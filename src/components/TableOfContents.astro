@@ -1,0 +1,84 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{tocHeadings.length > 0 && (
+  <nav aria-label="Table of contents">
+    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+      On this page
+    </p>
+    <ul class="space-y-1 text-sm">
+      {tocHeadings.map((h) => (
+        <li class={h.depth === 3 ? 'pl-3' : ''}>
+          <a
+            href={`#${h.slug}`}
+            class="toc-link block py-0.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            data-heading={h.slug}
+          >
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style is:global>
+  .toc-link.is-active {
+    color: rgb(37 99 235);
+    font-weight: 500;
+  }
+  [data-theme="dark"] .toc-link.is-active {
+    color: rgb(96 165 250);
+  }
+</style>
+
+<script>
+  const links = document.querySelectorAll<HTMLAnchorElement>('.toc-link');
+  if (links.length > 0) {
+    const headingIds = Array.from(links).map((l) => l.dataset.heading!);
+    const headingEls = headingIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    let activeId: string | null = null;
+
+    function setActive(id: string | null) {
+      if (id === activeId) return;
+      activeId = id;
+      links.forEach((l) => {
+        l.classList.toggle('is-active', l.dataset.heading === id);
+      });
+    }
+
+    const visibleSet = new Set<string>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visibleSet.add(entry.target.id);
+          } else {
+            visibleSet.delete(entry.target.id);
+          }
+        }
+        const first = headingIds.find((id) => visibleSet.has(id));
+        if (first) setActive(first);
+      },
+      { rootMargin: '-80px 0px -50% 0px', threshold: 0 }
+    );
+
+    headingEls.forEach((el) => observer.observe(el));
+  }
+</script>
