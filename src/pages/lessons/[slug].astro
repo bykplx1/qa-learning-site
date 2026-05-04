@@ -1,0 +1,44 @@
+---
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const lessons = await getCollection('lessons');
+  return lessons.map((lesson) => ({
+    params: { slug: lesson.data.slug },
+    props: { lesson },
+  }));
+}
+
+const { lesson } = Astro.props;
+const { Content } = await render(lesson);
+const { title, est_minutes, difficulty, tags, category } = lesson.data;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title} — QA Learning</title>
+  </head>
+  <body>
+    <main>
+      <article>
+        <header>
+          <h1>{title}</h1>
+          <dl>
+            <dt>Category</dt><dd>{category}</dd>
+            <dt>Est. read time</dt><dd>{est_minutes} min</dd>
+            <dt>Difficulty</dt><dd>{difficulty}</dd>
+            <dt>Tags</dt>
+            <dd>
+              <ul>
+                {tags.map((t) => <li>{t}</li>)}
+              </ul>
+            </dd>
+          </dl>
+        </header>
+        <Content />
+      </article>
+    </main>
+  </body>
+</html>
