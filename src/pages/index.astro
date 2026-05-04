@@ -1,17 +1,22 @@
 ---
-
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="QA Learning">
+  <main class="px-6 py-12 max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4">QA Learning</h1>
+    <p class="text-gray-600 dark:text-gray-400">
+      Interactive study site for QA fundamentals.
+    </p>
+    <ul class="mt-6 space-y-2">
+      <li>
+        <a
+          href="/lessons/testing-principles"
+          class="text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          Testing Principles
+        </a>
+      </li>
+    </ul>
+  </main>
+</BaseLayout>

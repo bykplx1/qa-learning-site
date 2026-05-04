@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+/* Redefine dark variant to use data-theme attribute set by inline script */
+@variant dark ([data-theme=dark] &);

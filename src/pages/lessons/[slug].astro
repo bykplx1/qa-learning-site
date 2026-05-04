@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
   const lessons = await getCollection('lessons');
@@ -14,31 +15,31 @@ const { Content } = await render(lesson);
 const { title, est_minutes, difficulty, tags, category } = lesson.data;
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>{title} — QA Learning</title>
-  </head>
-  <body>
-    <main>
-      <article>
-        <header>
-          <h1>{title}</h1>
-          <dl>
-            <dt>Category</dt><dd>{category}</dd>
-            <dt>Est. read time</dt><dd>{est_minutes} min</dd>
-            <dt>Difficulty</dt><dd>{difficulty}</dd>
-            <dt>Tags</dt>
-            <dd>
-              <ul>
-                {tags.map((t) => <li>{t}</li>)}
-              </ul>
-            </dd>
-          </dl>
-        </header>
+<BaseLayout title={`${title} — QA Learning`}>
+  <main class="px-6 py-10 max-w-3xl mx-auto">
+    <article>
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold mb-3">{title}</h1>
+        <div class="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+          <span class="capitalize">{category}</span>
+          <span>·</span>
+          <span>{est_minutes} min</span>
+          <span>·</span>
+          <span class="capitalize">{difficulty}</span>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-3">
+          {
+            tags.map((t) => (
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                {t}
+              </span>
+            ))
+          }
+        </div>
+      </header>
+      <div class="prose dark:prose-invert max-w-none">
         <Content />
-      </article>
-    </main>
-  </body>
-</html>
+      </div>
+    </article>
+  </main>
+</BaseLayout>
