@@ -1,0 +1,3 @@
+[submodule "content/qa-vault"]
+	path = content/qa-vault
+	url = https://github.com/bykplx1/qa-vault.git
