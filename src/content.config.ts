@@ -4,7 +4,8 @@ import { lessonFrontmatterSchema } from './lib/lessons/schema';
 
 const lessons = defineCollection({
   loader: glob({
-    pattern: '01-Fundamentals/Testing-Principles.md',
+    // Load all .md files under numbered category folders; excludes INDEX/PLAN at root.
+    pattern: '[0-9][0-9]-*/**/*.md',
     base: './content/qa-vault',
   }),
   schema: lessonFrontmatterSchema,
