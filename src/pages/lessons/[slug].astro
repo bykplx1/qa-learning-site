@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
 import { sortLessons, getPrevNext } from '../../lib/lessons/order';
 
 export async function getStaticPaths() {
@@ -13,7 +14,7 @@ export async function getStaticPaths() {
 }
 
 const { lesson, sorted } = Astro.props;
-const { Content } = await render(lesson);
+const { Content, headings } = await render(lesson);
 const { title, est_minutes, difficulty, tags, category } = lesson.data;
 const { prev, next } = getPrevNext(sorted, lesson.data.slug);
 
@@ -23,66 +24,76 @@ function formatCategory(cat: string): string {
 ---
 
 <BaseLayout title={`${title} — QA Learning`}>
-  <main class="px-6 py-10 max-w-3xl mx-auto">
-    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6 flex items-center gap-1.5">
-      <a href="/" class="hover:text-gray-900 dark:hover:text-gray-100">Home</a>
-      <span>›</span>
-      <a href={`/?category=${category}`} class="hover:text-gray-900 dark:hover:text-gray-100 capitalize">
-        {formatCategory(category)}
-      </a>
-      <span>›</span>
-      <span class="text-gray-900 dark:text-gray-100">{title}</span>
-    </nav>
+  <div class="px-6 py-10">
+    <div class="mx-auto lg:flex lg:gap-10 lg:max-w-5xl">
+      <main class="min-w-0 flex-1 max-w-3xl mx-auto lg:mx-0">
+        <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6 flex items-center gap-1.5">
+          <a href="/" class="hover:text-gray-900 dark:hover:text-gray-100">Home</a>
+          <span>›</span>
+          <a href={`/?category=${category}`} class="hover:text-gray-900 dark:hover:text-gray-100 capitalize">
+            {formatCategory(category)}
+          </a>
+          <span>›</span>
+          <span class="text-gray-900 dark:text-gray-100">{title}</span>
+        </nav>
 
-    <article>
-      <header class="mb-8">
-        <h1 class="text-3xl font-bold mb-3">{title}</h1>
-        <div class="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-          <span class="capitalize">{formatCategory(category)}</span>
-          <span>·</span>
-          <span>{est_minutes} min</span>
-          <span>·</span>
-          <span class="capitalize">{difficulty}</span>
+        <article>
+          <header class="mb-8">
+            <h1 class="text-3xl font-bold mb-3">{title}</h1>
+            <div class="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+              <span class="capitalize">{formatCategory(category)}</span>
+              <span>·</span>
+              <span>{est_minutes} min</span>
+              <span>·</span>
+              <span class="capitalize">{difficulty}</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-3">
+              {
+                tags.map((t) => (
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                    {t}
+                  </span>
+                ))
+              }
+            </div>
+          </header>
+
+          <div class="prose dark:prose-invert max-w-none">
+            <Content />
+          </div>
+        </article>
+
+        <nav class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex justify-between gap-4">
+          {prev ? (
+            <a
+              href={`/lessons/${prev.data.slug}`}
+              class="flex flex-col max-w-[45%] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+            >
+              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">← Previous</span>
+              <span class="font-medium text-sm">{prev.data.title}</span>
+            </a>
+          ) : (
+            <div />
+          )}
+          {next ? (
+            <a
+              href={`/lessons/${next.data.slug}`}
+              class="flex flex-col items-end max-w-[45%] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+            >
+              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Next →</span>
+              <span class="font-medium text-sm text-right">{next.data.title}</span>
+            </a>
+          ) : (
+            <div />
+          )}
+        </nav>
+      </main>
+
+      <aside class="hidden lg:block w-52 shrink-0">
+        <div class="sticky top-8 max-h-[calc(100vh-5rem)] overflow-y-auto">
+          <TableOfContents headings={headings} />
         </div>
-        <div class="flex flex-wrap gap-2 mt-3">
-          {
-            tags.map((t) => (
-              <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                {t}
-              </span>
-            ))
-          }
-        </div>
-      </header>
-
-      <div class="prose dark:prose-invert max-w-none">
-        <Content />
-      </div>
-    </article>
-
-    <nav class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex justify-between gap-4">
-      {prev ? (
-        <a
-          href={`/lessons/${prev.data.slug}`}
-          class="flex flex-col max-w-[45%] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
-        >
-          <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">← Previous</span>
-          <span class="font-medium text-sm">{prev.data.title}</span>
-        </a>
-      ) : (
-        <div />
-      )}
-      {next ? (
-        <a
-          href={`/lessons/${next.data.slug}`}
-          class="flex flex-col items-end max-w-[45%] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
-        >
-          <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Next →</span>
-          <span class="font-medium text-sm text-right">{next.data.title}</span>
-        </a>
-      ) : (
-        <div />
-      )}
-    </nav>
-  </main>
+      </aside>
+    </div>
+  </div>
 </BaseLayout>
