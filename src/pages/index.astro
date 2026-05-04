@@ -1,22 +1,58 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { sortLessons, groupByCategory } from '../lib/lessons/order';
+
+const allLessons = await getCollection('lessons');
+const sorted = sortLessons(allLessons);
+const groups = groupByCategory(sorted);
+
+const diffColor: Record<string, string> = {
+  beginner: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
+  intermediate: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
+  advanced: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+};
+
+function formatCategory(cat: string): string {
+  return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 ---
 
 <BaseLayout title="QA Learning">
-  <main class="px-6 py-12 max-w-3xl mx-auto">
-    <h1 class="text-3xl font-bold mb-4">QA Learning</h1>
-    <p class="text-gray-600 dark:text-gray-400">
-      Interactive study site for QA fundamentals.
+  <main class="px-6 py-12 max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-2">QA Learning</h1>
+    <p class="text-gray-600 dark:text-gray-400 mb-10">
+      Interactive study site for QA fundamentals. {sorted.length} lessons across {groups.size} categories.
     </p>
-    <ul class="mt-6 space-y-2">
-      <li>
-        <a
-          href="/lessons/testing-principles"
-          class="text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          Testing Principles
-        </a>
-      </li>
-    </ul>
+
+    {[...groups.entries()].map(([category, lessons]) => (
+      <section class="mb-12">
+        <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-gray-800 capitalize">
+          {formatCategory(category)}
+        </h2>
+        <ul class="space-y-3">
+          {lessons.map((lesson) => (
+            <li>
+              <a
+                href={`/lessons/${lesson.data.slug}`}
+                class="flex items-center justify-between gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors group"
+              >
+                <span class="font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                  {lesson.data.title}
+                </span>
+                <span class="flex items-center gap-3 shrink-0 text-sm text-gray-500 dark:text-gray-400">
+                  <span>{lesson.data.est_minutes} min</span>
+                  <span
+                    class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${diffColor[lesson.data.difficulty]}`}
+                  >
+                    {lesson.data.difficulty}
+                  </span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
   </main>
 </BaseLayout>
