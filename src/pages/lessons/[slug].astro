@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
+import WikiLink from '../../components/WikiLink';
 import { sortLessons, getPrevNext } from '../../lib/lessons/order';
 
 export async function getStaticPaths() {
@@ -59,6 +60,7 @@ function formatCategory(cat: string): string {
           </header>
 
           <div class="prose dark:prose-invert max-w-none">
+            <WikiLink client:idle />
             <Content />
           </div>
         </article>
