@@ -1,0 +1,226 @@
+lesson: jmeter-k6
+questions:
+  - id: jk-001
+    type: single
+    q: JMeter Thread Group =
+    options:
+      - A) Test plan
+      - B) Virtual users + ramp + loops config
+      - C) Listener
+      - D) Assertion
+    answer: 1
+    hint: VUs.
+    explanation: Threads simulate concurrent users. See [[#Key Components]].
+  - id: jk-002
+    type: single
+    q: "JMeter run mode for real load:"
+    options:
+      - A) GUI only
+      - B) Non-GUI (`-n`)
+      - C) Both same
+      - D) Server only
+    answer: 1
+    hint: GUI overhead.
+    explanation: GUI consumes resources, distorts data. See [[#Basic HTTP Test (CLI)]].
+  - id: jk-003
+    type: single
+    q: "k6 written in:"
+    options:
+      - A) Java
+      - B) Go (test script in JS)
+      - C) Python
+      - D) Rust
+    answer: 1
+    hint: Single binary.
+    explanation: Lightweight VUs via goroutines. See [[#Why]].
+  - id: jk-004
+    type: single
+    q: "k6 threshold failure effect:"
+    options:
+      - A) Warning only
+      - B) Non-zero exit code â†’ CI fails
+      - C) Logged
+      - D) Continues
+    answer: 1
+    hint: Pass/fail gate.
+    explanation: Useful for CI gating. See [[#Thresholds (Pass/Fail)]].
+  - id: jk-005
+    type: single
+    q: "JMeter correlation:"
+    options:
+      - A) Linking unrelated tests
+      - B) Extract dynamic value from response, reuse in subsequent request
+      - C) Stats analysis
+      - D) Distributed setup
+    answer: 1
+    hint: Tokens, IDs.
+    explanation: Required for stateful flows. See [[#Correlation]].
+  - id: jk-006
+    type: single
+    q: "k6 stages purpose:"
+    options:
+      - A) Static load
+      - B) Define ramp profile (target VUs at duration)
+      - C) Setup phase
+      - D) Reporting
+    answer: 1
+    hint: Ramp.
+    explanation: Models realistic load over time. See [[#Stages (Ramp Profile)]].
+  - id: jk-007
+    type: single
+    q: "JMeter distributed mode:"
+    options:
+      - A) Single binary multi-thread
+      - B) Controller + agents (`jmeter-server`)
+      - C) Cloud only
+      - D) Plugin
+    answer: 1
+    hint: Master/slave.
+    explanation: Generates higher load than 1 host. See [[#Distributed Mode]].
+  - id: jk-008
+    type: single
+    q: "k6 SharedArray purpose:"
+    options:
+      - A) Speed
+      - B) Share dataset across VUs without per-VU memory copy
+      - C) Networking
+      - D) Locking
+    answer: 1
+    hint: Memory efficiency.
+    explanation: Loaded once; safer for big data. See [[#Data Parameterization]].
+  - id: jk-009
+    type: single
+    q: "JMeter listener during real load:"
+    options:
+      - A) Use all
+      - B) Disable verbose; write Simple Data Writer to .jtl
+      - C) GUI listener fine
+      - D) Optional
+    answer: 1
+    hint: Reduce overhead.
+    explanation: Listeners consume RAM. See [[#Best Practices]].
+  - id: jk-010
+    type: single
+    q: "k6 metric `http_req_duration` represents:"
+    options:
+      - A) DNS only
+      - B) Full request duration
+      - C) Backend time only
+      - D) Network only
+    answer: 1
+    hint: End-to-end.
+    explanation: Total time client observed. See [[#Metrics]].
+  - id: jk-011
+    type: single
+    q: k6 `check()` =
+    options:
+      - A) Hard assert that stops VU
+      - B) Soft check; logs result, continues
+      - C) Threshold
+      - D) Pre-request
+    answer: 1
+    hint: Non-fatal.
+    explanation: Differs from threshold (fatal). See [[#Minimal Script]].
+  - id: jk-012
+    type: single
+    q: "JMeter parameterization via CSV:"
+    options:
+      - A) Plugin
+      - B) CSV Data Set Config
+      - C) Manual code
+      - D) JSON only
+    answer: 1
+    hint: Config element.
+    explanation: Built-in CSV reader. See [[#Parameterization]].
+  - id: jk-013
+    type: single
+    q: "k6 scenario `constant-vus`:"
+    options:
+      - A) Ramp
+      - B) Hold N VUs for duration
+      - C) Spike
+      - D) Stop after iteration
+    answer: 1
+    hint: Steady state.
+    explanation: Constant arrival of N concurrent VUs. See [[#Scenarios (Multiple
+      Patterns)]].
+  - id: jk-014
+    type: single
+    q: "JMeter output for HTML dashboard:"
+    options:
+      - A) `-r html`
+      - B) `-e -o reportDir`
+      - C) `--html`
+      - D) Plugin only
+    answer: 1
+    hint: Built-in reporter.
+    explanation: Generates HTML from .jtl. See [[#Basic HTTP Test (CLI)]].
+  - id: jk-015
+    type: single
+    q: "Target k6 errors below 1%:"
+    options:
+      - 'A) `http_req_failed: ["rate<0.01"]`'
+      - B) `http_errors<1`
+      - C) `http_req_duration<1`
+      - D) Custom plugin
+    answer: 0
+    hint: Threshold expression.
+    explanation: Standard threshold syntax. See [[#Thresholds (Pass/Fail)]].
+  - id: jk-016
+    type: single
+    q: "Heavy mem per VU:"
+    options:
+      - A) k6
+      - B) JMeter
+      - C) Both same
+      - D) Neither
+    answer: 1
+    hint: Thread per VU.
+    explanation: Java thread per VU costly. See [[#JMeter vs k6]].
+  - id: jk-017
+    type: single
+    q: "JMeter timer purpose:"
+    options:
+      - A) Measure time
+      - B) Pacing/think time between samplers
+      - C) Schedule
+      - D) Logging
+    answer: 1
+    hint: User behavior.
+    explanation: Mimics user wait time. See [[#Key Components]].
+  - id: jk-018
+    type: single
+    q: "k6 browser testing:"
+    options:
+      - A) Built-in headless
+      - B) `k6/browser` extension (Chromium)
+      - C) Selenium hook
+      - D) Not supported
+    answer: 1
+    hint: Extension.
+    explanation: k6 browser API drives Chromium. See [[#Why]].
+  - id: jk-019
+    type: single
+    q: "k6 percentile p95 < 800ms threshold:"
+    options:
+      - A) `mean<800`
+      - B) `p(95)<800`
+      - "C) `p95: 800`"
+      - D) `pct95<0.8`
+    answer: 1
+    hint: Stat function.
+    explanation: Percentile syntax. See [[#Thresholds (Pass/Fail)]].
+  - id: jk-020
+    type: single
+    q: "Best for OSS team prefers code-first CI gating:"
+    options:
+      - A) JMeter GUI
+      - B) k6
+      - C) Both same
+      - D) Neither
+    answer: 1
+    hint: Dev-friendly.
+    explanation: |-
+      JS scripts + threshold gates. See [[#JMeter vs k6]].
+
+      ---

@@ -1,0 +1,238 @@
+lesson: test-pyramid
+questions:
+  - id: tp-001
+    type: single
+    q: "Test Pyramid base layer:"
+    options:
+      - A) E2E
+      - B) Manual
+      - C) Unit
+      - D) Performance
+    answer: 2
+    hint: Many, fast, cheap.
+    explanation: Unit tests form base â€” most numerous, fastest, isolated. See
+      [[#The Layers]].
+  - id: tp-002
+    type: single
+    q: "Top of pyramid:"
+    options:
+      - A) Unit
+      - B) E2E / UI
+      - C) Static analysis
+      - D) Lint
+    answer: 1
+    hint: Slowest, fewest.
+    explanation: "E2E sits at top: full-stack, slow, expensive, used sparingly. See
+      [[#The Layers]]."
+  - id: tp-003
+    type: single
+    q: "Ice Cream Cone anti-pattern means:"
+    options:
+      - A) Many units, few E2E
+      - B) Many manual + E2E, few unit
+      - C) Equal layers
+      - D) No tests
+    answer: 1
+    hint: Inverted pyramid.
+    explanation: Heavy top with little automated unit base = slow, brittle, costly.
+      See [[#Anti-Patterns]].
+  - id: tp-004
+    type: single
+    q: "Why fewer E2E than unit tests:"
+    options:
+      - A) E2E free
+      - B) E2E slow, flaky, costly
+      - C) E2E always pass
+      - D) Unit tests deprecated
+    answer: 1
+    hint: Cost vs feedback.
+    explanation: E2E expensive to write/run/maintain; trade-off favors small count.
+      See [[#Why Pyramid Shape]].
+  - id: tp-005
+    type: single
+    q: '"Push tests down" means:'
+    options:
+      - A) Move slow into unit/integration when possible
+      - B) Delete tests
+      - C) Run E2E first
+      - D) Move unit to E2E
+    answer: 0
+    hint: Lower level if possible.
+    explanation: Lower-layer tests faster + cheaper; only escalate if needed. See
+      [[#Practical Rules]].
+  - id: tp-006
+    type: single
+    q: "Test Trophy emphasizes:"
+    options:
+      - A) E2E
+      - B) Integration tests
+      - C) Manual
+      - D) Static only
+    answer: 1
+    hint: Kent C. Dodds.
+    explanation: Trophy favors integration as biggest layer for component apps. See
+      [[#Anti-Patterns]].
+  - id: tp-007
+    type: single
+    q: "Hourglass anti-pattern lacks:"
+    options:
+      - A) Unit
+      - B) Integration / middle
+      - C) E2E
+      - D) Manual
+    answer: 1
+    hint: Skipped middle.
+    explanation: Hourglass skips integration; integration bugs slip through. See
+      [[#Anti-Patterns]].
+  - id: tp-008
+    type: single
+    q: 'Pyramid metric "tests per layer" is mainly about:'
+    options:
+      - A) Headcount
+      - B) Distribution shape
+      - C) Bug count
+      - D) Code lines
+    answer: 1
+    hint: Shape = ratio.
+    explanation: Pyramid shape = ratio between layers, not absolute counts. See
+      [[#The Layers]].
+  - id: tp-009
+    type: single
+    q: "Unit test typical runtime:"
+    options:
+      - A) Hours
+      - B) Seconds-minutes
+      - C) Milliseconds
+      - D) Days
+    answer: 2
+    hint: Sub-second.
+    explanation: Units run in ms â€” enables thousands per CI run. See [[#The Layers]].
+  - id: tp-010
+    type: single
+    q: "Best candidate to replace flaky UI test:"
+    options:
+      - A) Manual run
+      - B) API or unit test of same logic
+      - C) Add retries
+      - D) Delete it
+    answer: 1
+    hint: Lower layer.
+    explanation: Move logic check to API/unit; keep UI for what only UI verifies.
+      See [[#Practical Rules]].
+  - id: tp-011
+    type: single
+    q: "E2E should cover:"
+    options:
+      - A) Every edge case
+      - B) Critical user journeys
+      - C) All UI permutations
+      - D) Code coverage 100%
+    answer: 1
+    hint: Smoke-level.
+    explanation: E2E focuses on key flows; edges go lower. See [[#Practical Rules]].
+  - id: tp-012
+    type: single
+    q: "Cupcake anti-pattern:"
+    options:
+      - A) Equal layer sizes
+      - B) Only unit
+      - C) Only E2E
+      - D) Pyramid
+    answer: 0
+    hint: Flat.
+    explanation: Equal layers waste cheap fast tests opportunity. See [[#Anti-Patterns]].
+  - id: tp-013
+    type: single
+    q: "Diamond shape used for:"
+    options:
+      - A) Monoliths
+      - B) Microservices integration risk
+      - C) Static sites
+      - D) Mobile only
+    answer: 1
+    hint: Integration heavy.
+    explanation: Microservices bugs live in integration; diamond targets that. See
+      [[#Diamond / Honeycomb Variants]].
+  - id: tp-014
+    type: single
+    q: "Why E2E flake harmful:"
+    options:
+      - A) Forces faster CI
+      - B) Erodes trust â†’ ignored failures
+      - C) Improves coverage
+      - D) Lowers cost
+    answer: 1
+    hint: '"Probably nothing" syndrome.'
+    explanation: Flaky tests retried/ignored, hiding real bugs. See [[#Cost of E2E Bias]].
+  - id: tp-015
+    type: single
+    q: "Contract testing relation to pyramid:"
+    options:
+      - A) Replaces unit
+      - B) Can reduce need for many E2E
+      - C) Only manual
+      - D) Same as smoke
+    answer: 1
+    hint: Verify integration boundaries cheap.
+    explanation: Contract pins service interfaces; cuts E2E count. See [[#Practical Rules]].
+  - id: tp-016
+    type: single
+    q: "Pyramid coined by:"
+    options:
+      - A) Kent Beck
+      - B) Mike Cohn
+      - C) Martin Fowler
+      - D) James Bach
+    answer: 1
+    hint: '"Succeeding with Agile."'
+    explanation: Mike Cohn introduced Test Pyramid in 2009 book. See [[#Test Pyramid]].
+  - id: tp-017
+    type: single
+    q: "Integration test verifies:"
+    options:
+      - A) Single function in isolation
+      - B) Module + collaborators (DB, services)
+      - C) UI rendering only
+      - D) Compile errors
+    answer: 1
+    hint: Multiple parts together.
+    explanation: Integration covers interaction between components. See [[#The Layers]].
+  - id: tp-018
+    type: single
+    q: "Pyramid shape mainly drives:"
+    options:
+      - A) Code coverage %
+      - B) Feedback speed + maintenance cost
+      - C) Headcount
+      - D) UI design
+    answer: 1
+    hint: Speed + cost.
+    explanation: Shape optimizes fast feedback and low cost. See [[#Why Pyramid Shape]].
+  - id: tp-019
+    type: single
+    q: "Honeycomb model emphasizes:"
+    options:
+      - A) Heavy integration testing
+      - B) Heavy E2E
+      - C) Heavy manual
+      - D) No unit
+    answer: 0
+    hint: Spotify model.
+    explanation: Honeycomb prioritizes integrated tests of behavior. See [[#Diamond
+      / Honeycomb Variants]].
+  - id: tp-020
+    type: single
+    q: "Acceptable to skip a layer:"
+    options:
+      - A) Always
+      - B) Never
+      - C) Sometimes, with justified risk + alternative coverage
+      - D) Only Fridays
+    answer: 2
+    hint: Context.
+    explanation: >-
+      Pyramid is heuristic; context-aware adaptation OK if risk covered. See
+      [[#Diamond / Honeycomb Variants]].
+
+
+      ---

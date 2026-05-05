@@ -1,0 +1,31 @@
+lesson: bdd-tdd-atdd
+tasks:
+  - id: bta-t001
+    type: fill_blank
+    q: "Fill: TDD's three-step loop is _______, _______, _______."
+    answer: Red, Green, Refactor
+    hint: Fail, pass, clean.
+    explanation: Canonical TDD micro-cycle. See [[#TDD â€” Red, Green, Refactor]].
+  - id: bta-t002
+    type: fill_blank
+    q: 'Task: Write a Gherkin scenario for "user with locked account cannot log
+      in".'
+    answer: |-
+      ```gherkin
+      Feature: Login
+        Scenario: Locked account is rejected
+          Given the user "alice" exists with status "locked"
+          When she submits valid credentials to /login
+          Then the response status should be 423
+          And the response body should contain error code "ACCOUNT_LOCKED"
+      ```
+    hint: Given/When/Then declarative.
+    explanation: Declarative behavior, not UI clicks; reusable steps. See [[#Gherkin]].
+  - id: bta-t003
+    type: fill_blank
+    q: "Fill: BDD was introduced by _______ as an evolution of TDD focused on
+      behavior + ubiquitous language."
+    answer: Dan North
+    hint: ~2006 article.
+    explanation: Dan North reframed TDD vocabulary into behavior-centric BDD. See
+      [[#BDD â€” Behavior-Driven Development]].

@@ -1,0 +1,225 @@
+lesson: bug-reporting
+questions:
+  - id: br-001
+    type: single
+    q: "Severity asks:"
+    options:
+      - A) When to fix
+      - B) Impact when triggered
+      - C) Who fixes
+      - D) Cost to fix
+    answer: 1
+    hint: Tech lens.
+    explanation: Severity = damage extent. See [[#Severity vs Priority]].
+  - id: br-002
+    type: single
+    q: "Priority asks:"
+    options:
+      - A) Impact size
+      - B) How soon to fix
+      - C) Reproducibility
+      - D) Test coverage
+    answer: 1
+    hint: Business lens.
+    explanation: Priority = scheduling. See [[#Severity vs Priority]].
+  - id: br-003
+    type: single
+    q: "Best title pattern:"
+    options:
+      - A) "Bug found"
+      - B) "Login broken"
+      - C) "[Auth] Sign-In disabled after valid creds (Chrome 124)"
+      - D) "Critical issue!!!"
+    answer: 2
+    hint: Area + action + symptom + context.
+    explanation: Searchable + scoped. See [[#Title Patterns]].
+  - id: br-004
+    type: single
+    q: "Steps to reproduce should:"
+    options:
+      - A) Bundle setup + assertion in one step
+      - B) Be one action per step, atomic
+      - C) Skip preconditions
+      - D) Use prose paragraphs
+    answer: 1
+    hint: Atomicity.
+    explanation: One action = unambiguous repro. See [[#Steps to Reproduce â€” Rules]].
+  - id: br-005
+    type: single
+    q: Heisenbug =
+    options:
+      - A) Always reproduces
+      - B) Disappears under observation
+      - C) Only in Chrome
+      - D) Spec-related
+    answer: 1
+    hint: Observer effect.
+    explanation: Add logging, retries. See [[#Reproducibility]].
+  - id: br-006
+    type: single
+    q: "Most actionable evidence type:"
+    options:
+      - A) Plain screenshot
+      - B) Stack trace + log lines
+      - C) Verbal description
+      - D) Related ticket
+    answer: 1
+    hint: Code-level signal.
+    explanation: Trace points to fault site. See [[#Evidence Hierarchy]].
+  - id: br-007
+    type: single
+    q: Oracle source =
+    options:
+      - A) Tester's intuition
+      - B) Where "expected" comes from (AC, spec, standard)
+      - C) Bug tracker
+      - D) Stack Overflow
+    answer: 1
+    hint: Truth reference.
+    explanation: Cite to defend "is a bug". See [[#Oracle Sources]].
+  - id: br-008
+    type: single
+    q: "Sev1 / P3 example:"
+    options:
+      - A) Checkout broken in prod
+      - B) Admin-only crash, fix this sprint
+      - C) Cosmetic typo in backlog
+      - D) Performance regression
+    answer: 1
+    hint: High impact, low urgency.
+    explanation: Affects few users immediately. See [[#Severity vs Priority]].
+  - id: br-009
+    type: single
+    q: "Bugs in one ticket should be:"
+    options:
+      - A) As many as possible
+      - B) One bug per ticket
+      - C) Two if related
+      - D) Group by reporter
+    answer: 1
+    hint: Triage clarity.
+    explanation: State machine per defect. See [[#Common Anti-Patterns]].
+  - id: br-010
+    type: single
+    q: "Defect cost curve â€” prod vs requirements:"
+    options:
+      - A) Same
+      - B) ~100â€“1000Ã— more in prod
+      - C) 2Ã— more
+      - D) Cheaper in prod
+    answer: 1
+    hint: Boehm's data.
+    explanation: Drives shift-left. See [[#Defect Cost Curve]].
+  - id: br-011
+    type: single
+    q: MRE =
+    options:
+      - A) Maximum Reported Error
+      - B) Minimal Reproducible Example
+      - C) Mean Repro Effort
+      - D) Multi-Regression Engine
+    answer: 1
+    hint: Smallest trigger.
+    explanation: Strips noise from repro. See [[#Reproduction Aids]].
+  - id: br-012
+    type: single
+    q: "Reopen rate â€” high indicates:"
+    options:
+      - A) Strong verification
+      - B) Poor verification or premature close
+      - C) Good test coverage
+      - D) Healthy backlog
+    answer: 1
+    hint: Quality of fix sign-off.
+    explanation: Reopens = wasted cycle. See [[#Metrics Around Bugs (Use Carefully)]].
+  - id: br-013
+    type: single
+    q: "Bug-count as individual KPI:"
+    options:
+      - A) Best practice
+      - B) Drives hiding / gaming
+      - C) Only for QA leads
+      - D) Required by ISTQB
+    answer: 1
+    hint: Goodhart's law.
+    explanation: Anti-pattern. See [[#Metrics Around Bugs (Use Carefully)]].
+  - id: br-014
+    type: single
+    q: "HAR file useful for:"
+    options:
+      - A) Visual layout bug
+      - B) Network/API issues
+      - C) Compile errors
+      - D) Auth tokens only
+    answer: 1
+    hint: Captures requests.
+    explanation: Replay + inspect timing. See [[#Evidence Hierarchy]].
+  - id: br-015
+    type: single
+    q: Severity inflation =
+    options:
+      - A) All bugs marked Critical
+      - B) Severity decay over time
+      - C) Auto-set severity
+      - D) Severity unused
+    answer: 0
+    hint: Loses signal.
+    explanation: Triage breaks. See [[#Common Anti-Patterns]].
+  - id: br-016
+    type: single
+    q: Bug bash =
+    options:
+      - A) Solo overnight test
+      - B) Time-boxed group exploratory session
+      - C) Auto-test run
+      - D) Defect retrospective
+    answer: 1
+    hint: Group + time-box.
+    explanation: Surface pre-release issues. See [[#Bug Bash Etiquette]].
+  - id: br-017
+    type: single
+    q: "Frequency 1/10 means:"
+    options:
+      - A) Always reproduces
+      - B) Intermittent â€” note conditions
+      - C) Cannot reproduce
+      - D) Never seen
+    answer: 1
+    hint: Sometimes.
+    explanation: Need conditions/logs. See [[#Reproducibility]].
+  - id: br-018
+    type: single
+    q: "Citing oracle protects against:"
+    options:
+      - A) Network outage
+      - B) "Works as designed" pushback
+      - C) Flaky test
+      - D) Severity inflation
+    answer: 1
+    hint: Authority of expected.
+    explanation: Spec source = defensible. See [[#Oracle Sources]].
+  - id: br-019
+    type: single
+    q: "Best place for correlation/request ID:"
+    options:
+      - A) Title only
+      - B) Evidence section, with timestamp + timezone
+      - C) Tags
+      - D) Skip â€” devs don't need
+    answer: 1
+    hint: Trace lookup.
+    explanation: Lets dev pull server logs. See [[#Evidence Hierarchy]].
+  - id: br-020
+    type: single
+    q: "Communication tone in bug report:"
+    options:
+      - A) Blame author
+      - B) Describe behavior, assume good faith
+      - C) Sarcasm OK
+      - D) Use exclamation marks
+    answer: 1
+    hint: Behavior > person.
+    explanation: |-
+      Preserves collaboration. See [[#Communication Tone]].
+
+      ---

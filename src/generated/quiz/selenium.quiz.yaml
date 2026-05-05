@@ -1,0 +1,230 @@
+lesson: selenium
+questions:
+  - id: s-001
+    type: single
+    q: "Selenium driver communicates with browser via:"
+    options:
+      - A) HTTP/JSON over WebDriver protocol
+      - B) Direct DOM access
+      - C) gRPC
+      - D) Shared memory
+    answer: 0
+    hint: W3C standard.
+    explanation: Client lib sends commands over HTTP to driver, which controls
+      browser. See [[#Architecture]].
+  - id: s-002
+    type: single
+    q: "Preferred locator type:"
+    options:
+      - A) XPath
+      - B) ID/CSS
+      - C) Class name
+      - D) Tag name
+    answer: 1
+    hint: Stable + fast.
+    explanation: IDs unique; CSS efficient. XPath brittle for deep trees. See [[#Locators]].
+  - id: s-003
+    type: single
+    q: "Explicit wait advantage over implicit:"
+    options:
+      - A) Faster always
+      - B) Waits for specific condition
+      - C) Skips elements
+      - D) Auto retries network
+    answer: 1
+    hint: Condition-based.
+    explanation: Implicit polls existence only; explicit checks
+      clickability/visibility. See [[#Waits]].
+  - id: s-004
+    type: single
+    q: "`time.sleep(5)` problem:"
+    options:
+      - A) Slower than wait
+      - B) Inflexible, fails fast or wastes time
+      - C) Crashes browser
+      - D) Locks driver
+    answer: 1
+    hint: No condition.
+    explanation: Hard sleep ignores readiness; replace with explicit wait. See [[#Waits]].
+  - id: s-005
+    type: single
+    q: "Page Object Model goal:"
+    options:
+      - A) Speed
+      - B) Centralize locators + page actions
+      - C) Mock backend
+      - D) Headless mode
+    answer: 1
+    hint: Reuse + maintainability.
+    explanation: UI changes touch one class only. See [[#Page Object Model]].
+  - id: s-006
+    type: single
+    q: "Switch into iframe:"
+    options:
+      - A) `driver.frame()`
+      - B) `driver.switch_to.frame(...)`
+      - C) `driver.iframe()`
+      - D) `driver.context()`
+    answer: 1
+    hint: switch_to API.
+    explanation: Frames are separate browsing contexts. See [[#Frames + Windows]].
+  - id: s-007
+    type: single
+    q: "StaleElementReferenceException cause:"
+    options:
+      - A) Network down
+      - B) Element removed/replaced in DOM after lookup
+      - C) Driver died
+      - D) Wrong locator
+    answer: 1
+    hint: DOM mutated.
+    explanation: Reference no longer valid; re-find element. See [[#Common Pitfalls]].
+  - id: s-008
+    type: single
+    q: "Selenium Grid purpose:"
+    options:
+      - A) Logging
+      - B) Distribute tests across browsers/nodes
+      - C) Mock APIs
+      - D) Code coverage
+    answer: 1
+    hint: Parallel + remote.
+    explanation: Hub-node arch executes sessions on remote machines. See [[#Selenium Grid]].
+  - id: s-009
+    type: single
+    q: "Selenium 4 dropped:"
+    options:
+      - A) Java support
+      - B) Legacy JSON Wire protocol
+      - C) Headless
+      - D) Grid
+    answer: 1
+    hint: W3C only.
+    explanation: Standardized on W3C WebDriver. See [[#Selenium 4 New Features]].
+  - id: s-010
+    type: single
+    q: "Auto-download chromedriver:"
+    options:
+      - A) wget
+      - B) Selenium Manager (4.6+)
+      - C) PATH env
+      - D) Manual
+    answer: 1
+    hint: Built-in.
+    explanation: Resolves matching driver binary automatically. See [[#Selenium 4
+      New Features]].
+  - id: s-011
+    type: single
+    q: "Headless Chrome flag (modern):"
+    options:
+      - A) `--headless`
+      - B) `--headless=new`
+      - C) `--no-ui`
+      - D) `--quiet`
+    answer: 1
+    hint: New mode 109+.
+    explanation: New headless = full Chrome rendering, fewer detection diffs. See
+      [[#Headless]].
+  - id: s-012
+    type: single
+    q: "Not quitting driver leads to:"
+    options:
+      - A) Slower next run
+      - B) Orphaned browser/driver processes
+      - C) Driver corruption
+      - D) Test passes anyway
+    answer: 1
+    hint: Cleanup.
+    explanation: "`driver.quit()` kills session + driver process. See [[#Common Pitfalls]]."
+  - id: s-013
+    type: single
+    q: "Best practice for Select dropdowns:"
+    options:
+      - A) Click each option
+      - B) Use `Select` class helpers
+      - C) JS execute
+      - D) XPath only
+    answer: 1
+    hint: Wrapper API.
+    explanation: "`Select(...).select_by_visible_text(...)` handles native
+      `<select>`. See [[#Forms / Selects]]."
+  - id: s-014
+    type: single
+    q: "ElementClickIntercepted typical fix:"
+    options:
+      - A) Force click
+      - B) Close overlay/modal first
+      - C) Restart driver
+      - D) Refresh page
+    answer: 1
+    hint: Z-index covers.
+    explanation: Another element intercepts click; dismiss it. See [[#Common Pitfalls]].
+  - id: s-015
+    type: single
+    q: "Relative locator example:"
+    options:
+      - A) `By.RELATIVE`
+      - B) `locate_with(...).above(el)`
+      - C) `find_above()`
+      - D) `near_xpath()`
+    answer: 1
+    hint: Selenium 4.
+    explanation: Spatial locators introduced in 4. See [[#Selenium 4 New Features]].
+  - id: s-016
+    type: single
+    q: "Best for unique element:"
+    options:
+      - A) Class
+      - B) ID
+      - C) Tag
+      - D) Text
+    answer: 1
+    hint: HTML unique attribute.
+    explanation: IDs should be unique per page. See [[#Locators]].
+  - id: s-017
+    type: single
+    q: "Get current page title:"
+    options:
+      - A) `driver.title`
+      - B) `driver.get_title()`
+      - C) `driver.page_title`
+      - D) `driver.head.title`
+    answer: 0
+    hint: Property.
+    explanation: Attribute exposed by WebDriver client. See [[#Setup (Python)]].
+  - id: s-018
+    type: single
+    q: "`pytest-xdist` enables:"
+    options:
+      - A) Mocking
+      - B) Parallel test execution
+      - C) Logging
+      - D) Coverage
+    answer: 1
+    hint: "`-n auto`."
+    explanation: Distributes tests across CPUs/processes. See [[#CI Integration]].
+  - id: s-019
+    type: single
+    q: "Mixing implicit + explicit waits:"
+    options:
+      - A) Recommended
+      - B) Causes unpredictable cumulative timeouts
+      - C) Faster
+      - D) Required
+    answer: 1
+    hint: Avoid.
+    explanation: Selenium docs warn against combining both. See [[#Waits]].
+  - id: s-020
+    type: single
+    q: "Switch to newest tab:"
+    options:
+      - A) `driver.switch_to.frame(-1)`
+      - B) `driver.switch_to.window(driver.window_handles[-1])`
+      - C) `driver.last_tab()`
+      - D) `driver.tabs[-1].focus()`
+    answer: 1
+    hint: Handles list.
+    explanation: |-
+      Window handles tracked in order opened. See [[#Frames + Windows]].
+
+      ---

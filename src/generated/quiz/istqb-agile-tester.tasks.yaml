@@ -1,0 +1,28 @@
+lesson: istqb-agile-tester
+tasks:
+  - id: iat-t001
+    type: fill_blank
+    q: "Fill: BDD scenario format = ______ / ______ / ______."
+    answer: Given / When / Then
+    hint: Gherkin keywords.
+    explanation: Behavior spec template. See [[#In-Sprint Testing Techniques]].
+  - id: iat-t002
+    type: fill_blank
+    q: "Task: Write a DoD checklist (â‰¥6 items) for a new payment-flow story."
+    answer: |-
+      - [ ] Code reviewed and merged
+      - [ ] Unit tests added, â‰¥80% coverage on payment module
+      - [ ] Integration test against sandbox PSP green
+      - [ ] Acceptance criteria validated by tester
+      - [ ] No critical/major open defects
+      - [ ] Updated runbook + API docs
+      - [ ] Demoed to PO
+      - [ ] Telemetry/metric added
+    hint: Combine quality gates.
+    explanation: DoD enforces shared bar. See [[#Definition of Done (DoD)]].
+  - id: iat-t003
+    type: fill_blank
+    q: "Fill: Three roles in a Three-Amigos session = ______, ______, ______."
+    answer: Product Owner, Developer, Tester
+    hint: Cross-functional.
+    explanation: Aligns AC before code. See [[#In-Sprint Testing Techniques]].

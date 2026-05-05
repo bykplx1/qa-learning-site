@@ -1,0 +1,35 @@
+lesson: istqb-advanced-test-manager
+tasks:
+  - id: iatm-t001
+    type: fill_blank
+    q: "Fill: Cost-of-quality categories = ______, ______, ______, ______."
+    answer: Prevention, Appraisal, Internal failure, External failure
+    hint: PAIE.
+    explanation: CoQ taxonomy. See [[#Cost of Quality]].
+  - id: iatm-t002
+    type: fill_blank
+    q: "Task: Sketch a 5-row risk register for an online checkout (columns: ID,
+      Risk, Likelihood, Impact, Mitigation)."
+    answer: >-
+      | ID | Risk | L | I | Mitigation |
+
+      |----|------|---|---|------------|
+
+      | R1 | PSP outage during peak | M | H | Fallback PSP + chaos drills |
+
+      | R2 | Tax calc rounding error | M | H | EP/BVA matrix + golden tests |
+
+      | R3 | Inventory race on flash sale | L | H | Idempotency keys + load test
+      |
+
+      | R4 | Coupon abuse | H | M | Rate limit + audit |
+
+      | R5 | PII leakage in logs | L | H | Static analysis + log scrubber |
+    hint: LÃ—I prioritization.
+    explanation: Drives test depth. See [[#Risk-Based Test Mgmt]].
+  - id: iatm-t003
+    type: fill_blank
+    q: "Fill: TMMi 5 levels = ______, Managed, Defined, Measured, ______."
+    answer: Initial / Optimization
+    hint: Bottom + top.
+    explanation: Memorize ladder. See [[#Test Process Improvement]].

@@ -1,0 +1,226 @@
+lesson: test-reporting
+questions:
+  - id: tr-001
+    type: single
+    q: "Most universal CI-ingestable test format:"
+    options:
+      - A) PDF
+      - B) JUnit XML
+      - C) CSV
+      - D) Markdown
+    answer: 1
+    hint: Lingua franca.
+    explanation: Almost every CI tool parses JUnit XML. See [[#JUnit XML (Lingua Franca)]].
+  - id: tr-002
+    type: single
+    q: "Allure key advantage:"
+    options:
+      - A) Smallest output
+      - B) Rich HTML with history, attachments, severity, trends
+      - C) No setup
+      - D) Replaces JUnit XML in CI
+    answer: 1
+    hint: Human-friendly.
+    explanation: Builds static site with deep drill-down. See [[#Allure]].
+  - id: tr-003
+    type: single
+    q: "Allure history graphs require:"
+    options:
+      - A) Plugin
+      - B) Copying previous `history/` folder into new `allure-results/` before
+        generate
+      - C) Server
+      - D) DB
+    answer: 1
+    hint: Carry-over.
+    explanation: History is built from prior results. See [[#History]].
+  - id: tr-004
+    type: single
+    q: "Branch coverage vs line coverage:"
+    options:
+      - A) Same
+      - B) Branch covers conditional paths â€” more informative
+      - C) Line is stricter
+      - D) Branch only frontend
+    answer: 1
+    hint: Decisions.
+    explanation: Branch reflects logic paths, not just executed lines. See [[#Coverage]].
+  - id: tr-005
+    type: single
+    q: "Flaky test definition:"
+    options:
+      - A) Slow
+      - B) Same code passes and fails non-deterministically
+      - C) Skipped
+      - D) Failing always
+    answer: 1
+    hint: Non-deterministic.
+    explanation: Inconsistent results without code change. See [[#Flaky Test Tracking]].
+  - id: tr-006
+    type: single
+    q: "Best flaky-test response:"
+    options:
+      - A) Retry until green forever
+      - B) Quarantine + track + root-cause within sprint
+      - C) Delete immediately
+      - D) Ignore
+    answer: 1
+    hint: Triage.
+    explanation: Quarantine isolates without losing signal. See [[#Flaky Test Tracking]].
+  - id: tr-007
+    type: single
+    q: "MTTD measures:"
+    options:
+      - A) Test count
+      - B) Mean Time To Detect a regression
+      - C) Test duration
+      - D) Coverage
+    answer: 1
+    hint: Detection lag.
+    explanation: Pipeline speed indicator. See [[#Key Metrics (Quality Dashboard)]].
+  - id: tr-008
+    type: single
+    q: Defect escape rate =
+    options:
+      - A) Bugs in tests
+      - B) % of bugs found in prod vs pre-prod
+      - C) Reopen rate
+      - D) Coverage gap
+    answer: 1
+    hint: Slipped past.
+    explanation: Quality of pre-prod testing. See [[#Key Metrics (Quality Dashboard)]].
+  - id: tr-009
+    type: single
+    q: "Slack notification rule:"
+    options:
+      - A) Every build
+      - B) On failure only with link + top failing test
+      - C) Email instead always
+      - D) Nightly digest only
+    answer: 1
+    hint: Signal not noise.
+    explanation: Per-build noise causes muting. See [[#Notifications]].
+  - id: tr-010
+    type: single
+    q: "Coverage as sole KPI risk:"
+    options:
+      - A) Too low
+      - B) Gamed via trivial tests that exercise but don't assert
+      - C) Slow CI
+      - D) Plugin needed
+    answer: 1
+    hint: Goodhart's law.
+    explanation: Coverage â‰  quality. See [[#Anti-patterns]].
+  - id: tr-011
+    type: single
+    q: "SARIF format use:"
+    options:
+      - A) Tests
+      - B) Security findings (CodeQL, Trivy)
+      - C) Coverage
+      - D) BDD
+    answer: 1
+    hint: Static analysis.
+    explanation: Standard for security results. See [[#Report Formats]].
+  - id: tr-012
+    type: single
+    q: "JaCoCo:"
+    options:
+      - A) JS coverage
+      - B) Java coverage tool producing XML/HTML reports
+      - C) JS framework
+      - D) Linter
+    answer: 1
+    hint: Java.
+    explanation: JVM bytecode coverage. See [[#Coverage]].
+  - id: tr-013
+    type: single
+    q: "PR test summary tool example:"
+    options:
+      - A) JIRA
+      - B) `dorny/test-reporter` / `publish-unit-test-result-action`
+      - C) Slack
+      - D) Codecov only
+    answer: 1
+    hint: GHA marketplace.
+    explanation: Posts JUnit summary as PR comment. See [[#PR Comments]].
+  - id: tr-014
+    type: single
+    q: "Reports stored as CI artifact downside:"
+    options:
+      - A) Slow
+      - B) Expire â€” no long-term history
+      - C) Insecure
+      - D) Costly
+    answer: 1
+    hint: Retention.
+    explanation: Artifacts purge after retention period. See [[#Hosting Reports]].
+  - id: tr-015
+    type: single
+    q: "Traceability link in Allure:"
+    options:
+      - A) `@Tag`
+      - B) `@Issue` / `@TmsLink` / `@Link` annotations
+      - C) `@Test`
+      - D) `@Skip`
+    answer: 1
+    hint: External refs.
+    explanation: Connect tests to tickets/specs. See [[#Audit Trail / Traceability]].
+  - id: tr-016
+    type: single
+    q: "Retries hiding flakes silently:"
+    options:
+      - A) Best practice
+      - B) Anti-pattern â€” pass count masks instability
+      - C) Required
+      - D) Helps coverage
+    answer: 1
+    hint: Truth obscured.
+    explanation: Retries should be tracked, not invisible. See [[#Anti-patterns]].
+  - id: tr-017
+    type: single
+    q: "Best pytest junit + html combo:"
+    options:
+      - A) `pytest --xml`
+      - B) `pytest --junitxml=junit.xml --html=report.html`
+      - C) `--report=full`
+      - D) Plugin only
+    answer: 1
+    hint: Both flags.
+    explanation: Two reporters in one run. See [[#JUnit XML (Lingua Franca)]].
+  - id: tr-018
+    type: single
+    q: "Owner mapping value:"
+    options:
+      - A) Audit
+      - B) Failing tests route to code owner â†’ faster fix
+      - C) Permissions
+      - D) Compliance
+    answer: 1
+    hint: Routing.
+    explanation: Reduces MTTR. See [[#Best Practices]].
+  - id: tr-019
+    type: single
+    q: "Nightly digest vs per-build email:"
+    options:
+      - A) Same
+      - B) Digest reduces noise; per-build trains people to ignore
+      - C) Per-build always better
+      - D) Email is dead
+    answer: 1
+    hint: Cadence.
+    explanation: Frequency drives muting. See [[#Notifications]].
+  - id: tr-020
+    type: single
+    q: "Codecov role:"
+    options:
+      - A) Test runner
+      - B) Hosted coverage reporting + PR diff comments
+      - C) JUnit replacement
+      - D) Static analysis
+    answer: 1
+    hint: Coverage platform.
+    explanation: |-
+      Ingests Cobertura/lcov XML. See [[#Coverage]].
+
+      ---

@@ -1,0 +1,31 @@
+lesson: test-design-techniques
+tasks:
+  - id: tdt-t001
+    type: fill_blank
+    q: "Fill: For input range [1, 100], BVA tests at minimum the values _______."
+    answer: 0, 1, 2, 99, 100, 101 (boundaries + just outside + just inside)
+    hint: Edges + neighbors.
+    explanation: Captures off-by-one + boundary defects. See [[#Boundary Value
+      Analysis (BVA)]].
+  - id: tdt-t002
+    type: fill_blank
+    q: "Fill: The coverage type required by DO-178C for safety-critical avionics is
+      _______."
+    answer: MC/DC
+    hint: Modified Condition/Decision.
+    explanation: Each boolean condition's independent effect on outcome must be
+      shown. See [[#MC/DC (Modified Condition/Decision Coverage)]].
+  - id: tdt-t003
+    type: fill_blank
+    q: "Task: Build decision table for a discount rule: members get 10%, orders
+      â‰¥$100 get 5%, both stack to 15%."
+    answer: |-
+      | Member? | Order â‰¥ $100? | Discount |
+      |---------|---------------|----------|
+      | Y | Y | 15% |
+      | Y | N | 10% |
+      | N | Y | 5% |
+      | N | N | 0% |
+    hint: 2 conditions â†’ 2Â² rows.
+    explanation: Decision table enumerates all rule combinations explicitly. See
+      [[#Decision Tables]].

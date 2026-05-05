@@ -1,0 +1,31 @@
+lesson: ai-testing
+tasks:
+  - id: at-t001
+    type: fill_blank
+    q: "Fill: Statistic that measures distribution shift between training and
+      production data is _______."
+    answer: PSI (Population Stability Index) or KS test
+    hint: Drift metric.
+    explanation: Standard tool for detecting covariate drift. See [[#Drift Types]].
+  - id: at-t002
+    type: fill_blank
+    q: "Task: Write a Promptfoo assertion that ensures the model's response contains
+      \"Paris\" when asked \"What is the capital of France?\""
+    answer: |-
+      ```yaml
+      tests:
+        - vars: { question: "What is the capital of France?" }
+          assert:
+            - type: contains
+              value: "Paris"
+      ```
+    hint: "`contains` assertion."
+    explanation: Property assertion verifies factual correctness. See [[#Promptfoo
+      Example]].
+  - id: at-t003
+    type: fill_blank
+    q: "Fill: Adversarial input that overrides system instructions in an LLM is
+      called _______."
+    answer: Prompt injection
+    hint: "OWASP LLM Top 10 #1."
+    explanation: User input subverts intended behavior. See [[#LLM Test Dimensions]].

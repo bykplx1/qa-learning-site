@@ -1,0 +1,26 @@
+lesson: database-testing
+tasks:
+  - id: dt-t001
+    type: fill_blank
+    q: "Fill: Isolation level that prevents phantom reads is _______."
+    answer: Serializable
+    hint: Strictest.
+    explanation: Only Serializable forbids phantoms. See [[#Isolation Levels (SQL)]].
+  - id: dt-t002
+    type: fill_blank
+    q: "Task: Write a SQL test that asserts inserting two rows with same `email`
+      into a `users(email UNIQUE)` table fails."
+    answer: |-
+      ```sql
+      INSERT INTO users(email) VALUES ('a@x.com');
+      -- second should error
+      INSERT INTO users(email) VALUES ('a@x.com');  -- expect: unique violation
+      ```
+    hint: Trigger UNIQUE constraint.
+    explanation: Verifies UNIQUE constraint enforced. See [[#SQL Tests You Should Write]].
+  - id: dt-t003
+    type: fill_blank
+    q: "Fill: Tool that spins ephemeral real DB in tests via Docker is _______."
+    answer: Testcontainers
+    hint: Container lib.
+    explanation: Testcontainers brings real engine into tests. See [[#Tools]].

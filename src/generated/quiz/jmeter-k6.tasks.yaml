@@ -1,0 +1,31 @@
+lesson: jmeter-k6
+tasks:
+  - id: jk-t001
+    type: fill_blank
+    q: "Fill: JMeter command-line non-GUI flag is `-______`."
+    answer: n
+    hint: Single letter.
+    explanation: Required for real load runs. See [[#Basic HTTP Test (CLI)]].
+  - id: jk-t002
+    type: fill_blank
+    q: "Task: Write k6 options block for ramp 0â†’100 VUs over 1m, hold 3m, ramp
+      down 1m."
+    answer: |-
+      ```js
+      export const options = {
+        stages: [
+          { duration: "1m", target: 100 },
+          { duration: "3m", target: 100 },
+          { duration: "1m", target: 0 },
+        ],
+      };
+      ```
+    hint: Stages array.
+    explanation: Standard ramp profile. See [[#Stages (Ramp Profile)]].
+  - id: jk-t003
+    type: fill_blank
+    q: 'Fill: To assert <1% errors in k6, use threshold `http_req_failed:
+      ["rate<______"]`.'
+    answer: "0.01"
+    hint: Decimal rate.
+    explanation: rate-based threshold. See [[#Thresholds (Pass/Fail)]].

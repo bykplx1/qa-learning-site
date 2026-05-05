@@ -1,0 +1,27 @@
+lesson: api-testing
+tasks:
+  - id: at-t001
+    type: fill_blank
+    q: "Fill: Status code _______ means client authenticated but lacks permission."
+    answer: "403"
+    hint: Forbidden.
+    explanation: 403 = authorization failure. See [[#HTTP Status Quick Map]].
+  - id: at-t002
+    type: fill_blank
+    q: "Task: Write a pytest test asserting `GET /users/{id}` returns 404 for
+      nonexistent ID."
+    answer: |-
+      ```python
+      def test_user_not_found():
+          r = requests.get("https://api.x/users/99999999", timeout=5)
+          assert r.status_code == 404
+          assert "not found" in r.json().get("error","").lower()
+      ```
+    hint: Negative path.
+    explanation: Tests error contract, not just happy path. See [[#Test Categories]].
+  - id: at-t003
+    type: fill_blank
+    q: "Fill: A consumer-driven contract testing tool is _______."
+    answer: Pact
+    hint: Provider-consumer pinning.
+    explanation: Pact verifies consumer expectations against provider. See [[#Tools]].

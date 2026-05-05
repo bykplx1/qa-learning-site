@@ -1,0 +1,237 @@
+lesson: api-testing
+questions:
+  - id: at-001
+    type: single
+    q: "401 vs 403:"
+    options:
+      - A) Same thing
+      - B) 401 = no/bad creds, 403 = authed but not allowed
+      - C) 401 server error, 403 client
+      - D) 403 = not found
+    answer: 1
+    hint: Authentication vs authorization.
+    explanation: 401 = identity unknown/invalid; 403 = identity known, action
+      denied. See [[#HTTP Status Quick Map]].
+  - id: at-002
+    type: single
+    q: "Idempotent method:"
+    options:
+      - A) POST
+      - B) PUT
+      - C) PATCH (always)
+      - D) None
+    answer: 1
+    hint: Re-run same result.
+    explanation: PUT replaces resource â€” repeat = same state. POST creates new
+      each call. See [[#Test Categories]].
+  - id: at-003
+    type: single
+    q: 'Status code for "rate limited":'
+    options:
+      - A) 400
+      - B) 403
+      - C) 429
+      - D) 503
+    answer: 2
+    hint: Too Many Requests.
+    explanation: 429 signals client exceeded rate limit. See [[#HTTP Status Quick Map]].
+  - id: at-004
+    type: single
+    q: "Best place to validate response shape:"
+    options:
+      - A) Manual eyeball
+      - B) JSON Schema / OpenAPI validation
+      - C) Screenshot diff
+      - D) Type-only check
+    answer: 1
+    hint: Spec-driven.
+    explanation: Schema validates types + required fields automatically; catches
+      drift. See [[#Response Checks]].
+  - id: at-005
+    type: single
+    q: "IDOR bug found via API testing means:"
+    options:
+      - A) Image overflow
+      - B) User A reads/edits user B's data via ID swap
+      - C) Slow DB
+      - D) CSRF
+    answer: 1
+    hint: Insecure Direct Object Reference.
+    explanation: Endpoint trusts client-supplied ID without ownership check. See
+      [[#Common Bugs Found]].
+  - id: at-006
+    type: single
+    q: "Why test API below UI:"
+    options:
+      - A) UI mandatory
+      - B) Faster, more stable, deeper coverage
+      - C) APIs cheaper to deploy
+      - D) UI deprecated
+    answer: 1
+    hint: Test pyramid.
+    explanation: API tests fast, deterministic, catch logic without browser
+      overhead. See [[#Why API Testing]].
+  - id: at-007
+    type: single
+    q: "422 typically means:"
+    options:
+      - A) Auth failed
+      - B) Server crash
+      - C) Validation failed (well-formed but semantically invalid)
+      - D) Cache miss
+    answer: 2
+    hint: Unprocessable Entity.
+    explanation: Body parsed OK but values violate business rules. See [[#HTTP
+      Status Quick Map]].
+  - id: at-008
+    type: single
+    q: "Bearer token sent in:"
+    options:
+      - A) Body
+      - B) Authorization header
+      - C) URL fragment
+      - D) Cookie only
+    answer: 1
+    hint: "`Authorization: Bearer <token>`."
+    explanation: Standard placement; avoids URL leakage in logs. See [[#Auth Patterns]].
+  - id: at-009
+    type: single
+    q: "Newman is:"
+    options:
+      - A) Browser
+      - B) Postman CLI runner
+      - C) Mock server
+      - D) Schema linter
+    answer: 1
+    hint: CI for collections.
+    explanation: Newman runs Postman collections headless in pipelines. See [[#Tools]].
+  - id: at-010
+    type: single
+    q: "Schema drift means:"
+    options:
+      - A) Server moved
+      - B) Response shape changes vs contract
+      - C) Latency spike
+      - D) Auth rotated
+    answer: 1
+    hint: Contract broken.
+    explanation: Field added/removed/renamed without versioning breaks consumers.
+      See [[#Common Bugs Found]].
+  - id: at-011
+    type: single
+    q: "Negative API test example:"
+    options:
+      - A) Valid login â†’ 200
+      - B) Missing required field â†’ 400
+      - C) Healthy ping
+      - D) Schema valid
+    answer: 1
+    hint: Bad input expected.
+    explanation: Negative tests verify error handling and status codes. See [[#Test
+      Categories]].
+  - id: at-012
+    type: single
+    q: "Pact tool is for:"
+    options:
+      - A) Load testing
+      - B) Consumer-driven contract testing
+      - C) UI snapshot
+      - D) Mock browser
+    answer: 1
+    hint: Providerâ€“consumer contracts.
+    explanation: Pact pins integration shape between services. See [[#Tools]].
+  - id: at-013
+    type: single
+    q: "Best status for successful DELETE without body:"
+    options:
+      - A) 200
+      - B) 201
+      - C) 204
+      - D) 404
+    answer: 2
+    hint: No Content.
+    explanation: 204 signals success with empty body â€” common for DELETE. See
+      [[#HTTP Status Quick Map]].
+  - id: at-014
+    type: single
+    q: "Test data strategy preferred:"
+    options:
+      - A) Shared mutable fixture
+      - B) Factories / per-test ephemeral data
+      - C) Hardcoded prod IDs
+      - D) Manual setup each run
+    answer: 1
+    hint: Isolation.
+    explanation: Per-test data avoids order dependence and pollution. See [[#Best
+      Practices]].
+  - id: at-015
+    type: single
+    q: "mTLS uses:"
+    options:
+      - A) Username
+      - B) Client certificate
+      - C) Cookie
+      - D) IP only
+    answer: 1
+    hint: Mutual TLS.
+    explanation: Both sides present certs â€” strong identity. See [[#Auth Patterns]].
+  - id: at-016
+    type: single
+    q: "502 vs 504:"
+    options:
+      - A) Same
+      - B) 502 bad gateway, 504 gateway timeout
+      - C) 502 client, 504 server
+      - D) 502 redirect
+    answer: 1
+    hint: Upstream errors.
+    explanation: 502 = invalid upstream response; 504 = upstream didn't reply in
+      time. See [[#HTTP Status Quick Map]].
+  - id: at-017
+    type: single
+    q: "Concurrency test on API checks:"
+    options:
+      - A) UI rendering
+      - B) Race conditions / optimistic locking
+      - C) Logo color
+      - D) DNS
+    answer: 1
+    hint: Two writers same resource.
+    explanation: Parallel writes reveal lock/version bugs. See [[#Test Categories]].
+  - id: at-018
+    type: single
+    q: "OpenAPI is:"
+    options:
+      - A) Open-source UI lib
+      - B) API spec format (formerly Swagger)
+      - C) Mock service
+      - D) Browser
+    answer: 1
+    hint: YAML/JSON spec.
+    explanation: OpenAPI describes endpoints, schemas â€” basis for contract
+      validation. See [[#Test Categories]].
+  - id: at-019
+    type: single
+    q: "PUT with same payload twice on same resource should:"
+    options:
+      - A) Create two
+      - B) Result in same end state
+      - C) Error 500
+      - D) Return 201 each
+    answer: 1
+    hint: Idempotent.
+    explanation: PUT idempotency = repeated identical state. See [[#Test Categories]].
+  - id: at-020
+    type: single
+    q: "Smoke API test focuses on:"
+    options:
+      - A) Edge cases
+      - B) Critical happy-path endpoints
+      - C) Load
+      - D) Security fuzzing
+    answer: 1
+    hint: Quick health check.
+    explanation: |-
+      Smoke verifies core endpoints up after deploy. See [[#Best Practices]].
+
+      ---

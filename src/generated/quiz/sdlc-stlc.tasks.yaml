@@ -1,0 +1,29 @@
+lesson: sdlc-stlc
+tasks:
+  - id: ss-t001
+    type: fill_blank
+    q: "Fill: In V-model, system tests are designed during the _______ phase."
+    answer: System design
+    hint: Mirror image, top half.
+    explanation: "V-model parallel design: each left-side dev phase produces test
+      design for matching right-side level. System design â†” system tests. See
+      [[#V-Model (Tester favorite)]]."
+  - id: ss-t002
+    type: fill_blank
+    q: "Fill: STLC phase that produces lessons-learned doc and metrics is _______."
+    answer: Test closure
+    hint: Phase 6.
+    explanation: Closure consolidates results + retrospective output. See [[#STLC
+      Phases]] item 6.
+  - id: ss-t003
+    type: fill_blank
+    q: "Task: Draft entry + exit criteria for a sprint-level regression suite."
+    answer: >-
+      - **Entry**: User story Done-defined, build deployed to QA env, test data
+      seeded, smoke passing
+
+      - **Exit**: 100% planned cases executed, 0 Sev-1/Sev-2 open, â‰¥90% pass
+      rate, defects triaged
+    hint: Pre-conditions vs post-conditions.
+    explanation: "Sprint regression needs both gates: ready-to-start +
+      ready-to-stop. See [[#Entry / Exit Criteria]]."

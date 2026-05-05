@@ -1,0 +1,43 @@
+lesson: jenkins-github-actions
+tasks:
+  - id: jga-t001
+    type: fill_blank
+    q: "Fill: GHA event keyword to allow manual run from UI = `______`."
+    answer: workflow_dispatch
+    hint: Manual trigger.
+    explanation: On-demand event. See [[#Triggers Comparison]].
+  - id: jga-t002
+    type: fill_blank
+    q: "Task: Write a GHA job that runs Pytest on Python 3.11 + 3.12 in parallel and
+      uploads JUnit XML on failure."
+    answer: |-
+      ```yaml
+      jobs:
+        test:
+          runs-on: ubuntu-latest
+          strategy:
+            fail-fast: false
+            matrix:
+              python: ['3.11', '3.12']
+          steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with: { python-version: ${{ matrix.python }}, cache: pip }
+            - run: pip install -r requirements.txt
+            - run: pytest --junitxml=junit-${{ matrix.python }}.xml
+            - uses: actions/upload-artifact@v4
+              if: failure()
+              with:
+                name: junit-${{ matrix.python }}
+                path: junit-${{ matrix.python }}.xml
+      ```
+    hint: matrix + upload-artifact.
+    explanation: Parallel cells, conditional upload. See [[#Workflow Example]].
+  - id: jga-t003
+    type: fill_blank
+    q: "Fill: Jenkins block to inject secret as env var safely =
+      `withCredentials([______(credentialsId: 'X', variable: 'V')]) { ... }`."
+    answer: string
+    hint: Credential type.
+    explanation: Binds Jenkins credential to env without logging. See [[#Secrets
+      Management]].

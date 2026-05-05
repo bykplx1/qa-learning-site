@@ -1,0 +1,229 @@
+lesson: database-testing
+questions:
+  - id: dt-001
+    type: single
+    q: 'ACID "I":'
+    options:
+      - A) Indexing
+      - B) Isolation
+      - C) Integrity
+      - D) Idempotent
+    answer: 1
+    hint: Concurrency.
+    explanation: I = Isolation between concurrent transactions. See [[#ACID]].
+  - id: dt-002
+    type: single
+    q: "Highest isolation level:"
+    options:
+      - A) Read Uncommitted
+      - B) Read Committed
+      - C) Repeatable Read
+      - D) Serializable
+    answer: 3
+    hint: Strictest.
+    explanation: Serializable prevents phantom + repeatable + dirty reads. See
+      [[#Isolation Levels (SQL)]].
+  - id: dt-003
+    type: single
+    q: "Phantom read prevented at:"
+    options:
+      - A) Read Uncommitted
+      - B) Read Committed
+      - C) Repeatable Read
+      - D) Serializable
+    answer: 3
+    hint: Range locks.
+    explanation: Only Serializable removes phantom rows from new inserts. See
+      [[#Isolation Levels (SQL)]].
+  - id: dt-004
+    type: single
+    q: "PK implies:"
+    options:
+      - A) Nullable + duplicate
+      - B) Unique + not null
+      - C) Default 0
+      - D) Indexed only
+    answer: 1
+    hint: Identity.
+    explanation: PRIMARY KEY = unique + not null implicitly. See [[#Constraint Types]].
+  - id: dt-005
+    type: single
+    q: "EXPLAIN shows:"
+    options:
+      - A) Schema dump
+      - B) Query execution plan
+      - C) Backup size
+      - D) Lock list
+    answer: 1
+    hint: Optimizer plan.
+    explanation: EXPLAIN reveals chosen plan / index usage. See [[#Performance Checks]].
+  - id: dt-006
+    type: single
+    q: "Testcontainers benefit:"
+    options:
+      - A) Mock DB in memory
+      - B) Real DB engine spun in container per test
+      - C) UI test only
+      - D) Replaces docker
+    answer: 1
+    hint: Real engine.
+    explanation: Tests against real engine via ephemeral container. See [[#Tools]].
+  - id: dt-007
+    type: single
+    q: "Migration tool:"
+    options:
+      - A) Postman
+      - B) Flyway / Liquibase
+      - C) k6
+      - D) Selenium
+    answer: 1
+    hint: Versioned schema.
+    explanation: Flyway/Liquibase manage versioned migrations. See [[#Tools]].
+  - id: dt-008
+    type: single
+    q: "Risk of using SQLite in tests for Postgres app:"
+    options:
+      - A) None
+      - B) Dialect / behavior diverges â†’ false confidence
+      - C) Slower
+      - D) No FK support ever
+    answer: 1
+    hint: Dialect mismatch.
+    explanation: Different types, JSON, CTE, locking semantics. See [[#Best Practices]].
+  - id: dt-009
+    type: single
+    q: "ON DELETE CASCADE means:"
+    options:
+      - A) Block delete
+      - B) Delete dependent rows automatically
+      - C) Set null
+      - D) Delete table
+    answer: 1
+    hint: Propagate.
+    explanation: Children deleted with parent. See [[#SQL Tests You Should Write]].
+  - id: dt-010
+    type: single
+    q: "Atomicity ensures:"
+    options:
+      - A) Partial txn allowed
+      - B) All-or-nothing
+      - C) Read first
+      - D) Lock free
+    answer: 1
+    hint: Indivisible.
+    explanation: Atomic = entire txn commits or rolls back. See [[#ACID]].
+  - id: dt-011
+    type: single
+    q: 'Best place to enforce business rule "age >= 18":'
+    options:
+      - A) Only frontend
+      - B) DB CHECK + app validation + tests
+      - C) Logs
+      - D) Manual review
+    answer: 1
+    hint: Defense in depth.
+    explanation: DB last line; app first; tests verify both. See [[#Constraint Types]].
+  - id: dt-012
+    type: single
+    q: "Migration must be:"
+    options:
+      - A) One-way
+      - B) Reversible (or have documented forward-fix)
+      - C) Manual
+      - D) Skipped in dev
+    answer: 1
+    hint: Rollback safety.
+    explanation: Reversible migrations enable safe rollback. See [[#Migration Testing]].
+  - id: dt-013
+    type: single
+    q: "dbt tests verify:"
+    options:
+      - A) UI
+      - B) Data pipeline assertions (uniqueness, not null, accepted values)
+      - C) Auth
+      - D) Network
+    answer: 1
+    hint: Analytics layer.
+    explanation: dbt tests = data quality assertions on models. See [[#Tools]].
+  - id: dt-014
+    type: single
+    q: "Time zone bug:"
+    options:
+      - A) Layout
+      - B) Mixing UTC and local time â†’ off by hours
+      - C) Charset
+      - D) Slow query
+    answer: 1
+    hint: UTC vs local.
+    explanation: Mixed TZ causes wrong dates / windows. See [[#Common Bugs]].
+  - id: dt-015
+    type: single
+    q: "NULL in WHERE x = NULL:"
+    options:
+      - A) Matches null rows
+      - B) Always false (use IS NULL)
+      - C) Always true
+      - D) Error
+    answer: 1
+    hint: Three-valued logic.
+    explanation: NULL â‰  NULL; need IS NULL. See [[#Common Bugs]].
+  - id: dt-016
+    type: single
+    q: "Index missing symptom:"
+    options:
+      - A) Schema error
+      - B) Slow queries on common predicate
+      - C) Crash
+      - D) Data loss
+    answer: 1
+    hint: Plan = seq scan.
+    explanation: Missing index forces full scans. See [[#Common Bugs]].
+  - id: dt-017
+    type: single
+    q: "Trigger test verifies:"
+    options:
+      - A) UI
+      - B) Trigger fires on event + modifies right rows
+      - C) Cache
+      - D) Logs
+    answer: 1
+    hint: Event reaction.
+    explanation: Trigger correctness = fires + does intended change. See [[#SQL
+      Tests You Should Write]].
+  - id: dt-018
+    type: single
+    q: "Repeatable Read prevents:"
+    options:
+      - A) Phantom only
+      - B) Non-repeatable read (same row re-read same value)
+      - C) Crash
+      - D) Deadlock
+    answer: 1
+    hint: Stable rows.
+    explanation: Repeatable Read locks read rows; phantom may still occur. See
+      [[#Isolation Levels (SQL)]].
+  - id: dt-019
+    type: single
+    q: "Backup strategy test:"
+    options:
+      - A) Skip
+      - B) Restore to staging + verify counts/integrity
+      - C) Manual visual
+      - D) Drop tables
+    answer: 1
+    hint: Restore = real test.
+    explanation: Untested backup = no backup. See [[#Scope]].
+  - id: dt-020
+    type: single
+    q: "ETL output testing tool:"
+    options:
+      - A) Selenium
+      - B) Great Expectations
+      - C) Postman
+      - D) Cypress
+    answer: 1
+    hint: Data quality.
+    explanation: |-
+      Great Expectations validates dataset properties. See [[#Tools]].
+
+      ---

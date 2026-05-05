@@ -1,0 +1,25 @@
+lesson: security-testing
+tasks:
+  - id: st-t001
+    type: fill_blank
+    q: "Fill: Vulnerability where attacker forces server to fetch arbitrary URL is
+      _______."
+    answer: SSRF (Server-Side Request Forgery)
+    hint: Server-side.
+    explanation: Server makes request on attacker's behalf. See [[#OWASP Top 10 (2021)]].
+  - id: st-t002
+    type: fill_blank
+    q: "Task: List 3 HTTP response headers you'd verify in a security test of a web
+      app."
+    answer: |-
+      - `Strict-Transport-Security`
+      - `Content-Security-Policy`
+      - `X-Content-Type-Options: nosniff`
+    hint: Hardening headers.
+    explanation: Mitigate downgrade, XSS, MIME sniffing. See [[#Headers To Verify]].
+  - id: st-t003
+    type: fill_blank
+    q: "Fill: Threat modeling acronym is _______."
+    answer: STRIDE
+    hint: Six categories.
+    explanation: STRIDE classifies threats by type. See [[#Threat Modeling (STRIDE)]].

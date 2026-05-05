@@ -1,0 +1,30 @@
+lesson: selenium
+tasks:
+  - id: s-t001
+    type: fill_blank
+    q: 'Fill: To wait until element clickable up to 10s, use `WebDriverWait(driver,
+      10).until(EC.______((By.ID, "x")))`.'
+    answer: element_to_be_clickable
+    hint: EC condition name.
+    explanation: Standard explicit wait. See [[#Waits]].
+  - id: s-t002
+    type: fill_blank
+    q: "Task: Write POM-style method `login(u,p)` for Selenium Python that fills
+      user/pass, clicks submit, returns self."
+    answer: |-
+      ```python
+      def login(self, u, p):
+          self.d.find_element(*self.USER).send_keys(u)
+          self.d.find_element(*self.PASS).send_keys(p)
+          self.d.find_element(*self.SUBMIT).click()
+          return self
+      ```
+    hint: Use stored locator tuples.
+    explanation: Encapsulates page interaction. See [[#Page Object Model]].
+  - id: s-t003
+    type: fill_blank
+    q: "Fill: Selenium 4 introduced ______ Manager for automatic driver binary
+      resolution."
+    answer: Selenium
+    hint: Replaces webdriver-manager pip pkg.
+    explanation: Removes manual driver downloads. See [[#Selenium 4 New Features]].

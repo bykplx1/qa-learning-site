@@ -1,0 +1,28 @@
+lesson: exploratory-testing
+tasks:
+  - id: et-t001
+    type: fill_blank
+    q: "Fill: ET sessions are organized using _______-Based Test Management."
+    answer: Session
+    hint: Bach brothers.
+    explanation: SBTM = Session-Based Test Management; structures ET. See
+      [[#Session-Based Test Management (SBTM)]].
+  - id: et-t002
+    type: fill_blank
+    q: "Task: Write a charter for exploring a new file-upload feature with focus on
+      error handling."
+    answer: "> Explore /upload endpoint and UI with various invalid inputs
+      (oversize, wrong MIME, corrupt, zero-byte, non-UTF filename, network drop
+      mid-upload) for 90 minutes. Goal: surface error-handling defects, unclear
+      error messages, and resource leaks."
+    hint: Mission + scope + duration + focus.
+    explanation: Good charter narrows attention without scripting steps. See
+      [[#Session-Based Test Management (SBTM)]].
+  - id: et-t003
+    type: fill_blank
+    q: "Fill: HICCUPPS is a set of _______ used to decide whether observed behavior
+      is correct."
+    answer: consistency oracles
+    hint: Pass/fail decision aid.
+    explanation: Oracles compare against history, image, comparable, claims, etc.
+      See [[#Heuristics & Mnemonics]].

@@ -1,0 +1,245 @@
+lesson: sdlc-stlc
+questions:
+  - id: ss-001
+    type: single
+    q: "STLC stands for:"
+    options:
+      - A) System Testing Life Cycle
+      - B) Software Testing Life Cycle
+      - C) Static Testing Local Cycle
+      - D) Sequential Test Linkage Chain
+    answer: 1
+    hint: Testing version of SDLC.
+    explanation: STLC = Software Testing Life Cycle, parallel structure to SDLC. See
+      [[#STLC Phases]].
+  - id: ss-002
+    type: single
+    q: V-Model pairs requirements with which test level?
+    options:
+      - A) Unit
+      - B) Integration
+      - C) System
+      - D) Acceptance
+    answer: 3
+    hint: Top of the V on right side.
+    explanation: Requirements describe user needs â†’ validated by acceptance tests.
+      Top-left â†” top-right. See [[#V-Model (Tester favorite)]].
+  - id: ss-003
+    type: single
+    q: "First phase of STLC:"
+    options:
+      - A) Test execution
+      - B) Requirement analysis
+      - C) Test closure
+      - D) Defect logging
+    answer: 1
+    hint: Cannot plan without understanding.
+    explanation: STLC begins with understanding what must be tested before any
+      planning. See [[#STLC Phases]] item 1.
+  - id: ss-004
+    type: single
+    q: "Entry criteria typically include:"
+    options:
+      - A) All bugs fixed
+      - B) Test environment ready, requirements baseline
+      - C) Final report signed
+      - D) Coverage 100%
+    answer: 1
+    hint: Pre-conditions to start.
+    explanation: Entry = preconditions before execution. Exit = postconditions
+      after. See [[#Entry / Exit Criteria]].
+  - id: ss-005
+    type: single
+    q: "Agile Quadrant Q3 is:"
+    options:
+      - A) Unit tests
+      - B) Performance
+      - C) Exploratory and UAT
+      - D) Static analysis
+    answer: 2
+    hint: Business-facing critique.
+    explanation: Marick Q3 = business-facing, critique-product. Exploratory + UAT
+      fit. See [[#Agile Testing Quadrants (Brian Marick)]].
+  - id: ss-006
+    type: single
+    q: "Waterfall main weakness:"
+    options:
+      - A) Too many sprints
+      - B) Late feedback, expensive change
+      - C) No documentation
+      - D) No testers involved
+    answer: 1
+    hint: Sequential, locked phases.
+    explanation: Phases serial. Defects from req errors surface only at end. See
+      [[#SDLC Models]].
+  - id: ss-007
+    type: single
+    q: "Spiral model emphasizes:"
+    options:
+      - A) Speed
+      - B) Risk analysis each iteration
+      - C) Skipping tests
+      - D) Big-bang release
+    answer: 1
+    hint: Risk-driven.
+    explanation: Spiral cycles include explicit risk evaluation each loop. See
+      [[#SDLC Models]].
+  - id: ss-008
+    type: single
+    q: "DevOps focus:"
+    options:
+      - A) Manual testing
+      - B) Continuous integration and delivery
+      - C) Annual releases
+      - D) Waterfall revival
+    answer: 1
+    hint: Dev + Ops + automation.
+    explanation: DevOps merges dev + ops via automation pipeline â†’ CI/CD. See
+      [[#SDLC Models]] and [[#Continuous Testing]].
+  - id: ss-009
+    type: single
+    q: "RTM stands for:"
+    options:
+      - A) Real-Time Monitoring
+      - B) Requirements Traceability Matrix
+      - C) Regression Test Manager
+      - D) Risk Tracking Method
+    answer: 1
+    hint: Maps reqs to test cases.
+    explanation: RTM links each requirement to test case(s) ensuring coverage. See
+      [[#STLC Phases]] item 3.
+  - id: ss-010
+    type: single
+    q: Which phase produces test summary report?
+    options:
+      - A) Planning
+      - B) Execution
+      - C) Closure
+      - D) Design
+    answer: 2
+    hint: End of cycle.
+    explanation: Closure phase outputs reports + lessons + metrics. See [[#STLC
+      Phases]] item 6.
+  - id: ss-011
+    type: single
+    q: "Iterative model differs from waterfall by:"
+    options:
+      - A) No requirements gathering
+      - B) Repeating cycles with refined output
+      - C) Skipping testing
+      - D) Using AI
+    answer: 1
+    hint: Loops vs straight line.
+    explanation: Iterations build refined increments; waterfall single straight
+      pass. See [[#SDLC Models]].
+  - id: ss-012
+    type: single
+    q: "Acceptance test in V-model maps to:"
+    options:
+      - A) Code phase
+      - B) Requirements phase
+      - C) Architecture phase
+      - D) Module design
+    answer: 1
+    hint: Validate user needs.
+    explanation: Right-side test level mirrors left-side dev phase. Acceptance â†”
+      requirements. See [[#V-Model (Tester favorite)]].
+  - id: ss-013
+    type: single
+    q: "Q1 in Marick quadrants:"
+    options:
+      - A) UAT
+      - B) Unit/component, tech-facing
+      - C) Performance
+      - D) Exploratory
+    answer: 1
+    hint: Bottom of pyramid.
+    explanation: Q1 = tech-facing + supports team. Unit/component fit. See [[#Agile
+      Testing Quadrants (Brian Marick)]].
+  - id: ss-014
+    type: single
+    q: "Best STLC phase to write test cases:"
+    options:
+      - A) Execution
+      - B) Closure
+      - C) Design
+      - D) Setup
+    answer: 2
+    hint: Phase 3.
+    explanation: Test Case Design = phase 3, produces cases + RTM. See [[#STLC
+      Phases]] item 3.
+  - id: ss-015
+    type: single
+    q: "Exit criteria example:"
+    options:
+      - A) Reqs not approved
+      - B) 95% pass rate, no Sev-1 open
+      - C) Devs on vacation
+      - D) Test data missing
+    answer: 1
+    hint: Conditions to stop.
+    explanation: Exit = measurable completion conditions. See [[#Entry / Exit Criteria]].
+  - id: ss-016
+    type: single
+    q: "Scrum sprint typical length:"
+    options:
+      - A) 1 day
+      - B) 1â€“4 weeks
+      - C) 6 months
+      - D) 1 year
+    answer: 1
+    hint: Short iterations.
+    explanation: Scrum sprints 1â€“4 weeks balance feedback + delivery. See [[#Agile
+      Ceremonies (tester touchpoints)]].
+  - id: ss-017
+    type: single
+    q: In Agile, who tests?
+    options:
+      - A) Only QA
+      - B) Only devs
+      - C) Whole team
+      - D) Customer alone
+    answer: 2
+    hint: Whole-team approach.
+    explanation: "Agile principle: quality is whole-team responsibility, not
+      isolated QA gate. See [[#Agile Ceremonies (tester touchpoints)]]."
+  - id: ss-018
+    type: single
+    q: "Definition of Done usually includes:"
+    options:
+      - A) Code merged only
+      - B) Code + tests + reviewed + deployed to staging
+      - C) Released to prod
+      - D) PM approval only
+    answer: 1
+    hint: Multiple gates.
+    explanation: DoD ensures shippable increment, multiple criteria. See
+      [[#Definition of Done (DoD)]].
+  - id: ss-019
+    type: single
+    q: "Sprint review's purpose:"
+    options:
+      - A) Plan next sprint
+      - B) Demo working software
+      - C) Retrospective on process
+      - D) Hire developers
+    answer: 1
+    hint: Showcase to stakeholders.
+    explanation: Review demos increment to stakeholders for feedback. Retrospective
+      separate ceremony. See [[#Agile Ceremonies (tester touchpoints)]].
+  - id: ss-020
+    type: single
+    q: "Continuous Testing means:"
+    options:
+      - A) Test only at release
+      - B) Tests run on every commit/build automatically
+      - C) Manual nightly tests
+      - D) Outsourced QA
+    answer: 1
+    hint: CI pipeline.
+    explanation: >-
+      CT = automated tests triggered each commit/build for fast feedback. See
+      [[#Continuous Testing]].
+
+
+      ---

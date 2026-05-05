@@ -1,0 +1,225 @@
+lesson: istqb-agile-tester
+questions:
+  - id: iat-001
+    type: single
+    q: "Whole-team quality means:"
+    options:
+      - A) Only testers own quality
+      - B) Devs, testers, PO, UX all own quality
+      - C) Quality only in retros
+      - D) Manager owns quality
+    answer: 1
+    hint: Not gatekeeper.
+    explanation: Core agile-test premise. See [[#Whole-Team Approach]].
+  - id: iat-002
+    type: single
+    q: Three Amigos =
+    options:
+      - A) PO, dev, tester aligning on AC
+      - B) Three POs
+      - C) Three Scrum Masters
+      - D) Devs only
+    answer: 0
+    hint: Roles in conversation.
+    explanation: Drives shared understanding. See [[#In-Sprint Testing Techniques]].
+  - id: iat-003
+    type: single
+    q: "Q4 of testing quadrants:"
+    options:
+      - A) Business-facing supporting
+      - B) Technology-facing critiquing â€” perf/sec/reliability
+      - C) Unit
+      - D) Exploratory
+    answer: 1
+    hint: Non-functional critique.
+    explanation: Q4 = critique via tech lens. See [[#Testing Quadrants (Brian Marick)]].
+  - id: iat-004
+    type: single
+    q: "TDD cycle:"
+    options:
+      - A) Code â†’ test â†’ refactor
+      - B) Red â†’ green â†’ refactor
+      - C) Plan â†’ exec â†’ close
+      - D) Spec â†’ impl â†’ release
+    answer: 1
+    hint: Failing first.
+    explanation: Test-first cycle. See [[#In-Sprint Testing Techniques]].
+  - id: iat-005
+    type: single
+    q: "ATDD primary purpose:"
+    options:
+      - A) UI test only
+      - B) Drive dev from acceptance criteria via examples
+      - C) Replace TDD
+      - D) Pair programming
+    answer: 1
+    hint: Spec by example.
+    explanation: Acceptance examples drive code. See [[#In-Sprint Testing Techniques]].
+  - id: iat-006
+    type: single
+    q: "DoD vs DoR:"
+    options:
+      - A) Same
+      - B) Ready precedes work; Done concludes work
+      - C) DoR after DoD
+      - D) Both apply post-merge
+    answer: 1
+    hint: Pre vs post.
+    explanation: DoR gates pull-in; DoD gates demo. See [[#Definition of Done (DoD)]].
+  - id: iat-007
+    type: single
+    q: Velocity =
+    options:
+      - A) Sprint length
+      - B) Avg story points per sprint
+      - C) Defect rate
+      - D) Burn rate
+    answer: 1
+    hint: Capacity trend.
+    explanation: Estimation calibration. See [[#Estimation]].
+  - id: iat-008
+    type: single
+    q: "Story-point sequence:"
+    options:
+      - A) Linear 1,2,3,4,5
+      - B) Fibonacci 1,2,3,5,8,13
+      - C) Powers of 2
+      - D) Hours
+    answer: 1
+    hint: Reflects uncertainty.
+    explanation: Fibonacci spreads larger items. See [[#Estimation]].
+  - id: iat-009
+    type: single
+    q: "Anti-pattern in agile testing:"
+    options:
+      - A) Pair on automation
+      - B) Tester as bottleneck in last 2 days
+      - C) Continuous regression
+      - D) Three amigos
+    answer: 1
+    hint: Mini-waterfall.
+    explanation: Tester-end-of-sprint = waterfall. See [[#Agile-Specific Risks]].
+  - id: iat-010
+    type: single
+    q: "Cumulative flow diagram shows:"
+    options:
+      - A) Burn-down
+      - B) WIP visualization across stages over time
+      - C) Velocity
+      - D) Coverage
+    answer: 1
+    hint: Bands per state.
+    explanation: Shows bottlenecks. See [[#Metrics for Agile Testing]].
+  - id: iat-011
+    type: single
+    q: "Agile manifesto emphasizes:"
+    options:
+      - A) Comprehensive documentation > working software
+      - B) Working software > comprehensive documentation
+      - C) Process > people
+      - D) Plan > change
+    answer: 1
+    hint: Manifesto value 2.
+    explanation: Working software first. See [[#Agile Manifesto Recap]].
+  - id: iat-012
+    type: single
+    q: Spike =
+    options:
+      - A) Bug
+      - B) Time-boxed research/PoC story
+      - C) Sprint extension
+      - D) Production incident
+    answer: 1
+    hint: Reduce uncertainty.
+    explanation: Investigative story. See [[#Common Exam Traps]].
+  - id: iat-013
+    type: single
+    q: "BDD format:"
+    options:
+      - A) Arrange/Act/Assert
+      - B) Given/When/Then
+      - C) Setup/Run/Tear-down
+      - D) Plan/Do/Check
+    answer: 1
+    hint: Gherkin.
+    explanation: Specifies behavior. See [[#In-Sprint Testing Techniques]].
+  - id: iat-014
+    type: single
+    q: "Exploratory session typical length:"
+    options:
+      - A) 5 min
+      - B) 60â€“120 min charter
+      - C) 8 hr
+      - D) Whole sprint
+    answer: 1
+    hint: Time-box.
+    explanation: Charter-based session. See [[#Exploratory in Agile]].
+  - id: iat-015
+    type: single
+    q: "Test pyramid in agile:"
+    options:
+      - A) Inverted
+      - B) Wide unit base, narrow E2E
+      - C) Equal layers
+      - D) E2E only
+    answer: 1
+    hint: Cost balance.
+    explanation: Standard pyramid. See [[#Test Pyramid in Agile]].
+  - id: iat-016
+    type: single
+    q: Pseudo-agile =
+    options:
+      - A) True agile
+      - B) Waterfall in 2-week chunks
+      - C) Kanban
+      - D) DevOps
+    answer: 1
+    hint: Cargo-cult.
+    explanation: Sprint name without practices. See [[#Agile-Specific Risks]].
+  - id: iat-017
+    type: single
+    q: "Q1 quadrant tests:"
+    options:
+      - A) Exploratory
+      - B) Unit / component supporting devs
+      - C) Performance
+      - D) UAT
+    answer: 1
+    hint: Tech-facing supporting.
+    explanation: Q1 = unit/component. See [[#Testing Quadrants (Brian Marick)]].
+  - id: iat-018
+    type: single
+    q: "Daily standup tester contribution:"
+    options:
+      - A) Defect counts
+      - B) Surface blockers (env, data, flakies)
+      - C) Code review
+      - D) UAT
+    answer: 1
+    hint: Impediments.
+    explanation: Standup = blockers. See [[#Tester Activities Per Sprint]].
+  - id: iat-019
+    type: single
+    q: "Retro purpose:"
+    options:
+      - A) Demo
+      - B) Process / quality improvements + test debt
+      - C) Estimation
+      - D) Hire
+    answer: 1
+    hint: Inspect & adapt.
+    explanation: Process improvement loop. See [[#Tester Activities Per Sprint]].
+  - id: iat-020
+    type: single
+    q: "Specification by example replaces:"
+    options:
+      - A) Code reviews
+      - B) Ambiguous textual requirements with concrete examples
+      - C) UAT
+      - D) Coverage
+    answer: 1
+    hint: Concrete > abstract.
+    explanation: |-
+      Reduces misinterpretation. See [[#In-Sprint Testing Techniques]].
+
+      ---

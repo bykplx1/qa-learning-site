@@ -1,0 +1,23 @@
+lesson: bash-shell-for-qa
+tasks:
+  - id: bsfq-t001
+    type: fill_blank
+    q: "Fill: Strict-mode line at top of Bash script: `set -______`."
+    answer: Eeuo pipefail (or `-euo pipefail`)
+    hint: Fail-fast flags.
+    explanation: Guards against silent failures. See [[#Script Boilerplate]].
+  - id: bsfq-t002
+    type: fill_blank
+    q: "Task: Write a one-liner that prints unique error messages from `app.log`."
+    answer: |-
+      ```bash
+      grep -E 'ERROR' app.log | sort -u
+      ```
+    hint: grep + sort -u.
+    explanation: Quick triage of failure modes. See [[#QA Patterns]].
+  - id: bsfq-t003
+    type: fill_blank
+    q: "Fill: JSON CLI tool used in shell pipelines is `______`."
+    answer: jq
+    hint: Query language.
+    explanation: Standard for JSON parsing in scripts. See [[#Coreutils Cheat Sheet]].

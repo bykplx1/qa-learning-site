@@ -1,0 +1,30 @@
+lesson: java-for-qa
+tasks:
+  - id: jfq-t001
+    type: fill_blank
+    q: "Fill: Annotation to mark a JUnit 5 test method is `______`."
+    answer: "@Test"
+    hint: Test marker.
+    explanation: JUnit discovers test methods by this annotation. See [[#JUnit 5
+      Essentials]].
+  - id: jfq-t002
+    type: fill_blank
+    q: 'Task: Write a RestAssured test asserting `GET /health` returns 200 and body
+      `status` equals `"UP"`.'
+    answer: |-
+      ```java
+      @Test
+      void health_up() {
+          given()
+          .when().get("https://api.x/health")
+          .then().statusCode(200).body("status", equalTo("UP"));
+      }
+      ```
+    hint: "`equalTo` matcher."
+    explanation: Common smoke test pattern. See [[#RestAssured (API tests)]].
+  - id: jfq-t003
+    type: fill_blank
+    q: "Fill: Library replacing manual mocks in unit tests is `______`."
+    answer: Mockito
+    hint: Mock framework.
+    explanation: Standard JVM mocking lib. See [[#Mocking (Mockito)]].

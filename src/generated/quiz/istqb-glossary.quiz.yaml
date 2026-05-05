@@ -1,0 +1,227 @@
+lesson: istqb-glossary
+questions:
+  - id: ig-001
+    type: single
+    q: Failure =
+    options:
+      - A) Human mistake
+      - B) Flaw in artefact
+      - C) Observable deviation from expected at execution
+      - D) Code smell
+    answer: 2
+    hint: Observable.
+    explanation: Failure is the visible event. See [[#Fault Chain]].
+  - id: ig-002
+    type: single
+    q: "Verification answers:"
+    options:
+      - A) Right thing?
+      - B) Right way?
+      - C) On time?
+      - D) Cheap?
+    answer: 1
+    hint: Spec conformance.
+    explanation: Verification = build right. See [[#Verification vs Validation]].
+  - id: ig-003
+    type: single
+    q: Severity =
+    options:
+      - A) Business urgency
+      - B) Technical impact on system
+      - C) Test count
+      - D) Coverage
+    answer: 1
+    hint: Tech.
+    explanation: Severity is technical. See [[#Severity vs Priority]].
+  - id: ig-004
+    type: single
+    q: "ISO 25010 has how many quality categories:"
+    options:
+      - A) 5
+      - B) 6
+      - C) 7
+      - D) 8
+    answer: 3
+    hint: Eight.
+    explanation: FS, Perf, Compat, Usability, Reliability, Security,
+      Maintainability, Portability. See [[#Quality Model (ISO 25010)]].
+  - id: ig-005
+    type: single
+    q: "Mock vs Stub:"
+    options:
+      - A) Same
+      - B) Stub returns canned data; mock has expectations + verification
+      - C) Mock is real DB
+      - D) Stub records calls
+    answer: 1
+    hint: Verification adds the "mock".
+    explanation: Mock asserts on usage. See [[#Test Doubles (Mocking Hierarchy)]].
+  - id: ig-006
+    type: single
+    q: Confirmation testing =
+    options:
+      - A) Smoke
+      - B) Re-test fixed defect
+      - C) UAT
+      - D) Regression
+    answer: 1
+    hint: Re-test.
+    explanation: Confirms fix. See [[#Test Types]].
+  - id: ig-007
+    type: single
+    q: MTBF =
+    options:
+      - A) Mean Time Before Failure
+      - B) Mean Time Between Failures
+      - C) Mean Time To Boot Failure
+      - D) Manual Test Boundary Failure
+    answer: 1
+    hint: Between.
+    explanation: Reliability metric. See [[#Reliability]].
+  - id: ig-008
+    type: single
+    q: "Fault chain order:"
+    options:
+      - A) Defect â†’ error â†’ failure
+      - B) Failure â†’ defect â†’ error
+      - C) Error â†’ defect â†’ failure
+      - D) Error â†’ failure â†’ defect
+    answer: 2
+    hint: Human â†’ artefact â†’ observable.
+    explanation: Standard chain. See [[#Fault Chain]].
+  - id: ig-009
+    type: single
+    q: "DoR vs DoD:"
+    options:
+      - A) Same
+      - B) Ready precedes pull-in; Done concludes story
+      - C) DoR after DoD
+      - D) Both at end
+    answer: 1
+    hint: Pre vs post.
+    explanation: Different gates. See [[#Agile / DevOps]].
+  - id: ig-010
+    type: single
+    q: SBTM =
+    options:
+      - A) System Based Test Mgmt
+      - B) Session-Based Test Management â€” charters, sessions, debriefs
+      - C) Static Build Test Mode
+      - D) Standard Boundary Test Method
+    answer: 1
+    hint: Sessions.
+    explanation: Exploratory framework. See [[#Experience-Based]].
+  - id: ig-011
+    type: single
+    q: "Inspection role NOT typically:"
+    options:
+      - A) Author
+      - B) Moderator
+      - C) Marketing
+      - D) Scribe
+    answer: 2
+    hint: Not in inspection.
+    explanation: Marketing is not a review role. See [[#Reviews]].
+  - id: ig-012
+    type: single
+    q: "ISO 25010 reliability sub-char:"
+    options:
+      - A) Aesthetics
+      - B) Recoverability
+      - C) Throughput
+      - D) Documentation
+    answer: 1
+    hint: Restore after failure.
+    explanation: Reliability = maturity, availability, fault tolerance,
+      recoverability. See [[#Quality Model (ISO 25010)]].
+  - id: ig-013
+    type: single
+    q: Endurance testing =
+    options:
+      - A) Stress
+      - B) Soak â€” sustained load to find leaks
+      - C) Spike
+      - D) Smoke
+    answer: 1
+    hint: Long duration.
+    explanation: Reveals long-run degradation. See [[#Performance]].
+  - id: ig-014
+    type: single
+    q: "Decision Table 4 binary conditions max rules:"
+    options:
+      - A) 4
+      - B) 8
+      - C) 16
+      - D) 32
+    answer: 2
+    hint: 2^4.
+    explanation: 16 combinations. See [[#Specification Techniques]].
+  - id: ig-015
+    type: single
+    q: "CTP framework character:"
+    options:
+      - A) ISO standard
+      - B) Practitioner-driven, 12 critical processes
+      - C) Tool
+      - D) Maturity matrix
+    answer: 1
+    hint: Pragmatic.
+    explanation: Practitioner approach. See [[#Process Improvement]].
+  - id: ig-016
+    type: single
+    q: "Smoke vs Sanity:"
+    options:
+      - A) Same
+      - B) Smoke = broad coverage post-build; Sanity = narrow targeted post-fix
+      - C) Sanity is broader
+      - D) Smoke after fix
+    answer: 1
+    hint: Broad vs narrow.
+    explanation: Common confusion. See [[#Common Confusions]].
+  - id: ig-017
+    type: single
+    q: "Black-box testing means:"
+    options:
+      - A) Tester knows code
+      - B) Tester does not know internals; tests via interfaces
+      - C) White-box subset
+      - D) UI only
+    answer: 1
+    hint: No internals.
+    explanation: Specification-based. See [[#Test Types]].
+  - id: ig-018
+    type: single
+    q: DRE =
+    options:
+      - A) total tests / passed
+      - B) defects-pre / (pre+post-release)
+      - C) coverage %
+      - D) MTBF
+    answer: 1
+    hint: Defect Removal Efficiency.
+    explanation: Standard formula. See [[#Defect Mgmt]].
+  - id: ig-019
+    type: single
+    q: "Pairwise testing main goal:"
+    options:
+      - A) Cover all combinations
+      - B) Cover every pair of parameter values with minimal cases
+      - C) Boundary
+      - D) Unit only
+    answer: 1
+    hint: All-pairs.
+    explanation: Combinatorial reduction. See [[#Specification Techniques]].
+  - id: ig-020
+    type: single
+    q: "Maintenance testing trigger:"
+    options:
+      - A) Greenfield project
+      - B) Modification, migration, retirement
+      - C) Pre-launch
+      - D) Spec writing
+    answer: 1
+    hint: Existing system.
+    explanation: |-
+      Maintenance scope. See [[#Test Types]].
+
+      ---

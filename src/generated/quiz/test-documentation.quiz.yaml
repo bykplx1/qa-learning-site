@@ -1,0 +1,237 @@
+lesson: test-documentation
+questions:
+  - id: td-001
+    type: single
+    q: "Top of doc hierarchy:"
+    options:
+      - A) Test Plan
+      - B) Test Policy
+      - C) Test Case
+      - D) Test Script
+    answer: 1
+    hint: Org-wide why.
+    explanation: Policy sits above Strategy and Plan. See [[#Document Hierarchy]].
+  - id: td-002
+    type: single
+    q: "Test Strategy scope:"
+    options:
+      - A) Single test case
+      - B) Cross-project / org approach
+      - C) One sprint
+      - D) One feature
+    answer: 1
+    hint: Above plan.
+    explanation: Strategy applies across projects; Plan is project-specific. See
+      [[#Test Strategy]].
+  - id: td-003
+    type: single
+    q: "IEEE 829 / ISO 29119 covers:"
+    options:
+      - A) Code formatting
+      - B) Test plan structure
+      - C) Network protocols
+      - D) Build pipelines
+    answer: 1
+    hint: Documentation standard.
+    explanation: These standards define test plan content. See [[#Test Plan (IEEE
+      829 / ISO 29119)]].
+  - id: td-004
+    type: single
+    q: "Entry criteria example:"
+    options:
+      - A) All bugs closed
+      - B) Build deployed + smoke passes
+      - C) Sign-off received
+      - D) Report published
+    answer: 1
+    hint: Pre-test gate.
+    explanation: Entry checks readiness to start. Exit checks readiness to stop. See
+      [[#Entry / Exit Criteria]].
+  - id: td-005
+    type: single
+    q: "Exit criteria example:"
+    options:
+      - A) Devs hired
+      - B) No open Critical/Major + planned cases run + pass % met
+      - C) Build deployed
+      - D) Test data prepared
+    answer: 1
+    hint: Stop conditions.
+    explanation: Exit gates release decision. See [[#Entry / Exit Criteria]].
+  - id: td-006
+    type: single
+    q: "Test case must always include:"
+    options:
+      - A) Author photo
+      - B) Steps + expected result
+      - C) Code coverage
+      - D) Random ID
+    answer: 1
+    hint: Without expected, no pass/fail.
+    explanation: Expected result is core; without it case is unverifiable. See
+      [[#Test Case Anatomy]] and [[#Anti-Patterns]].
+  - id: td-007
+    type: single
+    q: "RTM purpose:"
+    options:
+      - A) Track salaries
+      - B) Map reqs â†” tests â†” defects
+      - C) Schedule sprints
+      - D) Generate code
+    answer: 1
+    hint: Coverage + gap detection.
+    explanation: RTM ensures every req tested + finds orphans. See [[#Traceability
+      Matrix (RTM)]].
+  - id: td-008
+    type: single
+    q: "Scenario vs case:"
+    options:
+      - A) Same thing
+      - B) Scenario = high-level flow; case = structured steps
+      - C) Case = code, scenario = doc
+      - D) Case is automated only
+    answer: 1
+    hint: Granularity.
+    explanation: Scenarios summarize flows; cases enumerate steps. See [[#Test Case
+      vs Test Script vs Test Scenario]].
+  - id: td-009
+    type: single
+    q: "Test script means:"
+    options:
+      - A) Movie script
+      - B) Automation code
+      - C) Manual checklist
+      - D) PR description
+    answer: 1
+    hint: Executable.
+    explanation: Script = code that drives test. See [[#Test Case vs Test Script vs
+      Test Scenario]].
+  - id: td-010
+    type: single
+    q: "Suspension criteria triggers when:"
+    options:
+      - A) Build deployed
+      - B) Major defect blocks further testing
+      - C) Sprint ends
+      - D) Standup happens
+    answer: 1
+    hint: Stop because of blocker.
+    explanation: Suspension pauses cycle when continuing wastes effort. See [[#Test
+      Plan (IEEE 829 / ISO 29119)]].
+  - id: td-011
+    type: single
+    q: "Test data anti-pattern:"
+    options:
+      - A) Anonymized synthetic data
+      - B) Real PII copied to staging
+      - C) Builder pattern fixtures
+      - D) Per-test isolation
+    answer: 1
+    hint: Privacy laws.
+    explanation: Real PII in non-prod violates GDPR/HIPAA. See [[#Test Data Management]].
+  - id: td-012
+    type: single
+    q: "Execution log status NOT typical:"
+    options:
+      - A) Pass
+      - B) Blocked
+      - C) Skip
+      - D) Cancelled-Forever
+    answer: 3
+    hint: Standard set.
+    explanation: "Standard: Pass/Fail/Blocked/Skip/N-A. See [[#Test Execution Log]]."
+  - id: td-013
+    type: single
+    q: "Test Summary Report contains:"
+    options:
+      - A) Source code
+      - B) Cycle outcome, coverage, defects, go/no-go
+      - C) Salary info
+      - D) UI mockups
+    answer: 1
+    hint: End-of-cycle verdict.
+    explanation: TSR informs release decision. See [[#Test Summary Report]].
+  - id: td-014
+    type: single
+    q: "Test charter is used in:"
+    options:
+      - A) Waterfall plans only
+      - B) Exploratory testing sessions
+      - C) Performance testing
+      - D) Release notes
+    answer: 1
+    hint: Mission + timebox.
+    explanation: Charter scopes session-based exploratory testing. See [[#Agile Lite
+      Forms]].
+  - id: td-015
+    type: single
+    q: "Acceptance criteria common format:"
+    options:
+      - A) JSON schema
+      - B) Given-When-Then (Gherkin)
+      - C) UML
+      - D) ER diagram
+    answer: 1
+    hint: BDD style.
+    explanation: Given-When-Then standard for AC + BDD. See [[#Agile Lite Forms]].
+  - id: td-016
+    type: single
+    q: "Storing test cases in Git benefits:"
+    options:
+      - A) Hides them
+      - B) Diff, PR review, version history
+      - C) Slower
+      - D) Removes traceability
+    answer: 1
+    hint: Same rigor as code.
+    explanation: Git brings review + history to docs. See [[#Version Control + Review]].
+  - id: td-017
+    type: single
+    q: 'Test plan section "Features NOT to Test" should:'
+    options:
+      - A) Be omitted
+      - B) List excluded features + reason
+      - C) Be filled randomly
+      - D) Equal Features to Test
+    answer: 1
+    hint: Explicit out-of-scope.
+    explanation: Records scope decisions; avoids confusion. See [[#Test Plan (IEEE
+      829 / ISO 29119)]].
+  - id: td-018
+    type: single
+    q: 'RTM finds "orphan tests" â€” meaning:'
+    options:
+      - A) Tests with no assigned tester
+      - B) Tests not linked to any requirement
+      - C) Tests that always fail
+      - D) Old tests
+    answer: 1
+    hint: No req anchor.
+    explanation: Orphans may be unnecessary or signal missing reqs. See
+      [[#Traceability Matrix (RTM)]].
+  - id: td-019
+    type: single
+    q: "Strategy vs Plan:"
+    options:
+      - A) Same
+      - B) Strategy = how org tests; Plan = how this project tests
+      - C) Plan above Strategy
+      - D) Plan = code
+    answer: 1
+    hint: Hierarchy.
+    explanation: Strategy is general approach; Plan applies to specific release. See
+      [[#Document Hierarchy]] and [[#Test Strategy]].
+  - id: td-020
+    type: single
+    q: "Anti-pattern in test cases:"
+    options:
+      - A) Single clear expected result
+      - B) One case validating 10 unrelated things
+      - C) Linking to req ID
+      - D) Numbered steps
+    answer: 1
+    hint: Granularity.
+    explanation: |-
+      Mega-cases hide failures + are unmaintainable. See [[#Anti-Patterns]].
+
+      ---

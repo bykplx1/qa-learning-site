@@ -1,0 +1,226 @@
+lesson: restassured-postman
+questions:
+  - id: rp-001
+    type: single
+    q: "REST Assured DSL pattern:"
+    options:
+      - A) `setup-act-assert`
+      - B) `given-when-then`
+      - C) `arrange-act-assert`
+      - D) `pre-call-post`
+    answer: 1
+    hint: BDD-flavored.
+    explanation: "Fluent BDD style: setup/request/assert. See [[#Basic GET]]."
+  - id: rp-002
+    type: single
+    q: "Postman variable precedence (highest first):"
+    options:
+      - A) Global > Env > Local
+      - B) Local > Data > Env > Collection > Global
+      - C) Random
+      - D) Env > all
+    answer: 1
+    hint: Local wins.
+    explanation: Documented Postman scope precedence. See [[#Variables]].
+  - id: rp-003
+    type: single
+    q: "Newman is:"
+    options:
+      - A) Postman GUI v2
+      - B) CLI test runner for Postman collections
+      - C) Plugin
+      - D) Mock server
+    answer: 1
+    hint: CI integration.
+    explanation: Headless runner for CI/CD. See [[#Newman (CLI)]].
+  - id: rp-004
+    type: single
+    q: "REST Assured assertion lib:"
+    options:
+      - A) AssertJ
+      - B) Hamcrest matchers
+      - C) TestNG only
+      - D) Custom
+    answer: 1
+    hint: "`equalTo`, `containsString`."
+    explanation: Hamcrest powers `.body()` matchers. See [[#Basic GET]].
+  - id: rp-005
+    type: single
+    q: "Schema validate in REST Assured:"
+    options:
+      - A) Custom code
+      - B) `matchesJsonSchemaInClasspath(...)`
+      - C) `assertSchema`
+      - D) Plugin
+    answer: 1
+    hint: Built-in matcher.
+    explanation: Built-in JSON schema matcher. See [[#Schema Validation]].
+  - id: rp-006
+    type: single
+    q: 'Postman test "status 200":'
+    options:
+      - A) `pm.response.status(200)`
+      - B) `pm.response.to.have.status(200)`
+      - C) `assert.status`
+      - D) `expect(200)`
+    answer: 1
+    hint: Chai-style.
+    explanation: Built on Chai assertions. See [[#Test Scripts (Tests Tab)]].
+  - id: rp-007
+    type: single
+    q: "Save token from response into env:"
+    options:
+      - A) `pm.environment.set("token", token)`
+      - B) `pm.global.token = ...`
+      - C) `env.set`
+      - D) `pm.save`
+    answer: 0
+    hint: Postman SDK.
+    explanation: Standard way to persist for next request. See [[#Test Scripts
+      (Tests Tab)]].
+  - id: rp-008
+    type: single
+    q: "Pre-request script use:"
+    options:
+      - A) Validate response
+      - B) Compute auth signatures, generate timestamps before send
+      - C) Mock backend
+      - D) Test setup only
+    answer: 1
+    hint: Runs before request.
+    explanation: Sets dynamic headers/vars. See [[#Pre-request Script]].
+  - id: rp-009
+    type: single
+    q: "RA extract JSON id:"
+    options:
+      - A) `extract().path("id")`
+      - B) `getId()`
+      - C) `body.id`
+      - D) `as Integer`
+    answer: 0
+    hint: Extract API.
+    explanation: Path queries response JSON. See [[#Extracting Response]].
+  - id: rp-010
+    type: single
+    q: "Postman data-driven via:"
+    options:
+      - A) Manual loop
+      - B) CSV/JSON file in Runner
+      - C) Plugin
+      - D) Pre-request only
+    answer: 1
+    hint: Iteration data.
+    explanation: Newman/Runner accepts data file. See [[#Data-Driven (CSV/JSON)]].
+  - id: rp-011
+    type: single
+    q: "Common RA base spec purpose:"
+    options:
+      - A) Hide tests
+      - B) Centralize baseURI/headers/auth across requests
+      - C) Mock
+      - D) Logging only
+    answer: 1
+    hint: DRY config.
+    explanation: RequestSpecBuilder reused. See [[#Common Patterns]].
+  - id: rp-012
+    type: single
+    q: "Postman mock server use:"
+    options:
+      - A) Real prod
+      - B) Generate fake responses based on collection examples
+      - C) Load test
+      - D) Security scan
+    answer: 1
+    hint: Stub backend.
+    explanation: Front-end dev/test before real API ready. See [[#Mock Servers]].
+  - id: rp-013
+    type: single
+    q: "Newman report formats:"
+    options:
+      - A) HTML only
+      - B) cli, html, json, junit, etc.
+      - C) PDF only
+      - D) None
+    answer: 1
+    hint: Reporter flag.
+    explanation: Multiple via `-r` reporters. See [[#Newman (CLI)]].
+  - id: rp-014
+    type: single
+    q: "RA `time(lessThan(2000L))` checks:"
+    options:
+      - A) Server time header
+      - B) Response time under 2000ms
+      - C) Build time
+      - D) Latency to DNS
+    answer: 1
+    hint: SLA assertion.
+    explanation: Built-in response time matcher. See [[#Basic GET]].
+  - id: rp-015
+    type: single
+    q: "Postman `setNextRequest`:"
+    options:
+      - A) Schedule cron
+      - B) Branch flow in Runner
+      - C) Pre-request only
+      - D) Disabled
+    answer: 1
+    hint: Conditional flow.
+    explanation: Determines next request based on logic. See [[#Chaining Requests]].
+  - id: rp-016
+    type: single
+    q: "RA filter `RequestLoggingFilter`:"
+    options:
+      - A) Skips request
+      - B) Logs request details to console
+      - C) Adds auth
+      - D) Mocks
+    answer: 1
+    hint: Debugging.
+    explanation: Outputs full request for troubleshooting. See [[#Filters / Logging]].
+  - id: rp-017
+    type: single
+    q: "Postman collection in git typical flow:"
+    options:
+      - A) Manual UI export only
+      - B) Export JSON, commit, run via Newman in CI
+      - C) Cannot commit
+      - D) Plugin only
+    answer: 1
+    hint: Versioned tests.
+    explanation: Standard pattern for CI integration. See [[#Newman (CLI)]].
+  - id: rp-018
+    type: single
+    q: "RA OAuth2 token:"
+    options:
+      - A) `auth().basic`
+      - B) `auth().oauth2(token)`
+      - C) `auth().bearer`
+      - D) Header manual only
+    answer: 1
+    hint: Built-in helper.
+    explanation: Adds Bearer header. See [[#Authentication]].
+  - id: rp-019
+    type: single
+    q: "Postman Tests tab runs:"
+    options:
+      - A) Before request
+      - B) After response received
+      - C) On startup
+      - D) Manually only
+    answer: 1
+    hint: Post-response.
+    explanation: Tests = post-response assertions. See [[#Test Scripts (Tests Tab)]].
+  - id: rp-020
+    type: single
+    q: "Best for Java + Maven CI suite:"
+    options:
+      - A) Postman GUI
+      - B) REST Assured
+      - C) HTML alone
+      - D) Browser
+    answer: 1
+    hint: Code-first.
+    explanation: |-
+      Native Java integration with build tools. See [[#Comparison Cheat]].
+
+      ---

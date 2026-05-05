@@ -1,0 +1,235 @@
+lesson: java-for-qa
+questions:
+  - id: jfq-001
+    type: single
+    q: "Compare two Strings in Java for equality:"
+    options:
+      - A) `==`
+      - B) `.equals()`
+      - C) `compareTo() == 0` only
+      - D) `===`
+    answer: 1
+    hint: Reference vs value.
+    explanation: "`==` checks reference identity; `.equals()` checks contents. See
+      [[#Common Bugs Java Specific]]."
+  - id: jfq-002
+    type: single
+    q: "JUnit 5 annotation for setup before each test:"
+    options:
+      - A) `@Before`
+      - B) `@BeforeEach`
+      - C) `@BeforeAll`
+      - D) `@Setup`
+    answer: 1
+    hint: Per-test.
+    explanation: JUnit 5 renamed; `@BeforeAll` runs once. See [[#JUnit 5 Essentials]].
+  - id: jfq-003
+    type: single
+    q: "Checked exception:"
+    options:
+      - A) NullPointerException
+      - B) IOException
+      - C) RuntimeException
+      - D) ArithmeticException
+    answer: 1
+    hint: Must declare/catch.
+    explanation: Compiler enforces handling. See [[#Exceptions]].
+  - id: jfq-004
+    type: single
+    q: "`Optional` purpose:"
+    options:
+      - A) Replace generics
+      - B) Express possibly-absent value safely
+      - C) Lazy evaluation
+      - D) Async result
+    answer: 1
+    hint: Null avoidance.
+    explanation: Forces caller to handle empty case. See [[#Optional (avoid null)]].
+  - id: jfq-005
+    type: single
+    q: "Stream `.collect(Collectors.toList())` returns:"
+    options:
+      - A) Set
+      - B) Mutable List
+      - C) Iterator
+      - D) Stream
+    answer: 1
+    hint: Terminal op.
+    explanation: Collects pipeline output to a List. See [[#Streams (Java 8+)]].
+  - id: jfq-006
+    type: single
+    q: "RestAssured chain order:"
+    options:
+      - A) `then().when().given()`
+      - B) `given().when().then()`
+      - C) any
+      - D) `when().given().then()`
+    answer: 1
+    hint: BDD style.
+    explanation: Reads as setup/action/assert. See [[#RestAssured (API tests)]].
+  - id: jfq-007
+    type: single
+    q: "try-with-resources benefit:"
+    options:
+      - A) Faster IO
+      - B) Auto-closes resources implementing AutoCloseable
+      - C) Skips exceptions
+      - D) Multi-threading
+    answer: 1
+    hint: Cleanup guarantee.
+    explanation: Equivalent to finally close, but cleaner and exception-safe. See
+      [[#Exceptions]].
+  - id: jfq-008
+    type: single
+    q: "Mockito `verify(repo).save(any())` checks:"
+    options:
+      - A) Save returns true
+      - B) `save` was called once with any arg
+      - C) Save signature
+      - D) Schema
+    answer: 1
+    hint: Interaction verification.
+    explanation: Ensures collaboration happened. See [[#Mocking (Mockito)]].
+  - id: jfq-009
+    type: single
+    q: "Maven goal to run tests only:"
+    options:
+      - A) `mvn build`
+      - B) `mvn test`
+      - C) `mvn install`
+      - D) `mvn package`
+    answer: 1
+    hint: Lifecycle phase.
+    explanation: Runs `surefire` against `src/test/java`. See [[#Project Structure
+      (Maven)]].
+  - id: jfq-010
+    type: single
+    q: "`@ParameterizedTest` requires source like:"
+    options:
+      - A) `@CsvSource`, `@MethodSource`
+      - B) `@Param`
+      - C) `@DataProvider`
+      - D) `@Inject`
+    answer: 0
+    hint: Sources.
+    explanation: Various source annotations supply args per invocation. See [[#JUnit
+      5 Essentials]].
+  - id: jfq-011
+    type: single
+    q: "`var` in Java 10+:"
+    options:
+      - A) Dynamic typing
+      - B) Local variable type inference
+      - C) Globals
+      - D) Same as JS `var`
+    answer: 1
+    hint: Compile-time inferred.
+    explanation: Type still static; just inferred from RHS. See [[#Hello + Types]].
+  - id: jfq-012
+    type: single
+    q: "Wrong equals/hashCode breaks:"
+    options:
+      - A) Strings
+      - B) HashMap/HashSet behavior
+      - C) Streams
+      - D) Constructors
+    answer: 1
+    hint: Hashing contract.
+    explanation: Equal objects must have equal hashCodes for hash-based collections.
+      See [[#Common Bugs Java Specific]].
+  - id: jfq-013
+    type: single
+    q: "AssertJ style:"
+    options:
+      - A) `assertEquals(expected, actual)`
+      - B) `assertThat(actual).isEqualTo(expected)`
+      - C) `assert actual == expected`
+      - D) `verify(actual)`
+    answer: 1
+    hint: Fluent.
+    explanation: Reads naturally; chainable matchers. See [[#Useful Libs]].
+  - id: jfq-014
+    type: single
+    q: "Selenium explicit wait class:"
+    options:
+      - A) `Thread.sleep`
+      - B) `WebDriverWait`
+      - C) `WaitFor`
+      - D) `Sleep`
+    answer: 1
+    hint: Conditioned wait.
+    explanation: Polls until condition or timeout â€” beats `sleep`. See [[#Selenium
+      (browser)]].
+  - id: jfq-015
+    type: single
+    q: "SLF4J parameterized log advantage:"
+    options:
+      - A) Faster always
+      - B) Avoids string concat unless level enabled
+      - C) Encrypts
+      - D) Async
+    answer: 1
+    hint: Lazy formatting.
+    explanation: "`{}` placeholder skips format if log disabled. See [[#Logging
+      (SLF4J + Logback)]]."
+  - id: jfq-016
+    type: single
+    q: "Group tests in TestNG via:"
+    options:
+      - A) `@Tag`
+      - B) `@Test(groups = "smoke")`
+      - C) `@Group`
+      - D) `@Category`
+    answer: 1
+    hint: Groups attr.
+    explanation: TestNG built-in mechanism for filtering runs. See [[#TestNG
+      (alternative)]].
+  - id: jfq-017
+    type: single
+    q: "Lombok `@Data` generates:"
+    options:
+      - A) DB schema
+      - B) Getters/setters/equals/hashCode/toString
+      - C) Tests
+      - D) Builders only
+    answer: 1
+    hint: Boilerplate.
+    explanation: Saves manual POJO methods. See [[#Useful Libs]].
+  - id: jfq-018
+    type: single
+    q: "Why prefer immutable `List.of(...)`:"
+    options:
+      - A) Faster
+      - B) Thread-safe + signals intent
+      - C) Sortable
+      - D) Parallel iteration
+    answer: 1
+    hint: Immutability.
+    explanation: Safer in concurrent contexts; clear API contract. See [[#Collections]].
+  - id: jfq-019
+    type: single
+    q: "`@Disabled` (JUnit 5) effect:"
+    options:
+      - A) Removes class
+      - B) Skips test execution
+      - C) Marks as failed
+      - D) Hides from report
+    answer: 1
+    hint: Skip flag.
+    explanation: Test not run; reported as skipped. See [[#JUnit 5 Essentials]].
+  - id: jfq-020
+    type: single
+    q: "Forgetting `driver.quit()` in Selenium causes:"
+    options:
+      - A) Compile error
+      - B) Browser/process leak in CI
+      - C) Faster runs
+      - D) Better isolation
+    answer: 1
+    hint: Resource leak.
+    explanation: >-
+      Each test leaves browser/driver alive â†’ flaky CI. See [[#Common Bugs
+      Java Specific]].
+
+
+      ---

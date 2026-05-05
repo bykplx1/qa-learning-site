@@ -1,0 +1,229 @@
+lesson: career-path
+questions:
+  - id: cp-001
+    type: single
+    q: T-shaped skill stack =
+    options:
+      - A) Only deep
+      - B) Only wide
+      - C) Wide base + one deep spike
+      - D) Random
+    answer: 2
+    hint: Letter T.
+    explanation: Most marketable shape. See [[#Skill Stack â€” T-Shaped]].
+  - id: cp-002
+    type: single
+    q: "Largest single-step raise typically:"
+    options:
+      - A) Annual review
+      - B) Switch companies
+      - C) Cert
+      - D) Side project
+    answer: 1
+    hint: Re-bench salary.
+    explanation: External offer resets baseline. See [[#Compensation Levers]].
+  - id: cp-003
+    type: single
+    q: "SDET role emphasis:"
+    options:
+      - A) Manual exploratory only
+      - B) Code-heavy automation + framework eng
+      - C) Project management
+      - D) UAT
+    answer: 1
+    hint: Closer to dev.
+    explanation: Engineering skills central. See [[#Specialist Branches]].
+  - id: cp-004
+    type: single
+    q: "Switch to management when you enjoy:"
+    options:
+      - A) Pure code
+      - B) 1:1s, hiring, conflict, prioritization
+      - C) Solo work
+      - D) Late nights
+    answer: 1
+    hint: People work.
+    explanation: Otherwise misery. See [[#Management Track]].
+  - id: cp-005
+    type: single
+    q: STAR =
+    options:
+      - A) Situation/Task/Action/Result
+      - B) Story/Test/Acceptance/Run
+      - C) Spec/Test/Auto/Report
+      - D) Setup/Test/Assert/Restore
+    answer: 0
+    hint: Behavioral interview frame.
+    explanation: Structures answers. See [[#Interview Stories â€” STAR]].
+  - id: cp-006
+    type: single
+    q: "Modern Testing principle 1:"
+    options:
+      - A) Find more bugs
+      - B) Improve the team, not just the product
+      - C) Automate everything
+      - D) Gate releases
+    answer: 1
+    hint: Coach mindset.
+    explanation: Frames role as enabler. See [[#Modern Testing Principles
+      (Bach/Bolton/Rosa-Bilbao)]].
+  - id: cp-007
+    type: single
+    q: "Cert role typically:"
+    options:
+      - A) Replace portfolio
+      - B) Pass HR filters / signal baseline
+      - C) Decide senior pay
+      - D) Prove production code skill
+    answer: 1
+    hint: Filter, not decider.
+    explanation: Portfolio outweighs at senior level. See [[#Certifications (Signal,
+      Not Substance)]].
+  - id: cp-008
+    type: single
+    q: "Best 90-day day-1â€“30 focus:"
+    options:
+      - A) Ship a refactor
+      - B) Read, ride-along, repro existing bugs, map systems
+      - C) Hire
+      - D) Reorg
+    answer: 1
+    hint: Listen first.
+    explanation: Establish baseline. See [[#90-Day Plan in New Role]].
+  - id: cp-009
+    type: single
+    q: "Anti-pattern: tool collector means:"
+    options:
+      - A) Knows many tools
+      - B) Many shallow > one deep
+      - C) Best practice
+      - D) Required for SDET
+    answer: 1
+    hint: Breadth without depth.
+    explanation: No leverage. See [[#Anti-Patterns]].
+  - id: cp-010
+    type: single
+    q: "Pivot easiest from QA to:"
+    options:
+      - A) Director
+      - B) DevOps/SRE â€” test infra carries over
+      - C) HR
+      - D) Sales
+    answer: 1
+    hint: Adjacent skills.
+    explanation: Infra + observability shared. See [[#Adjacent Pivots]].
+  - id: cp-011
+    type: single
+    q: "ISTQB Advanced TM aimed at:"
+    options:
+      - A) Junior automation
+      - B) Mid/senior management/strategy track
+      - C) Pentest
+      - D) UI design
+    answer: 1
+    hint: Test mgmt depth.
+    explanation: Strategy + estimation. See [[03-Advanced-Test-Manager]].
+  - id: cp-012
+    type: single
+    q: "Burnout signal:"
+    options:
+      - A) Curiosity
+      - B) Cynicism about all bugs, suite hatred
+      - C) Mentoring
+      - D) Speaking at meetups
+    answer: 1
+    hint: Avoidance + cynicism.
+    explanation: Early intervention matters. See [[#Burnout Signals]].
+  - id: cp-013
+    type: single
+    q: "Compounding > sprints in learning means:"
+    options:
+      - A) Cram before reviews
+      - B) Small daily/weekly practice consistently
+      - C) Cert binge
+      - D) One big course
+    answer: 1
+    hint: Consistency.
+    explanation: Compounds long-term. See [[#Continuous Learning Loop]].
+  - id: cp-014
+    type: single
+    q: "Senior QA interview likely round:"
+    options:
+      - A) UAT only
+      - B) Test design + framework design + behavioral
+      - C) Singing
+      - D) Writing essays
+    answer: 1
+    hint: Three pillars.
+    explanation: Proves design + automation + collaboration. See [[#Interview Loop
+      (Senior QA)]].
+  - id: cp-015
+    type: single
+    q: "Quality Coach role belongs to:"
+    options:
+      - A) Strict gatekeeper
+      - B) Modern Testing â€” coach team to own quality
+      - C) Manual-only
+      - D) Director track
+    answer: 1
+    hint: Enabler.
+    explanation: Aligns with Modern Testing. See [[#Specialist Branches]].
+  - id: cp-016
+    type: single
+    q: "Premium niche specialty:"
+    options:
+      - A) Manual scripting
+      - B) Performance / security
+      - C) Email writing
+      - D) Documentation
+    answer: 1
+    hint: Scarcer skill.
+    explanation: Higher market rate. See [[#Compensation Levers]].
+  - id: cp-017
+    type: single
+    q: "Portfolio item ranking:"
+    options:
+      - A) Big private project
+      - B) Small public artifact (repo, blog, talk)
+      - C) Resume bullets
+      - D) Internal docs
+    answer: 1
+    hint: Visibility.
+    explanation: Verifiable signal. See [[#Building a Portfolio]].
+  - id: cp-018
+    type: single
+    q: "Manual-only stagnation risk:"
+    options:
+      - A) Higher salary
+      - B) Salary plateau, fewer roles
+      - C) More variety
+      - D) Promotion
+    answer: 1
+    hint: Skill ceiling.
+    explanation: Auto-skills required at senior level now. See [[#Anti-Patterns]].
+  - id: cp-019
+    type: single
+    q: "Quality Coach principle re data:"
+    options:
+      - A) Data gates releases
+      - B) Use data to inform, not gatekeep
+      - C) Avoid data
+      - D) Data only for managers
+    answer: 1
+    hint: Inform vs block.
+    explanation: Decision-support framing. See [[#Modern Testing Principles
+      (Bach/Bolton/Rosa-Bilbao)]].
+  - id: cp-020
+    type: single
+    q: "IC ladder cap:"
+    options:
+      - A) Senior
+      - B) Continues to Staff/Principal/Architect
+      - C) Mandatory mgmt switch
+      - D) Senior Manager only
+    answer: 1
+    hint: Multi-rung IC.
+    explanation: |-
+      No need to switch tracks. See [[#Common Levels (IC track)]].
+
+      ---

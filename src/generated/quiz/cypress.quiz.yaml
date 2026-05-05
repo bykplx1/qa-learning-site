@@ -1,0 +1,231 @@
+lesson: cypress
+questions:
+  - id: c-001
+    type: single
+    q: "Cypress runs:"
+    options:
+      - A) Outside browser via WebDriver
+      - B) Inside browser process
+      - C) Server only
+      - D) Headless only
+    answer: 1
+    hint: Direct DOM.
+    explanation: No wire protocol; runs in-page. See [[#Architecture vs Selenium]].
+  - id: c-002
+    type: single
+    q: "Preferred selector:"
+    options:
+      - A) Random class
+      - B) `[data-cy=...]` attribute
+      - C) XPath
+      - D) Tag
+    answer: 1
+    hint: Test-only attr.
+    explanation: Decouples tests from styling. See [[#Selectors (Best Practice)]].
+  - id: c-003
+    type: single
+    q: "`cy.intercept` purpose:"
+    options:
+      - A) Logging
+      - B) Stub/spy network requests
+      - C) Inject CSS
+      - D) Mock DOM
+    answer: 1
+    hint: Replaces cy.route.
+    explanation: Powerful network mocking + assertions. See [[#Network Stubs]].
+  - id: c-004
+    type: single
+    q: "Cypress language support:"
+    options:
+      - A) Many languages
+      - B) JS/TS only
+      - C) Python
+      - D) Ruby
+    answer: 1
+    hint: Browser runtime.
+    explanation: Tests are JS code. See [[#Why Cypress]].
+  - id: c-005
+    type: single
+    q: "Mobile real-device testing:"
+    options:
+      - A) Built-in
+      - B) Not supported (use Appium)
+      - C) Plugin only
+      - D) Cloud only
+    answer: 1
+    hint: Limitation.
+    explanation: Cypress runs in desktop browsers. See [[#Architecture vs Selenium]].
+  - id: c-006
+    type: single
+    q: "`cy.session` enables:"
+    options:
+      - A) Per-test cleanup
+      - B) Cached login state across tests
+      - C) Mocking time
+      - D) Cookie disable
+    answer: 1
+    hint: Speed login.
+    explanation: Restores cookies/storage to skip re-login. See [[#Custom Commands]].
+  - id: c-007
+    type: single
+    q: '`cy.fixture("users")` loads:'
+    options:
+      - A) Component
+      - B) Static JSON file from /fixtures
+      - C) Plugin
+      - D) Snapshot
+    answer: 1
+    hint: Test data.
+    explanation: Centralized seed/test data. See [[#Fixtures]].
+  - id: c-008
+    type: single
+    q: "Time-travel feature:"
+    options:
+      - A) Skip ahead
+      - B) Snapshot each command for replay in runner
+      - C) Speed up tests
+      - D) Browser reset
+    answer: 1
+    hint: Debug aid.
+    explanation: Hover commands â†’ DOM snapshot. See [[#Time Travel]].
+  - id: c-009
+    type: single
+    q: '`cy.get("h1").should("be.visible")` does:'
+    options:
+      - A) Asserts once
+      - B) Auto-retries until visible or timeout
+      - C) Polls forever
+      - D) Skips
+    answer: 1
+    hint: Default timeout.
+    explanation: Built-in retry up to defaultCommandTimeout. See [[#Assertions (Chai
+      + Sinon-Chai)]].
+  - id: c-010
+    type: single
+    q: "Cross-origin within test:"
+    options:
+      - A) Always allowed
+      - B) Use `cy.origin(domain, () => {...})`
+      - C) Forbidden
+      - D) Plugin only
+    answer: 1
+    hint: v12+.
+    explanation: Wraps cross-origin steps. See [[#Limitations to Know]].
+  - id: c-011
+    type: single
+    q: "Parallel tests on one machine:"
+    options:
+      - A) Free built-in
+      - B) Requires Cypress Cloud
+      - C) Not possible
+      - D) Always on
+    answer: 1
+    hint: Cloud feature.
+    explanation: OSS Cypress runs serially. See [[#Plugins / Cloud]].
+  - id: c-012
+    type: single
+    q: "Retry config:"
+    options:
+      - A) Per command
+      - "B) `retries: { runMode, openMode }`"
+      - C) Plugin
+      - D) None
+    answer: 1
+    hint: Top-level.
+    explanation: Built-in flake mitigation. See [[#Configuration]].
+  - id: c-013
+    type: single
+    q: '`cy.wait("@alias")` waits for:'
+    options:
+      - A) Time
+      - B) Network call matching alias to complete
+      - C) DOM
+      - D) URL
+    answer: 1
+    hint: Intercept alias.
+    explanation: Synchronizes with stubbed request. See [[#Network Stubs]].
+  - id: c-014
+    type: single
+    q: "Cypress component test mounts:"
+    options:
+      - A) Full app
+      - B) Single component into harness
+      - C) JSDOM
+      - D) Snapshot only
+    answer: 1
+    hint: Isolated.
+    explanation: "`cy.mount(Component)` unit-style with real browser. See
+      [[#Component Testing]]."
+  - id: c-015
+    type: single
+    q: "Common state isolation issue:"
+    options:
+      - A) Cookies persist across tests
+      - B) Cypress clears cookies + storage between tests by default
+      - C) Tests share local state
+      - D) DB shared
+    answer: 1
+    hint: Auto cleanup.
+    explanation: Ensures clean slate; problems from leaked side effects. See
+      [[#Common Pitfalls]].
+  - id: c-016
+    type: single
+    q: "Avoid in tests:"
+    options:
+      - A) Assertions
+      - B) Long `cy.wait(5000)` time-based waits
+      - C) Fixtures
+      - D) Commands
+    answer: 1
+    hint: Use assertion-based.
+    explanation: Brittle. See [[#Common Pitfalls]].
+  - id: c-017
+    type: single
+    q: '`cy.contains("text")`:'
+    options:
+      - A) Body has text only
+      - B) Finds element containing text
+      - C) Substring assertion
+      - D) Regex match
+    answer: 1
+    hint: Text locator.
+    explanation: Returns first element matching text. See [[#Selectors (Best Practice)]].
+  - id: c-018
+    type: single
+    q: "iframe access strategy:"
+    options:
+      - A) Native built-in
+      - B) Plugin (`cypress-iframe`) or its(...) chain
+      - C) Switch frame
+      - D) cy.frame
+    answer: 1
+    hint: Workaround.
+    explanation: No first-class iframe API yet. See [[#Limitations to Know]].
+  - id: c-019
+    type: single
+    q: "`Cypress.Commands.add` purpose:"
+    options:
+      - A) Plugins
+      - B) Define custom reusable commands
+      - C) New browsers
+      - D) Hooks
+    answer: 1
+    hint: DSL extension.
+    explanation: Encapsulates patterns like `cy.login(...)`. See [[#Custom Commands]].
+  - id: c-020
+    type: single
+    q: "Default reason E2E tests considered slow in Cypress:"
+    options:
+      - A) JS
+      - B) Real browser, real network â€” but Cypress fast inside browser;
+        perceived slow when not stubbing
+      - C) Always slower than Selenium
+      - D) GUI overhead
+    answer: 1
+    hint: Stub deps.
+    explanation: >-
+      Stub external APIs to keep tests fast + deterministic. See [[#Network
+      Stubs]].
+
+
+      ---

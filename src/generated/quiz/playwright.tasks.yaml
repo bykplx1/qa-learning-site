@@ -1,0 +1,30 @@
+lesson: playwright
+tasks:
+  - id: p-t001
+    type: fill_blank
+    q: 'Fill: To enable auto-trace on retry, set `use.trace = "______"` in config.'
+    answer: on-first-retry
+    hint: Common CI setting.
+    explanation: Balances cost + debugging. See [[#Fixtures + Configuration]].
+  - id: p-t002
+    type: fill_blank
+    q: 'Task: Write a Playwright test that intercepts `/api/users` and returns
+      `[{id:1,name:"Ada"}]`.'
+    answer: >-
+      ```ts
+
+      test("mock users", async ({ page }) => {
+        await page.route("**/api/users", r => r.fulfill({ json: [{id:1,name:"Ada"}] }));
+        await page.goto("/users");
+        await expect(page.getByText("Ada")).toBeVisible();
+      });
+
+      ```
+    hint: "`page.route` + `route.fulfill`."
+    explanation: Standard mocking pattern. See [[#Network Interception]].
+  - id: p-t003
+    type: fill_blank
+    q: "Fill: Run only chromium project: `npx playwright test --project=______`."
+    answer: chromium
+    hint: Matches config name.
+    explanation: Filters projects in suite. See [[#Fixtures + Configuration]].

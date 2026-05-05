@@ -1,0 +1,230 @@
+lesson: git-for-qa
+questions:
+  - id: gfq-001
+    type: single
+    q: "Three areas of Git workflow:"
+    options:
+      - A) Local, server, cloud
+      - B) Working, staging, repo
+      - C) HEAD, master, origin
+      - D) Push, pull, fetch
+    answer: 1
+    hint: Index in middle.
+    explanation: Working dir â†’ staged â†’ committed defines git's state model. See
+      [[#Mental Model]].
+  - id: gfq-002
+    type: single
+    q: "`git fetch` vs `git pull`:"
+    options:
+      - A) Same
+      - B) Fetch downloads refs only; pull = fetch + merge/rebase
+      - C) Fetch faster
+      - D) Pull is read-only
+    answer: 1
+    hint: Pull = fetch + integrate.
+    explanation: Fetch is safe inspect; pull mutates local branch. See [[#Sync With
+      Remote]].
+  - id: gfq-003
+    type: single
+    q: "Safer alternative to `--force`:"
+    options:
+      - A) `--force-yes`
+      - B) `--force-with-lease`
+      - C) `--push-hard`
+      - D) `--rebase`
+    answer: 1
+    hint: Lease.
+    explanation: Aborts if remote changed since last fetch â€” prevents stomping.
+      See [[#Sync With Remote]].
+  - id: gfq-004
+    type: single
+    q: "Find first bad commit causing test failure:"
+    options:
+      - A) `git log -p`
+      - B) `git bisect`
+      - C) `git blame`
+      - D) `git diff`
+    answer: 1
+    hint: Binary search.
+    explanation: Bisect halves history each step. See [[#Bisect (regression hunt)]].
+  - id: gfq-005
+    type: single
+    q: "Discard local working changes to a file:"
+    options:
+      - A) `git rm`
+      - B) `git restore <file>`
+      - C) `git revert`
+      - D) `git push`
+    answer: 1
+    hint: Modern restore.
+    explanation: Undoes unstaged edits. See [[#Undo Cheat Sheet]].
+  - id: gfq-006
+    type: single
+    q: "`git revert <sha>` produces:"
+    options:
+      - A) Deletes commit silently
+      - B) New commit that inverses the change
+      - C) Rewrites history
+      - D) Stashes
+    answer: 1
+    hint: Safe undo.
+    explanation: Preserves history; safe on shared branches. See [[#Undo Cheat Sheet]].
+  - id: gfq-007
+    type: single
+    q: "Recover commit after `git reset --hard`:"
+    options:
+      - A) Impossible
+      - B) `git reflog` + `git reset` to old SHA
+      - C) `git revert`
+      - D) Re-clone
+    answer: 1
+    hint: Reflog log.
+    explanation: Reflog tracks HEAD movements ~90 days. See [[#Inspect History]].
+  - id: gfq-008
+    type: single
+    q: "Why never rebase shared branches:"
+    options:
+      - A) Slow
+      - B) Rewrites SHAs others depend on
+      - C) Forbidden by Git
+      - D) Same as merge
+    answer: 1
+    hint: Hash mismatch breaks teammates.
+    explanation: Public commits should remain immutable. See [[#Merging vs Rebasing]].
+  - id: gfq-009
+    type: single
+    q: "Stage chunks interactively:"
+    options:
+      - A) `git add -p`
+      - B) `git stage --all`
+      - C) `git commit -i`
+      - D) `git split`
+    answer: 0
+    hint: Patch mode.
+    explanation: Lets you craft surgical commits per hunk. See [[#Core Commands]].
+  - id: gfq-010
+    type: single
+    q: "`git blame` reveals:"
+    options:
+      - A) Test failures
+      - B) Per-line author/commit history
+      - C) Diff stats
+      - D) PR comments
+    answer: 1
+    hint: Line provenance.
+    explanation: Useful when triaging flaky tests. See [[#Inspect History]].
+  - id: gfq-011
+    type: single
+    q: "`git log -- path/to/file` shows:"
+    options:
+      - A) All commits
+      - B) Commits touching that path
+      - C) Errors
+      - D) Stash
+    answer: 1
+    hint: Path filter.
+    explanation: Focused history for debugging. See [[#Inspect History]].
+  - id: gfq-012
+    type: single
+    q: "`.gitignore` matches `*.log` means:"
+    options:
+      - A) Tracks logs
+      - B) Ignores all .log files (untracked)
+      - C) Compresses
+      - D) Encrypts
+    answer: 1
+    hint: Glob pattern.
+    explanation: Already-tracked files stay tracked unless removed. See
+      [[#.gitignore Patterns]].
+  - id: gfq-013
+    type: single
+    q: "Use `git stash` to:"
+    options:
+      - A) Create branch
+      - B) Set aside uncommitted changes temporarily
+      - C) Tag release
+      - D) Resolve merge
+    answer: 1
+    hint: Shelf.
+    explanation: Lets you switch context without committing. See [[#Stash]].
+  - id: gfq-014
+    type: single
+    q: "Squash 3 last commits into one:"
+    options:
+      - A) `git merge -s squash`
+      - B) `git rebase -i HEAD~3` then mark `squash`/`fixup`
+      - C) `git reset HEAD^^^`
+      - D) `git compact`
+    answer: 1
+    hint: Interactive rebase.
+    explanation: Edit commit list during rebase. See [[#Merging vs Rebasing]].
+  - id: gfq-015
+    type: single
+    q: "`git push -u origin feat/x` does:"
+    options:
+      - A) Pushes + sets upstream tracking
+      - B) Updates remote only
+      - C) Forces push
+      - D) Tags release
+    answer: 0
+    hint: Upstream link.
+    explanation: Subsequent `git push` works without args. See [[#Sync With Remote]].
+  - id: gfq-016
+    type: single
+    q: "`git diff --staged`:"
+    options:
+      - A) Shows working changes
+      - B) Shows staged vs HEAD
+      - C) Shows remote diff
+      - D) Word diff
+    answer: 1
+    hint: Index vs HEAD.
+    explanation: Preview what's about to be committed. See [[#Core Commands]].
+  - id: gfq-017
+    type: single
+    q: "Detached HEAD means:"
+    options:
+      - A) Repo broken
+      - B) HEAD points to commit, not a branch
+      - C) Conflict state
+      - D) Server down
+    answer: 1
+    hint: No branch ref.
+    explanation: Commits made there are lost without a branch (use `git switch -c`).
+      See [[#Common Bugs / Foot-guns]].
+  - id: gfq-018
+    type: single
+    q: "CI requires full history for `git log`/`bisect`. Set:"
+    options:
+      - "A) `fetch-depth: 1`"
+      - "B) `fetch-depth: 0` (no shallow)"
+      - "C) `clone-mode: deep`"
+      - D) Cannot
+    answer: 1
+    hint: Disable shallow.
+    explanation: GitHub Actions defaults to shallow clone. See [[#QA-Specific Patterns]].
+  - id: gfq-019
+    type: single
+    q: "Keep two branches working concurrently:"
+    options:
+      - A) Two clones
+      - B) `git worktree add ../path branch`
+      - C) `git switch --multi`
+      - D) Submodule
+    answer: 1
+    hint: Worktrees.
+    explanation: Multiple working dirs sharing one .git. See [[#QA-Specific Patterns]].
+  - id: gfq-020
+    type: single
+    q: "Tag annotated vs lightweight:"
+    options:
+      - A) Same
+      - B) Annotated stores metadata (msg, tagger), lightweight is just a ref
+      - C) Lightweight slower
+      - D) Annotated is read-only
+    answer: 1
+    hint: Metadata.
+    explanation: |-
+      Releases should be annotated. See [[#Tags + Releases]].
+
+      ---

@@ -1,0 +1,225 @@
+lesson: pytest
+questions:
+  - id: p-001
+    type: single
+    q: "Default test discovery file pattern:"
+    options:
+      - A) `*.py`
+      - B) `test_*.py` / `*_test.py`
+      - C) `*Test.py`
+      - D) Configurable only
+    answer: 1
+    hint: Convention.
+    explanation: Standard discovery rule. See [[#Setup]].
+  - id: p-002
+    type: single
+    q: "Default fixture scope:"
+    options:
+      - A) session
+      - B) function
+      - C) module
+      - D) class
+    answer: 1
+    hint: Per test.
+    explanation: Smallest scope; safest. See [[#Scopes]].
+  - id: p-003
+    type: single
+    q: 'Run tests matching name "login":'
+    options:
+      - A) `pytest -k login`
+      - B) `pytest --name login`
+      - C) `pytest login`
+      - D) `pytest tag=login`
+    answer: 0
+    hint: Keyword expression.
+    explanation: "`-k` filters by id substring. See [[#CLI Essentials]]."
+  - id: p-004
+    type: single
+    q: "Parametrize purpose:"
+    options:
+      - A) Skip
+      - B) Run same test with multiple input sets
+      - C) Mock
+      - D) Parallel
+    answer: 1
+    hint: Data-driven.
+    explanation: Generates one test per row. See [[#Parametrize]].
+  - id: p-005
+    type: single
+    q: "`conftest.py` ="
+    options:
+      - A) Pytest plugin file
+      - B) Shared fixtures/hooks per directory
+      - C) Coverage config
+      - D) Required entry point
+    answer: 1
+    hint: Auto-discovered.
+    explanation: Provides shared fixtures without import. See [[#conftest.py]].
+  - id: p-006
+    type: single
+    q: "`xfail` marker:"
+    options:
+      - A) Skips test
+      - B) Test expected to fail; passes if fails, fails-unexpected if passes
+      - C) Same as skip
+      - D) Runs twice
+    answer: 1
+    hint: Known failure.
+    explanation: Tracks bugs without failing CI. See [[#Markers]].
+  - id: p-007
+    type: single
+    q: "Run last failures only:"
+    options:
+      - A) `pytest --rerun`
+      - B) `pytest --lf`
+      - C) `pytest --last`
+      - D) `pytest -f`
+    answer: 1
+    hint: last failed.
+    explanation: Speeds up redâ†’green loop. See [[#CLI Essentials]].
+  - id: p-008
+    type: single
+    q: "Auto parallel by CPU:"
+    options:
+      - A) `pytest --par`
+      - B) `pytest -n auto` (xdist)
+      - C) `pytest --workers=auto`
+      - D) Built-in
+    answer: 1
+    hint: Plugin.
+    explanation: xdist `-n auto`. See [[#Parallel]].
+  - id: p-009
+    type: single
+    q: "Stop at first fail:"
+    options:
+      - A) `pytest --halt`
+      - B) `pytest -x`
+      - C) `pytest --first`
+      - D) `pytest --quick`
+    answer: 1
+    hint: Single letter.
+    explanation: "`-x` aliases `--exitfirst`. See [[#CLI Essentials]]."
+  - id: p-010
+    type: single
+    q: "Show print output:"
+    options:
+      - A) `pytest -p`
+      - B) `pytest -s`
+      - C) `pytest --show`
+      - D) Default
+    answer: 1
+    hint: Capture flag.
+    explanation: Disables stdout capture. See [[#CLI Essentials]].
+  - id: p-011
+    type: single
+    q: "Async test plugin:"
+    options:
+      - A) Built-in
+      - B) `pytest-asyncio`
+      - C) `pytest-async`
+      - D) `aio-test`
+    answer: 1
+    hint: Pip pkg.
+    explanation: Adds `@pytest.mark.asyncio`. See [[#Async Tests]].
+  - id: p-012
+    type: single
+    q: "Mark slow tests + run only fast:"
+    options:
+      - A) `pytest -m "not slow"`
+      - B) `pytest --skip slow`
+      - C) `pytest --fast`
+      - D) Manual
+    answer: 0
+    hint: Marker expression.
+    explanation: "`-m` filters by markers. See [[#Markers]]."
+  - id: p-013
+    type: single
+    q: "Strict markers means:"
+    options:
+      - A) All tests fail strict
+      - B) Unknown markers raise error
+      - C) No markers allowed
+      - D) Stricter parametrize
+    answer: 1
+    hint: addopts flag.
+    explanation: Prevents typos in marker names. See [[#pytest.ini Sample]].
+  - id: p-014
+    type: single
+    q: "Fixture teardown via:"
+    options:
+      - A) `setup/teardown` methods
+      - B) Code after `yield` in fixture
+      - C) `__del__`
+      - D) Plugin only
+    answer: 1
+    hint: Generator pattern.
+    explanation: Code post-yield runs at teardown. See [[#Yield + Teardown]].
+  - id: p-015
+    type: single
+    q: "autouse fixture:"
+    options:
+      - A) Optional
+      - B) Applied to every test in scope without request
+      - C) Faster
+      - D) Required
+    answer: 1
+    hint: Implicit.
+    explanation: Useful for global setup like clean DB. See [[#autouse]].
+  - id: p-016
+    type: single
+    q: "`tmp_path`:"
+    options:
+      - A) Plugin
+      - B) Built-in fixture giving temp directory per test
+      - C) Custom
+      - D) Removed
+    answer: 1
+    hint: Built-in.
+    explanation: Provides clean tmp dir auto-cleaned. See [[#Yield + Teardown]].
+  - id: p-017
+    type: single
+    q: "`pytest-cov` outputs:"
+    options:
+      - A) Stdout only
+      - B) Term, html, xml
+      - C) Slack
+      - D) Email
+    answer: 1
+    hint: Multiple reports.
+    explanation: "`--cov-report` controls format. See [[#Coverage]]."
+  - id: p-018
+    type: single
+    q: "Mocking helper plugin:"
+    options:
+      - A) `pytest-mock`
+      - B) `pytest-stub`
+      - C) `pytest-fake`
+      - D) None
+    answer: 0
+    hint: Provides `mocker`.
+    explanation: Wraps `unittest.mock` as fixture. See [[#Mocking]].
+  - id: p-019
+    type: single
+    q: "Fixture in higher conftest collision:"
+    options:
+      - A) Outer wins
+      - B) Inner (closer) wins
+      - C) Error
+      - D) Random
+    answer: 1
+    hint: Closest scope.
+    explanation: More specific dir overrides. See [[#conftest.py]].
+  - id: p-020
+    type: single
+    q: "BDD-style with pytest:"
+    options:
+      - A) Built-in
+      - B) `pytest-bdd` plugin (Gherkin)
+      - C) Cucumber Python
+      - D) Manual only
+    answer: 1
+    hint: Plugin.
+    explanation: |-
+      Maps Gherkin to pytest tests. See [[#Useful Plugins]].
+
+      ---

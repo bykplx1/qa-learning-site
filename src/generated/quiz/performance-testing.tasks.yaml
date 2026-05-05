@@ -1,0 +1,29 @@
+lesson: performance-testing
+tasks:
+  - id: pt-t001
+    type: fill_blank
+    q: "Fill: Test that runs over many hours to expose memory leaks is called
+      _______."
+    answer: Soak (Endurance)
+    hint: Long duration.
+    explanation: Soak reveals slow degradation. See [[#Types]].
+  - id: pt-t002
+    type: fill_blank
+    q: "Task: Define a k6 threshold so the test fails when P95 latency exceeds 500ms
+      or error rate exceeds 1%."
+    answer: |-
+      ```js
+      thresholds: {
+        http_req_duration: ['p(95)<500'],
+        http_req_failed: ['rate<0.01'],
+      }
+      ```
+    hint: "`thresholds` block."
+    explanation: Codifies SLO into the test for pass/fail. See [[#k6 Example]].
+  - id: pt-t003
+    type: fill_blank
+    q: 'Fill: Internal target like "99% requests under 300ms" is an _______ (3
+      letters).'
+    answer: SLO
+    hint: Objective.
+    explanation: SLO is the engineering target derived from SLIs. See [[#SLI / SLO / SLA]].

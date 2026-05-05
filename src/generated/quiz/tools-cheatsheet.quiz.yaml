@@ -1,0 +1,226 @@
+lesson: tools-cheatsheet
+questions:
+  - id: tc-001
+    type: single
+    q: "Default modern web e2e tool:"
+    options:
+      - A) Selenium 3
+      - B) Playwright
+      - C) Watir
+      - D) Sahi
+    answer: 1
+    hint: Auto-wait, trace viewer.
+    explanation: "Multi-browser, modern. See [[#Decision: Which Tool?]]."
+  - id: tc-002
+    type: single
+    q: "Cypress weakness:"
+    options:
+      - A) Bad DX
+      - B) Single-tab, no multi-origin (legacy)
+      - C) No JS support
+      - D) No CI
+    answer: 1
+    hint: Browser sandbox.
+    explanation: Architectural constraint. See [[#Web Automation Layer]].
+  - id: tc-003
+    type: single
+    q: "Pact tool category:"
+    options:
+      - A) Load
+      - B) Consumer-driven contract testing
+      - C) a11y
+      - D) Visual diff
+    answer: 1
+    hint: Consumer + provider.
+    explanation: API contract. See [[#API Testing]] and [[Contract-Testing]].
+  - id: tc-004
+    type: single
+    q: "k6 scripting language:"
+    options:
+      - A) Python
+      - B) JavaScript
+      - C) Groovy
+      - D) Scala
+    answer: 1
+    hint: ES modules.
+    explanation: Modern perf tool. See [[#Performance / Load]].
+  - id: tc-005
+    type: single
+    q: "Free DAST scanner:"
+    options:
+      - A) Burp Pro
+      - B) OWASP ZAP
+      - C) Snyk
+      - D) Datadog
+    answer: 1
+    hint: OWASP project.
+    explanation: Open + scriptable. See [[#Security]].
+  - id: tc-006
+    type: single
+    q: "Embeddable a11y engine:"
+    options:
+      - A) JAWS
+      - B) axe-core
+      - C) Color Contrast Analyser
+      - D) Lighthouse only
+    answer: 1
+    hint: Library used by many tools.
+    explanation: Programmable a11y. See [[#Accessibility]].
+  - id: tc-007
+    type: single
+    q: "Testcontainers value:"
+    options:
+      - A) Mock DB
+      - B) Real deps (DB/queue) in tests via containers
+      - C) UI testing
+      - D) Browser farm
+    answer: 1
+    hint: Production-like deps.
+    explanation: Reduces mock-vs-real divergence. See [[#Containers + Test Envs]].
+  - id: tc-008
+    type: single
+    q: "Toxiproxy purpose:"
+    options:
+      - A) UI mocks
+      - B) Network fault injection (latency/drop)
+      - C) Test data gen
+      - D) BDD
+    answer: 1
+    hint: Layer 4 chaos.
+    explanation: Resilience tests. See [[#Chaos / Resilience]].
+  - id: tc-009
+    type: single
+    q: "Service virtualization tool:"
+    options:
+      - A) WireMock
+      - B) JMeter
+      - C) Selenium
+      - D) Allure
+    answer: 0
+    hint: Stub HTTP responses.
+    explanation: "Unblock when downstream not ready. See [[#Decision: Which Tool?]]."
+  - id: tc-010
+    type: single
+    q: "Cross-framework reporting:"
+    options:
+      - A) ExtentReports (Java only)
+      - B) Allure
+      - C) JUnit XML
+      - D) TestRail
+    answer: 1
+    hint: Adapters across frameworks.
+    explanation: Unified UX. See [[#Reporting / Observability]].
+  - id: tc-011
+    type: single
+    q: "LocalStack emulates:"
+    options:
+      - A) Azure
+      - B) AWS locally
+      - C) GCP
+      - D) Kubernetes
+    answer: 1
+    hint: AWS in a container.
+    explanation: Cheap integration tests. See [[#Containers + Test Envs]].
+  - id: tc-012
+    type: single
+    q: "Promptfoo use:"
+    options:
+      - A) Web e2e
+      - B) Prompt regression suite for LLMs
+      - C) Visual diff
+      - D) Load test
+    answer: 1
+    hint: Eval harness.
+    explanation: AI-app QA. See [[#AI / LLM Testing]] and [[AI-Testing]].
+  - id: tc-013
+    type: single
+    q: "Anti-pattern: Postman as source of truth ="
+    options:
+      - A) Best practice
+      - B) Not version-controlled â€” drift risk
+      - C) Required
+      - D) Faster CI
+    answer: 1
+    hint: GUI exports.
+    explanation: Use Bruno/Hurl/code. See [[#Anti-Patterns]].
+  - id: tc-014
+    type: single
+    q: "Default JS unit:"
+    options:
+      - A) Mocha 1.0
+      - B) Vitest (or Jest)
+      - C) QUnit
+      - D) Jasmine
+    answer: 1
+    hint: Vite ecosystem.
+    explanation: "Modern default. See [[#Decision: Which Tool?]]."
+  - id: tc-015
+    type: single
+    q: "Visual regression cloud SaaS:"
+    options:
+      - A) BackstopJS
+      - B) Percy / Applitools
+      - C) Pa11y
+      - D) Lighthouse
+    answer: 1
+    hint: PR diffs SaaS.
+    explanation: Hosted approval flow. See [[#Visual + Snapshot]].
+  - id: tc-016
+    type: single
+    q: "SAST quick rules engine:"
+    options:
+      - A) ZAP
+      - B) Semgrep
+      - C) JMeter
+      - D) Allure
+    answer: 1
+    hint: Pattern rules.
+    explanation: Lightweight code scan. See [[#Security]].
+  - id: tc-017
+    type: single
+    q: "Selection heuristic top:"
+    options:
+      - A) Use 5 e2e tools
+      - B) One per layer, deep skill
+      - C) GUI-only
+      - D) Latest tool always
+    answer: 1
+    hint: Compounding.
+    explanation: Avoid tool-collecting trap. See [[#Selection Heuristic]] and
+      [[Career-Path#Anti-Patterns]].
+  - id: tc-018
+    type: single
+    q: "Postman in CI:"
+    options:
+      - A) Manually run
+      - B) Newman runs collection
+      - C) Direct GUI
+      - D) impossible
+    answer: 1
+    hint: CLI runner.
+    explanation: CI-compatible. See [[#API Testing]].
+  - id: tc-019
+    type: single
+    q: "Espresso platform:"
+    options:
+      - A) iOS
+      - B) Android
+      - C) Cross-platform
+      - D) Web
+    answer: 1
+    hint: Google Android framework.
+    explanation: Native fast. See [[#Mobile Automation]].
+  - id: tc-020
+    type: single
+    q: "Trivy scans:"
+    options:
+      - A) Web pages
+      - B) Container images + IaC for vulns
+      - C) UI bugs
+      - D) Database rows
+    answer: 1
+    hint: Image SBOM.
+    explanation: |-
+      Supply-chain check. See [[#Security]].
+
+      ---

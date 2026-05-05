@@ -1,0 +1,30 @@
+lesson: risk-based-testing
+tasks:
+  - id: rbt-t001
+    type: fill_blank
+    q: "Fill: Risk score is computed as likelihood _____ impact."
+    answer: Ã—  (multiplied by)
+    hint: Product not sum.
+    explanation: Multiplication amplifies items high on both axes. See [[#Risk =
+      Likelihood Ã— Impact]].
+  - id: rbt-t002
+    type: fill_blank
+    q: "Task: For a banking transfer feature, list 3 product risks and rate each (L,
+      I, score on 1â€“5 scale)."
+    answer: >-
+      - Wrong-account credit due to ID mismatch â€” L=3, I=5, score 15
+      (critical)
+
+      - Duplicate transfer on retry â€” L=4, I=5, score 20 (critical)
+
+      - UI rounding shows wrong fee â€” L=2, I=2, score 4 (low)
+    hint: Money + correctness drive impact.
+    explanation: Concrete scoring â†’ coverage decisions. See [[#Risk Matrix]].
+  - id: rbt-t003
+    type: fill_blank
+    q: "Fill: Risks affecting schedule, staffing, or environment are called _______
+      risks."
+    answer: project
+    hint: Not in product code.
+    explanation: Project risks live outside the product but threaten delivery. See
+      [[#Types of Risk]].

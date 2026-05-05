@@ -1,0 +1,232 @@
+lesson: defect-lifecycle
+questions:
+  - id: dl-001
+    type: single
+    q: "Severity vs priority:"
+    options:
+      - A) Same thing
+      - B) Severity = tech impact, priority = business urgency
+      - C) Severity = urgency, priority = impact
+      - D) Both = customer mood
+    answer: 1
+    hint: Tech vs business.
+    explanation: Severity measures technical effect; priority measures urgency to
+      fix. See [[#Severity vs Priority]].
+  - id: dl-002
+    type: single
+    q: "Typo in marketing hero banner is best classified as:"
+    options:
+      - A) Critical severity, P3 priority
+      - B) Trivial severity, P0/P1 priority
+      - C) Trivial severity, P3 priority
+      - D) Major severity, P0 priority
+    answer: 1
+    hint: Cosmetic but visible.
+    explanation: Trivial tech impact, urgent business visibility. See [[#Severity vs
+      Priority]].
+  - id: dl-003
+    type: single
+    q: "State after dev pushes fix and QA must verify:"
+    options:
+      - A) New
+      - B) Ready for Test
+      - C) Deferred
+      - D) Closed
+    answer: 1
+    hint: Awaits retest.
+    explanation: Fixed code in test env â†’ Ready for Test. See [[#Standard States]].
+  - id: dl-004
+    type: single
+    q: "Reopened state means:"
+    options:
+      - A) Bug logged twice
+      - B) Retest failed, fix did not work
+      - C) Dev rejected
+      - D) Customer happy
+    answer: 1
+    hint: Came back.
+    explanation: QA reopens when retest fails. See [[#Standard States]].
+  - id: dl-005
+    type: single
+    q: "Rejected reason NOT typical:"
+    options:
+      - A) Not a bug
+      - B) Duplicate
+      - C) Wont fix
+      - D) Build broken
+    answer: 3
+    hint: Build broken not bug-level.
+    explanation: Rejection typically not-a-bug / dup / wont-fix; build issue handled
+      elsewhere. See [[#Standard States]].
+  - id: dl-006
+    type: single
+    q: "Duplicate handling correct flow:"
+    options:
+      - A) Close silently
+      - B) Link to original, close as Duplicate
+      - C) Reopen original
+      - D) Delete report
+    answer: 1
+    hint: Preserve traceability.
+    explanation: Link maintains history; closing as Duplicate signals known. See
+      [[#Standard States]].
+  - id: dl-007
+    type: single
+    q: "Defect Density formula:"
+    options:
+      - A) bugs Ã— KLOC
+      - B) bugs / KLOC or bugs / module
+      - C) bugs âˆ’ KLOC
+      - D) prod bugs only
+    answer: 1
+    hint: Per unit code.
+    explanation: Density normalizes count by code volume. See [[#Defect Metrics]].
+  - id: dl-008
+    type: single
+    q: "DRE close to 100% means:"
+    options:
+      - A) Lots of prod escapes
+      - B) Most defects caught pre-prod
+      - C) No tests run
+      - D) Build failing
+    answer: 1
+    hint: Removal efficiency.
+    explanation: High DRE = strong pre-prod catch rate. See [[#Defect Metrics]].
+  - id: dl-009
+    type: single
+    q: "Reopen rate spikes â€” most likely cause:"
+    options:
+      - A) Too many tests
+      - B) Poor fix quality or unclear repro steps
+      - C) Dev productivity high
+      - D) Excellent triage
+    answer: 1
+    hint: Fix did not stick.
+    explanation: Reopens point to weak fixes or misunderstood bug. See [[#Defect Metrics]].
+  - id: dl-010
+    type: single
+    q: "RCA technique that drills cause chain:"
+    options:
+      - A) Pareto
+      - B) 5 Whys
+      - C) Boundary value
+      - D) Decision table
+    answer: 1
+    hint: Ask "why" five times.
+    explanation: 5 Whys peels surface to root. See [[#Root Cause Analysis (RCA)]].
+  - id: dl-011
+    type: single
+    q: "Fishbone diagram is used for:"
+    options:
+      - A) Sprint planning
+      - B) Categorizing potential causes (people, process, tools, env)
+      - C) Estimation
+      - D) Test design
+    answer: 1
+    hint: Ishikawa.
+    explanation: Fishbone groups cause categories visually. See [[#Root Cause
+      Analysis (RCA)]].
+  - id: dl-012
+    type: single
+    q: 'Reproducibility "Intermittent" means:'
+    options:
+      - A) Always reproduces
+      - B) Sometimes reproduces
+      - C) Never reproduces
+      - D) Reproduces only in prod
+    answer: 1
+    hint: Flaky.
+    explanation: Intermittent = non-deterministic occurrence. See [[#Defect Report
+      Fields (Minimum)]].
+  - id: dl-013
+    type: single
+    q: "Best title for login bug:"
+    options:
+      - A) "broken"
+      - B) "Issue"
+      - C) "Login fails with valid creds returns 500 on Chrome 120"
+      - D) "Help"
+    answer: 2
+    hint: Action + result + context.
+    explanation: Specific titles speed triage. See [[#Defect Report Fields
+      (Minimum)]] and [[#Anti-Patterns]].
+  - id: dl-014
+    type: single
+    q: "Triage outcome NOT valid:"
+    options:
+      - A) Accept + assign
+      - B) Reject as dup
+      - C) Defer
+      - D) Auto-close without review
+    answer: 3
+    hint: Decisions need review.
+    explanation: Auto-close skips judgment; defeats triage. See [[#Triage]].
+  - id: dl-015
+    type: single
+    q: "P0 typically means:"
+    options:
+      - A) Lowest urgency
+      - B) Fix now / hotfix
+      - C) Next sprint
+      - D) Optional
+    answer: 1
+    hint: Highest urgency.
+    explanation: P0 = drop everything, hotfix. See [[#Priority Levels]].
+  - id: dl-016
+    type: single
+    q: "Critical severity example:"
+    options:
+      - A) Misaligned button
+      - B) App crash on login
+      - C) Typo in footer
+      - D) Slow tooltip
+    answer: 1
+    hint: Blocks core flow.
+    explanation: Crash prevents use â†’ critical. See [[#Severity Levels]].
+  - id: dl-017
+    type: single
+    q: "Defect Leakage measures:"
+    options:
+      - A) Pre-prod bugs / total
+      - B) Prod bugs / total
+      - C) Open bugs / closed
+      - D) Severity ratio
+    answer: 1
+    hint: Escaped.
+    explanation: Leakage = bugs that reached prod. See [[#Defect Metrics]].
+  - id: dl-018
+    type: single
+    q: "MTTR measures:"
+    options:
+      - A) Time to detect
+      - B) Average time to repair/close
+      - C) Test runtime
+      - D) Build time
+    answer: 1
+    hint: Repair speed.
+    explanation: MTTR = mean time to fix. See [[#Defect Metrics]].
+  - id: dl-019
+    type: single
+    q: Bug bash =
+    options:
+      - A) Solo retest
+      - B) Cross-team timeboxed exploratory hunt
+      - C) Stress test
+      - D) RCA meeting
+    answer: 1
+    hint: Whole team hunts.
+    explanation: Bug bash gathers team to find issues fast pre-release. See [[#Bug Bash]].
+  - id: dl-020
+    type: single
+    q: "Anti-pattern in defect reports:"
+    options:
+      - A) Numbered repro steps
+      - B) Bundling many bugs in one ticket
+      - C) Attaching logs
+      - D) Including env info
+    answer: 1
+    hint: One bug per ticket.
+    explanation: |-
+      Bundling blocks parallel fix + triage. See [[#Anti-Patterns]].
+
+      ---

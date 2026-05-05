@@ -1,0 +1,242 @@
+lesson: exploratory-testing
+questions:
+  - id: et-001
+    type: single
+    q: "Exploratory testing is best defined as:"
+    options:
+      - A) Random clicking
+      - B) Simultaneous learning, test design, execution
+      - C) Scripted regression
+      - D) Performance test
+    answer: 1
+    hint: Kaner definition.
+    explanation: Concurrent learn-design-execute is core ET definition. See
+      [[#Definition (Cem Kaner)]].
+  - id: et-002
+    type: single
+    q: "Charter in SBTM:"
+    options:
+      - A) Legal contract
+      - B) Mission statement guiding the session
+      - C) Test plan template
+      - D) Bug ID
+    answer: 1
+    hint: Goal of session.
+    explanation: Charter sets focus + scope for time-boxed exploration. See
+      [[#Session-Based Test Management (SBTM)]].
+  - id: et-003
+    type: single
+    q: "Typical SBTM session length:"
+    options:
+      - A) 5 min
+      - B) 60â€“120 min
+      - C) 8 hr
+      - D) Days
+    answer: 1
+    hint: Focused window.
+    explanation: Long enough to explore, short enough to stay sharp. See
+      [[#Session-Based Test Management (SBTM)]].
+  - id: et-004
+    type: single
+    q: "ET vs ad-hoc differ in:"
+    options:
+      - A) Same thing
+      - B) ET has structure, charter, notes
+      - C) Ad-hoc faster
+      - D) Ad-hoc records bugs better
+    answer: 1
+    hint: Structure.
+    explanation: ET is disciplined; ad-hoc is unstructured. See [[#ET â‰  Ad-hoc]].
+  - id: et-005
+    type: single
+    q: "SFDIPOT is a heuristic for:"
+    options:
+      - A) Login flows
+      - B) Test coverage areas (Structure, Function, Data...)
+      - C) Bug priority
+      - D) CI pipelines
+    answer: 1
+    hint: Bach mnemonic.
+    explanation: Coverage heuristic ensures broad area sweep. See [[#Heuristics &
+      Mnemonics]].
+  - id: et-006
+    type: single
+    q: "HICCUPPS oracles help by:"
+    options:
+      - A) Generating tests
+      - B) Deciding pass/fail via consistency comparisons
+      - C) Improving CI
+      - D) Replacing requirements
+    answer: 1
+    hint: Oracle = decide right/wrong.
+    explanation: HICCUPPS lists ways to judge correctness without explicit spec. See
+      [[#Heuristics & Mnemonics]].
+  - id: et-007
+    type: single
+    q: "Tours technique by Whittaker is:"
+    options:
+      - A) Travel agency
+      - B) Different angles to explore product (Money, Landmark, Garbage)
+      - C) Performance test
+      - D) UI design
+    answer: 1
+    hint: Themed exploration.
+    explanation: Tours guide ET via varied perspectives. See [[#Heuristics & Mnemonics]].
+  - id: et-008
+    type: single
+    q: "Best fit for ET:"
+    options:
+      - A) Spec-mature stable feature regression
+      - B) New feature with unclear behavior
+      - C) Compiler tests
+      - D) Static lint
+    answer: 1
+    hint: Unknown unknowns.
+    explanation: ET excels where info is scarce + risk high. See [[#When ET Shines]].
+  - id: et-009
+    type: single
+    q: "Less ideal for ET:"
+    options:
+      - A) Prototype
+      - B) Repeatable regulatory regression
+      - C) Bug investigation
+      - D) Usability check
+    answer: 1
+    hint: Reproducibility need.
+    explanation: Regulated checks need scripted, traceable reruns. See [[#When ET
+      Less Useful]].
+  - id: et-010
+    type: single
+    q: "ET and automation are:"
+    options:
+      - A) Mutually exclusive
+      - B) Complementary (check vs discover)
+      - C) Same
+      - D) Both manual
+    answer: 1
+    hint: Two roles.
+    explanation: Automation checks known; ET discovers unknown. See [[#ET +
+      Automation = Complement]].
+  - id: et-011
+    type: single
+    q: "TBS in session sheet:"
+    options:
+      - A) Test, Build, Ship
+      - B) Test design, Bug investigation, Setup percentages
+      - C) Test bug suppression
+      - D) Time blocking system
+    answer: 1
+    hint: Time split categories.
+    explanation: TBS tracks where session time went. See [[#Session-Based Test
+      Management (SBTM)]].
+  - id: et-012
+    type: single
+    q: "Soap-opera test means:"
+    options:
+      - A) Audio test
+      - B) Exaggerated realistic complex scenario
+      - C) Boundary test
+      - D) Unit test
+    answer: 1
+    hint: Drama-rich flow.
+    explanation: Soap-opera stresses with realistic but extreme combinations. See
+      [[#Heuristics & Mnemonics]].
+  - id: et-013
+    type: single
+    q: "Debrief after session is for:"
+    options:
+      - A) Punishment
+      - B) Reviewing findings, gaps, coverage with peer/lead
+      - C) Replacing tests
+      - D) Closing session sheet
+    answer: 1
+    hint: Reflection.
+    explanation: Debrief turns notes into actionable insights + plans. See
+      [[#Session-Based Test Management (SBTM)]].
+  - id: et-014
+    type: single
+    q: "ET note-taking should be:"
+    options:
+      - A) Skipped
+      - B) Concurrent with testing
+      - C) After release
+      - D) Only on bug
+    answer: 1
+    hint: Live capture.
+    explanation: Concurrent notes preserve context and reproducibility. See
+      [[#Session-Based Test Management (SBTM)]].
+  - id: et-015
+    type: single
+    q: "ET output examples:"
+    options:
+      - A) Bug reports + new automated test ideas + risk insights
+      - B) Only bug reports
+      - C) Just opinions
+      - D) Test scripts only
+    answer: 0
+    hint: Multi-output.
+    explanation: ET informs many artifacts beyond bugs. See [[#Outputs]].
+  - id: et-016
+    type: single
+    q: "SBTM coined by:"
+    options:
+      - A) Cem Kaner
+      - B) James + Jonathan Bach
+      - C) Martin Fowler
+      - D) Mike Cohn
+    answer: 1
+    hint: Bach brothers.
+    explanation: Bachs introduced SBTM in 2000s. See [[#Session-Based Test
+      Management (SBTM)]].
+  - id: et-017
+    type: single
+    q: "Goldilocks heuristic targets:"
+    options:
+      - A) Login defaults
+      - B) Boundary values (too big / small / just right)
+      - C) Performance
+      - D) UI fonts
+    answer: 1
+    hint: Three sizes.
+    explanation: Tests boundaries via too-much / too-little / right. See
+      [[#Heuristics & Mnemonics]].
+  - id: et-018
+    type: single
+    q: "ET supports risk-based testing by:"
+    options:
+      - A) Replacing it
+      - B) Deep-diving high-risk areas with charters
+      - C) Avoiding risk
+      - D) Skipping bugs
+    answer: 1
+    hint: Targeted exploration.
+    explanation: ET focuses sessions where risk highest. See [[Risk-Based-Testing]]
+      and [[#When ET Shines]].
+  - id: et-019
+    type: single
+    q: "Bug advocacy in ET means:"
+    options:
+      - A) Hiding defects
+      - B) Reporting bugs persuasively + clearly so they get fixed
+      - C) Blaming devs
+      - D) Auto-closing bugs
+    answer: 1
+    hint: Make case for fix.
+    explanation: Clear, motivated reports drive actual fixes. See [[#Skills]] and
+      [[Bug-Reporting]].
+  - id: et-020
+    type: single
+    q: "ET reproducibility achieved via:"
+    options:
+      - A) Memory
+      - B) Session sheets, screencasts, charters
+      - C) Single tester intuition
+      - D) Random seed
+    answer: 1
+    hint: Documented artifacts.
+    explanation: >-
+      Records enable replay + audit. See [[#Session-Based Test Management
+      (SBTM)]].
+
+
+      ---

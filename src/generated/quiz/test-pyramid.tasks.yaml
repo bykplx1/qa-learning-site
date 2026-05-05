@@ -1,0 +1,29 @@
+lesson: test-pyramid
+tasks:
+  - id: tp-t001
+    type: fill_blank
+    q: "Fill: Anti-pattern with many manual + E2E and few unit tests is called
+      _______."
+    answer: Ice Cream Cone
+    hint: Inverted pyramid.
+    explanation: Top-heavy distribution = slow, brittle, costly. See [[#Anti-Patterns]].
+  - id: tp-t002
+    type: fill_blank
+    q: 'Task: Login flow has flaky Selenium test for "wrong password shows error".
+      Suggest a faster, more stable replacement layer.'
+    answer: >-
+      - Move check to API test: `POST /login` with bad creds â†’ expect 401 +
+      error code in body.
+
+      - Keep one E2E for the happy login path only.
+    hint: Push down.
+    explanation: Logic verifiable at API; UI test just renders message â€” split
+      concerns. See [[#Practical Rules]].
+  - id: tp-t003
+    type: fill_blank
+    q: "Fill: Microservices teams sometimes prefer the _______ shape, with thinner
+      unit + E2E and a fat integration middle."
+    answer: Diamond (Testing Diamond)
+    hint: Integration-heavy variant.
+    explanation: Microservice bugs cluster in integration boundaries. See [[#Diamond
+      / Honeycomb Variants]].

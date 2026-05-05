@@ -1,0 +1,225 @@
+lesson: testng-junit
+questions:
+  - id: tj-001
+    type: single
+    q: "JUnit 5 main API module:"
+    options:
+      - A) Vintage
+      - B) Jupiter
+      - C) Platform
+      - D) Runner
+    answer: 1
+    hint: Modern API.
+    explanation: Jupiter = new programming model + engine. See [[#JUnit 5 (Jupiter)]].
+  - id: tj-002
+    type: single
+    q: "Run JUnit 4 tests on JUnit 5 platform:"
+    options:
+      - A) Impossible
+      - B) Vintage engine
+      - C) Bridge plugin
+      - D) Manual port
+    answer: 1
+    hint: Compatibility engine.
+    explanation: Vintage runs legacy tests. See [[#Architecture]].
+  - id: tj-003
+    type: single
+    q: "JUnit 5 parametrize source:"
+    options:
+      - A) `@DataProvider`
+      - B) `@ValueSource`/`@CsvSource`/`@MethodSource`
+      - C) XML
+      - D) ini
+    answer: 1
+    hint: Multiple sources.
+    explanation: Different annotations for inline/csv/method data. See [[#Parameterized]].
+  - id: tj-004
+    type: single
+    q: "JUnit 5 expected exception:"
+    options:
+      - A) `@Test(expected=...)`
+      - B) `assertThrows(Class, lambda)`
+      - C) try/catch
+      - D) `@ExpectedException`
+    answer: 1
+    hint: Lambda assertion.
+    explanation: JUnit 4's `expected` removed; use assertThrows. See [[#Assertions]].
+  - id: tj-005
+    type: single
+    q: "TestNG group filter via:"
+    options:
+      - A) Annotation only
+      - B) Suite XML `<groups>`
+      - C) CLI flag
+      - D) Properties
+    answer: 1
+    hint: XML config.
+    explanation: Declarative inclusion/exclusion. See [[#Groups]].
+  - id: tj-006
+    type: single
+    q: "TestNG data-driven tests:"
+    options:
+      - A) `@CsvSource`
+      - B) `@DataProvider`
+      - C) `@MethodSource`
+      - D) `@Inject`
+    answer: 1
+    hint: Object[][].
+    explanation: Returns matrix to test method. See [[#Data Providers]].
+  - id: tj-007
+    type: single
+    q: "TestNG dependency:"
+    options:
+      - A) `@Order`
+      - B) `dependsOnMethods=...`
+      - C) `priority`
+      - D) `@After`
+    answer: 1
+    hint: Test order.
+    explanation: Skips dependent if dependency fails. See [[#Dependencies]].
+  - id: tj-008
+    type: single
+    q: "JUnit 5 parallel via:"
+    options:
+      - A) Always on
+      - B) `junit.jupiter.execution.parallel.enabled=true` property
+      - C) Plugin only
+      - D) Manual
+    answer: 1
+    hint: Config property.
+    explanation: Engine-level config. See [[#TestNG vs JUnit 5]].
+  - id: tj-009
+    type: single
+    q: "JUnit 5 disable on Windows:"
+    options:
+      - A) `@Skip("win")`
+      - B) `@DisabledOnOs(OS.WINDOWS)`
+      - C) `@SkipIf("os=win")`
+      - D) Profile
+    answer: 1
+    hint: Annotation.
+    explanation: Built-in conditional. See [[#Disabled]].
+  - id: tj-010
+    type: single
+    q: "`@BeforeAll` static requirement:"
+    options:
+      - A) Always
+      - B) Default; non-static needs `@TestInstance(PER_CLASS)`
+      - C) Never
+      - D) Plugin
+    answer: 1
+    hint: Lifecycle mode.
+    explanation: Default PER_METHOD requires static. See [[#Lifecycle Annotations]].
+  - id: tj-011
+    type: single
+    q: "TestNG retry mechanism:"
+    options:
+      - A) JUnit only
+      - B) IRetryAnalyzer interface
+      - C) Plugin
+      - D) `@Retry`
+    answer: 1
+    hint: Analyzer interface.
+    explanation: Implement + attach via `retryAnalyzer`. See [[#Retry Analyzer]].
+  - id: tj-012
+    type: single
+    q: "JUnit 5 grouping replacement:"
+    options:
+      - A) Groups
+      - B) Tags via `@Tag`
+      - C) Categories
+      - D) None
+    answer: 1
+    hint: Tag annotation.
+    explanation: Filter via build tool config. See [[#Tags + Filtering]].
+  - id: tj-013
+    type: single
+    q: "TestNG suite XML purpose:"
+    options:
+      - A) Logging
+      - B) Declare tests, classes, groups, parallel config
+      - C) Mock data
+      - D) Reporting only
+    answer: 1
+    hint: Config doc.
+    explanation: Drives execution scope/parallel. See [[#Parallel (Suite XML)]].
+  - id: tj-014
+    type: single
+    q: "JUnit 5 extension equivalent of JUnit 4 Rule:"
+    options:
+      - A) `@Rule`
+      - B) `@ExtendWith(...)`
+      - C) `@RunWith(...)`
+      - D) None
+    answer: 1
+    hint: Extension model.
+    explanation: Unified mechanism replacing Rules + Runners. See [[#Extensions (Hooks)]].
+  - id: tj-015
+    type: single
+    q: "Default parallel JUnit 5:"
+    options:
+      - A) On
+      - B) Off (opt-in)
+      - C) Auto by CPU
+      - D) Suite-defined
+    answer: 1
+    hint: Opt-in.
+    explanation: Must enable + configure. See [[#TestNG vs JUnit 5]].
+  - id: tj-016
+    type: single
+    q: "Soft assertions JUnit 5:"
+    options:
+      - A) `assertSoft`
+      - B) `assertAll(executables...)`
+      - C) Plugin
+      - D) None
+    answer: 1
+    hint: Group asserts.
+    explanation: Reports all failures, not first only. See [[#Assertions]].
+  - id: tj-017
+    type: single
+    q: "TestNG `@BeforeTest` triggers:"
+    options:
+      - A) Per method
+      - B) Per `<test>` tag in suite XML
+      - C) Per class
+      - D) Per suite
+    answer: 1
+    hint: XML tag.
+    explanation: Common confusion vs `@BeforeMethod`. See [[#Lifecycle]].
+  - id: tj-018
+    type: single
+    q: "JUnit 5 display name:"
+    options:
+      - A) `@Name(...)`
+      - B) `@DisplayName(...)`
+      - C) `@Title(...)`
+      - D) Default class
+    answer: 1
+    hint: Annotation.
+    explanation: Custom human-readable label in reports. See [[#Display Names]].
+  - id: tj-019
+    type: single
+    q: "TestNG vs JUnit 5 for new project (default choice 2026):"
+    options:
+      - A) TestNG
+      - B) JUnit 5
+      - C) JUnit 4
+      - D) Spock
+    answer: 1
+    hint: Standard.
+    explanation: De-facto in modern Java. See [[#TestNG vs JUnit 5]].
+  - id: tj-020
+    type: single
+    q: "Listener interface in TestNG:"
+    options:
+      - A) `IListener`
+      - B) `ITestListener`
+      - C) `TestObserver`
+      - D) `TestNGHook`
+    answer: 1
+    hint: I-prefixed.
+    explanation: |-
+      Implements lifecycle callbacks. See [[#Listeners]].
+
+      ---

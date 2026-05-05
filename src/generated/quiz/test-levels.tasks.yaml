@@ -1,0 +1,35 @@
+lesson: test-levels
+tasks:
+  - id: tl-t001
+    type: fill_blank
+    q: "Fill: A test that uses a fake lower module to test top components is _______
+      integration."
+    answer: Top-down (with stubs)
+    hint: "Direction: high to low."
+    explanation: Top-down approach starts at top, fakes incomplete bottom via stubs.
+      See [[#Stubs vs Drivers vs Mocks]].
+  - id: tl-t002
+    type: fill_blank
+    q: "Fill: An anti-pattern with many UI tests and few unit tests is called the
+      _______."
+    answer: Ice-cream cone (or inverted pyramid)
+    hint: Dessert shape.
+    explanation: Inverted pyramid metaphor. Slow + brittle + costly. See [[#Common
+      Mistakes]].
+  - id: tl-t003
+    type: fill_blank
+    q: "Task: For a checkout feature, list one test you'd write at each level (unit,
+      integration, system, acceptance)."
+    answer: >-
+      - Unit: `calculateTotal(items, taxRate)` returns correct sum
+
+      - Integration: payment service â†’ order service writes to DB
+
+      - System: end-to-end browser test "user adds items, pays, sees
+      confirmation"
+
+      - Acceptance: business user runs scenario "discount code applies correctly
+      per policy"
+    hint: Different scope each level.
+    explanation: Each level targets different scope; mapping to one feature shows
+      coverage layering. See [[#The 4 Levels]].

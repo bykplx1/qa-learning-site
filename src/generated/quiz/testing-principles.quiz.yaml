@@ -1,0 +1,255 @@
+lesson: testing-principles
+questions:
+  - id: tp-001
+    type: single
+    q: Which principle states tests cannot prove a system is defect-free?
+    options:
+      - A) Pesticide paradox
+      - B) Testing shows presence of defects
+      - C) Exhaustive testing is impossible
+      - D) Defect clustering
+    answer: 1
+    hint: "Read principle #1 literally."
+    explanation: Tests reveal failures only when they trigger them. Passing test ≠
+      no bugs — only no detected bugs in run paths. Untested input may still
+      hide defect. See [[#The 7 Principles]] item 1.
+  - id: tp-002
+    type: single
+    q: What is the pesticide paradox?
+    options:
+      - A) Bugs accumulate in old code
+      - B) Repeated tests stop finding new defects
+      - C) Test data poisons production
+      - D) Too many tests slow regression
+    answer: 1
+    hint: Like real pesticide — pests adapt.
+    explanation: Static test set covers fixed paths. Once those paths clean, new
+      bugs live elsewhere. Need fresh tests to hit untested areas. See [[#The 7
+      Principles]] item 5.
+  - id: tp-003
+    type: single
+    q: '"Defect clustering" means:'
+    options:
+      - A) Bugs reproduce randomly
+      - B) Most defects found in few modules
+      - C) Defects always cluster near deadlines
+      - D) One defect causes ten more
+    answer: 1
+    hint: Pareto 80/20.
+    explanation: "Empirical Pareto distribution: complex/changed/legacy modules
+      concentrate bugs. Drives risk-based focus. See [[#The 7 Principles]] item
+      4."
+  - id: tp-004
+    type: single
+    q: "Verification answers:"
+    options:
+      - A) Are we meeting user needs?
+      - B) Are we building it right?
+      - C) Are we shipping on time?
+      - D) Are we testing enough?
+    answer: 1
+    hint: V comes before V — spec before user.
+    explanation: Verification = conformance to specification. Validation =
+      conformance to user need. See [[#Verification vs Validation]].
+  - id: tp-005
+    type: single
+    q: "Validation answers:"
+    options:
+      - A) Does code compile?
+      - B) Are we building the right thing?
+      - C) Are tests automated?
+      - D) Is documentation complete?
+    answer: 1
+    hint: User-facing question.
+    explanation: Validation checks whether built product solves real user problem
+      regardless of spec match. See [[#Verification vs Validation]].
+  - id: tp-006
+    type: single
+    q: Why is exhaustive testing impossible?
+    options:
+      - A) Lack of automation tools
+      - B) Too many input/path combinations
+      - C) Developers refuse fixes
+      - D) Hardware limits
+    answer: 1
+    hint: Combinatorial explosion.
+    explanation: Even 32-bit int input has 4B values; combine with state + paths →
+      infeasible. Risk + priority replace exhaustion. See [[#The 7 Principles]]
+      item 2.
+  - id: tp-007
+    type: single
+    q: "Early testing implies:"
+    options:
+      - A) Test only after release
+      - B) Involve QA from requirements stage
+      - C) Skip unit tests
+      - D) Manual first, automation later
+    answer: 1
+    hint: Shift-left.
+    explanation: Defects found in requirements/design cost ~10x less than in prod.
+      Static reviews + early test design catch them. See [[#The 7 Principles]]
+      item 3 and [[Shift-Left-Right]].
+  - id: tp-008
+    type: single
+    q: '"Absence of errors fallacy" warns that:'
+    options:
+      - A) Bug-free software may still fail user expectations
+      - B) Errors are absent in good code
+      - C) Static analysis misses bugs
+      - D) Test reports lie
+    answer: 0
+    hint: Working ≠ valuable.
+    explanation: Software meeting spec but missing user need is still failure.
+      Validation gap. See [[#The 7 Principles]] item 7.
+  - id: tp-009
+    type: single
+    q: "Banking app testing differs from game testing because:"
+    options:
+      - A) Games have no bugs
+      - B) Testing is context-dependent
+      - C) Banks don't use automation
+      - D) Games skip regression
+    answer: 1
+    hint: "Principle #6."
+    explanation: Risk profile, regulation, user tolerance, perf criteria all differ.
+      Same test plan ≠ universal. See [[#The 7 Principles]] item 6.
+  - id: tp-010
+    type: single
+    q: ISO 25010 covers which attribute?
+    options:
+      - A) Profitability
+      - B) Maintainability
+      - C) Marketing reach
+      - D) Pricing model
+    answer: 1
+    hint: Quality model attribute.
+    explanation: ISO 25010 defines product quality (engineering attributes), not
+      business metrics. See [[#Quality Attributes (ISO 25010)]].
+  - id: tp-011
+    type: single
+    q: "A bug found in production typically costs ___ vs in design:"
+    options:
+      - A) Same
+      - B) 10–100x more
+      - C) Less (easier to fix)
+      - D) Free under warranty
+    answer: 1
+    hint: Cost-of-defect curve.
+    explanation: "Cost grows exponentially through phases (Boehm curve): rework,
+      regression, customer impact, hotfix. See [[#The 7 Principles]] item 3."
+  - id: tp-012
+    type: single
+    q: "Best response to pesticide paradox:"
+    options:
+      - A) Delete old tests
+      - B) Run tests more frequently
+      - C) Add new tests, vary inputs, exploratory sessions
+      - D) Hire more testers
+    answer: 2
+    hint: Refresh test set.
+    explanation: "Frequency alone repeats same paths. Need variation: new inputs,
+      new techniques, exploratory probing. See [[#The 7 Principles]] item 5."
+  - id: tp-013
+    type: single
+    q: "Defect clustering suggests test strategy:"
+    options:
+      - A) Test all modules equally
+      - B) Focus more effort on hot-spot modules
+      - C) Skip tested modules
+      - D) Random testing only
+    answer: 1
+    hint: Risk-based.
+    explanation: Spend budget where ROI highest. Hot spots =
+      complex/recent/historical-bug-heavy. See [[#The 7 Principles]] item 4 and
+      [[Risk-Based-Testing]].
+  - id: tp-014
+    type: single
+    q: Which is NOT a quality attribute in ISO 25010?
+    options:
+      - A) Security
+      - B) Portability
+      - C) Marketability
+      - D) Reliability
+    answer: 2
+    hint: Marketing not engineering quality.
+    explanation: ISO 25010 lists 8 product-quality attributes; marketability is
+      business concern. See [[#Quality Attributes (ISO 25010)]].
+  - id: tp-015
+    type: single
+    q: '"Build right thing" maps to:'
+    options:
+      - A) Verification
+      - B) Validation
+      - C) Vetting
+      - D) Velocity
+    answer: 1
+    hint: User-thing.
+    explanation: '"Right thing" = correct product for user (validation). "Right"
+      alone = correct per spec (verification). See [[#Verification vs
+      Validation]].'
+  - id: tp-016
+    type: single
+    q: Static testing is part of which principle?
+    options:
+      - A) Pesticide paradox
+      - B) Early testing
+      - C) Defect clustering
+      - D) Absence of errors
+    answer: 1
+    hint: Reviews catch bugs early.
+    explanation: Reviews/inspections/linters run before code executes — embodies
+      shift-left. See [[#Static vs Dynamic Testing]] and [[#The 7 Principles]]
+      item 3.
+  - id: tp-017
+    type: single
+    q: "Which statement aligns with principle #1?"
+    options:
+      - A) Passing tests prove correctness
+      - B) Failing tests prove bugs exist
+      - C) No tests = no bugs
+      - D) Automation finds all bugs
+    answer: 1
+    hint: Tests reveal, not prove absence.
+    explanation: Failing test demonstrates defect's presence. Passing tests cannot
+      prove absence. See [[#The 7 Principles]] item 1.
+  - id: tp-018
+    type: single
+    q: Risk-based testing leverages which principle?
+    options:
+      - A) Exhaustive testing impossible
+      - B) Pesticide paradox
+      - C) Absence of errors
+      - D) Verification ≠ validation
+    answer: 0
+    hint: Cannot test all → prioritize.
+    explanation: Since exhaustive infeasible, allocate effort by risk (impact ×
+      likelihood). See [[#The 7 Principles]] item 2 and [[Risk-Based-Testing]].
+  - id: tp-019
+    type: single
+    q: "Reviewing requirements doc is:"
+    options:
+      - A) Dynamic testing
+      - B) Static testing
+      - C) Black-box testing
+      - D) Regression
+    answer: 1
+    hint: No code execution.
+    explanation: Static = analysis without execution. Reviews and inspections fit.
+      See [[#Static vs Dynamic Testing]].
+  - id: tp-020
+    type: single
+    q: "Best definition of testing:"
+    options:
+      - A) Finding all bugs
+      - B) Process of evaluating product to find defects and assess quality
+      - C) Running automation
+      - D) Writing test cases
+    answer: 1
+    hint: ISTQB definition.
+    explanation: >-
+      Testing = evaluation activity producing info on quality, not just bug-hunt
+      or automation. See [[#The 7 Principles]] item 1 (presence-not-absence
+      framing).
+
+
+      ---

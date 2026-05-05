@@ -1,0 +1,26 @@
+lesson: restassured-postman
+tasks:
+  - id: rp-t001
+    type: fill_blank
+    q: "Fill: Postman variable syntax in URL is `{{______}}`."
+    answer: variableName
+    hint: Double curly braces.
+    explanation: Resolves from active env/collection. See [[#Variables]].
+  - id: rp-t002
+    type: fill_blank
+    q: "Task: Write REST Assured snippet asserting GET `/users/1` returns 200 and
+      body.id == 1."
+    answer: |-
+      ```java
+      given().baseUri("https://api.x")
+      .when().get("/users/1")
+      .then().statusCode(200).body("id", equalTo(1));
+      ```
+    hint: given/when/then.
+    explanation: Idiomatic RA test. See [[#Basic GET]].
+  - id: rp-t003
+    type: fill_blank
+    q: "Fill: CLI runner for Postman collections is `______`."
+    answer: newman
+    hint: From Postman team.
+    explanation: Headless CI execution. See [[#Newman (CLI)]].

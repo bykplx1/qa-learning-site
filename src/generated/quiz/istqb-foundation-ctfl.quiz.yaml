@@ -1,0 +1,230 @@
+lesson: istqb-foundation-ctfl
+questions:
+  - id: ifc-001
+    type: single
+    q: "Which is NOT an ISTQB testing principle:"
+    options:
+      - A) Exhaustive testing impossible
+      - B) Defect clustering
+      - C) Testing proves absence of defects
+      - D) Pesticide paradox
+    answer: 2
+    hint: Inverse principle.
+    explanation: Principle 1 â€” testing shows presence, not absence. See [[#Seven
+      Principles]].
+  - id: ifc-002
+    type: single
+    q: Verification =
+    options:
+      - A) Build right thing
+      - B) Build the thing right
+      - C) Same as validation
+      - D) Acceptance only
+    answer: 1
+    hint: Process conformance.
+    explanation: Verification = conform to spec; validation = meet user need. See
+      [[#Key Vocabulary (Glossary Highlights)]].
+  - id: ifc-003
+    type: single
+    q: "Boundary value method (3-value) tests:"
+    options:
+      - A) Just min and max
+      - B) min-1, min, min+1 and max-1, max, max+1
+      - C) All values
+      - D) Random values
+    answer: 1
+    hint: Â±1 around boundary.
+    explanation: 3-value BVA covers each side. See [[#Black-box Techniques]].
+  - id: ifc-004
+    type: single
+    q: "Decision table with 4 binary conditions yields:"
+    options:
+      - A) 4 rules
+      - B) 8 rules
+      - C) 16 rules
+      - D) 24 rules
+    answer: 2
+    hint: 2^n.
+    explanation: 2^4 = 16 combinations. See [[#Black-box Techniques]].
+  - id: ifc-005
+    type: single
+    q: "Order of fault chain:"
+    options:
+      - A) Failure â†’ defect â†’ error
+      - B) Error â†’ defect â†’ failure
+      - C) Defect â†’ error â†’ failure
+      - D) Failure â†’ error â†’ defect
+    answer: 1
+    hint: Human â†’ code â†’ observable.
+    explanation: Mistake creates defect, defect causes failure. See [[#Key
+      Vocabulary (Glossary Highlights)]].
+  - id: ifc-006
+    type: single
+    q: "Most formal review:"
+    options:
+      - A) Walkthrough
+      - B) Inspection
+      - C) Informal
+      - D) Pair review
+    answer: 1
+    hint: Metrics + roles.
+    explanation: Inspection has full formal process. See [[#Reviews]].
+  - id: ifc-007
+    type: single
+    q: "White-box technique:"
+    options:
+      - A) EP
+      - B) Branch coverage
+      - C) State transition
+      - D) Decision table
+    answer: 1
+    hint: Code-based.
+    explanation: Branch/statement = structural. See [[#White-box Techniques]].
+  - id: ifc-008
+    type: single
+    q: Risk =
+    options:
+      - A) Likelihood Ã— impact
+      - B) Severity alone
+      - C) Defect count
+      - D) Test count
+    answer: 0
+    hint: Two-factor.
+    explanation: Standard risk formula. See [[#Risk-Based Testing]].
+  - id: ifc-009
+    type: single
+    q: "QA vs QC:"
+    options:
+      - A) Same
+      - B) QA process/prevention; QC product/detection
+      - C) QC is mgmt
+      - D) QA only manual
+    answer: 1
+    hint: Process vs product.
+    explanation: QA is process-focused, QC is product-focused. See [[#Key Vocabulary
+      (Glossary Highlights)]].
+  - id: ifc-010
+    type: single
+    q: Confirmation testing =
+    options:
+      - A) Re-test fixed defect
+      - B) Same as regression
+      - C) UAT
+      - D) Smoke
+    answer: 0
+    hint: Verify fix.
+    explanation: Re-test = confirmation. See [[#Test Types]].
+  - id: ifc-011
+    type: single
+    q: "Test process step right after Analysis:"
+    options:
+      - A) Execution
+      - B) Design
+      - C) Planning
+      - D) Completion
+    answer: 1
+    hint: Conditions â†’ cases.
+    explanation: Analysis â†’ Design â†’ Implementation. See [[#Test Process (generic)]].
+  - id: ifc-012
+    type: single
+    q: "Pesticide paradox solution:"
+    options:
+      - A) Stop testing
+      - B) Vary tests / data / techniques
+      - C) Increase coverage forever
+      - D) Add more retries
+    answer: 1
+    hint: Refresh.
+    explanation: Static tests miss new bugs. See [[#Seven Principles]].
+  - id: ifc-013
+    type: single
+    q: "Acceptance test that contracts must satisfy:"
+    options:
+      - A) Alpha
+      - B) Beta
+      - C) Contractual
+      - D) Operational
+    answer: 2
+    hint: Legal binding.
+    explanation: Contractual acceptance = contract clauses. See [[#Common Exam Traps]].
+  - id: ifc-014
+    type: single
+    q: "Tool category for SonarQube:"
+    options:
+      - A) Test management
+      - B) Static analysis
+      - C) Performance
+      - D) Test design
+    answer: 1
+    hint: Code scanning.
+    explanation: Static analysis tool. See [[#Categories]].
+  - id: ifc-015
+    type: single
+    q: "Test level after Integration:"
+    options:
+      - A) Component
+      - B) System
+      - C) Acceptance
+      - D) Smoke
+    answer: 1
+    hint: End-to-end.
+    explanation: Component â†’ Integration â†’ System â†’ Acceptance. See [[#Test Levels]].
+  - id: ifc-016
+    type: single
+    q: "Risk-based testing prioritizes:"
+    options:
+      - A) Easy areas
+      - B) High likelihood Ã— impact areas first
+      - C) Low risk
+      - D) Random
+    answer: 1
+    hint: Maximize value.
+    explanation: Address biggest exposure first. See [[#Risk-Based Testing]].
+  - id: ifc-017
+    type: single
+    q: "Static testing finds:"
+    options:
+      - A) Runtime crashes only
+      - B) Defects without execution (in spec, code, design)
+      - C) Performance bugs
+      - D) UI bugs only
+    answer: 1
+    hint: No run.
+    explanation: Reviews and analysis catch defects pre-execution. See [[#Static vs
+      Dynamic]].
+  - id: ifc-018
+    type: single
+    q: "Equivalence Partitioning produces classes that are:"
+    options:
+      - A) Always valid
+      - B) Treated equivalently by system; pick one representative
+      - C) Random
+      - D) Boundary only
+    answer: 1
+    hint: Class collapse.
+    explanation: Reduces test count. See [[#Black-box Techniques]].
+  - id: ifc-019
+    type: single
+    q: "Maintenance testing trigger NOT:"
+    options:
+      - A) Modification
+      - B) Migration
+      - C) Retirement
+      - D) New product launch
+    answer: 3
+    hint: Maintenance â‰  greenfield.
+    explanation: Maintenance applies to existing. See [[#Maintenance Triggers]].
+  - id: ifc-020
+    type: single
+    q: "CTFL exam time:"
+    options:
+      - A) 30 min
+      - B) 60 min
+      - C) 90 min
+      - D) 120 min
+    answer: 1
+    hint: 1.5 min Ã— 40.
+    explanation: |-
+      60 minutes total. See [[00-ISTQB-Roadmap]].
+
+      ---

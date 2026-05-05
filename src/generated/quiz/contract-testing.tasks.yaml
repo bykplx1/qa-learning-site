@@ -1,0 +1,41 @@
+lesson: contract-testing
+tasks:
+  - id: ct-t001
+    type: fill_blank
+    q: "Fill: In CDCT, the _______ defines the expectation and the _______ verifies
+      it can satisfy the contract."
+    answer: consumer; provider
+    hint: Direction of pact flow.
+    explanation: Consumer writes pact, provider replays + verifies. See
+      [[#Consumer-Driven Contract Testing (CDCT)]].
+  - id: ct-t002
+    type: fill_blank
+    q: "Task: Sketch a Pact consumer interaction for `GET /orders/{id}` returning
+      200 with `{ id, total, items[] }`."
+    answer: |-
+      ```js
+      provider
+        .given('order 7 exists with 2 items')
+        .uponReceiving('get order 7')
+        .withRequest({ method: 'GET', path: '/orders/7' })
+        .willRespondWith({
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+          body: {
+            id: like(7),
+            total: like(99.5),
+            items: eachLike({ sku: like('A1'), qty: like(1) })
+          }
+        });
+      ```
+    hint: Use type matchers, not exact values.
+    explanation: Type matchers pin shape, tolerate data churn. See [[#Pact Example
+      (Consumer side, JS)]].
+  - id: ct-t003
+    type: fill_blank
+    q: "Fill: The CI gate that blocks a deploy when no green consumer/provider
+      version pair exists is _______."
+    answer: can-i-deploy
+    hint: Broker query.
+    explanation: Pact's `can-i-deploy` enforces compatibility before promotion. See
+      [[#Versioning & Compatibility]].

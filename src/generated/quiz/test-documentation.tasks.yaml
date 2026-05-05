@@ -1,0 +1,46 @@
+lesson: test-documentation
+tasks:
+  - id: td-t001
+    type: fill_blank
+    q: "Fill: The document that maps requirements to test cases and defects is
+      called the _______."
+    answer: Traceability Matrix (RTM)
+    hint: Coverage map.
+    explanation: RTM links reqs â†” cases â†” defects. See [[#Traceability Matrix (RTM)]].
+  - id: td-t002
+    type: fill_blank
+    q: "Fill: Conditions that must be satisfied before testing begins are called
+      _______ criteria."
+    answer: Entry
+    hint: Gate to start.
+    explanation: Entry criteria gate start of cycle. See [[#Entry / Exit Criteria]].
+  - id: td-t003
+    type: fill_blank
+    q: 'Task: Draft a test case for "user resets password via email link". Include
+      ID, title, preconditions, data, steps, expected, priority, linked req.'
+    answer: >-
+      - ID: TC-AUTH-014
+
+      - Title: Password reset via emailed link succeeds
+
+      - Preconditions: user account active, mail inbox accessible
+
+      - Test Data: user@x.com / new password "N3wPass!"
+
+      - Steps: 1) /login â†’ click "Forgot password" 2) enter email â†’ submit
+      3) open email â†’ click reset link 4) enter new password twice â†’ submit
+      5) login with new password
+
+      - Expected: step 2 shows "check email" toast; step 3 link opens reset
+      form; step 4 redirects to /login with success banner; step 5 redirects to
+      /dashboard
+
+      - Postconditions: old password invalid; reset link consumed
+
+      - Priority: High
+
+      - Type: Functional
+
+      - Linked Req: REQ-AUTH-09
+    hint: Use anatomy table fields.
+    explanation: Complete case verifiable + traceable. See [[#Test Case Anatomy]].

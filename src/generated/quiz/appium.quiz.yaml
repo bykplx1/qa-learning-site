@@ -1,0 +1,231 @@
+lesson: appium
+questions:
+  - id: a-001
+    type: single
+    q: "Appium uses which protocol:"
+    options:
+      - A) Custom RPC
+      - B) WebDriver (W3C)
+      - C) gRPC
+      - D) WebSocket only
+    answer: 1
+    hint: Selenium-compatible.
+    explanation: Reuses Selenium client libs. See [[#Why Appium]].
+  - id: a-002
+    type: single
+    q: "Android default driver:"
+    options:
+      - A) Espresso
+      - B) UiAutomator2
+      - C) Selendroid
+      - D) XCUITest
+    answer: 1
+    hint: Modern Android driver.
+    explanation: UiAutomator2 = primary; Espresso optional. See [[#Architecture]].
+  - id: a-003
+    type: single
+    q: "iOS driver:"
+    options:
+      - A) UiAutomator
+      - B) XCUITest
+      - C) Instruments
+      - D) iOSDriver
+    answer: 1
+    hint: Apple framework.
+    explanation: XCUITest is Apple's modern UI test framework. See [[#Architecture]].
+  - id: a-004
+    type: single
+    q: "Preferred cross-platform locator:"
+    options:
+      - A) XPath
+      - B) accessibility id
+      - C) Class
+      - D) Index
+    answer: 1
+    hint: Resilient + a11y.
+    explanation: Maps to content-desc (Android) / accessibilityIdentifier (iOS). See
+      [[#Locators (Mobile)]].
+  - id: a-005
+    type: single
+    q: "Capability keys vendor prefix:"
+    options:
+      - A) `mobile:`
+      - B) `appium:`
+      - C) `vendor:`
+      - D) None
+    answer: 1
+    hint: W3C compliance.
+    explanation: Non-standard caps must be `appium:`-prefixed. See [[#Capabilities
+      (Session Config)]].
+  - id: a-006
+    type: single
+    q: "Switch into WebView:"
+    options:
+      - A) `driver.switch_to.window`
+      - B) `driver.switch_to.context("WEBVIEW_...")`
+      - C) `driver.switch_to.iframe`
+      - D) `driver.context = web`
+    answer: 1
+    hint: Contexts API.
+    explanation: Native â†” WebView via context switch. See [[#Hybrid + WebView]].
+  - id: a-007
+    type: single
+    q: Appium Inspector =
+    options:
+      - A) Code linter
+      - B) GUI to inspect element tree, build locators
+      - C) Performance tool
+      - D) Debugger
+    answer: 1
+    hint: Like DevTools.
+    explanation: Visual element exploration. See [[#Inspector]].
+  - id: a-008
+    type: single
+    q: "iOS automation requires:"
+    options:
+      - A) Linux + Android Studio
+      - B) macOS + Xcode
+      - C) Windows
+      - D) Chrome
+    answer: 1
+    hint: Apple toolchain.
+    explanation: XCUITest runs only on macOS. See [[#Real Device vs Emulator]].
+  - id: a-009
+    type: single
+    q: "Reset app between tests via cap:"
+    options:
+      - A) `noReset=true`
+      - B) `noReset=false`
+      - C) `freshInstall`
+      - D) `cleanState`
+    answer: 1
+    hint: Default reset.
+    explanation: "`noReset=false` reinstalls/clears app data. See [[#Common Pitfalls]]."
+  - id: a-010
+    type: single
+    q: "XPath on UiAutomator2 issue:"
+    options:
+      - A) Unsupported
+      - B) Slow on large trees
+      - C) Not standard
+      - D) Crashes
+    answer: 1
+    hint: Performance.
+    explanation: Native tree XPath traversal slow. See [[#Common Pitfalls]].
+  - id: a-011
+    type: single
+    q: "`mobile: swipe` invoked via:"
+    options:
+      - A) `driver.swipe()`
+      - 'B) `driver.execute_script("mobile: swipe", {...})`'
+      - C) `actions.swipe()`
+      - D) `gesture.swipe()`
+    answer: 1
+    hint: Driver extension.
+    explanation: Driver-specific commands via execute_script. See [[#Gestures (W3C
+      Actions)]].
+  - id: a-012
+    type: single
+    q: "Appium server runtime:"
+    options:
+      - A) Java
+      - B) Node.js
+      - C) Python
+      - D) Go
+    answer: 1
+    hint: npm install -g appium.
+    explanation: Server is Node-based. See [[#Setup]].
+  - id: a-013
+    type: single
+    q: "Capability `app`:"
+    options:
+      - A) Server URL
+      - B) Path/URL to app binary (apk/ipa) for install
+      - C) Bundle name only
+      - D) Activity
+    answer: 1
+    hint: Install target.
+    explanation: Tells driver which build to install. See [[#Capabilities (Session
+      Config)]].
+  - id: a-014
+    type: single
+    q: "Best for unique element across platforms:"
+    options:
+      - A) class
+      - B) accessibility id
+      - C) text
+      - D) xpath
+    answer: 1
+    hint: Cross-platform.
+    explanation: Same locator works on iOS + Android with proper accessibility. See
+      [[#Locators (Mobile)]].
+  - id: a-015
+    type: single
+    q: "Press Android back button:"
+    options:
+      - A) `driver.back()`
+      - B) `driver.press_keycode(4)`
+      - C) Both work
+      - D) Neither
+    answer: 2
+    hint: Multiple APIs.
+    explanation: "`driver.back()` and keycode 4 both navigate back. See [[#Common
+      Actions]]."
+  - id: a-016
+    type: single
+    q: "Real device benefit over emulator:"
+    options:
+      - A) Faster
+      - B) Hardware fidelity (sensors, performance)
+      - C) Free
+      - D) Less setup
+    answer: 1
+    hint: Real-world.
+    explanation: Catches device-specific issues. See [[#Real Device vs Emulator]].
+  - id: a-017
+    type: single
+    q: "`driver.contexts` returns:"
+    options:
+      - A) Test contexts
+      - B) List of available contexts (NATIVE + WEBVIEWs)
+      - C) Servers
+      - D) Sessions
+    answer: 1
+    hint: Hybrid hint.
+    explanation: Lists currently visible contexts. See [[#Hybrid + WebView]].
+  - id: a-018
+    type: single
+    q: "Cloud device farm advantage:"
+    options:
+      - A) Free always
+      - B) Wide device matrix without local hardware
+      - C) Faster than local
+      - D) Mocking
+    answer: 1
+    hint: Coverage.
+    explanation: Tests across many real devices/OS versions. See [[#Cloud Providers]].
+  - id: a-019
+    type: single
+    q: "WebdriverIO + Appium:"
+    options:
+      - A) Java only
+      - B) Node.js client supports Appium service
+      - C) Plugin missing
+      - D) Same as Selenium IDE
+    answer: 1
+    hint: JS ecosystem.
+    explanation: Common JS choice for mobile + web. See [[#Test Frameworks]].
+  - id: a-020
+    type: single
+    q: "Hidden keyboard:"
+    options:
+      - A) `driver.hide_keyboard()`
+      - B) `driver.keyboard.close()`
+      - C) `driver.dismiss()`
+      - D) `actions.hide()`
+    answer: 0
+    hint: Helper.
+    explanation: |-
+      Built-in helper to dismiss soft keyboard. See [[#Common Actions]].
+
+      ---

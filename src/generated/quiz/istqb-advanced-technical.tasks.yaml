@@ -1,0 +1,31 @@
+lesson: istqb-advanced-technical
+tasks:
+  - id: iat-t001
+    type: fill_blank
+    q: "Fill: Cyclomatic complexity V(G) for code with 5 decisions = ______."
+    answer: "6"
+    hint: decisions + 1.
+    explanation: McCabe shortcut. See [[#Cyclomatic Complexity (V(G))]].
+  - id: iat-t002
+    type: fill_blank
+    q: "Task: Given `if (A && (B || C))` write minimal MC/DC test cases (A,B,C truth
+      + outcome)."
+    answer: |-
+      | # | A | B | C | Outcome |
+      |---|---|---|---|---------|
+      | 1 | T | T | F | T |
+      | 2 | F | T | F | F | (A flips) |
+      | 3 | T | F | F | F | (B flips when C=F) |
+      | 4 | T | F | T | T | (C flips when B=F) |
+
+      A: 1â†’2 isolates A.
+      B: 1â†’3 isolates B (C constant F).
+      C: 3â†’4 isolates C (B constant F).
+    hint: Isolate each atom.
+    explanation: Independence requirement. See [[#MC/DC Example]].
+  - id: iat-t003
+    type: fill_blank
+    q: "Fill: gTAA 4 layers = ______, ______, ______, ______."
+    answer: Test Generation, Test Definition, Test Execution, Test Adaptation
+    hint: ISTQB ref.
+    explanation: Memorize for exam. See [[#Automation Strategy]].

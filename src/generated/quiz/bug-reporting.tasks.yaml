@@ -1,0 +1,59 @@
+lesson: bug-reporting
+tasks:
+  - id: br-t001
+    type: fill_blank
+    q: "Fill: Title pattern = `[____] [____] â†’ [____] ([____])`."
+    answer: Area / Action(or trigger) / Symptom / Context
+    hint: Four slots.
+    explanation: Searchable + scoped titles. See [[#Title Patterns]].
+  - id: br-t002
+    type: fill_blank
+    q: 'Task: Write a bug report for: clicking "Save" on profile page returns 500
+      once out of three tries on staging.'
+    answer: >-
+      ```
+
+      **Title:** [Profile] Save button returns 500 intermittently on staging
+
+
+      **Environment:** build 2.7.1 / Chrome 124 / Win 11 / stg / role=user
+
+      **Preconditions:** logged in as qa+1@example.com, profile page open
+
+
+      **Steps:**
+
+      1. Navigate to https://app.stg/profile
+
+      2. Edit "Display name" to "Test User 42"
+
+      3. Click "Save"
+
+      4. Repeat 3Ã— with same input
+
+
+      **Expected:** 200 OK, toast "Profile updated" (AC-2 STORY-512)
+
+      **Actual:** ~1/3 attempts returns 500, no toast; response:
+      {"error":"internal"}; request-id 7f2a-â€¦ (15:42 UTC)
+
+
+      **Evidence:** HAR, console.log, screenshot, Sentry link
+
+      **Frequency:** 1/3
+
+      **Severity / Priority:** Major / P2
+
+      **Workaround:** retry succeeds
+
+      **Related:** none
+
+      ```
+    hint: Atomic steps + evidence + oracle.
+    explanation: Triage-ready, intermittent flagged. See [[#Anatomy of Good Bug Report]].
+  - id: br-t003
+    type: fill_blank
+    q: "Fill: Severity = ____, Priority = ____."
+    answer: impact when triggered / how soon to fix
+    hint: Tech vs business.
+    explanation: Two independent axes. See [[#Severity vs Priority]].

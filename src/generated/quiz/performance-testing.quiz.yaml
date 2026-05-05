@@ -1,0 +1,230 @@
+lesson: performance-testing
+questions:
+  - id: pt-001
+    type: single
+    q: "Which metric most useful for tail latency:"
+    options:
+      - A) Average
+      - B) P95 / P99
+      - C) Min
+      - D) Mode
+    answer: 1
+    hint: Average hides outliers.
+    explanation: P95/P99 expose worst user experience the average masks. See [[#Key
+      Metrics]].
+  - id: pt-002
+    type: single
+    q: "Stress test goal:"
+    options:
+      - A) Verify happy path
+      - B) Find breaking point beyond expected load
+      - C) Smoke test
+      - D) UI rendering
+    answer: 1
+    hint: Push past limit.
+    explanation: Stress tests probe failure mode and recovery. See [[#Types]].
+  - id: pt-003
+    type: single
+    q: "Soak test detects:"
+    options:
+      - A) UI bugs
+      - B) Memory leaks, slow degradation
+      - C) Auth bugs
+      - D) Schema drift
+    answer: 1
+    hint: Long duration.
+    explanation: Sustained run exposes leaks, fragmentation, queue buildup. See [[#Types]].
+  - id: pt-004
+    type: single
+    q: "SLO vs SLA:"
+    options:
+      - A) Same
+      - B) SLO internal target; SLA external contract with penalty
+      - C) SLA free; SLO paid
+      - D) SLO log; SLA metric
+    answer: 1
+    hint: Contractual.
+    explanation: SLA carries consequences; SLO is engineering target. See [[#SLI /
+      SLO / SLA]].
+  - id: pt-005
+    type: single
+    q: "Open vs closed workload:"
+    options:
+      - A) Closed = fixed VUs with think time; Open = arrival rate
+      - B) Same thing
+      - C) Open = browser; Closed = API
+      - D) Open = paid
+    answer: 0
+    hint: Real web traffic.
+    explanation: Open model better matches independent user arrivals. See
+      [[#Workload Models]].
+  - id: pt-006
+    type: single
+    q: "k6 written in:"
+    options:
+      - A) Java
+      - B) JS scripting
+      - C) Ruby
+      - D) Go scripting
+    answer: 1
+    hint: JS test scripts.
+    explanation: k6 uses JS for test scripts (Go core engine). See [[#Tools]].
+  - id: pt-007
+    type: single
+    q: "Spike test pattern:"
+    options:
+      - A) Slow ramp
+      - B) Sudden surge then drop
+      - C) Constant
+      - D) Soak
+    answer: 1
+    hint: Burst.
+    explanation: Spike checks behavior + recovery from sudden surge. See [[#Types]].
+  - id: pt-008
+    type: single
+    q: "Apdex measures:"
+    options:
+      - A) CPU
+      - B) User satisfaction score
+      - C) Memory
+      - D) Throughput
+    answer: 1
+    hint: 0â€“1 score.
+    explanation: Apdex = ratio of satisfied/tolerating/frustrated requests. See
+      [[#Key Metrics]].
+  - id: pt-009
+    type: single
+    q: "Common DB bottleneck:"
+    options:
+      - A) Missing index, N+1 queries
+      - B) Wrong logo
+      - C) Browser cache
+      - D) DNS only
+    answer: 0
+    hint: Query plan.
+    explanation: Index gaps + N+1 dominate DB perf issues. See [[#Common Bottlenecks]].
+  - id: pt-010
+    type: single
+    q: "P95 = 300ms means:"
+    options:
+      - A) Avg 300ms
+      - B) 95% requests under 300ms
+      - C) 95 users
+      - D) 5 errors
+    answer: 1
+    hint: Percentile.
+    explanation: 95th percentile threshold for response time. See [[#Key Metrics]].
+  - id: pt-011
+    type: single
+    q: "JMeter strength:"
+    options:
+      - A) JS native
+      - B) GUI + plugin ecosystem, mature
+      - C) Cloud-only
+      - D) Headless only
+    answer: 1
+    hint: Apache, decade+.
+    explanation: JMeter mature with plugins for many protocols. See [[#Tools]].
+  - id: pt-012
+    type: single
+    q: "Why warmup before measuring:"
+    options:
+      - A) Save energy
+      - B) JIT, caches, pools cold initially â†’ skewed numbers
+      - C) Free CPU
+      - D) Avoid lint
+    answer: 1
+    hint: Cold start.
+    explanation: Warmup stabilizes runtime to measure steady state. See [[#Anti-Patterns]].
+  - id: pt-013
+    type: single
+    q: "Saturation refers to:"
+    options:
+      - A) Color depth
+      - B) Resource utilization (CPU/mem/disk/net)
+      - C) Test count
+      - D) User count
+    answer: 1
+    hint: Bottleneck signal.
+    explanation: Saturated resource = candidate bottleneck. See [[#Key Metrics]].
+  - id: pt-014
+    type: single
+    q: "Volume test focuses on:"
+    options:
+      - A) Many users
+      - B) Large data sets
+      - C) Sudden burst
+      - D) UI
+    answer: 1
+    hint: Big data.
+    explanation: Volume tests system with large datasets (DB rows, files). See [[#Types]].
+  - id: pt-015
+    type: single
+    q: "Realistic test env:"
+    options:
+      - A) Dev laptop
+      - B) Prod-like topology + data
+      - C) Single mocked service
+      - D) Whiteboard
+    answer: 1
+    hint: Prod parity.
+    explanation: Lab-grade env yields misleading numbers. See [[#Anti-Patterns]].
+  - id: pt-016
+    type: single
+    q: "Cache stampede:"
+    options:
+      - A) Cache hit storm
+      - B) Many concurrent misses rebuilding same value
+      - C) Cache eviction policy
+      - D) Cache TTL = 0
+    answer: 1
+    hint: Thundering herd.
+    explanation: Expiry triggers many parallel rebuilds â†’ backend overload. See
+      [[#Common Bottlenecks]].
+  - id: pt-017
+    type: single
+    q: "Throughput unit:"
+    options:
+      - A) ms
+      - B) RPS / TPS
+      - C) %
+      - D) GB
+    answer: 1
+    hint: Per-second rate.
+    explanation: Throughput = requests/transactions per second. See [[#Key Metrics]].
+  - id: pt-018
+    type: single
+    q: "Closed model needs:"
+    options:
+      - A) Arrival rate
+      - B) Fixed VU count + think time
+      - C) Browser
+      - D) GUI
+    answer: 1
+    hint: VUs with pause.
+    explanation: Closed = N users, each pauses between actions. See [[#Workload Models]].
+  - id: pt-019
+    type: single
+    q: "Why P50 alone insufficient:"
+    options:
+      - A) Hard to compute
+      - B) Tail (slow requests) hidden
+      - C) Too high
+      - D) Same as max
+    answer: 1
+    hint: Median.
+    explanation: P50 ignores worst half-of-percent that hurts UX most. See [[#Key Metrics]].
+  - id: pt-020
+    type: single
+    q: "Gatling DSL language:"
+    options:
+      - A) Python
+      - B) Scala (or Java/Kotlin)
+      - C) Ruby
+      - D) Bash
+    answer: 1
+    hint: JVM.
+    explanation: |-
+      Gatling scripts in Scala (Java/Kotlin supported). See [[#Tools]].
+
+      ---

@@ -1,0 +1,30 @@
+lesson: test-types
+tasks:
+  - id: tt-t001
+    type: fill_blank
+    q: "Fill: A test executed after a defect fix to confirm the bug is gone is
+      called _______ testing."
+    answer: Confirmation (re-test)
+    hint: Specific to the fix.
+    explanation: Confirmation rerun verifies fix works. See [[#Confirmation vs
+      Regression Testing]].
+  - id: tt-t002
+    type: fill_blank
+    q: "Fill: A test that runs the system for many hours to detect memory leaks is
+      _______ testing."
+    answer: Endurance (soak)
+    hint: Long duration.
+    explanation: Memory leaks emerge over time; endurance reveals them. See
+      [[#Non-Functional Test Types]].
+  - id: tt-t003
+    type: fill_blank
+    q: "Task: For a login API, list one test of each: smoke, regression, security,
+      performance."
+    answer: |-
+      - Smoke: POST /login with valid creds returns 200
+      - Regression: existing locked-account scenario still returns 403
+      - Security: SQL injection payload in username field rejected
+      - Performance: 500 concurrent logins under 1s p95
+    hint: Same feature, different angle.
+    explanation: Single feature has multiple test type angles. See [[#Functional
+      Test Types]] and [[#Non-Functional Test Types]].

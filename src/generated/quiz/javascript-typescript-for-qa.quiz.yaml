@@ -1,0 +1,239 @@
+lesson: javascript-typescript-for-qa
+questions:
+  - id: jtfq-001
+    type: single
+    q: "Prefer `===` over `==` because:"
+    options:
+      - A) Faster
+      - B) Avoids type coercion bugs
+      - C) Required by ESM
+      - D) Works on objects only
+    answer: 1
+    hint: Strict equality.
+    explanation: '`==` coerces (`"" == 0` true) â€” bug magnet. See [[#Equality]].'
+  - id: jtfq-002
+    type: single
+    q: "`const` array can be:"
+    options:
+      - A) Reassigned
+      - B) Mutated (push/pop) but not reassigned
+      - C) Frozen automatically
+      - D) Read-only deep
+    answer: 1
+    hint: Binding vs contents.
+    explanation: "`const` locks variable binding, not the object it points to. See
+      [[#`let` / `const` / `var`]]."
+  - id: jtfq-003
+    type: single
+    q: "Forget `await` consequence:"
+    options:
+      - A) Compile error
+      - B) Promise returned, value undefined, possible unhandled rejection
+      - C) Slower
+      - D) Same as awaited
+    answer: 1
+    hint: Pending promise.
+    explanation: Code continues without value; assertions on undefined; rejection
+      silent. See [[#Common Bugs JS Specific]].
+  - id: jtfq-004
+    type: single
+    q: "Run two HTTP calls in parallel:"
+    options:
+      - A) `await a; await b`
+      - B) `Promise.all([a(), b()])`
+      - C) `Promise.then`
+      - D) `for...of`
+    answer: 1
+    hint: Concurrency.
+    explanation: "`Promise.all` runs concurrently; sequential await waits. See
+      [[#Async + Promises]]."
+  - id: jtfq-005
+    type: single
+    q: "TS `unknown` vs `any`:"
+    options:
+      - A) Identical
+      - B) `unknown` requires narrowing; `any` skips checks
+      - C) `unknown` faster
+      - D) `any` deprecated
+    answer: 1
+    hint: Type safety.
+    explanation: "`unknown` forces type guard before use. See [[#TS Pitfalls]]."
+  - id: jtfq-006
+    type: single
+    q: "`0.1 + 0.2 === 0.3` returns:"
+    options:
+      - A) true
+      - B) false (floating-point)
+      - C) NaN
+      - D) error
+    answer: 1
+    hint: IEEE 754.
+    explanation: Float precision; use epsilon comparison. See [[#Common Bugs JS Specific]].
+  - id: jtfq-007
+    type: single
+    q: "`for...in` iterates:"
+    options:
+      - A) Values
+      - B) Keys (incl. inherited)
+      - C) Indices only
+      - D) Random
+    answer: 1
+    hint: Use `for...of` for values.
+    explanation: "`for...in` enumerates property names; `for...of` walks iterables.
+      See [[#Common Bugs JS Specific]]."
+  - id: jtfq-008
+    type: single
+    q: "Default export import syntax:"
+    options:
+      - A) `import { default }`
+      - B) `import Name from "./mod"`
+      - C) `import * as Name`
+      - D) `require("default")`
+    answer: 1
+    hint: No braces.
+    explanation: "`import name from` pulls default; named imports use braces. See
+      [[#Modules (ESM)]]."
+  - id: jtfq-009
+    type: single
+    q: "Optional chaining `a?.b`:"
+    options:
+      - A) Throws if `a` null
+      - B) Returns undefined when `a` null/undefined
+      - C) Same as `a.b`
+      - D) Async
+    answer: 1
+    hint: Safe nav.
+    explanation: Avoids "cannot read property of undefined". See [[#TS Pitfalls]].
+  - id: jtfq-010
+    type: single
+    q: "Nullish coalescing `a ?? b` differs from `a || b`:"
+    options:
+      - A) Same
+      - B) `??` only falls back on null/undefined; `||` on any falsy
+      - C) `??` async
+      - D) `??` for arrays
+    answer: 1
+    hint: '`0`, `""` are falsy but not nullish.'
+    explanation: Avoids treating `0` or `""` as missing. See [[#TS Pitfalls]].
+  - id: jtfq-011
+    type: single
+    q: "Playwright recommended locator:"
+    options:
+      - A) `page.$$("css")`
+      - B) Role/text-based (`getByRole`, `getByLabel`)
+      - C) XPath always
+      - D) ID only
+    answer: 1
+    hint: Accessibility-first.
+    explanation: Role locators stable + match user perception. See [[#Playwright
+      Test (sample)]].
+  - id: jtfq-012
+    type: single
+    q: "msw stands for:"
+    options:
+      - A) Mock Service Worker
+      - B) Manual sync wait
+      - C) Module style writer
+      - D) Microservice wrapper
+    answer: 0
+    hint: Network mock.
+    explanation: Intercepts HTTP at network layer for tests. See [[#Mocking HTTP
+      (msw / nock)]].
+  - id: jtfq-013
+    type: single
+    q: "`Promise.all` rejects if:"
+    options:
+      - A) Any input rejects
+      - B) All reject
+      - C) First fulfills
+      - D) Never
+    answer: 0
+    hint: Fail-fast.
+    explanation: Use `Promise.allSettled` for "wait all, collect outcomes". See
+      [[#Async + Promises]].
+  - id: jtfq-014
+    type: single
+    q: "Arrow fn `this` binding:"
+    options:
+      - A) Bound to caller
+      - B) Lexical (enclosing scope)
+      - C) Always global
+      - D) Throws
+    answer: 1
+    hint: No own `this`.
+    explanation: Inherits from where defined; useful in callbacks. See [[#Common
+      Bugs JS Specific]].
+  - id: jtfq-015
+    type: single
+    q: "`as` type assertion:"
+    options:
+      - A) Validates at runtime
+      - B) Compile-time only; trusts you
+      - C) Throws on mismatch
+      - D) Auto-casts data
+    answer: 1
+    hint: Compiler hint.
+    explanation: No runtime check; bypasses type system risk. See [[#TS Pitfalls]].
+  - id: jtfq-016
+    type: single
+    q: "Best for unique values:"
+    options:
+      - A) `Array`
+      - B) `Set`
+      - C) `Object` keys
+      - D) `WeakRef`
+    answer: 1
+    hint: Unique collection.
+    explanation: "`Set` has dedupe + O(1) `has()`. See [[#Array Methods
+      (must-know)]] (Set similar)."
+  - id: jtfq-017
+    type: single
+    q: "`npm i -D pkg` does:"
+    options:
+      - A) Installs as dev dependency
+      - B) Deletes pkg
+      - C) Disables pkg
+      - D) Installs globally
+    answer: 0
+    hint: "`--save-dev`."
+    explanation: Dev deps not shipped to prod (test/lint tools). See [[#Node + npm Basics]].
+  - id: jtfq-018
+    type: single
+    q: "Discriminated union narrowed by:"
+    options:
+      - A) `typeof`
+      - B) Common literal field (e.g. `kind`)
+      - C) `instanceof`
+      - D) `as`
+    answer: 1
+    hint: Tagged unions.
+    explanation: TS narrows when checking discriminant property. See [[#TypeScript
+      Essentials]].
+  - id: jtfq-019
+    type: single
+    q: "`package.json` `scripts.test` runs via:"
+    options:
+      - A) `node test`
+      - B) `npm test` (or `npm run test`)
+      - C) `pip test`
+      - D) `yarn build`
+    answer: 1
+    hint: Lifecycle scripts.
+    explanation: "`npm test` is shortcut; other scripts need `npm run`. See [[#Node
+      + npm Basics]]."
+  - id: jtfq-020
+    type: single
+    q: "`Object.freeze(obj)` makes:"
+    options:
+      - A) Deep immutable
+      - B) Shallow immutable (top level only)
+      - C) Read-only DB record
+      - D) Synchronous
+    answer: 1
+    hint: Shallow.
+    explanation: >-
+      Nested objects still mutable; need recursive freeze for deep. See [[#`let`
+      / `const` / `var`]].
+
+
+      ---

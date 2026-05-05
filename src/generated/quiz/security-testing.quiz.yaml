@@ -1,0 +1,232 @@
+lesson: security-testing
+questions:
+  - id: st-001
+    type: single
+    q: "SAST scans:"
+    options:
+      - A) Running app
+      - B) Source code statically
+      - C) Network traffic
+      - D) DNS
+    answer: 1
+    hint: Static analysis.
+    explanation: SAST = Static Application Security Testing on source. See [[#Test Types]].
+  - id: st-002
+    type: single
+    q: "DAST requires:"
+    options:
+      - A) Source code
+      - B) Running app to probe
+      - C) Compiler only
+      - D) Database dump
+    answer: 1
+    hint: Dynamic.
+    explanation: DAST exercises live app like attacker. See [[#Test Types]].
+  - id: st-003
+    type: single
+    q: "IDOR stands for:"
+    options:
+      - A) Insecure Direct Object Reference
+      - B) Internal Data Object Read
+      - C) Identity Driven Object Routing
+      - D) Indexed Database OR
+    answer: 0
+    hint: Authorization gap.
+    explanation: Endpoint trusts client-supplied object ID without ownership check.
+      See [[#Common Vulnerabilities Cheat]].
+  - id: st-004
+    type: single
+    q: "CIA triad:"
+    options:
+      - A) Confidentiality, Integrity, Availability
+      - B) Crypto, Identity, Audit
+      - C) Compliance, Inspection, Audit
+      - D) Cipher, Index, Audit
+    answer: 0
+    hint: Core security goals.
+    explanation: CIA = foundational properties. See [[#CIA Triad]].
+  - id: st-005
+    type: single
+    q: "SQLi test payload example:"
+    options:
+      - A) `<script>alert(1)</script>`
+      - B) `' OR '1'='1`
+      - C) `../../etc/passwd`
+      - D) `?next=evil.com`
+    answer: 1
+    hint: Quote + always true.
+    explanation: Tautology breaks WHERE clause. See [[#Common Vulnerabilities Cheat]].
+  - id: st-006
+    type: single
+    q: "XSS payload:"
+    options:
+      - A) `' OR 1=1`
+      - B) `<script>alert(1)</script>`
+      - C) `../../etc/passwd`
+      - D) `;rm -rf /`
+    answer: 1
+    hint: Browser script injection.
+    explanation: XSS executes JS in victim's browser context. See [[#Common
+      Vulnerabilities Cheat]].
+  - id: st-007
+    type: single
+    q: "CSRF mitigation:"
+    options:
+      - A) HTTPS only
+      - B) Anti-CSRF token + SameSite cookie
+      - C) Hash password
+      - D) Disable JS
+    answer: 1
+    hint: Cross-site request.
+    explanation: Token + SameSite prevent forged cross-origin requests. See
+      [[#Common Vulnerabilities Cheat]].
+  - id: st-008
+    type: single
+    q: "SCA tool checks:"
+    options:
+      - A) Source style
+      - B) Dependency CVEs / known vuln versions
+      - C) UI accessibility
+      - D) DB perf
+    answer: 1
+    hint: Software composition.
+    explanation: SCA flags vulnerable libs/images. See [[#Tools]].
+  - id: st-009
+    type: single
+    q: 'STRIDE "T":'
+    options:
+      - A) Tampering
+      - B) Throttling
+      - C) Tracing
+      - D) Tunneling
+    answer: 0
+    hint: Integrity threat.
+    explanation: T = Tampering with data/code. See [[#Threat Modeling (STRIDE)]].
+  - id: st-010
+    type: single
+    q: "Header that prevents clickjacking:"
+    options:
+      - A) `X-Frame-Options` / CSP frame-ancestors
+      - B) `Content-Type`
+      - C) `Cache-Control`
+      - D) `Server`
+    answer: 0
+    hint: Iframe restriction.
+    explanation: Restricts who can frame the site. See [[#Headers To Verify]].
+  - id: st-011
+    type: single
+    q: "CVSS High range:"
+    options:
+      - A) 0.1â€“3.9
+      - B) 4.0â€“6.9
+      - C) 7.0â€“8.9
+      - D) 9.0+
+    answer: 2
+    hint: High vs Critical.
+    explanation: High = 7.0â€“8.9; Critical = 9.0+. See [[#Risk Scoring (CVSS)]].
+  - id: st-012
+    type: single
+    q: "SSRF means:"
+    options:
+      - A) Server-Side Request Forgery
+      - B) Same-Site Request Filter
+      - C) Static Source Replay
+      - D) Secure Socket RF
+    answer: 0
+    hint: Server fetches attacker URL.
+    explanation: Attacker forces server to call internal/sensitive URL. See [[#OWASP
+      Top 10 (2021)]].
+  - id: st-013
+    type: single
+    q: "JWT `alg=none` exploit:"
+    options:
+      - A) Bypass signature
+      - B) Encrypts JWT
+      - C) Adds MFA
+      - D) Compresses
+    answer: 0
+    hint: No verification.
+    explanation: Server accepts unsigned token if `alg=none` allowed. See [[#Common
+      Vulnerabilities Cheat]].
+  - id: st-014
+    type: single
+    q: "HSTS header purpose:"
+    options:
+      - A) Force HTTPS
+      - B) Lazy loading
+      - C) Cache static
+      - D) DNS pinning
+    answer: 0
+    hint: Strict Transport.
+    explanation: HSTS forces HTTPS to prevent SSL strip. See [[#Headers To Verify]].
+  - id: st-015
+    type: single
+    q: "Vertical privilege escalation:"
+    options:
+      - A) User â†’ other user
+      - B) User â†’ admin
+      - C) Admin â†’ user
+      - D) Read â†’ write
+    answer: 1
+    hint: Role uplift.
+    explanation: Vertical = gain higher role; horizontal = peer access. See [[#Auth
+      Test Checklist]].
+  - id: st-016
+    type: single
+    q: "Fuzzing means:"
+    options:
+      - A) Manual review
+      - B) Random/malformed input to find crashes
+      - C) Encryption
+      - D) Logging
+    answer: 1
+    hint: Bombard inputs.
+    explanation: Fuzzers feed unexpected input to surface defects. See [[#Test Types]].
+  - id: st-017
+    type: single
+    q: "Burp Suite role:"
+    options:
+      - A) DAST proxy / pen-test toolkit
+      - B) Compiler
+      - C) Mock DB
+      - D) IDE
+    answer: 0
+    hint: Intercept proxy.
+    explanation: Burp intercepts/modifies HTTP for security testing. See [[#Tools]].
+  - id: st-018
+    type: single
+    q: "OWASP Top 10 #1 (2021):"
+    options:
+      - A) Injection
+      - B) Broken Access Control
+      - C) XSS
+      - D) CSRF
+    answer: 1
+    hint: Moved to top.
+    explanation: Broken Access Control most common in 2021 list. See [[#OWASP Top 10
+      (2021)]].
+  - id: st-019
+    type: single
+    q: "Secret scanning typical stage:"
+    options:
+      - A) After release
+      - B) Pre-commit / CI
+      - C) Manual yearly
+      - D) Never
+    answer: 1
+    hint: Catch early.
+    explanation: Pre-commit + CI block secrets reaching repo. See [[#Shift-Left Security]].
+  - id: st-020
+    type: single
+    q: "Pen test should be done:"
+    options:
+      - A) On prod without notice
+      - B) With written authorization + scope
+      - C) Anonymously
+      - D) Once ever
+    answer: 1
+    hint: Rules of engagement.
+    explanation: |-
+      Authorization + scope = legal + safe testing. See [[#Best Practices]].
+
+      ---

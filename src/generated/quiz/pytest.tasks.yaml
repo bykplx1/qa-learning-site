@@ -1,0 +1,27 @@
+lesson: pytest
+tasks:
+  - id: p-t001
+    type: fill_blank
+    q: "Fill: Custom marker registered under `[pytest]` section key `______ =`."
+    answer: markers
+    hint: ini config.
+    explanation: Avoids strict-marker errors. See [[#pytest.ini Sample]].
+  - id: p-t002
+    type: fill_blank
+    q: 'Task: Write parametrized test asserting `len(s) == n` for `("",0)`,
+      `("ab",2)`, `("hi!",3)`.'
+    answer: |-
+      ```python
+      import pytest
+      @pytest.mark.parametrize("s,n",[("",0),("ab",2),("hi!",3)])
+      def test_len(s,n):
+          assert len(s) == n
+      ```
+    hint: parametrize decorator.
+    explanation: Compact data-driven test. See [[#Parametrize]].
+  - id: p-t003
+    type: fill_blank
+    q: "Fill: To rerun only failures from last run, use `pytest --______`."
+    answer: lf
+    hint: last failed.
+    explanation: Speeds debug cycle. See [[#CLI Essentials]].

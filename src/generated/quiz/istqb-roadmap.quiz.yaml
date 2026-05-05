@@ -1,0 +1,227 @@
+lesson: istqb-roadmap
+questions:
+  - id: ir-001
+    type: single
+    q: "ISTQB Foundation v4.0 release year:"
+    options:
+      - A) 2018
+      - B) 2023
+      - C) 2010
+      - D) 2025
+    answer: 1
+    hint: Major rewrite, agile-default.
+    explanation: v4.0 published 2023, shifted away from waterfall framing. See
+      [[#Foundation (CTFL v4.0, 2023)]].
+  - id: ir-002
+    type: single
+    q: "CTFL exam pass mark:"
+    options:
+      - A) 50%
+      - B) 65%
+      - C) 75%
+      - D) 80%
+    answer: 1
+    hint: 26/40.
+    explanation: Standard ISTQB pass. See [[#Foundation (CTFL v4.0, 2023)]].
+  - id: ir-003
+    type: single
+    q: "Cert renewal cycle:"
+    options:
+      - A) 1 year
+      - B) 3 years
+      - C) Never â€” lifetime
+      - D) 5 years
+    answer: 2
+    hint: No CPD points.
+    explanation: ISTQB issues lifetime certs. See [[#Validity]].
+  - id: ir-004
+    type: single
+    q: "Which is Advanced-level Test Manager cert:"
+    options:
+      - A) CTFL-TM
+      - B) CTAL-TM
+      - C) CTEL-TM
+      - D) CT-TM
+    answer: 1
+    hint: AL = Advanced.
+    explanation: CTAL-TM is the manager track. See [[#Advanced Level (CTAL)]].
+  - id: ir-005
+    type: single
+    q: 'K-level for "apply technique to a problem":'
+    options:
+      - A) K1
+      - B) K2
+      - C) K3
+      - D) K4
+    answer: 2
+    hint: Apply.
+    explanation: K3 = apply, K4 = analyze. See [[#Exam Strategy]].
+  - id: ir-006
+    type: single
+    q: "CT-AI focus:"
+    options:
+      - A) Cloud testing
+      - B) Testing AI/ML systems including data quality and adversarial
+      - C) AI-driven test gen
+      - D) ChatGPT prompting
+    answer: 1
+    hint: Test the AI.
+    explanation: Specialist for AI system QA. See [[#Specialist (Hot 2024â€“2026)]].
+  - id: ir-007
+    type: single
+    q: "Foundation prereq:"
+    options:
+      - A) CTAL
+      - B) None
+      - C) 2 years exp
+      - D) Degree
+    answer: 1
+    hint: Entry tier.
+    explanation: CTFL has no formal prereq. See [[#Three Tiers]].
+  - id: ir-008
+    type: single
+    q: "Best path for automation engineer:"
+    options:
+      - A) CTFL â†’ CTAL-TM
+      - B) CTFL â†’ CTAL-TAE (+ optional CTAL-TTA)
+      - C) CTEL â†’ CTAL
+      - D) CT-AI only
+    answer: 1
+    hint: Automation-engineer cert.
+    explanation: TAE is automation-specific. See [[#Recommended Order (Pragmatic)]].
+  - id: ir-009
+    type: single
+    q: "CTFL question count:"
+    options:
+      - A) 25
+      - B) 40
+      - C) 60
+      - D) 100
+    answer: 1
+    hint: 40 in 60 min.
+    explanation: Standard CTFL format. See [[#Foundation (CTFL v4.0, 2023)]].
+  - id: ir-010
+    type: single
+    q: "ISTQB exam format type:"
+    options:
+      - A) Hands-on coding
+      - B) Multiple choice (MCQ)
+      - C) Essay
+      - D) Oral
+    answer: 1
+    hint: Knowledge-based.
+    explanation: All ISTQB except CT-TAE practical = MCQ. See [[#What ISTQB Is]].
+  - id: ir-011
+    type: single
+    q: "Agile Tester extension:"
+    options:
+      - A) CTAL-AT
+      - B) CTFL-AT
+      - C) CT-AT
+      - D) CTEL-AT
+    answer: 1
+    hint: Foundation-level extension.
+    explanation: CTFL-AT sits on top of CTFL. See [[#Foundation Extensions]].
+  - id: ir-012
+    type: single
+    q: "Test Process Improvement expert cert:"
+    options:
+      - A) CTEL-TM
+      - B) CTEL-ITP
+      - C) TMMi (separate)
+      - D) CTAL-TPI
+    answer: 1
+    hint: Improving the Test Process.
+    explanation: ITP = expert-level test process improvement. See [[#Expert Level (CTEL)]].
+  - id: ir-013
+    type: single
+    q: "Which market most weighs ISTQB:"
+    options:
+      - A) US tech startup
+      - B) Germany / banking / aerospace enterprise
+      - C) Open-source projects
+      - D) None
+    answer: 1
+    hint: Compliance-heavy.
+    explanation: EU enterprise often requires it. See [[#Market Signal]].
+  - id: ir-014
+    type: single
+    q: "Sample-exam value:"
+    options:
+      - A) Same as real exam
+      - B) Format and wording calibration
+      - C) Useless
+      - D) Replaces syllabus
+    answer: 1
+    hint: Get used to phrasing.
+    explanation: Format awareness reduces exam shock. See [[#Study Resources]].
+  - id: ir-015
+    type: single
+    q: "CTAL-TTA target:"
+    options:
+      - A) Manager
+      - B) Technical test analyst â€” code-based, perf, security basics
+      - C) Business analyst
+      - D) Agile coach
+    answer: 1
+    hint: Technical IC.
+    explanation: TTA = engineering-leaning Advanced. See [[#Advanced Level (CTAL)]].
+  - id: ir-016
+    type: single
+    q: "Best resource for terminology:"
+    options:
+      - A) Wikipedia
+      - B) ISTQB Glossary
+      - C) Stack Overflow
+      - D) Reddit
+    answer: 1
+    hint: Authoritative term list.
+    explanation: Exam wording uses glossary terms. See [[#Study Resources]].
+  - id: ir-017
+    type: single
+    q: 'Why "verification vs validation" trips candidates:'
+    options:
+      - A) Same word
+      - B) Glossary distinguishes them precisely; everyday usage doesn't
+      - C) Not on exam
+      - D) Only in CTAL
+    answer: 1
+    hint: Build right thing vs build thing right.
+    explanation: Common distractor. See [[Glossary]] and [[#Common Pitfalls]].
+  - id: ir-018
+    type: single
+    q: "CT-AcT covers:"
+    options:
+      - A) Acceptance testing
+      - B) Action testing
+      - C) Active learning
+      - D) Accessibility
+    answer: 0
+    hint: UAT-leaning.
+    explanation: Acceptance Testing specialist. See [[#Foundation Extensions]].
+  - id: ir-019
+    type: single
+    q: "Expert vs Advanced difference:"
+    options:
+      - A) Same
+      - B) Expert focuses on strategy/programme leadership; Advanced on
+        specialty mastery
+      - C) Expert is shorter
+      - D) Advanced is harder
+    answer: 1
+    hint: Strategic > tactical.
+    explanation: Expert is org-level. See [[#Expert Level (CTEL)]].
+  - id: ir-020
+    type: single
+    q: "Best pair with cert for hireability:"
+    options:
+      - A) Another cert
+      - B) Hands-on portfolio (GitHub, real projects)
+      - C) Forum posts
+      - D) LinkedIn endorsements
+    answer: 1
+    hint: Cert + practice.
+    explanation: |-
+      Cert alone = paper tiger. See [[#Recommended Order (Pragmatic)]].
+
+      ---

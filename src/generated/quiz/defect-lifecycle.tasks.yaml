@@ -1,0 +1,33 @@
+lesson: defect-lifecycle
+tasks:
+  - id: dl-t001
+    type: fill_blank
+    q: "Fill: Severity measures _______ impact; priority measures _______ urgency."
+    answer: technical; business
+    hint: Two axes.
+    explanation: Independent dimensions of a defect. See [[#Severity vs Priority]].
+  - id: dl-t002
+    type: fill_blank
+    q: "Fill: When QA retest of a fix fails, the bug moves to state _______."
+    answer: Reopened
+    hint: Came back.
+    explanation: Failed retest reverts ticket back to dev. See [[#Standard States]].
+  - id: dl-t003
+    type: fill_blank
+    q: 'Task: Write a defect report for "checkout button does nothing on mobile
+      Safari iOS 17". Include all minimum fields.'
+    answer: |-
+      - ID: BUG-1042
+      - Title: Checkout button no-op on mobile Safari iOS 17
+      - Env: Build 4.2.1, iOS 17.4, Safari 17, iPhone 14
+      - Steps: 1) Add item to cart 2) Tap Cart 3) Tap Checkout
+      - Expected: navigate to /checkout
+      - Actual: nothing, no console error visible
+      - Severity: Major (no workaround on Safari)
+      - Priority: P1
+      - Reproducibility: Always
+      - Attachments: screen recording, Safari console export
+      - Reporter: QA team / Date: 2026-05-02
+    hint: Title + env + repro + expected/actual + sev/pri.
+    explanation: Complete report enables fast dev action. See [[#Defect Report
+      Fields (Minimum)]].

@@ -1,0 +1,227 @@
+lesson: mobile-testing
+questions:
+  - id: mt-001
+    type: single
+    q: "Espresso targets:"
+    options:
+      - A) iOS
+      - B) Android native
+      - C) Web
+      - D) Flutter
+    answer: 1
+    hint: Google.
+    explanation: Espresso is Android native UI test framework. See [[#Tools]].
+  - id: mt-002
+    type: single
+    q: "XCUITest is for:"
+    options:
+      - A) Android
+      - B) iOS native
+      - C) Cross-platform
+      - D) PWA
+    answer: 1
+    hint: Apple.
+    explanation: Apple's iOS UI test framework. See [[#Tools]].
+  - id: mt-003
+    type: single
+    q: "Appium protocol:"
+    options:
+      - A) JDBC
+      - B) WebDriver / W3C
+      - C) gRPC
+      - D) GraphQL
+    answer: 1
+    hint: Selenium-like.
+    explanation: Appium speaks WebDriver protocol. See [[#Tools]].
+  - id: mt-004
+    type: single
+    q: "Best stable locator:"
+    options:
+      - A) XPath full
+      - B) Accessibility ID
+      - C) Pixel coordinates
+      - D) Index
+    answer: 1
+    hint: Cross-platform stable.
+    explanation: Accessibility IDs survive layout changes. See [[#Best Practices]].
+  - id: mt-005
+    type: single
+    q: "Detox primarily for:"
+    options:
+      - A) Native iOS
+      - B) React Native
+      - C) Cordova
+      - D) Flutter
+    answer: 1
+    hint: RN gray-box.
+    explanation: Detox built for React Native testing. See [[#Tools]].
+  - id: mt-006
+    type: single
+    q: "Hybrid app uses:"
+    options:
+      - A) Native code only
+      - B) WebView inside native shell
+      - C) Browser only
+      - D) Server-side render
+    answer: 1
+    hint: Cordova/Capacitor.
+    explanation: Hybrid wraps web UI in native container. See [[#App Types]].
+  - id: mt-007
+    type: single
+    q: "Interrupt test example:"
+    options:
+      - A) Long input
+      - B) Incoming call during purchase flow
+      - C) Empty form
+      - D) DB down
+    answer: 1
+    hint: External event.
+    explanation: Interrupts test app handles real-world events. See [[#Test Categories]].
+  - id: mt-008
+    type: single
+    q: "Cold start means:"
+    options:
+      - A) App resumed from background
+      - B) App launched from terminated state
+      - C) Device boot
+      - D) Cache hit
+    answer: 1
+    hint: Fresh process.
+    explanation: Cold start = full launch from zero. See [[#Performance Targets (rough)]].
+  - id: mt-009
+    type: single
+    q: "Frame budget at 60fps:"
+    options:
+      - A) 33ms
+      - B) 16ms
+      - C) 100ms
+      - D) 1ms
+    answer: 1
+    hint: 1000/60.
+    explanation: ~16.7ms per frame for 60fps. See [[#Performance Targets (rough)]].
+  - id: mt-010
+    type: single
+    q: "Cloud device farm example:"
+    options:
+      - A) BrowserStack / Sauce / Firebase Test Lab
+      - B) Postman
+      - C) JMeter
+      - D) Wireshark
+    answer: 0
+    hint: Real device cloud.
+    explanation: Run tests on hosted real devices. See [[#Device Strategy]].
+  - id: mt-011
+    type: single
+    q: "Maestro is:"
+    options:
+      - A) DB tool
+      - B) YAML mobile flow runner
+      - C) IDE
+      - D) CDN
+    answer: 1
+    hint: Declarative mobile.
+    explanation: Maestro defines flows in YAML, no code. See [[#Tools]].
+  - id: mt-012
+    type: single
+    q: "RTL testing checks:"
+    options:
+      - A) Right-to-left language layout
+      - B) Round-trip latency
+      - C) Real-time logs
+      - D) Retry logic
+    answer: 0
+    hint: Arabic/Hebrew.
+    explanation: Layout mirroring for RTL languages. See [[#Test Categories]].
+  - id: mt-013
+    type: single
+    q: "Foldable / large screen test verifies:"
+    options:
+      - A) Layout adapts to fold/unfold + density
+      - B) Audio
+      - C) DB indexes
+      - D) Cookies
+    answer: 0
+    hint: Continuity.
+    explanation: Foldables require layout adaptation. See [[#Common Bugs Found]].
+  - id: mt-014
+    type: single
+    q: "Deep link bug surfaces when:"
+    options:
+      - A) Tap link doesn't reach correct screen
+      - B) Color wrong
+      - C) Battery low
+      - D) Slow start
+    answer: 0
+    hint: Routing.
+    explanation: Deep link testing verifies URL/intent â†’ screen. See [[#Common
+      Bugs Found]].
+  - id: mt-015
+    type: single
+    q: "Permissions test should:"
+    options:
+      - A) Skip
+      - B) Test grant + deny + revoke flows
+      - C) Always grant
+      - D) Disable check
+    answer: 1
+    hint: All paths.
+    explanation: Apps must handle deny gracefully. See [[#Test Categories]].
+  - id: mt-016
+    type: single
+    q: "Emulator vs real device:"
+    options:
+      - A) Same
+      - B) Emulator faster dev loop, real device required for hardware-sensitive
+      - C) Real always better
+      - D) Emulator only
+    answer: 1
+    hint: Trade-off.
+    explanation: Emulator misses sensors, OEM, GPU quirks. See [[#Device Strategy]].
+  - id: mt-017
+    type: single
+    q: "Network condition tool:"
+    options:
+      - A) Charles / Network Link Conditioner
+      - B) JMeter
+      - C) Lighthouse
+      - D) Pact
+    answer: 0
+    hint: Throttle traffic.
+    explanation: Charles throttles bandwidth + latency for testing. See [[#Best Practices]].
+  - id: mt-018
+    type: single
+    q: "App lifecycle states include:"
+    options:
+      - A) Foreground / Background / Killed
+      - B) Logged in / out
+      - C) Public / Private
+      - D) Sync / Async
+    answer: 0
+    hint: OS lifecycle.
+    explanation: Lifecycle = states OS transitions app through. See [[#What's
+      Different vs Web]].
+  - id: mt-019
+    type: single
+    q: "Push notification test step:"
+    options:
+      - A) Verify delivery + deep link tap â†’ correct screen + state
+      - B) Just send
+      - C) Manual screenshot only
+      - D) Skip
+    answer: 0
+    hint: End-to-end.
+    explanation: Cover delivery, tap action, navigation, state. See [[#Test Categories]].
+  - id: mt-020
+    type: single
+    q: "React Native app testing:"
+    options:
+      - A) XCUITest only
+      - B) Espresso only
+      - C) Detox or Appium
+      - D) PowerShell
+    answer: 2
+    hint: RN-aware.
+    explanation: |-
+      Detox best for RN gray-box; Appium also works. See [[#Tools]].
+
+      ---

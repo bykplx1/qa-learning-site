@@ -1,0 +1,233 @@
+lesson: playwright
+questions:
+  - id: p-001
+    type: single
+    q: "Playwright auto-wait means:"
+    options:
+      - A) Sleep before each action
+      - B) Actions wait for actionability before executing
+      - C) Polls every 100ms forever
+      - D) Lazy load only
+    answer: 1
+    hint: Visible + enabled + stable.
+    explanation: Eliminates flaky manual waits. See [[#Auto-Wait]].
+  - id: p-002
+    type: single
+    q: "Preferred locator strategy:"
+    options:
+      - A) XPath
+      - B) Role/label/testid
+      - C) Class name
+      - D) Tag name
+    answer: 1
+    hint: Resilient + accessible.
+    explanation: "`getByRole` aligns with how users find elements. See [[#Locators
+      (Recommended API)]]."
+  - id: p-003
+    type: single
+    q: "Web-first assertion advantage:"
+    options:
+      - A) Faster
+      - B) Auto-retries until condition met or timeout
+      - C) Skip on failure
+      - D) Cached
+    answer: 1
+    hint: Built-in retry.
+    explanation: "`expect(locator).toHaveText(...)` polls. See [[#Assertions (web-first)]]."
+  - id: p-004
+    type: single
+    q: "Mock API response:"
+    options:
+      - A) `page.intercept`
+      - B) `page.route("...", route => route.fulfill(...))`
+      - C) `page.mock`
+      - D) `page.fake`
+    answer: 1
+    hint: Route handler.
+    explanation: "`page.route()` registers fulfill/continue/abort. See [[#Network
+      Interception]]."
+  - id: p-005
+    type: single
+    q: "Run tests on three browsers:"
+    options:
+      - A) Three suites
+      - B) Define `projects` in config
+      - C) `--browser all`
+      - D) Manual loop
+    answer: 1
+    hint: Project config.
+    explanation: Playwright runs tests per project. See [[#Fixtures + Configuration]].
+  - id: p-006
+    type: single
+    q: "Trace viewer shows:"
+    options:
+      - A) Console only
+      - B) DOM snapshots, network, actions, screenshots
+      - C) Coverage
+      - D) Linter
+    answer: 1
+    hint: Time-travel debug.
+    explanation: Trace records full execution. See [[#Tracing + Debugging]].
+  - id: p-007
+    type: single
+    q: "Skip re-login per test:"
+    options:
+      - A) Cookie hard-code
+      - B) `storageState` reuse
+      - C) Disable auth
+      - D) Singleton
+    answer: 1
+    hint: Save/restore state.
+    explanation: Save context state once, reuse via project. See [[#Storage State
+      (Auth Reuse)]].
+  - id: p-008
+    type: single
+    q: "Built-in API testing client:"
+    options:
+      - A) `axios`
+      - B) `request` fixture
+      - C) `fetch` only
+      - D) None
+    answer: 1
+    hint: Fixture.
+    explanation: "`request` provides API context. See [[#API Testing (Built-in)]]."
+  - id: p-009
+    type: single
+    q: "Shard tests across 4 CI nodes:"
+    options:
+      - A) `--workers=4`
+      - B) `--shard=1/4` etc per node
+      - C) `--parallel`
+      - D) Custom script
+    answer: 1
+    hint: Shard flag.
+    explanation: Splits suite by hash for distributed CI. See [[#Parallel + Sharding]].
+  - id: p-010
+    type: single
+    q: "Codegen does:"
+    options:
+      - A) Generate code coverage
+      - B) Records actions into test code
+      - C) Compiles tests
+      - D) Mocks data
+    answer: 1
+    hint: Recorder.
+    explanation: "`playwright codegen` outputs scaffolding. See [[#Setup]]."
+  - id: p-011
+    type: single
+    q: "UI mode benefit:"
+    options:
+      - A) Required for tests
+      - B) Interactive watch + time travel
+      - C) Faster CI
+      - D) Mocking
+    answer: 1
+    hint: Dev loop.
+    explanation: "`--ui` opens interactive runner. See [[#Tracing + Debugging]]."
+  - id: p-012
+    type: single
+    q: "Default workers value source:"
+    options:
+      - A) 1
+      - B) Config or auto by CPUs
+      - "C) `workers: max`"
+      - D) Disabled
+    answer: 1
+    hint: Config-driven.
+    explanation: "`workers` in config; default auto. See [[#Fixtures + Configuration]]."
+  - id: p-013
+    type: single
+    q: "Tests in same file run:"
+    options:
+      - A) Always parallel
+      - B) Serial by default
+      - C) Random
+      - D) Reverse
+    answer: 1
+    hint: File scope.
+    explanation: Same-file tests share worker by default; opt-in to parallel via
+      describe. See [[#Parallel + Sharding]].
+  - id: p-014
+    type: single
+    q: "`page.waitForTimeout(2000)` advice:"
+    options:
+      - A) Use freely
+      - B) Avoid; prefer web-first assertion
+      - C) Required between actions
+      - D) Mocks time
+    answer: 1
+    hint: Anti-pattern.
+    explanation: Fixed sleeps cause flakiness. See [[#Common Pitfalls]].
+  - id: p-015
+    type: single
+    q: "Custom fixture purpose:"
+    options:
+      - A) Mock browser
+      - B) Reusable setup like authedPage
+      - C) Skip tests
+      - D) Required for CI
+    answer: 1
+    hint: Test extension.
+    explanation: "`test.extend` creates per-test context. See [[#Custom Fixtures]]."
+  - id: p-016
+    type: single
+    q: "`expect(page).toHaveURL(/x/)`:"
+    options:
+      - A) Sync check
+      - B) Auto-retry until URL matches or timeout
+      - C) Throws immediately
+      - D) Network only
+    answer: 1
+    hint: Web-first.
+    explanation: Same retry semantics as locator assertions. See [[#Assertions
+      (web-first)]].
+  - id: p-017
+    type: single
+    q: "WebKit testing matters because:"
+    options:
+      - A) Same as Chromium
+      - B) Tests Safari-equivalent rendering
+      - C) Faster
+      - D) Required by spec
+    answer: 1
+    hint: Safari engine.
+    explanation: Catches Safari-only bugs without Mac. See [[#Why Playwright]].
+  - id: p-018
+    type: single
+    q: "Trace setting `on-first-retry`:"
+    options:
+      - A) Always trace
+      - B) Trace only when test retried
+      - C) Disable
+      - D) Trace failures only
+    answer: 1
+    hint: Save resources.
+    explanation: Avoids tracing every passing run. See [[#Fixtures + Configuration]].
+  - id: p-019
+    type: single
+    q: "`getByTestId` selects via:"
+    options:
+      - A) `id`
+      - B) `data-testid` attribute
+      - C) Role
+      - D) Class
+    answer: 1
+    hint: Configurable attr.
+    explanation: Convention; testIdAttribute customizable. See [[#Locators
+      (Recommended API)]].
+  - id: p-020
+    type: single
+    q: "Component tests run:"
+    options:
+      - A) Inside Node only
+      - B) Mount components in real browser via experimental-ct-*
+      - C) Headless Node
+      - D) JSDOM
+    answer: 1
+    hint: Real browser.
+    explanation: >-
+      CT mounts components in actual browser context. See [[#Component Testing
+      (experimental)]].
+
+
+      ---

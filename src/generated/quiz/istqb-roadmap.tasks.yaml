@@ -1,0 +1,24 @@
+lesson: istqb-roadmap
+tasks:
+  - id: ir-t001
+    type: fill_blank
+    q: "Fill: CTFL v4.0 has ___ MCQ in ___ minutes with ___% pass."
+    answer: 40 / 60 / 65
+    hint: Standard format.
+    explanation: Memorize for exam day. See [[#Foundation (CTFL v4.0, 2023)]].
+  - id: ir-t002
+    type: fill_blank
+    q: "Task: List the four CTAL streams and their target audiences."
+    answer: |-
+      - CTAL-TM â†’ test managers (strategy, risk, metrics).
+      - CTAL-TA â†’ analyst (domain-driven test design).
+      - CTAL-TTA â†’ technical analyst (perf, security basics, code-based).
+      - CTAL-TAE â†’ automation engineer (automation architecture).
+    hint: TM, TA, TTA, TAE.
+    explanation: Lane choice drives study plan. See [[#Advanced Level (CTAL)]].
+  - id: ir-t003
+    type: fill_blank
+    q: "Fill: Specialist cert for AI/ML system testing = ______."
+    answer: CT-AI
+    hint: Specialist tier.
+    explanation: Hot specialist for 2024â€“2026. See [[#Specialist (Hot 2024â€“2026)]].

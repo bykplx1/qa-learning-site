@@ -1,0 +1,237 @@
+lesson: python-for-qa
+questions:
+  - id: pfq-001
+    type: single
+    q: "Difference `is` vs `==`:"
+    options:
+      - A) Same
+      - B) `is` identity, `==` equality
+      - C) `is` faster equality
+      - D) `==` only for numbers
+    answer: 1
+    hint: Object id vs value.
+    explanation: "`is` compares object identity (`id(x) == id(y)`); `==` compares
+      value via `__eq__`. See [[#Gotchas]]."
+  - id: pfq-002
+    type: single
+    q: "Mutable default argument bug:"
+    options:
+      - A) Crashes
+      - B) Default list shared across calls
+      - C) Slower function
+      - D) Type error
+    answer: 1
+    hint: Default eval'd once.
+    explanation: Default values created at function def time; mutating them
+      persists. Use `None` sentinel. See [[#Gotchas]].
+  - id: pfq-003
+    type: single
+    q: "Pytest parametrize purpose:"
+    options:
+      - A) Mock fixtures
+      - B) Run same test with multiple input sets
+      - C) Skip tests
+      - D) Parallelism
+    answer: 1
+    hint: Data-driven.
+    explanation: "`@pytest.mark.parametrize` expands one test into N cases. See
+      [[#pytest Essentials]]."
+  - id: pfq-004
+    type: single
+    q: "Activate venv (POSIX):"
+    options:
+      - A) `python venv on`
+      - B) `source .venv/bin/activate`
+      - C) `pip activate`
+      - D) `venv start`
+    answer: 1
+    hint: Source the script.
+    explanation: Activates env so `python` and `pip` resolve to the venv. See
+      [[#Virtual Envs + pip]].
+  - id: pfq-005
+    type: single
+    q: "`requests.get` timeout=5 means:"
+    options:
+      - A) Retry 5x
+      - B) Wait max 5s for response
+      - C) 5 ms
+      - D) Cache 5s
+    answer: 1
+    hint: Seconds.
+    explanation: Without timeout, request can hang forever. See [[#requests (HTTP)]].
+  - id: pfq-006
+    type: single
+    q: "Best fixture scope for shared DB connection across module:"
+    options:
+      - A) function
+      - B) class
+      - C) module
+      - D) session
+    answer: 2
+    hint: Per file.
+    explanation: '`scope="module"` shares for tests in one file; `session` for
+      entire run. See [[#pytest Essentials]].'
+  - id: pfq-007
+    type: single
+    q: "Comprehension equivalent of map+filter:"
+    options:
+      - A) `[f(x) for x in xs if cond(x)]`
+      - "B) `lambda xs: xs`"
+      - C) `map(filter, xs)`
+      - D) `xs.filter(f)`
+    answer: 0
+    hint: Single line.
+    explanation: Pythonic; clearer than chained `map()/filter()`. See [[#Comprehensions]].
+  - id: pfq-008
+    type: single
+    q: "`with open(...)` benefit:"
+    options:
+      - A) Faster read
+      - B) Auto-closes file even on exception
+      - C) Encrypts
+      - D) Locks file
+    answer: 1
+    hint: Context manager.
+    explanation: "`__exit__` closes resource; safer than manual `close()`. See
+      [[#File I/O]]."
+  - id: pfq-009
+    type: single
+    q: "JSON Schema use in tests:"
+    options:
+      - A) Make HTTP calls
+      - B) Validate response shape against contract
+      - C) Mock APIs
+      - D) Generate code
+    answer: 1
+    hint: Spec validation.
+    explanation: Catches drift in fields/types automatically. See [[#JSON + Schema]].
+  - id: pfq-010
+    type: single
+    q: "Run only smoke-tagged tests:"
+    options:
+      - A) `pytest --smoke`
+      - B) `pytest -m smoke`
+      - C) `pytest tag=smoke`
+      - D) `pytest --tag smoke`
+    answer: 1
+    hint: Markers.
+    explanation: "`-m` filters by `@pytest.mark.<name>`. See [[#pytest Essentials]]."
+  - id: pfq-011
+    type: single
+    q: "`unittest.mock.patch` purpose:"
+    options:
+      - A) Patches OS
+      - B) Replaces target with Mock during test
+      - C) Hot-reloads code
+      - D) Static analysis
+    answer: 1
+    hint: Isolation.
+    explanation: Replaces dependency to control behavior, assert calls. See [[#Mocking]].
+  - id: pfq-012
+    type: single
+    q: "Why `print` not show in pytest by default:"
+    options:
+      - A) Disabled globally
+      - B) Pytest captures stdout; use `-s` to disable
+      - C) Use logging only
+      - D) Unsupported
+    answer: 1
+    hint: Capture flag.
+    explanation: "`pytest -s` disables output capture. See [[#Common QA Patterns]]."
+  - id: pfq-013
+    type: single
+    q: "Right collection for unique items:"
+    options:
+      - A) list
+      - B) tuple
+      - C) set
+      - D) dict keys also fine
+    answer: 2
+    hint: Math set.
+    explanation: "`set` enforces uniqueness, O(1) membership. See [[#Data Structures
+      Quick Map]]."
+  - id: pfq-014
+    type: single
+    q: "f-string repr formatter:"
+    options:
+      - A) `f"{x:r}"`
+      - B) `f"{x!r}"`
+      - C) `f"{repr x}"`
+      - D) `repr(f"{x}")`
+    answer: 1
+    hint: "`!r`."
+    explanation: Conversion flag invokes `repr()` inside f-string. See [[#Strings +
+      f-strings]].
+  - id: pfq-015
+    type: single
+    q: "`pathlib.Path` over `os.path` because:"
+    options:
+      - A) Faster always
+      - B) Object-oriented, cross-platform paths
+      - C) Required by stdlib
+      - D) Async
+    answer: 1
+    hint: Path objects.
+    explanation: 'Cleaner API: `Path("a") / "b"`. See [[#Useful Stdlib]].'
+  - id: pfq-016
+    type: single
+    q: "`r.raise_for_status()` does:"
+    options:
+      - A) Print code
+      - B) Raise HTTPError if 4xx/5xx
+      - C) Cancel request
+      - D) Retry
+    answer: 1
+    hint: Bad codes.
+    explanation: Converts HTTP error codes to exceptions. See [[#requests (HTTP)]].
+  - id: pfq-017
+    type: single
+    q: "List â†’ set converts because:"
+    options:
+      - A) Sorts
+      - B) Dedupes (loses order)
+      - C) Reverses
+      - D) Compresses
+    answer: 1
+    hint: Unique only.
+    explanation: Sets eliminate dupes; insertion order not guaranteed pre-3.7-ish.
+      See [[#Data Structures Quick Map]].
+  - id: pfq-018
+    type: single
+    q: "`pytest-asyncio` enables:"
+    options:
+      - A) Faster sync tests
+      - B) `async def` test functions
+      - C) Threading
+      - D) Subprocess
+    answer: 1
+    hint: Coroutines in tests.
+    explanation: Plugin allows awaiting async code in tests. See [[#Common QA Patterns]].
+  - id: pfq-019
+    type: single
+    q: "Late binding in `[lambda: i for i in range(3)]` produces:"
+    options:
+      - A) [0,1,2]
+      - B) All return 2
+      - C) Error
+      - D) Random
+    answer: 1
+    hint: Closure captures variable, not value.
+    explanation: Each lambda references same `i`; final value = 2. Use `lambda i=i:`
+      to bind. See [[#Gotchas]].
+  - id: pfq-020
+    type: single
+    q: "`tenacity` library used for:"
+    options:
+      - A) Logging
+      - B) Retry with backoff
+      - C) Mocking
+      - D) HTTP
+    answer: 1
+    hint: Robustness.
+    explanation: >-
+      Decorators retry flaky calls (network, eventually-consistent reads). See
+      [[#Common QA Patterns]].
+
+
+      ---

@@ -1,0 +1,28 @@
+lesson: python-for-qa
+tasks:
+  - id: pfq-t001
+    type: fill_blank
+    q: "Fill: Decorator to mark a slow test in pytest is `@pytest.mark.______`."
+    answer: slow (custom marker)
+    hint: Tag tests.
+    explanation: Custom markers filter test runs (`-m "not slow"`). See [[#pytest
+      Essentials]].
+  - id: pfq-t002
+    type: fill_blank
+    q: 'Task: Write a parametrized pytest checking `len(s) == expected` for
+      `("","",0)`, `("ab","",2)`.'
+    answer: |-
+      ```python
+      import pytest
+      @pytest.mark.parametrize("s,expected",[("",0),("ab",2),("hello",5)])
+      def test_len(s, expected):
+          assert len(s) == expected
+      ```
+    hint: "`@pytest.mark.parametrize`."
+    explanation: Compact data-driven test. See [[#pytest Essentials]].
+  - id: pfq-t003
+    type: fill_blank
+    q: "Fill: Library used to validate JSON response shape: ______."
+    answer: jsonschema
+    hint: Schema enforcement.
+    explanation: Standard for declarative response validation. See [[#JSON + Schema]].

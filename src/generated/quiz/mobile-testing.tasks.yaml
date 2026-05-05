@@ -1,0 +1,25 @@
+lesson: mobile-testing
+tasks:
+  - id: mt-t001
+    type: fill_blank
+    q: "Fill: Tool that throttles network conditions during testing is called
+      _______."
+    answer: Charles (or Network Link Conditioner / mitmproxy)
+    hint: Proxy throttler.
+    explanation: Simulates real-world network for mobile. See [[#Best Practices]].
+  - id: mt-t002
+    type: fill_blank
+    q: "Task: List 3 interrupt scenarios you must cover during mobile testing."
+    answer: |-
+      - Incoming call during a flow.
+      - Push notification during checkout.
+      - Low battery / power save mode toggle.
+    hint: Real-world events.
+    explanation: Interrupts test resilience to OS-level events. See [[#Test Categories]].
+  - id: mt-t003
+    type: fill_blank
+    q: "Fill: Cross-platform mobile automation tool using WebDriver protocol is
+      _______."
+    answer: Appium
+    hint: WebDriver mobile.
+    explanation: Appium = de facto cross-platform mobile automation. See [[#Tools]].

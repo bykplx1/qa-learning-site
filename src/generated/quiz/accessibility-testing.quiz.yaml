@@ -1,0 +1,238 @@
+lesson: accessibility-testing
+questions:
+  - id: at-001
+    type: single
+    q: WCAG POUR =
+    options:
+      - A) Perceivable, Operable, Understandable, Robust
+      - B) Public, Open, Usable, Reachable
+      - C) Persistent, Optimal, Universal, Reliable
+      - D) None
+    answer: 0
+    hint: Four principles.
+    explanation: POUR is mnemonic for the WCAG 4 principles. See [[#WCAG Principles
+      (POUR)]].
+  - id: at-002
+    type: single
+    q: "Common legal target conformance level:"
+    options:
+      - A) A
+      - B) AA
+      - C) AAA
+      - D) AAAA
+    answer: 1
+    hint: Middle.
+    explanation: AA is widely required (ADA, EAA). See [[#Conformance Levels]].
+  - id: at-003
+    type: single
+    q: "Min contrast ratio for normal text:"
+    options:
+      - A) 2:1
+      - B) 3:1
+      - C) 4.5:1
+      - D) 7:1
+    answer: 2
+    hint: WCAG 1.4.3.
+    explanation: Normal text needs 4.5:1; large text 3:1. See [[#Key WCAG Criteria
+      (AA highlights)]].
+  - id: at-004
+    type: single
+    q: "Best practice for clickable element:"
+    options:
+      - A) `<div onclick>`
+      - B) `<button>`
+      - C) `<span>`
+      - D) `<a href="#">`
+    answer: 1
+    hint: Native semantics.
+    explanation: "`<button>` is keyboard + screen reader accessible by default. See
+      [[#ARIA Rules]]."
+  - id: at-005
+    type: single
+    q: "ARIA first rule:"
+    options:
+      - A) Always add ARIA
+      - B) Don't use ARIA if native HTML exists
+      - C) ARIA replaces semantic HTML
+      - D) ARIA needed on every element
+    answer: 1
+    hint: No ARIA is best ARIA.
+    explanation: Native elements ship correct semantics + behavior. See [[#ARIA Rules]].
+  - id: at-006
+    type: single
+    q: "Screen reader for Mac:"
+    options:
+      - A) NVDA
+      - B) JAWS
+      - C) VoiceOver
+      - D) TalkBack
+    answer: 2
+    hint: Built into macOS/iOS.
+    explanation: VoiceOver is Apple's built-in SR. See [[#Testing Methods]].
+  - id: at-007
+    type: single
+    q: "axe-core covers what % of issues:"
+    options:
+      - A) 100%
+      - B) ~30â€“40%
+      - C) 80%
+      - D) None
+    answer: 1
+    hint: Automation limit.
+    explanation: Many issues need human judgment (alt quality, focus order). See
+      [[#Testing Methods]].
+  - id: at-008
+    type: single
+    q: "Tab key purpose:"
+    options:
+      - A) Insert tab character
+      - B) Move keyboard focus to next interactive
+      - C) Submit form
+      - D) Close modal
+    answer: 1
+    hint: Focus traversal.
+    explanation: Tab moves focus forward through interactive elements. See [[#Manual
+      Test Checklist]].
+  - id: at-009
+    type: single
+    q: "Decorative image alt:"
+    options:
+      - A) Description
+      - B) `alt=""`
+      - C) Long paragraph
+      - D) Filename
+    answer: 1
+    hint: Empty alt.
+    explanation: Empty alt tells SR to skip purely decorative images. See [[#Manual
+      Test Checklist]].
+  - id: at-010
+    type: single
+    q: "Modal accessibility need:"
+    options:
+      - A) Auto-close after 2s
+      - B) Focus trap + Esc + focus return
+      - C) Disable keyboard
+      - D) Always full screen
+    answer: 1
+    hint: Focus management.
+    explanation: Trap inside modal, restore on close. See [[#Manual Test Checklist]].
+  - id: at-011
+    type: single
+    q: "WCAG 2.1.1 (Keyboard) requires:"
+    options:
+      - A) Touch only
+      - B) All functionality available via keyboard
+      - C) Mouse required
+      - D) Voice only
+    answer: 1
+    hint: Keyboard access.
+    explanation: All UI must be keyboard-operable. See [[#Key WCAG Criteria (AA
+      highlights)]].
+  - id: at-012
+    type: single
+    q: "Color alone for meaning:"
+    options:
+      - A) Allowed
+      - B) Not allowed (need text/icon too)
+      - C) Required
+      - D) AAA only
+    answer: 1
+    hint: Color blind users.
+    explanation: Color cannot be sole signal â€” pair with text/shape. See [[#Manual
+      Test Checklist]].
+  - id: at-013
+    type: single
+    q: "Heading order rule:"
+    options:
+      - A) Random
+      - B) No skipping levels (h1â†’h3 wrong)
+      - C) Always h1 only
+      - D) h6 first
+    answer: 1
+    hint: Logical hierarchy.
+    explanation: Skipping levels breaks SR navigation. See [[#Common Issues]].
+  - id: at-014
+    type: single
+    q: "ARIA live region used for:"
+    options:
+      - A) Static text
+      - B) Announcing dynamic content updates
+      - C) Hide content
+      - D) Color
+    answer: 1
+    hint: SR announce.
+    explanation: "`aria-live` regions notify SR of changes (e.g., toasts). See
+      [[#Manual Test Checklist]]."
+  - id: at-015
+    type: single
+    q: "Focus visible requirement:"
+    options:
+      - A) Optional
+      - B) Required at AA (2.4.7)
+      - C) AAA only
+      - D) Never
+    answer: 1
+    hint: Outline/ring.
+    explanation: Sighted keyboard users must see focus. See [[#Key WCAG Criteria (AA
+      highlights)]].
+  - id: at-016
+    type: single
+    q: "Animations + accessibility:"
+    options:
+      - A) Always required
+      - B) Respect `prefers-reduced-motion`
+      - C) Auto-play OK
+      - D) Faster better
+    answer: 1
+    hint: Vestibular disorders.
+    explanation: Reduce motion when user has set preference. See [[#Common Issues]].
+  - id: at-017
+    type: single
+    q: "Lighthouse a11y score is:"
+    options:
+      - A) Definitive
+      - B) Helpful baseline; not exhaustive
+      - C) Pass = perfect
+      - D) Manual replacement
+    answer: 1
+    hint: Automation limit.
+    explanation: Lighthouse spots subset; manual still needed. See [[#Testing Methods]].
+  - id: at-018
+    type: single
+    q: "WCAG R = Robust means:"
+    options:
+      - A) Works with assistive tech / parsers
+      - B) Performance
+      - C) Encryption
+      - D) Mobile
+    answer: 0
+    hint: Compatible.
+    explanation: Robust = compatible with current/future assistive tech. See [[#WCAG
+      Principles (POUR)]].
+  - id: at-019
+    type: single
+    q: "Form input must have:"
+    options:
+      - A) Border
+      - B) Programmatic label
+      - C) Color
+      - D) Auto-focus
+    answer: 1
+    hint: Name, Role, Value.
+    explanation: Label associates name to field for SR. See [[#Manual Test Checklist]].
+  - id: at-020
+    type: single
+    q: "Section 508 is:"
+    options:
+      - A) US federal accessibility law
+      - B) UK GDPR clause
+      - C) WCAG version
+      - D) Browser
+    answer: 0
+    hint: US gov.
+    explanation: >-
+      US federal regulation requiring accessible IT. See [[#Accessibility
+      Testing]].
+
+
+      ---

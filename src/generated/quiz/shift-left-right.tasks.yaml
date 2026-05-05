@@ -1,0 +1,28 @@
+lesson: shift-left-right
+tasks:
+  - id: slr-t001
+    type: fill_blank
+    q: "Fill: Releasing to a small subset of users first to limit blast radius is a
+      _______ release."
+    answer: canary
+    hint: Coal mine bird.
+    explanation: Canary catches issues in narrow user slice before full rollout. See
+      [[#Practices]].
+  - id: slr-t002
+    type: fill_blank
+    q: "Task: Team only tests after dev-complete. Suggest 3 shift-left actions."
+    answer: |-
+      - Add three-amigos review of acceptance criteria pre-sprint.
+      - Add unit + lint + type-check gates in pre-merge CI.
+      - Adopt TDD or BDD for new features; tests authored with code.
+    hint: Earlier collaboration + automation.
+    explanation: Earlier defect detection lowers cost + improves req clarity. See
+      [[#Practices]] and [[#Cost-of-Defect Curve]].
+  - id: slr-t003
+    type: fill_blank
+    q: "Fill: Scripted probes that continuously hit production endpoints to detect
+      outages are called _______ monitoring."
+    answer: synthetic
+    hint: Not real users.
+    explanation: Synthetic monitoring validates uptime and SLO from outside. See
+      [[#Practices]].

@@ -1,0 +1,240 @@
+lesson: risk-based-testing
+questions:
+  - id: rbt-001
+    type: single
+    q: Risk = ?
+    options:
+      - A) Likelihood + Impact
+      - B) Likelihood Ã— Impact
+      - C) Bug count / day
+      - D) Coverage %
+    answer: 1
+    hint: Product, not sum.
+    explanation: Combined product weighs both probability + consequence. See [[#Risk
+      = Likelihood Ã— Impact]].
+  - id: rbt-002
+    type: single
+    q: "Primary purpose of RBT:"
+    options:
+      - A) Replace requirements
+      - B) Allocate test effort by risk
+      - C) Hide bugs
+      - D) Speed up CI
+    answer: 1
+    hint: Prioritization.
+    explanation: RBT directs limited effort to highest-risk areas. See [[#Core Idea]].
+  - id: rbt-003
+    type: single
+    q: "Project risk example:"
+    options:
+      - A) Off-by-one bug
+      - B) Key tester leaves mid-release
+      - C) Memory leak
+      - D) SQL injection
+    answer: 1
+    hint: People/schedule.
+    explanation: Project risks affect delivery, not product itself. See [[#Types of Risk]].
+  - id: rbt-004
+    type: single
+    q: "Product risk example:"
+    options:
+      - A) Server room fire
+      - B) Auth bypass vulnerability
+      - C) PM resigns
+      - D) License expires
+    answer: 1
+    hint: Inside the product.
+    explanation: Product risk = defect potential within software. See [[#Types of Risk]].
+  - id: rbt-005
+    type: single
+    q: "High-likelihood + high-impact area should:"
+    options:
+      - A) Skip testing
+      - B) Get deepest, earliest test coverage
+      - C) Manual only
+      - D) Defer to UAT
+    answer: 1
+    hint: Critical bucket.
+    explanation: Critical risk demands maximal coverage + early detection. See
+      [[#Mitigation by Level]].
+  - id: rbt-006
+    type: single
+    q: "RBT first step:"
+    options:
+      - A) Mitigate
+      - B) Identify
+      - C) Prioritize
+      - D) Close
+    answer: 1
+    hint: Cannot prioritize unknowns.
+    explanation: Identify before analyze, prioritize, mitigate. See [[#RBT Process
+      (ISTQB-aligned)]].
+  - id: rbt-007
+    type: single
+    q: "Likelihood factor:"
+    options:
+      - A) Fines from regulator
+      - B) Code complexity / churn
+      - C) Brand reputation
+      - D) User count
+    answer: 1
+    hint: Source-side.
+    explanation: Complexity, churn, novelty drive bug probability. See [[#Risk =
+      Likelihood Ã— Impact]].
+  - id: rbt-008
+    type: single
+    q: "Impact factor:"
+    options:
+      - A) Number of devs
+      - B) Money lost / safety / users affected
+      - C) Build time
+      - D) Lines of code
+    answer: 1
+    hint: Consequence.
+    explanation: Impact measures cost if defect manifests. See [[#Risk = Likelihood
+      Ã— Impact]].
+  - id: rbt-009
+    type: single
+    q: "Risk-based test plan should be:"
+    options:
+      - A) Static
+      - B) Reviewed and updated as info emerges
+      - C) Hidden from devs
+      - D) Only at release
+    answer: 1
+    hint: Living document.
+    explanation: Risk landscape shifts; continuous reassessment required. See [[#RBT
+      Process (ISTQB-aligned)]].
+  - id: rbt-010
+    type: single
+    q: "Low-likelihood / catastrophic-impact item:"
+    options:
+      - A) Always ignore
+      - B) Mitigate due to severity
+      - C) Regression suite only
+      - D) Defer indefinitely
+    answer: 1
+    hint: Black swan.
+    explanation: Severity makes rare events worth mitigation (data loss, safety).
+      See [[#Pitfalls]].
+  - id: rbt-011
+    type: single
+    q: "Risk score 25 implies (5Ã—5 scale):"
+    options:
+      - A) Lowest priority
+      - B) Critical, max test effort
+      - C) Auto-pass
+      - D) Same as 1
+    answer: 1
+    hint: Top right corner.
+    explanation: Max likelihood Ã— impact = critical priority. See [[#Risk Matrix]].
+  - id: rbt-012
+    type: single
+    q: "Three amigos contributes to RBT by:"
+    options:
+      - A) Replacing risk register
+      - B) Surfacing risks across roles early
+      - C) Removing testers
+      - D) Skipping reqs
+    answer: 1
+    hint: Cross-perspective.
+    explanation: Mixed roles spot risks single role misses. See [[#RBT Process
+      (ISTQB-aligned)]].
+  - id: rbt-013
+    type: single
+    q: "Best signal for hot risk areas:"
+    options:
+      - A) Random files
+      - B) High-churn Ã— high-complexity hotspots + defect history
+      - C) Newest commits only
+      - D) Untouched legacy
+    answer: 1
+    hint: Where bugs cluster.
+    explanation: Hotspots predict future defects. See [[#Inputs / Heuristics]].
+  - id: rbt-014
+    type: single
+    q: "RBT vs exhaustive testing:"
+    options:
+      - A) RBT replaces exhaustive only for unit tests
+      - B) Exhaustive impossible; RBT prioritizes within constraints
+      - C) Same thing
+      - D) RBT skips testing
+    answer: 1
+    hint: Time/budget bound.
+    explanation: Exhaustive infeasible; RBT optimizes coverage under limits. See
+      [[#Core Idea]].
+  - id: rbt-015
+    type: single
+    q: "Output of risk analysis often:"
+    options:
+      - A) Random list
+      - B) Risk register with scored, ranked items
+      - C) Bug bash invitation
+      - D) PR description
+    answer: 1
+    hint: Living register.
+    explanation: Risk register tracks items, scores, owners, mitigations. See [[#RBT
+      Process (ISTQB-aligned)]].
+  - id: rbt-016
+    type: single
+    q: "Compliance area typically:"
+    options:
+      - A) Low risk
+      - B) Elevated risk regardless of likelihood
+      - C) Not a risk
+      - D) Skipped
+    answer: 1
+    hint: Legal/financial impact.
+    explanation: Regulatory failure carries large impact (fines, blocking). See
+      [[#Inputs / Heuristics]].
+  - id: rbt-017
+    type: single
+    q: "RBT is most valuable when:"
+    options:
+      - A) Unlimited time
+      - B) Limited time + many risks
+      - C) No risks
+      - D) Single feature
+    answer: 1
+    hint: Constraint-driven.
+    explanation: Scarcity of effort makes prioritization critical. See [[#Core Idea]].
+  - id: rbt-018
+    type: single
+    q: "Continuous monitoring of risk includes:"
+    options:
+      - A) Locking the register
+      - B) Updating scores when new info appears (defects, changes)
+      - C) Annual review only
+      - D) Ignoring fix data
+    answer: 1
+    hint: Adaptive.
+    explanation: New defects/changes shift likelihood; rescore. See [[#RBT Process
+      (ISTQB-aligned)]].
+  - id: rbt-019
+    type: single
+    q: "Risk-based exploratory session targets:"
+    options:
+      - A) Random pages
+      - B) High-risk areas with charters
+      - C) Login only
+      - D) Untouched legacy
+    answer: 1
+    hint: Charter on hotspot.
+    explanation: Pair RBT with [[Exploratory-Testing]] for deep dive on risky zones.
+      See [[#Mitigation by Level]].
+  - id: rbt-020
+    type: single
+    q: "Stakeholder workshop in RBT:"
+    options:
+      - A) Optional and rare
+      - B) Aligns risk view across roles
+      - C) Decides salaries
+      - D) Removes testers
+    answer: 1
+    hint: Multi-perspective.
+    explanation: >-
+      Cross-role input surfaces blind spots; aligns priorities. See [[#RBT
+      Process (ISTQB-aligned)]].
+
+
+      ---

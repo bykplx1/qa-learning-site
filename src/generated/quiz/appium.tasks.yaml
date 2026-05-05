@@ -1,0 +1,28 @@
+lesson: appium
+tasks:
+  - id: a-t001
+    type: fill_blank
+    q: "Fill: For W3C compliance, vendor cap key prefix is `______:`."
+    answer: appium
+    hint: Vendor prefix.
+    explanation: Required for non-standard caps. See [[#Capabilities (Session Config)]].
+  - id: a-t002
+    type: fill_blank
+    q: "Task: Show Python snippet to switch into Android WebView, then back to
+      native."
+    answer: |-
+      ```python
+      ctxs = driver.contexts
+      web = next(c for c in ctxs if c.startswith("WEBVIEW"))
+      driver.switch_to.context(web)
+      # ... web actions ...
+      driver.switch_to.context("NATIVE_APP")
+      ```
+    hint: contexts list.
+    explanation: Hybrid app testing pattern. See [[#Hybrid + WebView]].
+  - id: a-t003
+    type: fill_blank
+    q: "Fill: Best cross-platform locator strategy is `______ id`."
+    answer: accessibility
+    hint: Maps to native a11y attrs.
+    explanation: Stable, supported on iOS + Android. See [[#Locators (Mobile)]].

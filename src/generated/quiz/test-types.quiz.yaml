@@ -1,0 +1,245 @@
+lesson: test-types
+questions:
+  - id: tt-001
+    type: single
+    q: "Smoke test is best described as:"
+    options:
+      - A) Long-running endurance test
+      - B) Quick wide check after build/deploy
+      - C) Penetration test
+      - D) Code review
+    answer: 1
+    hint: Wire glow â†’ on/off check.
+    explanation: Smoke = shallow broad sanity right after build to catch fundamental
+      brokenness. See [[#Functional Test Types]].
+  - id: tt-002
+    type: single
+    q: "Stress test goal:"
+    options:
+      - A) Verify normal traffic handled
+      - B) Find breaking point under extreme load
+      - C) Check spelling
+      - D) Validate regression suite
+    answer: 1
+    hint: Push past limits.
+    explanation: Stress probes beyond capacity to find failure modes + recovery. See
+      [[#Non-Functional Test Types]].
+  - id: tt-003
+    type: single
+    q: "Black-box testing relies on:"
+    options:
+      - A) Source code
+      - B) Specifications and external behavior
+      - C) Compiler output
+      - D) Memory profiler
+    answer: 1
+    hint: Outside view.
+    explanation: Black-box uses spec/behavior, ignores internals. See [[#Black-box
+      vs White-box vs Gray-box]].
+  - id: tt-004
+    type: single
+    q: "White-box covers:"
+    options:
+      - A) UI mockups
+      - B) Code paths, branches, conditions
+      - C) Business reqs only
+      - D) Network packets
+    answer: 1
+    hint: Structural.
+    explanation: White-box = structural testing of code structures. See [[#Black-box
+      vs White-box vs Gray-box]].
+  - id: tt-005
+    type: single
+    q: "Confirmation testing means:"
+    options:
+      - A) Confirm test plan
+      - B) Re-run a specific failed test after fix
+      - C) Confirm regression
+      - D) Confirm release
+    answer: 1
+    hint: Re-test fix.
+    explanation: Confirmation rerun confirms defect closed. See [[#Confirmation vs
+      Regression Testing]].
+  - id: tt-006
+    type: single
+    q: "Regression testing aims to:"
+    options:
+      - A) Verify only the fix
+      - B) Ensure changes did not break other features
+      - C) Replace UAT
+      - D) Remove old tests
+    answer: 1
+    hint: Side-effect check.
+    explanation: Regression catches collateral damage from changes. See
+      [[#Confirmation vs Regression Testing]].
+  - id: tt-007
+    type: single
+    q: "Endurance testing checks:"
+    options:
+      - A) Sudden burst
+      - B) Long-running stability (memory leaks, perf decay)
+      - C) Security
+      - D) Accessibility
+    answer: 1
+    hint: Soak.
+    explanation: Long duration reveals leaks, fragmentation, slow decay. See
+      [[#Non-Functional Test Types]].
+  - id: tt-008
+    type: single
+    q: "Spike test is:"
+    options:
+      - A) Same as soak
+      - B) Sudden traffic surge
+      - C) Slow ramp
+      - D) Error injection
+    answer: 1
+    hint: Sharp burst.
+    explanation: Spike validates handling of abrupt traffic jumps. See
+      [[#Non-Functional Test Types]].
+  - id: tt-009
+    type: single
+    q: "Localization testing verifies:"
+    options:
+      - A) Geo-routing
+      - B) Language, currency, date formats per locale
+      - C) Time zones only
+      - D) DNS
+    answer: 1
+    hint: L10n.
+    explanation: L10n covers per-locale UI/data adaptation. i18n is enabling
+      architecture. See [[#Non-Functional Test Types]].
+  - id: tt-010
+    type: single
+    q: "Compatibility testing matrix typically covers:"
+    options:
+      - A) Languages only
+      - B) Browser Ã— OS Ã— device
+      - C) Authors only
+      - D) Editors only
+    answer: 1
+    hint: Cross-environment.
+    explanation: Compatibility checks consistent behavior across environment
+      combinations. See [[#Non-Functional Test Types]].
+  - id: tt-011
+    type: single
+    q: "Recoverability testing checks:"
+    options:
+      - A) Backups can be deleted
+      - B) System recovers from failure (crash, network loss)
+      - C) Speed of CPU
+      - D) Cache hit ratio
+    answer: 1
+    hint: Crash + come back.
+    explanation: Recoverability validates fault recovery (restart, failover,
+      restore). See [[#Non-Functional Test Types]].
+  - id: tt-012
+    type: single
+    q: "Static testing is:"
+    options:
+      - A) Running tests without UI
+      - B) Reviews, walkthroughs, static analysis without executing
+      - C) Manual testing only
+      - D) Stress under static load
+    answer: 1
+    hint: No execution.
+    explanation: Static = analysis without runtime. See [[#Static vs Dynamic]].
+  - id: tt-013
+    type: single
+    q: "Functional vs non-functional:"
+    options:
+      - A) Functional = perf, non-functional = features
+      - B) Functional = features, non-functional = qualities
+      - C) Same thing
+      - D) Non-functional means broken
+    answer: 1
+    hint: WHAT vs HOW WELL.
+    explanation: Functional = behavior; non-functional = quality attributes. See
+      [[#Functional vs Non-Functional]].
+  - id: tt-014
+    type: single
+    q: "Volume testing focuses on:"
+    options:
+      - A) Audio loudness
+      - B) Large amounts of data
+      - C) Number of users only
+      - D) HTTP volume header
+    answer: 1
+    hint: Big data sizes.
+    explanation: Volume tests system with massive data sets (DB rows, file sizes).
+      See [[#Non-Functional Test Types]].
+  - id: tt-015
+    type: single
+    q: "Scalability testing answers:"
+    options:
+      - A) Does adding resources improve perf?
+      - B) Does code compile?
+      - C) Is UI accessible?
+      - D) Is doc complete?
+    answer: 0
+    hint: Horizontal/vertical scale.
+    explanation: Scalability = ability to grow with resources. Distinct from raw
+      load. See [[#Non-Functional Test Types]].
+  - id: tt-016
+    type: single
+    q: "Maintenance testing is triggered by:"
+    options:
+      - A) Sprint planning
+      - B) Change, migration, retirement
+      - C) Hiring
+      - D) UI redesign only
+    answer: 1
+    hint: Post-release events.
+    explanation: Maintenance covers post-prod changes (patches, migrations,
+      decommission). See [[#Maintenance Testing]].
+  - id: tt-017
+    type: single
+    q: "Re-test â‰  regression because:"
+    options:
+      - A) Re-test rerun all suite, regression rerun one
+      - B) Re-test = specific fix; regression = side-effects
+      - C) Same thing
+      - D) Re-test is manual only
+    answer: 1
+    hint: Single fix vs ripple.
+    explanation: Distinct purposes; both run after change. See [[#Confirmation vs
+      Regression Testing]].
+  - id: tt-018
+    type: single
+    q: "Gray-box testing:"
+    options:
+      - A) No knowledge
+      - B) Full source access
+      - C) Partial internal knowledge (e.g., DB schema)
+      - D) Production only
+    answer: 2
+    hint: Between black + white.
+    explanation: Gray-box mixes black-box + selective internal info. See
+      [[#Black-box vs White-box vs Gray-box]].
+  - id: tt-019
+    type: single
+    q: "Penetration testing is a form of:"
+    options:
+      - A) Performance
+      - B) Security
+      - C) Usability
+      - D) Localization
+    answer: 1
+    hint: Attack simulation.
+    explanation: Pentest = security testing technique simulating attacker. See
+      [[#Non-Functional Test Types]] and [[Security-Testing]].
+  - id: tt-020
+    type: single
+    q: "Usability testing evaluates:"
+    options:
+      - A) Code style
+      - B) Ease of use, learnability
+      - C) Network speed
+      - D) Compiler errors
+    answer: 1
+    hint: UX.
+    explanation: >-
+      Usability targets user experience metrics: learnability, efficiency,
+      satisfaction. See [[#Non-Functional Test Types]].
+
+
+      ---

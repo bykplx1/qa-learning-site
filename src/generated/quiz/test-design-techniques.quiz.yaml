@@ -1,0 +1,248 @@
+lesson: test-design-techniques
+questions:
+  - id: tdt-001
+    type: single
+    q: "EP stands for:"
+    options:
+      - A) Edge Pattern
+      - B) Equivalence Partitioning
+      - C) Error Probability
+      - D) Exit Procedure
+    answer: 1
+    hint: Group inputs.
+    explanation: EP groups inputs with same expected behavior to reduce test count.
+      See [[#Equivalence Partitioning (EP)]].
+  - id: tdt-002
+    type: single
+    q: "BVA tests primarily:"
+    options:
+      - A) Random middle values
+      - B) Edges and just-outside-edges
+      - C) Internal code paths
+      - D) UI styling
+    answer: 1
+    hint: Boundaries.
+    explanation: Defects cluster at boundaries (off-by-one, wrong operator). See
+      [[#Boundary Value Analysis (BVA)]].
+  - id: tdt-003
+    type: single
+    q: "Decision table best fits:"
+    options:
+      - A) Single input range
+      - B) Combined business rules
+      - C) Linear performance test
+      - D) Path coverage
+    answer: 1
+    hint: Multiple conditions interact.
+    explanation: When outcome depends on combinations of conditions, decision tables
+      enumerate exhaustively. See [[#Decision Tables]].
+  - id: tdt-004
+    type: single
+    q: "State transition testing useful for:"
+    options:
+      - A) Stateless API
+      - B) Login workflow with locked/unlocked states
+      - C) Static text display
+      - D) Code coverage
+    answer: 1
+    hint: Modes/states.
+    explanation: State machines need transition + state coverage to find bad
+      transitions. See [[#State Transition]].
+  - id: tdt-005
+    type: single
+    q: "Pairwise testing reduces:"
+    options:
+      - A) Code coverage
+      - B) Combinatorial test explosion
+      - C) Test data
+      - D) Exploratory time
+    answer: 1
+    hint: All-pairs subset.
+    explanation: Most defects emerge from pairs of inputs; covering all pairs gives
+      high defect detection at fraction of full combo. See [[#Pairwise
+      (All-Pairs)]].
+  - id: tdt-006
+    type: single
+    q: "MC/DC is required mainly in:"
+    options:
+      - A) Web apps
+      - B) Safety-critical (avionics, medical)
+      - C) Mobile games
+      - D) Marketing sites
+    answer: 1
+    hint: Aviation standard DO-178C.
+    explanation: MC/DC mandated by safety standards because each condition's
+      independent effect verified. See [[#MC/DC (Modified Condition/Decision
+      Coverage)]].
+  - id: tdt-007
+    type: single
+    q: "Statement coverage requires:"
+    options:
+      - A) All branches taken
+      - B) Each line executed at least once
+      - C) All paths
+      - D) All conditions evaluated
+    answer: 1
+    hint: Lines hit.
+    explanation: "Weakest white-box metric: each statement runs once. See
+      [[#Statement Coverage]]."
+  - id: tdt-008
+    type: single
+    q: "Branch coverage stronger than statement because:"
+    options:
+      - A) Same thing
+      - B) Each true + false outcome of each branch exercised
+      - C) Branch is faster
+      - D) Branch ignores conditions
+    answer: 1
+    hint: Both polarities.
+    explanation: Statement coverage misses untaken branches; branch coverage forces
+      both directions. See [[#Branch / Decision Coverage]].
+  - id: tdt-009
+    type: single
+    q: "Error guessing relies on:"
+    options:
+      - A) Random tools
+      - B) Tester experience and intuition about likely defects
+      - C) Spec only
+      - D) Compiler
+    answer: 1
+    hint: Hunch from history.
+    explanation: Veteran tester predicts common pitfalls (nulls, max, dupes). See
+      [[#Error Guessing]].
+  - id: tdt-010
+    type: single
+    q: "Exploratory testing is:"
+    options:
+      - A) Pre-scripted
+      - B) Simultaneous learning, design, execution
+      - C) Only manual
+      - D) UAT
+    answer: 1
+    hint: No script, charter-guided.
+    explanation: ET interleaves activities; charters provide focus + time-box. See
+      [[#Exploratory Testing]].
+  - id: tdt-011
+    type: single
+    q: "For range [10,20], BVA test set:"
+    options:
+      - A) {10, 15, 20}
+      - B) {9, 10, 11, 19, 20, 21}
+      - C) {0, 100}
+      - D) {15}
+    answer: 1
+    hint: Edges + outside.
+    explanation: Boundaries on, just inside, just outside maximize defect detection.
+      See [[#Boundary Value Analysis (BVA)]].
+  - id: tdt-012
+    type: single
+    q: "Use case testing derives cases from:"
+    options:
+      - A) Source code
+      - B) Actor flows + alternates + exceptions
+      - C) Random inputs
+      - D) Profiler
+    answer: 1
+    hint: UML use cases.
+    explanation: Use cases describe actor interactions; alternates/exceptions yield
+      cases. See [[#Use Case Testing]].
+  - id: tdt-013
+    type: single
+    q: "Checklist-based testing relies on:"
+    options:
+      - A) Auto-generated cases
+      - B) Curated heuristic lists
+      - C) Compilers
+      - D) Mocks
+    answer: 1
+    hint: Reusable lists.
+    explanation: Checklists encode prior team learning into reusable test cues. See
+      [[#Checklist-Based]].
+  - id: tdt-014
+    type: single
+    q: "PICT is a tool for:"
+    options:
+      - A) Performance
+      - B) Pairwise generation
+      - C) Mocking
+      - D) Coverage
+    answer: 1
+    hint: All-pairs combos.
+    explanation: PICT = Microsoft tool generating pairwise covering arrays. See
+      [[#Pairwise (All-Pairs)]].
+  - id: tdt-015
+    type: single
+    q: "Path coverage often infeasible because:"
+    options:
+      - A) Too few paths
+      - B) Loops + branches â†’ exponential paths
+      - C) Paths hidden
+      - D) Paths immutable
+    answer: 1
+    hint: Combinatorial explosion.
+    explanation: Loops with branches generate exponential/infinite paths; full path
+      coverage rarely tractable. See [[#Path Coverage]].
+  - id: tdt-016
+    type: single
+    q: "Decision table with N independent binary conditions has rows:"
+    options:
+      - A) N
+      - B) 2^N
+      - C) NÂ²
+      - D) N!
+    answer: 1
+    hint: Powers of 2.
+    explanation: Each condition T/F doubles rows; N conditions â†’ 2^N rows (before
+      collapsing impossible ones). See [[#Decision Tables]].
+  - id: tdt-017
+    type: single
+    q: "Best technique when business rules combine multiple inputs:"
+    options:
+      - A) BVA only
+      - B) Decision tables
+      - C) Path coverage
+      - D) Soak testing
+    answer: 1
+    hint: Rule combinations.
+    explanation: Decision tables explicit + complete enumeration of rule combos. See
+      [[#Decision Tables]] and [[#Choosing Technique]].
+  - id: tdt-018
+    type: single
+    q: "Equivalence partition example for age 0â€“120 has minimum partitions:"
+    options:
+      - A) 1
+      - B) 2 (valid/invalid)
+      - C) 4
+      - D) Many â€” depends on rules; at minimum invalid-low, valid, invalid-high
+    answer: 3
+    hint: Don't forget invalid below + above.
+    explanation: Always include invalid partitions; below 0 + above 120 + valid
+      range. See [[#Equivalence Partitioning (EP)]].
+  - id: tdt-019
+    type: single
+    q: "Exploratory testing best documented via:"
+    options:
+      - A) Full scripts
+      - B) Charters + session notes
+      - C) Code coverage report only
+      - D) Sprint backlog
+    answer: 1
+    hint: Lightweight artifacts.
+    explanation: Session-Based Test Management uses charters + notes. See
+      [[#Exploratory Testing]] and [[Exploratory-Testing]].
+  - id: tdt-020
+    type: single
+    q: "White-box implies:"
+    options:
+      - A) UI testing
+      - B) Internal structure visible to tester
+      - C) Black background
+      - D) Mock-only
+    answer: 1
+    hint: Code visible.
+    explanation: >-
+      White-box = structural testing using internal knowledge. See [[#White-Box
+      Techniques]].
+
+
+      ---
