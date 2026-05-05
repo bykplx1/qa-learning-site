@@ -1,9 +1,15 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'yaml';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import WikiLink from '../../components/WikiLink';
+import QuizRunner from '../../components/quiz/QuizRunner';
 import { sortLessons, getPrevNext } from '../../lib/lessons/order';
+import { quizFileSchema } from '../../lib/quiz/schema';
+import type { QuizQuestion } from '../../lib/quiz/schema';
 
 export async function getStaticPaths() {
   const allLessons = await getCollection('lessons');
@@ -21,6 +27,13 @@ const { prev, next } = getPrevNext(sorted, lesson.data.slug);
 
 function formatCategory(cat: string): string {
   return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const quizYamlPath = join(process.cwd(), 'src', 'generated', 'quiz', `${lesson.data.slug}.quiz.yaml`);
+let quizQuestions: QuizQuestion[] = [];
+if (existsSync(quizYamlPath)) {
+  const result = quizFileSchema.safeParse(parse(readFileSync(quizYamlPath, 'utf-8')));
+  if (result.success) quizQuestions = result.data.questions;
 }
 ---
 
@@ -64,6 +77,10 @@ function formatCategory(cat: string): string {
             <Content />
           </div>
         </article>
+
+        {quizQuestions.length > 0 && (
+          <QuizRunner client:load questions={quizQuestions} quizSlug={lesson.data.slug} />
+        )}
 
         <nav class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex justify-between gap-4">
           {prev ? (
