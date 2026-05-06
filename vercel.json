@@ -1,0 +1,3 @@
+{
+  "installCommand": "git config --global url.\"https://${VAULT_PAT}@github.com/\".insteadOf \"https://github.com/\" && git submodule update --init --recursive && npm ci"
+}
