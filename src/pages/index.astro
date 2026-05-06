@@ -18,7 +18,10 @@ function formatCategory(cat: string): string {
 }
 ---
 
-<BaseLayout title="QA Learning">
+<BaseLayout
+  title="QA Learning"
+  description={`Interactive study site for QA fundamentals. ${sorted.length} lessons across ${groups.size} categories.`}
+>
   <main class="px-6 py-12 max-w-4xl mx-auto">
     <h1 class="text-3xl font-bold mb-2">QA Learning</h1>
     <p class="text-gray-600 dark:text-gray-400 mb-10">

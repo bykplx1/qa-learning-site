@@ -10,6 +10,7 @@ import QuizRunner from '../../components/quiz/QuizRunner';
 import { sortLessons, getPrevNext } from '../../lib/lessons/order';
 import { quizFileSchema } from '../../lib/quiz/schema';
 import type { QuizQuestion } from '../../lib/quiz/schema';
+import { extractExcerpt } from '../../lib/wikilinks/excerpt';
 
 export async function getStaticPaths() {
   const allLessons = await getCollection('lessons');
@@ -35,9 +36,17 @@ if (existsSync(quizYamlPath)) {
   const result = quizFileSchema.safeParse(parse(readFileSync(quizYamlPath, 'utf-8')));
   if (result.success) quizQuestions = result.data.questions;
 }
+
+const ogDescription = lesson.body ? extractExcerpt(lesson.body) : undefined;
+const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
 ---
 
-<BaseLayout title={`${title} — QA Learning`}>
+<BaseLayout
+  title={`${title} — QA Learning`}
+  description={ogDescription}
+  canonicalUrl={canonicalUrl}
+  ogType="article"
+>
   <div class="px-6 py-10">
     <div class="mx-auto lg:flex lg:gap-10 lg:max-w-5xl">
       <main class="min-w-0 flex-1 max-w-3xl mx-auto lg:mx-0">
@@ -72,14 +81,21 @@ if (existsSync(quizYamlPath)) {
             </div>
           </header>
 
-          <div class="prose dark:prose-invert max-w-none">
+          <div class="prose dark:prose-invert max-w-none" data-pagefind-body>
             <WikiLink client:idle />
             <Content />
           </div>
         </article>
 
         {quizQuestions.length > 0 && (
-          <QuizRunner client:load questions={quizQuestions} quizSlug={lesson.data.slug} />
+          <section id="quiz">
+            {/* Static quiz question text for Pagefind indexing — hidden from visual display */}
+            <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz">
+              <h2>Practice Quiz</h2>
+              {quizQuestions.map((q) => <p>{q.q}</p>)}
+            </div>
+            <QuizRunner client:load questions={quizQuestions} quizSlug={lesson.data.slug} />
+          </section>
         )}
 
         <nav class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex justify-between gap-4">
