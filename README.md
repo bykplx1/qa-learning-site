@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/bykplx1/qa-learning-site/actions/workflows/ci.yml/badge.svg)](https://github.com/bykplx1/qa-learning-site/actions/workflows/ci.yml)
 
+**Production:** https://qa-learning-site.vercel.app
+
 Public QA learning portfolio site. Source content lives in the `qa-vault` repo, included here as a git submodule under `content/qa-vault`.
 
 See [`PLAN.md` in the vault](https://github.com/bykplx1/qa-vault/blob/main/PLAN.md) for the full spec.
