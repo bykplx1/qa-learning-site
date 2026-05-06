@@ -25,11 +25,26 @@ const pagefindIntegration = {
   },
 };
 
+/** @type {import('vite').Plugin} */
+const pagefindDevStub = {
+  name: 'pagefind-dev-stub',
+  apply: 'serve',
+  configureServer(server) {
+    server.middlewares.use('/pagefind/pagefind.js', (_req, res) => {
+      res.setHeader('Content-Type', 'application/javascript');
+      res.end('export async function search(){return{results:[]}}\nexport async function init(){}');
+    });
+  },
+};
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://qa-learning-site.vercel.app',
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), pagefindDevStub],
+    resolve: {
+      dedupe: ['react', 'react-dom'],
+    },
     build: {
       rollupOptions: {
         external: ['/pagefind/pagefind.js'],

@@ -30,8 +30,9 @@ export default function SearchModal() {
   useEffect(() => {
     const load = async () => {
       try {
-        // @ts-ignore @vite-ignore — file only exists after build, not in node_modules
-        const pf = await import(/* @vite-ignore */ '/pagefind/pagefind.js') as PagefindInstance;
+        // Non-literal path prevents Vite static analysis — file only exists after build
+        const path = '/pagefind/' + 'pagefind.js';
+        const pf = await import(/* @vite-ignore */ path) as PagefindInstance;
         if (pf.init) await pf.init();
         pagefindRef.current = pf;
         setReady(true);
