@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { authClient } from '../../lib/auth-client';
 import type { QuizQuestion } from '../../lib/quiz/schema.js';
 import {
   createQuizState,
@@ -10,8 +11,8 @@ import {
   type QuizState,
   type QuizAction,
 } from '../../lib/quiz/engine.js';
+import { selectAdapter, type QuizPersistenceAdapter } from '../../lib/quiz/persistence.js';
 
-const STORAGE_KEY = (slug: string) => `quiz_${slug}`;
 const COMPLETE_KEY = (slug: string) => `quiz_${slug}_complete`;
 
 interface Props {
@@ -19,10 +20,15 @@ interface Props {
   quizSlug: string;
 }
 
-function LoginBanner() {
+interface LoginBannerProps {
+  signedIn: boolean | null;
+}
+
+function LoginBanner({ signedIn }: LoginBannerProps) {
+  if (signedIn === null || signedIn) return null;
   return (
     <div className="mb-5 px-4 py-2.5 rounded-lg text-sm bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-      Log in (coming soon) to save your score
+      <a href="/api/auth/sign-in/github" className="underline">Sign in</a> to save your score
     </div>
   );
 }
@@ -30,9 +36,10 @@ function LoginBanner() {
 interface QuestionScreenProps {
   state: QuizState;
   dispatch: (action: QuizAction) => void;
+  signedIn: boolean | null;
 }
 
-function QuestionScreen({ state, dispatch }: QuestionScreenProps) {
+function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
   const q = state.questions[state.currentIndex];
   const answer = state.answers[state.currentIndex];
   const correct = state.feedback ? isCorrect(q, answer) : null;
@@ -64,7 +71,7 @@ function QuestionScreen({ state, dispatch }: QuestionScreenProps) {
 
   return (
     <div>
-      <LoginBanner />
+      <LoginBanner signedIn={signedIn} />
 
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -185,13 +192,27 @@ function QuestionScreen({ state, dispatch }: QuestionScreenProps) {
 interface SummaryScreenProps {
   state: QuizState;
   markedComplete: boolean;
+  signedIn: boolean | null;
+  saveStatus: SaveStatus;
   onMarkComplete: () => void;
   onRestart: () => void;
 }
 
-function SummaryScreen({ state, markedComplete, onMarkComplete, onRestart }: SummaryScreenProps) {
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComplete, onRestart }: SummaryScreenProps) {
   const { correct, total } = getScore(state);
   const missed = state.questions.filter((q, i) => !isCorrect(q, state.answers[i]));
+
+  const savedNote = signedIn
+    ? saveStatus === 'saving'
+      ? 'Saving attempt…'
+      : saveStatus === 'saved'
+        ? '✓ Attempt saved to your account'
+        : saveStatus === 'error'
+          ? 'Could not save attempt'
+          : ''
+    : '(practice only — not saved to account)';
 
   return (
     <div>
@@ -243,35 +264,80 @@ function SummaryScreen({ state, markedComplete, onMarkComplete, onRestart }: Sum
           </span>
         )}
 
-        <span className="text-xs text-gray-400 dark:text-gray-500">
-          (practice only — not saved to account)
-        </span>
+        {savedNote && (
+          <span
+            className="text-xs text-gray-400 dark:text-gray-500"
+            data-testid="quiz-save-status"
+            data-status={saveStatus}
+          >
+            {savedNote}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
 export default function QuizRunner({ questions, quizSlug }: Props) {
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [state, setState] = useState<QuizState>(() => createQuizState(questions, 'practice'));
   const [markedComplete, setMarkedComplete] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+
+  const startedAtRef = useRef<number>(Date.now());
+  const submittedRef = useRef<boolean>(false);
+
+  const adapter: QuizPersistenceAdapter = useMemo(
+    () => selectAdapter(signedIn === true),
+    [signedIn],
+  );
 
   useEffect(() => {
+    let cancelled = false;
+    authClient.getSession().then((res) => {
+      if (cancelled) return;
+      const data = (res && 'data' in res ? res.data : res) as { user?: { id?: string } } | null;
+      setSignedIn(!!data?.user?.id);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const restored = adapter.loadProgress(quizSlug);
+    if (restored) setState(restoreQuizState(questions, 'practice', restored));
     try {
-      const raw = sessionStorage.getItem(STORAGE_KEY(quizSlug));
-      if (raw) {
-        setState(restoreQuizState(questions, 'practice', JSON.parse(raw)));
-      }
       setMarkedComplete(sessionStorage.getItem(COMPLETE_KEY(quizSlug)) === 'true');
-    } catch {
-      // sessionStorage unavailable or corrupted — start fresh
-    }
-  }, [quizSlug]);
+    } catch {}
+  }, [adapter, quizSlug, questions]);
 
   useEffect(() => {
-    try {
-      sessionStorage.setItem(STORAGE_KEY(quizSlug), JSON.stringify(persistQuizState(state)));
-    } catch {}
-  }, [state, quizSlug]);
+    adapter.saveProgress(quizSlug, persistQuizState(state));
+  }, [adapter, quizSlug, state]);
+
+  useEffect(() => {
+    if (state.status !== 'summary') return;
+    if (submittedRef.current) return;
+    if (signedIn !== true) return;
+    submittedRef.current = true;
+    const { correct, total } = getScore(state);
+    const durationSec = Math.floor((Date.now() - startedAtRef.current) / 1000);
+    setSaveStatus('saving');
+    adapter
+      .recordAttempt({
+        quizSlug,
+        mode: 'practice',
+        score: correct,
+        total,
+        answers: state.answers,
+        durationSec,
+      })
+      .then(({ id }) => {
+        setSaveStatus(id ? 'saved' : 'error');
+      })
+      .catch(() => setSaveStatus('error'));
+  }, [adapter, quizSlug, signedIn, state]);
 
   const dispatch = useCallback((action: QuizAction) => {
     setState((prev) => transition(prev, action));
@@ -290,6 +356,9 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
       sessionStorage.removeItem(COMPLETE_KEY(quizSlug));
     } catch {}
     setMarkedComplete(false);
+    setSaveStatus('idle');
+    submittedRef.current = false;
+    startedAtRef.current = Date.now();
   }, [questions, quizSlug]);
 
   return (
@@ -308,11 +377,13 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
         <SummaryScreen
           state={state}
           markedComplete={markedComplete}
+          signedIn={signedIn}
+          saveStatus={saveStatus}
           onMarkComplete={handleMarkComplete}
           onRestart={handleRestart}
         />
       ) : (
-        <QuestionScreen state={state} dispatch={dispatch} />
+        <QuestionScreen state={state} dispatch={dispatch} signedIn={signedIn} />
       )}
     </div>
   );

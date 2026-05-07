@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -68,8 +68,37 @@ export const lessonViews = pgTable(
   (t) => [uniqueIndex('lesson_views_user_slug_uniq').on(t.userId, t.lessonSlug)],
 );
 
+export const quizAttempts = pgTable(
+  'quiz_attempts',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    quizSlug: text('quiz_slug').notNull(),
+    mode: text('mode').notNull(),
+    score: integer('score').notNull(),
+    total: integer('total').notNull(),
+    answers: jsonb('answers').notNull(),
+    durationSec: integer('duration_sec').notNull().default(0),
+    attemptedAt: timestamp('attempted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('quiz_attempts_user_idx').on(t.userId, t.attemptedAt)],
+);
+
+export const dailyActivity = pgTable(
+  'daily_activity',
+  {
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    day: date('day').notNull(),
+    attemptsCount: integer('attempts_count').notNull().default(0),
+    lessonsCount: integer('lessons_count').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day] })],
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
 export type LessonMeta = typeof lessonsMeta.$inferSelect;
 export type LessonView = typeof lessonViews.$inferSelect;
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type DailyActivity = typeof dailyActivity.$inferSelect;

@@ -15,6 +15,13 @@
       "when": 1778157983278,
       "tag": "0001_lying_hammerhead",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778158544270,
+      "tag": "0002_quiz_attempts",
+      "breakpoints": true
     }
   ]
 }
