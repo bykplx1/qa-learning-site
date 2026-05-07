@@ -24,7 +24,7 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  await migrationDb.execute(sql`TRUNCATE TABLE accounts, sessions, verifications, lesson_views, lessons_meta, users RESTART IDENTITY CASCADE`);
+  await migrationDb.execute(sql`TRUNCATE TABLE accounts, sessions, verifications, lesson_views, lessons_meta, quiz_attempts, daily_activity, users RESTART IDENTITY CASCADE`);
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
