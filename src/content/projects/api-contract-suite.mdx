@@ -1,0 +1,33 @@
+---
+slug: api-contract-suite
+title: API Contract Test Suite
+tier: mid
+estimate: 1 day
+acceptanceCriteria:
+  - You pick a public REST API and write a contract test suite covering at least three endpoints.
+  - Tests assert status code, response schema (with a schema validator like zod or ajv), and at least one negative case per endpoint.
+  - Tests run locally with a single command and produce machine-readable output (JUnit XML or similar).
+  - You document one breaking change you'd catch with this suite that an ad-hoc smoke test would miss.
+---
+
+## Brief
+
+Pick a public REST API — GitHub, OpenWeatherMap, PokéAPI, your own pet project, anything with stable docs. Build a contract test suite that pins the **shape** of the API, not just whether it answers.
+
+Contract tests are the load-bearing layer between unit tests (your code in isolation) and full E2E (everything wired up). They catch the breakages that come from outside your control: vendor API changes, microservice version skew, accidentally-renamed fields.
+
+## Suggested approach
+
+1. Pick three endpoints. Read their docs and capture sample responses.
+2. Write a schema for each response with a runtime validator.
+3. For each endpoint, write at least one happy-path test and one negative test (404, malformed request, auth failure).
+4. Wire it into a single command — `npm test` or equivalent — and emit JUnit XML.
+5. Pretend a backend engineer renamed a field. Show — in your writeup — which assertion would fire.
+
+## What "done" looks like
+
+A repo (public or private) with the suite, a README explaining how to run it, and a short note on the breaking change your suite would catch.
+
+## Why this matters
+
+Contract testing is the cheapest, highest-leverage form of integration testing. It is also the most under-taught. Doing this once changes how you read API docs forever.

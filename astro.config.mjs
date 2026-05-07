@@ -56,5 +56,5 @@ export default defineConfig({
     },
   },
 
-  integrations: [mdx(), react(), sitemap(), quizExtractorIntegration(), wikilinksIntegration(), pagefindIntegration]
+  integrations: [mdx({ extendMarkdownConfig: false }), react(), sitemap(), quizExtractorIntegration(), wikilinksIntegration(), pagefindIntegration]
 });

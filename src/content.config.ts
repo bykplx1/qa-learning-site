@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { lessonFrontmatterSchema } from './lib/lessons/schema';
+import { projectFrontmatterSchema } from './lib/projects/schema';
 
 const lessons = defineCollection({
   loader: glob({
@@ -11,4 +12,12 @@ const lessons = defineCollection({
   schema: lessonFrontmatterSchema,
 });
 
-export const collections = { lessons };
+const projects = defineCollection({
+  loader: glob({
+    pattern: '**/*.mdx',
+    base: './src/content/projects',
+  }),
+  schema: projectFrontmatterSchema,
+});
+
+export const collections = { lessons, projects };

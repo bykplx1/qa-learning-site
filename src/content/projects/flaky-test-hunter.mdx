@@ -1,0 +1,31 @@
+---
+slug: flaky-test-hunter
+title: Flaky Test Hunter
+tier: starter
+estimate: 1–2 hr
+acceptanceCriteria:
+  - You can identify at least one flaky test in a public repository.
+  - You document a likely root cause (timing, ordering, env, network, randomness).
+  - You propose a fix and describe how you'd verify the fix removes the flakiness.
+---
+
+## Brief
+
+Pick any open-source project with a public CI history (GitHub Actions logs are easiest). Hunt for a flaky test — one that fails intermittently without code changes — and write up what you found.
+
+The goal is **diagnostic muscle**, not a green CI badge. Real flakes hide behind nondeterminism: time-of-day, parallel execution, shared fixtures, network jitter, system clocks. You're learning to spot the smell.
+
+## Suggested approach
+
+1. Browse a project's recent CI runs. Look for re-runs of the same commit with different outcomes.
+2. Open the failing test. Read it, then read the code it exercises.
+3. Form a hypothesis: *what state must differ between the passing and failing run?*
+4. Write a one-paragraph postmortem: symptom, hypothesis, proposed fix, verification plan.
+
+## What "done" looks like
+
+A short writeup (a paragraph or two) that another engineer could act on. No PR required — the artifact is the analysis itself.
+
+## Why this matters
+
+Flakiness is the #1 silent destroyer of test-suite trust. A QA engineer who can triage flakes is immediately useful on any team.
