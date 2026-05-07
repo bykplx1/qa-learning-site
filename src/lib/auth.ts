@@ -24,6 +24,16 @@ export const auth = betterAuth({
         githubHandle: (profile as { login?: string }).login,
       }),
     },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      trustedProviders: ['github', 'google'],
+    },
   },
 });
 

@@ -13,6 +13,8 @@ process.env.BETTER_AUTH_SECRET ??= 'test-secret-at-least-32-bytes-long-aaaaaaaaa
 process.env.BETTER_AUTH_URL ??= 'http://localhost:4321';
 process.env.GITHUB_CLIENT_ID ??= 'test-client-id';
 process.env.GITHUB_CLIENT_SECRET ??= 'test-client-secret';
+process.env.GOOGLE_CLIENT_ID ??= 'test-google-client-id';
+process.env.GOOGLE_CLIENT_SECRET ??= 'test-google-client-secret';
 
 const migrationClient = postgres(databaseUrl, { max: 1, prepare: false });
 const migrationDb = drizzle(migrationClient);
