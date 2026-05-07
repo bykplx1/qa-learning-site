@@ -23,14 +23,25 @@ export function AuthNav() {
   if (loading) return null;
 
   if (!user) {
+    const buttonClass =
+      'text-sm px-3 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800';
     return (
-      <button
-        type="button"
-        onClick={() => authClient.signIn.social({ provider: 'github', callbackURL: window.location.href })}
-        className="text-sm px-3 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-      >
-        Sign in with GitHub
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => authClient.signIn.social({ provider: 'github', callbackURL: window.location.href })}
+          className={buttonClass}
+        >
+          Sign in with GitHub
+        </button>
+        <button
+          type="button"
+          onClick={() => authClient.signIn.social({ provider: 'google', callbackURL: window.location.href })}
+          className={buttonClass}
+        >
+          Sign in with Google
+        </button>
+      </div>
     );
   }
 

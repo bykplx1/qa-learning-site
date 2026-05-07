@@ -27,6 +27,17 @@ npm ci
 npm run dev
 ```
 
+### OAuth providers
+
+Copy `.env.example` to `.env` and fill in the credentials.
+
+| Provider | Console | Authorized callback / redirect URI |
+|----------|---------|------------------------------------|
+| GitHub | https://github.com/settings/developers | `$BETTER_AUTH_URL/api/auth/callback/github` |
+| Google | https://console.cloud.google.com/apis/credentials | `$BETTER_AUTH_URL/api/auth/callback/google` |
+
+Both providers write to the same `users` table; matching verified emails are linked rather than duplicated.
+
 ## Scripts
 
 | Script | Purpose |
