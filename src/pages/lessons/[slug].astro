@@ -7,6 +7,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import TableOfContents from '../../components/TableOfContents.astro';
 import WikiLink from '../../components/WikiLink';
 import QuizRunner from '../../components/quiz/QuizRunner';
+import { MarkComplete } from '../../components/MarkComplete';
 import { sortLessons, getPrevNext } from '../../lib/lessons/order';
 import { quizFileSchema } from '../../lib/quiz/schema';
 import type { QuizQuestion } from '../../lib/quiz/schema';
@@ -84,6 +85,10 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
           <div class="prose dark:prose-invert max-w-none" data-pagefind-body>
             <WikiLink client:idle />
             <Content />
+          </div>
+
+          <div class="mt-8">
+            <MarkComplete client:only="react" slug={lesson.data.slug} />
           </div>
         </article>
 

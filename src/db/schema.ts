@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -47,6 +47,29 @@ export const verifications = pgTable('verifications', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const lessonsMeta = pgTable('lessons_meta', {
+  slug: text('slug').primaryKey(),
+  title: text('title').notNull(),
+  category: text('category').notNull(),
+  estMinutes: integer('est_minutes').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const lessonViews = pgTable(
+  'lesson_views',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    lessonSlug: text('lesson_slug').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    timeSpentSec: integer('time_spent_sec').notNull().default(0),
+  },
+  (t) => [uniqueIndex('lesson_views_user_slug_uniq').on(t.userId, t.lessonSlug)],
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
+export type LessonMeta = typeof lessonsMeta.$inferSelect;
+export type LessonView = typeof lessonViews.$inferSelect;
