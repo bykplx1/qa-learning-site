@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { ThemeToggle } from '../components/ThemeToggle';
 import SearchModal from '../components/search/SearchModal';
 import SearchTrigger from '../components/search/SearchTrigger';
+import { AuthNav } from '../components/AuthNav';
 
 interface Props {
   title: string;
@@ -59,6 +60,7 @@ const {
       <div class="flex items-center gap-3">
         <SearchTrigger client:only="react" />
         <ThemeToggle client:only="react" />
+        <AuthNav client:only="react" />
       </div>
     </nav>
     <SearchModal client:only="react" />

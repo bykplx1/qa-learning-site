@@ -1,4 +1,5 @@
 // @ts-check
+import 'dotenv/config';
 import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
