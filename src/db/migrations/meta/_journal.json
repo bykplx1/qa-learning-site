@@ -22,6 +22,13 @@
       "when": 1778158544270,
       "tag": "0002_quiz_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778159709425,
+      "tag": "0003_strong_centennial",
+      "breakpoints": true
     }
   ]
 }

@@ -2,19 +2,34 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SelfAttestChecklist from '../../components/projects/SelfAttestChecklist';
+import SubmitProjectForm from '../../components/projects/SubmitProjectForm';
 import { TIER_LABELS, type ProjectTier } from '../../lib/projects/schema';
+import { auth } from '../../lib/auth';
+import { getSubmission } from '../../db/queries';
 
-export async function getStaticPaths() {
-  const all = await getCollection('projects');
-  return all.map((project) => ({
-    params: { slug: project.data.slug },
-    props: { project },
-  }));
+export const prerender = false;
+
+const all = await getCollection('projects');
+const slug = Astro.params.slug;
+const project = all.find((p) => p.data.slug === slug);
+if (!project) {
+  return new Response('Not Found', { status: 404 });
 }
 
-const { project } = Astro.props;
 const { Content } = await render(project);
 const { title, tier, estimate, acceptanceCriteria } = project.data;
+
+const session = await auth.api.getSession({ headers: Astro.request.headers });
+const userId = session?.user?.id ?? null;
+const existing = userId ? await getSubmission(userId, project.data.slug) : null;
+const existingProp = existing
+  ? {
+      repoUrl: existing.repoUrl,
+      reflection: existing.reflection,
+      isPublic: existing.isPublic,
+      submittedAt: existing.submittedAt.toISOString(),
+    }
+  : null;
 
 const tierBadge: Record<ProjectTier, string> = {
   starter: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
@@ -69,5 +84,19 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
       projectSlug={project.data.slug}
       criteria={acceptanceCriteria}
     />
+
+    {userId ? (
+      <SubmitProjectForm
+        client:load
+        projectSlug={project.data.slug}
+        existing={existingProp}
+      />
+    ) : (
+      <section class="mt-8 p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+        <p class="text-sm text-gray-700 dark:text-gray-300 m-0">
+          <a href="/api/auth/sign-in/github" class="underline">Sign in</a> to submit your build.
+        </p>
+      </section>
+    )}
   </main>
 </BaseLayout>

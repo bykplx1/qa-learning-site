@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { db } from './index';
-import { dailyActivity, lessonViews, quizAttempts } from './schema';
+import {
+  dailyActivity,
+  lessonViews,
+  projectSubmissions,
+  quizAttempts,
+  type ProjectSubmission,
+} from './schema';
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -93,4 +99,72 @@ export async function getQuizAttemptCount(userId: string): Promise<number> {
     .from(quizAttempts)
     .where(eq(quizAttempts.userId, userId));
   return rows[0]?.count ?? 0;
+}
+
+export interface SubmitProjectInput {
+  userId: string;
+  projectSlug: string;
+  repoUrl?: string | null;
+  reflection: string;
+  isPublic?: boolean;
+}
+
+export async function submitProject(input: SubmitProjectInput): Promise<{ id: string }> {
+  const { userId, projectSlug, repoUrl = null, reflection, isPublic = false } = input;
+  const id = randomUUID();
+  const now = new Date();
+  const rows = await db
+    .insert(projectSubmissions)
+    .values({
+      id,
+      userId,
+      projectSlug,
+      repoUrl,
+      reflection,
+      isPublic,
+      submittedAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [projectSubmissions.userId, projectSubmissions.projectSlug],
+      set: {
+        repoUrl: sql`excluded.repo_url`,
+        reflection: sql`excluded.reflection`,
+        isPublic: sql`excluded.is_public`,
+        updatedAt: sql`excluded.updated_at`,
+      },
+    })
+    .returning({ id: projectSubmissions.id });
+  return { id: rows[0]?.id ?? id };
+}
+
+export async function listSubmissions(userId: string): Promise<ProjectSubmission[]> {
+  return db
+    .select()
+    .from(projectSubmissions)
+    .where(eq(projectSubmissions.userId, userId))
+    .orderBy(desc(projectSubmissions.submittedAt));
+}
+
+export async function getSubmission(
+  userId: string,
+  projectSlug: string,
+): Promise<ProjectSubmission | null> {
+  const rows = await db
+    .select()
+    .from(projectSubmissions)
+    .where(and(eq(projectSubmissions.userId, userId), eq(projectSubmissions.projectSlug, projectSlug)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function setSubmissionPublic(
+  userId: string,
+  projectSlug: string,
+  isPublic: boolean,
+): Promise<void> {
+  await db
+    .update(projectSubmissions)
+    .set({ isPublic, updatedAt: new Date() })
+    .where(and(eq(projectSubmissions.userId, userId), eq(projectSubmissions.projectSlug, projectSlug)));
 }
