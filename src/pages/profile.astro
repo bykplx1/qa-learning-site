@@ -5,6 +5,7 @@ import { auth } from '../lib/auth';
 import {
   getCategoryProgress,
   getCompletedLessonCount,
+  getQuizAccuracyByTopic,
   getQuizAttemptCount,
   getStreak,
   listSubmissions,
@@ -19,6 +20,7 @@ const attemptCount = user?.id ? await getQuizAttemptCount(user.id) : 0;
 const streak = user?.id ? await getStreak(user.id) : { current: 0, longest: 0 };
 const submissions = user?.id ? await listSubmissions(user.id) : [];
 const categoryProgress = user?.id ? await getCategoryProgress(user.id) : [];
+const quizAccuracy = user?.id ? await getQuizAccuracyByTopic(user.id) : [];
 const submissionsProp = submissions.map((s) => ({
   projectSlug: s.projectSlug,
   repoUrl: s.repoUrl,
@@ -86,6 +88,41 @@ const submissionsProp = submissions.map((s) => ({
                 </li>
               ))}
             </ul>
+          )}
+        </section>
+
+        <section class="mt-8" aria-label="Quiz accuracy by topic" data-testid="quiz-accuracy-section">
+          <h2 class="text-xl font-semibold mb-3">Quiz accuracy by topic</h2>
+          {quizAccuracy.length === 0 ? (
+            <p class="text-sm text-gray-500 dark:text-gray-400">No quiz attempts yet.</p>
+          ) : (
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm border-collapse">
+                <thead>
+                  <tr class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                    <th class="py-2 pr-4 font-medium">Topic</th>
+                    <th class="py-2 pr-4 font-medium text-right">Attempts</th>
+                    <th class="py-2 pr-4 font-medium text-right">Correct / Total</th>
+                    <th class="py-2 font-medium text-right">Accuracy</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quizAccuracy.map((t) => (
+                    <tr
+                      class="border-b border-gray-100 dark:border-gray-900"
+                      data-testid={`quiz-accuracy-${t.category}`}
+                    >
+                      <td class="py-2 pr-4 font-medium">{t.category}</td>
+                      <td class="py-2 pr-4 text-right tabular-nums">{t.attempts}</td>
+                      <td class="py-2 pr-4 text-right tabular-nums text-gray-600 dark:text-gray-400">
+                        {t.correct}/{t.total}
+                      </td>
+                      <td class="py-2 text-right font-semibold tabular-nums">{t.accuracy}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
 

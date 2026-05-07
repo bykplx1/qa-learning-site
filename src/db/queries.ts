@@ -11,6 +11,7 @@ import {
 } from './schema';
 import { streakOf, type StreakResult } from '../lib/streak/streak';
 import { categoryProgressOf, type CategoryProgress } from '../lib/progress/progress';
+import { quizAccuracyByTopicOf, type TopicAccuracy } from '../lib/progress/quiz-accuracy';
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -198,6 +199,21 @@ export async function getCategoryProgress(userId: string): Promise<CategoryProgr
     db.select({ slug: lessonsMeta.slug, category: lessonsMeta.category }).from(lessonsMeta),
   ]);
   return categoryProgressOf(views, attempts, meta);
+}
+
+export async function getQuizAccuracyByTopic(userId: string): Promise<TopicAccuracy[]> {
+  const [attempts, meta] = await Promise.all([
+    db
+      .select({
+        quizSlug: quizAttempts.quizSlug,
+        score: quizAttempts.score,
+        total: quizAttempts.total,
+      })
+      .from(quizAttempts)
+      .where(eq(quizAttempts.userId, userId)),
+    db.select({ slug: lessonsMeta.slug, category: lessonsMeta.category }).from(lessonsMeta),
+  ]);
+  return quizAccuracyByTopicOf(attempts, meta);
 }
 
 export async function setSubmissionPublic(
