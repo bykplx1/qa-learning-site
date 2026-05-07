@@ -95,6 +95,25 @@ export const dailyActivity = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.day] })],
 );
 
+export const projectSubmissions = pgTable(
+  'project_submissions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    projectSlug: text('project_slug').notNull(),
+    repoUrl: text('repo_url'),
+    reflection: text('reflection').notNull(),
+    status: text('status').notNull().default('submitted'),
+    isPublic: boolean('is_public').notNull().default(false),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('project_submissions_user_slug_uniq').on(t.userId, t.projectSlug),
+    index('project_submissions_user_idx').on(t.userId, t.submittedAt),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
@@ -102,3 +121,4 @@ export type LessonMeta = typeof lessonsMeta.$inferSelect;
 export type LessonView = typeof lessonViews.$inferSelect;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type DailyActivity = typeof dailyActivity.$inferSelect;
+export type ProjectSubmission = typeof projectSubmissions.$inferSelect;

@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SubmissionsList from '../components/profile/SubmissionsList';
 import { auth } from '../lib/auth';
-import { getCompletedLessonCount, getQuizAttemptCount } from '../db/queries';
+import { getCompletedLessonCount, getQuizAttemptCount, listSubmissions } from '../db/queries';
 
 export const prerender = false;
 
@@ -9,6 +10,14 @@ const session = await auth.api.getSession({ headers: Astro.request.headers });
 const user = session?.user ?? null;
 const completedCount = user?.id ? await getCompletedLessonCount(user.id) : 0;
 const attemptCount = user?.id ? await getQuizAttemptCount(user.id) : 0;
+const submissions = user?.id ? await listSubmissions(user.id) : [];
+const submissionsProp = submissions.map((s) => ({
+  projectSlug: s.projectSlug,
+  repoUrl: s.repoUrl,
+  reflection: s.reflection,
+  isPublic: s.isPublic,
+  submittedAt: s.submittedAt.toISOString(),
+}));
 ---
 
 <BaseLayout title="Profile — QA Learning">
@@ -29,6 +38,11 @@ const attemptCount = user?.id ? await getQuizAttemptCount(user.id) : 0;
             <div class="text-3xl font-semibold mt-1" data-testid="attempt-count">{attemptCount}</div>
           </div>
         </div>
+
+        <section class="mt-8" aria-label="Project submissions" data-testid="submissions-section">
+          <h2 class="text-xl font-semibold mb-3">Project submissions</h2>
+          <SubmissionsList client:load submissions={submissionsProp} />
+        </section>
       </div>
     ) : (
       <p class="text-gray-700 dark:text-gray-300">Sign in to see your progress.</p>
