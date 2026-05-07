@@ -39,3 +39,6 @@ test-results/
 
 # Pagefind
 public/pagefind/
+
+.vercel
+.env*.local
