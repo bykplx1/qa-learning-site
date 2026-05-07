@@ -11,6 +11,7 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { wikilinksIntegration } from './src/integrations/wikilinks.ts';
 import { quizExtractorIntegration } from './src/integrations/quizExtractor.ts';
+import { seedLessonsMetaIntegration } from './src/integrations/seedLessonsMeta.ts';
 
 /** @type {import('astro').AstroIntegration} */
 const pagefindIntegration = {
@@ -56,5 +57,5 @@ export default defineConfig({
     },
   },
 
-  integrations: [mdx({ extendMarkdownConfig: false }), react(), sitemap(), quizExtractorIntegration(), wikilinksIntegration(), pagefindIntegration]
+  integrations: [mdx({ extendMarkdownConfig: false }), react(), sitemap(), quizExtractorIntegration(), wikilinksIntegration(), seedLessonsMetaIntegration(), pagefindIntegration]
 });
