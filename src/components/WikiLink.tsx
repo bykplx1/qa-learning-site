@@ -66,12 +66,36 @@ export default function WikiLink() {
         left: rect.left,
         transform: 'translateY(-100%)',
         zIndex: 50,
-        maxWidth: '18rem',
+        maxWidth: '20rem',
+        padding: 14,
+        background: 'var(--paper)',
+        border: '1px solid var(--rule-2)',
+        borderRadius: 10,
+        boxShadow: '0 12px 40px -12px rgba(0,0,0,0.18)',
       }}
-      className="p-3 rounded-lg shadow-xl border text-sm bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
     >
-      <p className="font-semibold mb-1 text-gray-900 dark:text-gray-100">{entry.title}</p>
-      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{entry.excerpt}</p>
+      <p
+        style={{
+          margin: 0,
+          fontFamily: 'var(--serif)',
+          fontSize: 15,
+          fontWeight: 500,
+          letterSpacing: '-0.01em',
+          color: 'var(--ink)',
+        }}
+      >
+        {entry.title}
+      </p>
+      <p
+        style={{
+          margin: '6px 0 0',
+          fontSize: 12,
+          lineHeight: 1.55,
+          color: 'var(--ink-2)',
+        }}
+      >
+        {entry.excerpt}
+      </p>
     </div>,
     document.body
   );

@@ -8,7 +8,7 @@ import TableOfContents from '../../components/TableOfContents.astro';
 import WikiLink from '../../components/WikiLink';
 import QuizRunner from '../../components/quiz/QuizRunner';
 import { MarkComplete } from '../../components/MarkComplete';
-import { sortLessons, getPrevNext } from '../../lib/lessons/order';
+import { sortLessons, getPrevNext, groupByCategory } from '../../lib/lessons/order';
 import { quizFileSchema } from '../../lib/quiz/schema';
 import type { QuizQuestion } from '../../lib/quiz/schema';
 import { extractExcerpt } from '../../lib/wikilinks/excerpt';
@@ -31,6 +31,24 @@ function formatCategory(cat: string): string {
   return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function splitTitleAccent(t: string): { head: string; tail: string } {
+  const idx = t.lastIndexOf(' ');
+  if (idx <= 0 || t.split(' ').length < 2) return { head: '', tail: t };
+  return { head: t.slice(0, idx), tail: t.slice(idx + 1) };
+}
+
+function folderPrefix(id: string): string {
+  return id.split('/')[0].slice(0, 2);
+}
+
+const groups = groupByCategory(sorted);
+const siblings = groups.get(category) ?? [];
+const categoryNum = folderPrefix(siblings[0]?.id ?? lesson.id);
+const { head, tail } = splitTitleAccent(title);
+
+const difficultyClass =
+  difficulty === 'beginner' ? 'pill pill--pass' : difficulty === 'intermediate' ? 'pill pill--warn' : 'pill pill--accent';
+
 const quizYamlPath = join(process.cwd(), 'src', 'generated', 'quiz', `${lesson.data.slug}.quiz.yaml`);
 let quizQuestions: QuizQuestion[] = [];
 if (existsSync(quizYamlPath)) {
@@ -48,92 +66,221 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
   canonicalUrl={canonicalUrl}
   ogType="article"
 >
-  <div class="px-6 py-10">
-    <div class="mx-auto lg:flex lg:gap-10 lg:max-w-5xl">
-      <main class="min-w-0 flex-1 max-w-3xl mx-auto lg:mx-0">
-        <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6 flex items-center gap-1.5">
-          <a href="/" class="hover:text-gray-900 dark:hover:text-gray-100">Home</a>
-          <span>›</span>
-          <a href={`/?category=${category}`} class="hover:text-gray-900 dark:hover:text-gray-100 capitalize">
-            {formatCategory(category)}
-          </a>
-          <span>›</span>
-          <span class="text-gray-900 dark:text-gray-100">{title}</span>
-        </nav>
-
-        <article>
-          <header class="mb-8">
-            <h1 class="text-3xl font-bold mb-3">{title}</h1>
-            <div class="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-              <span class="capitalize">{formatCategory(category)}</span>
-              <span>·</span>
-              <span>{est_minutes} min</span>
-              <span>·</span>
-              <span class="capitalize">{difficulty}</span>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-3">
-              {
-                tags.map((t) => (
-                  <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                    {t}
-                  </span>
-                ))
-              }
-            </div>
-          </header>
-
-          <div class="prose dark:prose-invert max-w-none" data-pagefind-body>
-            <WikiLink client:idle />
-            <Content />
-          </div>
-
-          <div class="mt-8">
-            <MarkComplete client:only="react" slug={lesson.data.slug} />
-          </div>
-        </article>
-
-        {quizQuestions.length > 0 && (
-          <section id="quiz">
-            {/* Static quiz question text for Pagefind indexing — hidden from visual display */}
-            <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz">
-              <h2>Practice Quiz</h2>
-              {quizQuestions.map((q) => <p>{q.q}</p>)}
-            </div>
-            <QuizRunner client:load questions={quizQuestions} quizSlug={lesson.data.slug} />
-          </section>
-        )}
-
-        <nav class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 flex justify-between gap-4">
-          {prev ? (
+  <div class="lesson-grid">
+    <aside class="lesson-sidebar">
+      <div class="eyebrow" style="margin-bottom: 16px;">
+        {categoryNum} · {formatCategory(category)}
+      </div>
+      <ul class="sib-list">
+        {siblings.map((s) => (
+          <li>
             <a
-              href={`/lessons/${prev.data.slug}`}
-              class="flex flex-col max-w-[45%] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+              href={`/lessons/${s.data.slug}`}
+              class={`sib-link${s.data.slug === lesson.data.slug ? ' is-active' : ''}`}
             >
-              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">← Previous</span>
-              <span class="font-medium text-sm">{prev.data.title}</span>
+              {s.data.title}
             </a>
-          ) : (
-            <div />
-          )}
-          {next ? (
-            <a
-              href={`/lessons/${next.data.slug}`}
-              class="flex flex-col items-end max-w-[45%] p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
-            >
-              <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">Next →</span>
-              <span class="font-medium text-sm text-right">{next.data.title}</span>
-            </a>
-          ) : (
-            <div />
-          )}
-        </nav>
-      </main>
-
-      <aside class="hidden lg:block w-52 shrink-0">
-        <div class="sticky top-8 max-h-[calc(100vh-5rem)] overflow-y-auto">
-          <TableOfContents headings={headings} />
+          </li>
+        ))}
+      </ul>
+      {next && (
+        <div class="continue-card">
+          <div class="eyebrow" style="margin-bottom: 6px;">continue</div>
+          <div style="font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em; color: var(--ink);">
+            {next.data.title}
+          </div>
+          <div style="font-size: 12px; color: var(--ink-3); margin-top: 4px; font-family: var(--mono);">
+            up next · {next.data.est_minutes} min
+          </div>
         </div>
-      </aside>
-    </div>
+      )}
+    </aside>
+
+    <main class="lesson-main">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">QA Learning</a>
+        <span class="sep">/</span>
+        <a href="/">{formatCategory(category)}</a>
+        <span class="sep">/</span>
+        <span class="crumb-current">{title}</span>
+      </nav>
+
+      <article>
+        <header style="margin-bottom: 28px;">
+          <h1 class="lesson-title">
+            {head ? (
+              <>
+                {head}{' '}
+                <em>{tail}</em>
+              </>
+            ) : (
+              tail
+            )}
+          </h1>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px;">
+            <span class="pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              {est_minutes} min read
+            </span>
+            <span class={difficultyClass}>
+              <span class="dot"></span>{difficulty}
+            </span>
+            {tags.map((t) => <span class="pill">{t}</span>)}
+          </div>
+        </header>
+
+        <div class="prose" data-pagefind-body>
+          <WikiLink client:idle />
+          <Content />
+        </div>
+
+        <div style="margin-top: 28px;">
+          <MarkComplete client:only="react" slug={lesson.data.slug} />
+        </div>
+      </article>
+
+      {quizQuestions.length > 0 && (
+        <section id="quiz">
+          <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz">
+            <h2>Practice Quiz</h2>
+            {quizQuestions.map((q) => <p>{q.q}</p>)}
+          </div>
+          <QuizRunner client:load questions={quizQuestions} quizSlug={lesson.data.slug} />
+        </section>
+      )}
+
+      <nav class="lesson-footnav" aria-label="Lesson navigation">
+        {prev ? (
+          <a class="footnav-card footnav-card--prev" href={`/lessons/${prev.data.slug}`}>
+            <span class="eyebrow">← previous</span>
+            <span class="footnav-title">{prev.data.title}</span>
+          </a>
+        ) : <div></div>}
+        {next ? (
+          <a class="footnav-card footnav-card--next" href={`/lessons/${next.data.slug}`}>
+            <span class="eyebrow">next →</span>
+            <span class="footnav-title">{next.data.title}</span>
+          </a>
+        ) : <div></div>}
+      </nav>
+    </main>
+
+    <aside class="lesson-toc">
+      <TableOfContents headings={headings} />
+    </aside>
   </div>
 </BaseLayout>
+
+<style>
+  .lesson-grid {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 240px;
+    gap: 0;
+    min-height: calc(100vh - 67px);
+  }
+  @media (max-width: 1100px) {
+    .lesson-grid {
+      grid-template-columns: minmax(0, 1fr) 240px;
+    }
+    .lesson-sidebar { display: none; }
+  }
+  @media (max-width: 768px) {
+    .lesson-grid { grid-template-columns: minmax(0, 1fr); }
+    .lesson-toc { display: none; }
+  }
+
+  .lesson-sidebar {
+    border-right: 1px solid var(--rule);
+    padding: 32px 24px;
+  }
+  .lesson-main {
+    padding: 44px 56px;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) { .lesson-main { padding: 28px 20px; } }
+  .lesson-toc {
+    border-left: 1px solid var(--rule);
+    padding: 44px 24px;
+    position: sticky;
+    top: 67px;
+    align-self: start;
+    max-height: calc(100vh - 67px);
+    overflow-y: auto;
+  }
+
+  .sib-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 2px;
+    font-size: 13px;
+  }
+  .sib-link {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background 120ms ease;
+  }
+  .sib-link:hover { background: var(--paper-2); color: var(--ink); }
+  .sib-link.is-active {
+    color: var(--ink);
+    background: var(--paper-2);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+
+  .continue-card {
+    margin-top: 28px;
+    padding: 16px;
+    background: var(--paper-2);
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+  }
+
+  .lesson-title {
+    font-family: var(--serif);
+    font-size: 52px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .lesson-title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  @media (max-width: 768px) { .lesson-title { font-size: 38px; } }
+
+  .lesson-footnav {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .footnav-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .footnav-card:hover { border-color: var(--ink-3); background: var(--paper-2); }
+  .footnav-card--next { text-align: right; align-items: flex-end; }
+  .footnav-title { font-size: 14px; font-weight: 500; }
+
+  .hidden { display: none !important; }
+</style>

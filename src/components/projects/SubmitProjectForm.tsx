@@ -55,21 +55,22 @@ export default function SubmitProjectForm({ projectSlug, existing }: Props) {
   return (
     <section
       aria-label="Submit project"
-      className="mt-8 p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950"
+      className="card"
+      style={{ marginTop: 32 }}
     >
-      <header className="mb-3">
-        <h2 className="text-lg font-semibold m-0">Submit your build</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 m-0 mt-1">
+      <header style={{ marginBottom: 18 }}>
+        <span className="eyebrow">submit your build</span>
+        <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '8px 0 0', lineHeight: 1.55 }}>
           {existing
-            ? `Last submitted ${new Date(existing.submittedAt).toLocaleDateString()}. Re-submitting updates your submission.`
+            ? `Last submitted ${new Date(existing.submittedAt).toLocaleDateString()}. Re-submitting overwrites your previous entry.`
             : 'Optional GitHub repo URL plus a short reflection on what you learned.'}
         </p>
       </header>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 16 }}>
         <div>
-          <label htmlFor={`repo-${projectSlug}`} className="block text-sm font-medium mb-1">
-            Repo URL <span className="text-gray-500 font-normal">(optional)</span>
+          <label htmlFor={`repo-${projectSlug}`} className="label">
+            Repo URL <span className="label__hint">(optional)</span>
           </label>
           <input
             id={`repo-${projectSlug}`}
@@ -77,12 +78,12 @@ export default function SubmitProjectForm({ projectSlug, existing }: Props) {
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
             placeholder="https://github.com/you/your-repo"
-            className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+            className="input"
           />
         </div>
 
         <div>
-          <label htmlFor={`reflection-${projectSlug}`} className="block text-sm font-medium mb-1">
+          <label htmlFor={`reflection-${projectSlug}`} className="label">
             Reflection
           </label>
           <textarea
@@ -93,43 +94,49 @@ export default function SubmitProjectForm({ projectSlug, existing }: Props) {
             rows={5}
             maxLength={4000}
             placeholder="What did you build, what was hard, what did you learn?"
-            className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+            className="textarea"
           />
-          <div className="text-xs text-gray-500 mt-1">{reflection.length} / 4000</div>
+          <div className="field-help">{reflection.length} / 4000</div>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <input
             id={`public-${projectSlug}`}
             type="checkbox"
             checked={isPublic}
             onChange={(e) => setIsPublic(e.target.checked)}
-            className="mt-1 h-4 w-4 cursor-pointer accent-blue-600"
+            style={{
+              marginTop: 3,
+              width: 16,
+              height: 16,
+              cursor: 'pointer',
+              accentColor: 'var(--accent)',
+            }}
           />
-          <label htmlFor={`public-${projectSlug}`} className="text-sm cursor-pointer">
+          <label htmlFor={`public-${projectSlug}`} style={{ fontSize: 13, color: 'var(--ink-2)', cursor: 'pointer', lineHeight: 1.5 }}>
             Make this submission visible on my public profile
-            <span className="block text-xs text-gray-500 dark:text-gray-400">
-              Off by default. Only the items you opt in are visible to anyone else.
+            <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-3)', marginTop: 2, fontFamily: 'var(--mono)' }}>
+              Off by default. Only opted-in items are visible to others.
             </span>
           </label>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <button
             type="submit"
             disabled={status === 'saving' || reflectionTooShort}
-            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn--primary"
           >
             {status === 'saving' ? 'Saving…' : existing ? 'Update submission' : 'Submit'}
           </button>
-          <span className="text-sm" aria-live="polite">
+          <span style={{ fontSize: 12, fontFamily: 'var(--mono)' }} aria-live="polite">
             {status === 'saved' && lastSavedAt && (
-              <span className="text-green-700 dark:text-green-400">
-                Saved {new Date(lastSavedAt).toLocaleTimeString()}
+              <span style={{ color: 'var(--pass-strong)' }}>
+                ✓ Saved {new Date(lastSavedAt).toLocaleTimeString()}
               </span>
             )}
             {status === 'error' && (
-              <span className="text-red-700 dark:text-red-400">{errorMsg ?? 'Error'}</span>
+              <span style={{ color: 'var(--error)' }}>{errorMsg ?? 'Error'}</span>
             )}
           </span>
         </div>

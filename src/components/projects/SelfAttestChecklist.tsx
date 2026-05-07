@@ -64,45 +64,62 @@ export default function SelfAttestChecklist({ projectSlug, criteria }: Props) {
   return (
     <section
       aria-label="Self-attest checklist"
-      className="mt-8 p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900"
+      className="card"
+      style={{ marginTop: 32 }}
     >
-      <header className="flex items-baseline justify-between gap-3 mb-3">
-        <h2 className="text-lg font-semibold m-0">Self-attest checklist</h2>
-        <span className="text-sm text-gray-600 dark:text-gray-400" aria-live="polite">
+      <header style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+        <span className="eyebrow">self-attest checklist</span>
+        <span
+          style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}
+          aria-live="polite"
+        >
           {doneCount} / {criteria.length}
         </span>
       </header>
-      <ul className="space-y-2 list-none p-0 m-0">
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10 }}>
         {criteria.map((c, i) => (
-          <li key={i} className="flex items-start gap-3">
+          <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <input
               id={`attest-${projectSlug}-${i}`}
               type="checkbox"
               checked={checked[i] ?? false}
               onChange={() => toggle(i)}
               disabled={!hydrated}
-              className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-blue-600"
+              style={{
+                marginTop: 4,
+                width: 16,
+                height: 16,
+                flexShrink: 0,
+                cursor: 'pointer',
+                accentColor: 'var(--accent)',
+              }}
             />
             <label
               htmlFor={`attest-${projectSlug}-${i}`}
-              className={`cursor-pointer ${checked[i] ? 'line-through text-gray-500 dark:text-gray-500' : ''}`}
+              style={{
+                cursor: 'pointer',
+                fontSize: 14,
+                lineHeight: 1.55,
+                color: checked[i] ? 'var(--ink-3)' : 'var(--ink-2)',
+                textDecoration: checked[i] ? 'line-through' : 'none',
+              }}
             >
               {c}
             </label>
           </li>
         ))}
       </ul>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-gray-600 dark:text-gray-400 m-0" aria-live="polite">
+      <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }} aria-live="polite">
           {allDone
-            ? 'All criteria checked. Saving submissions across devices arrives in a later release.'
-            : 'Progress is kept locally for this browser session.'}
+            ? 'All criteria checked. Submit below to record your build.'
+            : 'Progress kept locally for this browser session.'}
         </p>
         <button
           type="button"
           onClick={reset}
           disabled={!hydrated || doneCount === 0}
-          className="text-sm px-3 py-1 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn btn--ghost btn--sm"
         >
           Reset
         </button>

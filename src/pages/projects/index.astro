@@ -14,16 +14,16 @@ for (const list of grouped.values()) {
   list.sort((a, b) => a.data.title.localeCompare(b.data.title));
 }
 
-const tierBadge: Record<ProjectTier, string> = {
-  starter: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-  mid: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-  capstone: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+const tierEstimate: Record<ProjectTier, string> = {
+  starter: '1–2 hr',
+  mid: '~1 day',
+  capstone: '~1 week',
 };
 
 const tierBlurb: Record<ProjectTier, string> = {
-  starter: '≈ 1–2 hours. A focused exercise in one diagnostic skill.',
-  mid: '≈ 1 day. A deeper integration project with multiple moving parts.',
-  capstone: '≈ 1 week. A full-stack QA artifact you can put on your resume.',
+  starter: 'Pick a tool, ship a tiny suite. One focused diagnostic skill.',
+  mid: 'Combine two concepts, harness real CI. Multiple moving parts.',
+  capstone: 'Production-grade artefact. A full QA artifact for the resume.',
 };
 ---
 
@@ -31,43 +31,112 @@ const tierBlurb: Record<ProjectTier, string> = {
   title="Build — Project Briefs — QA Learning"
   description={`Tiered QA project briefs: ${allProjects.length} projects across Starter, Mid, and Capstone tiers.`}
 >
-  <main class="px-6 py-12 max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold mb-2">Build</h1>
-    <p class="text-gray-600 dark:text-gray-400 mb-10">
-      Project briefs grouped by time commitment. Pick one matching what you have to give this week.
-    </p>
+  <section class="hero">
+    <div>
+      <span class="eyebrow">build pillar · self-directed</span>
+      <h1>
+        Read less.<br />
+        Build <em>more.</em>
+      </h1>
+      <p class="hero__lead">
+        Three tiers of self-directed project briefs. Each ships with a scoped
+        acceptance-criteria list, a self-attest checklist, and an optional
+        GitHub URL + reflection on submission.
+      </p>
+    </div>
+    <div class="card" style="align-self: end; padding: 22px; font-size: 13px; color: var(--ink-2); line-height: 1.6;">
+      <div class="eyebrow" style="margin-bottom: 10px;">tiers</div>
+      {PROJECT_TIERS.map((tier) => (
+        <div style="margin-top: 6px;">
+          <strong style="color: var(--ink);">{TIER_LABELS[tier]}</strong> · {tierEstimate[tier]} ·{' '}
+          <span style="color: var(--ink-3);">{tierBlurb[tier]}</span>
+        </div>
+      ))}
+    </div>
+  </section>
 
+  <section class="section">
     {PROJECT_TIERS.map((tier) => {
       const list = grouped.get(tier)!;
       if (list.length === 0) return null;
       return (
-        <section class="mb-12">
-          <div class="mb-4 pb-2 border-b border-gray-200 dark:border-gray-800 flex items-baseline gap-3">
-            <h2 class="text-xl font-semibold">{TIER_LABELS[tier]}</h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{tierBlurb[tier]}</span>
+        <div style="margin-bottom: 48px;">
+          <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px;">
+            <h2
+              style="font-family: var(--serif); font-size: 32px; font-weight: 400; letter-spacing: -0.02em; margin: 0; color: var(--ink); line-height: 1.15;"
+            >
+              {TIER_LABELS[tier]}
+            </h2>
+            <span class="pill">{tierEstimate[tier]}</span>
+            <span class="pill">{list.length} brief{list.length === 1 ? '' : 's'}</span>
           </div>
-          <ul class="space-y-3">
-            {list.map((project) => (
-              <li>
-                <a
-                  href={`/projects/${project.data.slug}`}
-                  class="flex items-center justify-between gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors group"
-                >
-                  <span class="font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                    {project.data.title}
+          <div class="brief-grid">
+            {list.map((project, i) => (
+              <a class="brief-card" href={`/projects/${project.data.slug}`}>
+                <div class="eyebrow">brief · {String(i + 1).padStart(2, '0')}</div>
+                <div class="brief-card__title">{project.data.title}</div>
+                <div class="brief-card__desc">
+                  {project.data.acceptanceCriteria.length} acceptance criteria · self-attest checklist included
+                </div>
+                <div class="brief-card__foot">
+                  <span class="mono" style="font-size: 11px; color: var(--ink-3);">
+                    {project.data.estimate} · {TIER_LABELS[project.data.tier]}
                   </span>
-                  <span class="flex items-center gap-3 shrink-0 text-sm text-gray-500 dark:text-gray-400">
-                    <span>{project.data.estimate}</span>
-                    <span class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${tierBadge[tier]}`}>
-                      {TIER_LABELS[tier]}
-                    </span>
+                  <span class="mono" style="font-size: 12px; color: var(--ink); text-decoration: underline;">
+                    open brief →
                   </span>
-                </a>
-              </li>
+                </div>
+              </a>
             ))}
-          </ul>
-        </section>
+          </div>
+        </div>
       );
     })}
-  </main>
+  </section>
 </BaseLayout>
+
+<style>
+  .brief-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1024px) { .brief-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px)  { .brief-grid { grid-template-columns: 1fr; } }
+
+  .brief-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 200px;
+    padding: 22px;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    background: var(--paper);
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .brief-card:hover { border-color: var(--ink-3); background: var(--paper-2); }
+  .brief-card__title {
+    font-family: var(--serif);
+    font-size: 22px;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    color: var(--ink);
+    font-weight: 450;
+  }
+  .brief-card__desc {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .brief-card__foot {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+  }
+</style>

@@ -19,9 +19,9 @@ export default function SubmissionsList({ submissions: initial }: Props) {
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-gray-600 dark:text-gray-400 m-0">
-        You have not submitted any project builds yet. Pick one from the{' '}
-        <a className="underline" href="/projects">
+      <p style={{ fontSize: 13, color: 'var(--ink-3)', margin: 0 }}>
+        No project builds submitted yet. Pick one from the{' '}
+        <a className="underline" href="/projects" style={{ color: 'var(--ink)', textDecoration: 'underline' }}>
           Build
         </a>{' '}
         section.
@@ -50,18 +50,25 @@ export default function SubmissionsList({ submissions: initial }: Props) {
   }
 
   return (
-    <ul className="space-y-3 list-none p-0 m-0">
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
       {items.map((s) => (
         <li
           key={s.projectSlug}
-          className="p-4 rounded-lg border border-gray-200 dark:border-gray-800"
+          style={{
+            padding: 14,
+            border: '1px solid var(--rule)',
+            borderRadius: 8,
+          }}
         >
-          <div className="flex items-baseline justify-between gap-3 flex-wrap">
-            <a className="font-medium underline" href={`/projects/${s.projectSlug}`}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <a
+              href={`/projects/${s.projectSlug}`}
+              style={{ fontWeight: 500, fontSize: 13, color: 'var(--ink)', textDecoration: 'underline' }}
+            >
               {s.projectSlug}
             </a>
-            <span className="text-xs text-gray-500">
-              Submitted {new Date(s.submittedAt).toLocaleDateString()}
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>
+              {new Date(s.submittedAt).toLocaleDateString()}
             </span>
           </div>
           {s.repoUrl && (
@@ -69,25 +76,42 @@ export default function SubmissionsList({ submissions: initial }: Props) {
               href={s.repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-700 dark:text-blue-400 underline break-all"
+              style={{
+                display: 'inline-block',
+                fontSize: 12,
+                color: 'var(--accent)',
+                textDecoration: 'underline',
+                wordBreak: 'break-all',
+                marginTop: 4,
+                fontFamily: 'var(--mono)',
+              }}
             >
               {s.repoUrl}
             </a>
           )}
-          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 mb-3 whitespace-pre-wrap">
+          <p
+            style={{
+              fontSize: 13,
+              color: 'var(--ink-2)',
+              marginTop: 8,
+              marginBottom: 12,
+              lineHeight: 1.55,
+              whiteSpace: 'pre-wrap',
+            }}
+          >
             {s.reflection}
           </p>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--ink-2)', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={s.isPublic}
               disabled={pending === s.projectSlug}
               onChange={(e) => togglePublic(s.projectSlug, e.target.checked)}
-              className="h-4 w-4 cursor-pointer accent-blue-600"
+              style={{ width: 14, height: 14, cursor: 'pointer', accentColor: 'var(--accent)' }}
             />
-            <span>Visible on my public profile</span>
+            <span>Visible on public profile</span>
             {errorSlug === s.projectSlug && (
-              <span className="text-red-700 dark:text-red-400 text-xs">save failed</span>
+              <span style={{ color: 'var(--error)', fontSize: 11 }}>save failed</span>
             )}
           </label>
         </li>

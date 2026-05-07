@@ -30,9 +30,8 @@ export default function SearchModal() {
   useEffect(() => {
     const load = async () => {
       try {
-        // Non-literal path prevents Vite static analysis — file only exists after build
         const path = '/pagefind/' + 'pagefind.js';
-        const pf = await import(/* @vite-ignore */ path) as PagefindInstance;
+        const pf = (await import(/* @vite-ignore */ path)) as PagefindInstance;
         if (pf.init) await pf.init();
         pagefindRef.current = pf;
         setReady(true);
@@ -81,7 +80,9 @@ export default function SearchModal() {
         setSelected(0);
       }
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [query]);
 
   useEffect(() => {
@@ -97,10 +98,13 @@ export default function SearchModal() {
     setResults([]);
   }, []);
 
-  const navigate = useCallback((url: string) => {
-    window.location.href = url;
-    close();
-  }, [close]);
+  const navigate = useCallback(
+    (url: string) => {
+      window.location.href = url;
+      close();
+    },
+    [close],
+  );
 
   const handleOverlayKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -117,9 +121,8 @@ export default function SearchModal() {
         const href = r.filters?.section?.includes('quiz') ? `${r.url}#quiz` : r.url;
         navigate(href);
       } else if (e.key === 'Tab') {
-        // Keep focus inside modal
         const focusable = (e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(
-          'input, a, button, [tabindex]:not([tabindex="-1"])'
+          'input, a, button, [tabindex]:not([tabindex="-1"])',
         );
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -132,14 +135,30 @@ export default function SearchModal() {
         }
       }
     },
-    [results, selected, navigate, close]
+    [results, selected, navigate, close],
   );
 
   if (!open) return null;
 
+  const selectedResult = results[selected];
+  const lessonResults = results.filter((r) => !r.filters?.section?.includes('quiz'));
+  const quizResults = results.filter((r) => r.filters?.section?.includes('quiz'));
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4 bg-black/40"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: '12vh',
+        paddingLeft: 16,
+        paddingRight: 16,
+        background: 'rgba(20, 20, 18, 0.45)',
+        backdropFilter: 'blur(2px)',
+      }}
       role="dialog"
       aria-modal="true"
       aria-label="Search"
@@ -147,19 +166,29 @@ export default function SearchModal() {
       onKeyDown={handleOverlayKeyDown}
     >
       <div
-        className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+        style={{
+          width: 720,
+          maxWidth: '95%',
+          background: 'var(--paper)',
+          border: '1px solid var(--rule)',
+          borderRadius: 14,
+          boxShadow: '0 30px 80px -20px rgba(0,0,0,0.4)',
+          overflow: 'hidden',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center border-b border-gray-200 dark:border-gray-700">
-          <svg
-            className="ml-4 mr-2 w-4 h-4 text-gray-400 shrink-0"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+        <div
+          style={{
+            padding: '18px 22px',
+            borderBottom: '1px solid var(--rule)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true" style={{ color: 'var(--ink-3)' }}>
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
           </svg>
           <input
             ref={inputRef}
@@ -167,79 +196,148 @@ export default function SearchModal() {
             placeholder={ready ? 'Search lessons and quizzes…' : 'Search unavailable in dev mode'}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 py-3 pr-4 text-base bg-transparent outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            style={{
+              flex: 1,
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontFamily: 'var(--sans)',
+              fontSize: 17,
+              color: 'var(--ink)',
+            }}
             aria-label="Search query"
             aria-autocomplete="list"
             aria-controls="search-results"
             aria-activedescendant={results[selected] ? `result-${selected}` : undefined}
           />
-          <button
-            onClick={close}
-            className="mr-3 text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Close search"
-          >
-            Esc
+          <button onClick={close} className="kbd" aria-label="Close search" style={{ cursor: 'pointer' }}>
+            esc
           </button>
         </div>
 
         {results.length > 0 && (
-          <ul
-            ref={listRef}
-            id="search-results"
-            role="listbox"
-            className="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800"
-          >
-            {results.map((r, i) => {
-              const isQuiz = r.filters?.section?.includes('quiz');
-              const href = isQuiz ? `${r.url}#quiz` : r.url;
-              const isSelected = i === selected;
-              return (
-                <li
-                  key={r.url + i}
-                  id={`result-${i}`}
-                  role="option"
-                  aria-selected={isSelected}
-                >
-                  <a
-                    href={href}
-                    className={`block px-4 py-3 transition-colors ${
-                      isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(href);
-                    }}
-                    tabIndex={0}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm truncate">{r.meta.title ?? 'Untitled'}</span>
-                      {isQuiz && (
-                        <span className="shrink-0 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded px-1.5 py-0.5">
-                          Quiz
-                        </span>
-                      )}
-                    </div>
-                    <div
-                      className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 [&_mark]:bg-yellow-200 dark:[&_mark]:bg-yellow-800 [&_mark]:rounded"
-                      dangerouslySetInnerHTML={{ __html: r.excerpt }}
-                    />
-                  </a>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 60%) minmax(0, 1fr)', maxHeight: 460 }}>
+            <ul
+              ref={listRef}
+              id="search-results"
+              role="listbox"
+              style={{ listStyle: 'none', padding: '8px', margin: 0, borderRight: '1px solid var(--rule)', overflowY: 'auto' }}
+            >
+              {lessonResults.length > 0 && (
+                <li className="eyebrow" style={{ padding: '10px 14px 6px', listStyle: 'none' }}>
+                  lessons · {lessonResults.length}
                 </li>
-              );
-            })}
-          </ul>
+              )}
+              {results.map((r, i) => {
+                const isQuiz = r.filters?.section?.includes('quiz');
+                const href = isQuiz ? `${r.url}#quiz` : r.url;
+                const isSelected = i === selected;
+                if (isQuiz && i === lessonResults.length) {
+                  // section break before first quiz
+                }
+                return (
+                  <li key={r.url + i} id={`result-${i}`} role="option" aria-selected={isSelected}>
+                    <a
+                      href={href}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto',
+                        gap: 4,
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        marginBottom: 2,
+                        background: isSelected ? 'var(--paper-2)' : 'transparent',
+                        borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+                        textDecoration: 'none',
+                        color: 'var(--ink)',
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(href);
+                      }}
+                      tabIndex={0}
+                    >
+                      <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--ink)' }}>
+                        {r.meta.title ?? 'Untitled'}
+                      </div>
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>
+                        {isQuiz ? 'quiz' : 'lesson'}
+                      </div>
+                      <div
+                        style={{
+                          gridColumn: '1 / -1',
+                          fontSize: 12,
+                          color: 'var(--ink-2)',
+                          lineHeight: 1.5,
+                        }}
+                        dangerouslySetInnerHTML={{ __html: r.excerpt }}
+                      />
+                    </a>
+                  </li>
+                );
+              })}
+              {quizResults.length > 0 && (
+                <li className="eyebrow" style={{ padding: '16px 14px 6px', listStyle: 'none' }}>
+                  quiz questions · {quizResults.length}
+                </li>
+              )}
+            </ul>
+
+            <div style={{ padding: 22 }}>
+              {selectedResult && (
+                <>
+                  <span className="eyebrow">preview</span>
+                  <div
+                    style={{
+                      fontFamily: 'var(--serif)',
+                      fontSize: 22,
+                      fontWeight: 450,
+                      letterSpacing: '-0.02em',
+                      marginTop: 6,
+                      color: 'var(--ink)',
+                    }}
+                  >
+                    {selectedResult.meta.title ?? 'Untitled'}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      color: 'var(--ink-2)',
+                      lineHeight: 1.6,
+                      marginTop: 14,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: selectedResult.excerpt }}
+                  />
+                  <div style={{ height: 1, background: 'var(--rule)', margin: '16px 0' }} />
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', lineHeight: 1.7 }}>
+                    ↑↓ navigate · ↵ open · esc close
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         )}
 
         {query && results.length === 0 && ready && (
-          <p className="px-4 py-4 text-sm text-gray-400 text-center">No results for "{query}"</p>
+          <p style={{ padding: '24px 16px', fontSize: 13, color: 'var(--ink-3)', textAlign: 'center', margin: 0 }}>
+            No results for "{query}"
+          </p>
         )}
 
-        <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-800 flex gap-3 text-xs text-gray-400">
-          <span><kbd className="font-sans">↑↓</kbd> navigate</span>
-          <span><kbd className="font-sans">↵</kbd> open</span>
-          <span><kbd className="font-sans">Esc</kbd> close</span>
+        <div
+          style={{
+            padding: '10px 16px',
+            borderTop: '1px solid var(--rule)',
+            background: 'var(--paper-2)',
+            fontFamily: 'var(--mono)',
+            fontSize: 11,
+            color: 'var(--ink-3)',
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>Pagefind · static index</span>
+          <span>{ready ? 'ready' : 'loading…'}</span>
         </div>
       </div>
     </div>

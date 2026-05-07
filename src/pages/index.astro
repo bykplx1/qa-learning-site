@@ -1,61 +1,188 @@
 ---
 import { getCollection } from 'astro:content';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { sortLessons, groupByCategory } from '../lib/lessons/order';
+import type { LessonEntry } from '../lib/lessons/order';
 
 const allLessons = await getCollection('lessons');
 const sorted = sortLessons(allLessons);
 const groups = groupByCategory(sorted);
 
-const diffColor: Record<string, string> = {
-  beginner: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-  intermediate: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-  advanced: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
-};
-
 function formatCategory(cat: string): string {
   return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+function folderPrefix(entry: LessonEntry): string {
+  return entry.id.split('/')[0].slice(0, 2);
+}
+
+const categoryRows = Array.from(groups.entries())
+  .map(([cat, lessons]) => ({
+    cat,
+    title: formatCategory(cat),
+    num: folderPrefix(lessons[0]),
+    lessons,
+    count: lessons.length,
+    minutes: lessons.reduce((s, l) => s + l.data.est_minutes, 0),
+  }))
+  .sort((a, b) => a.num.localeCompare(b.num));
+
+const totalLessons = sorted.length;
+const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
+const quizCount = sorted.filter((l) =>
+  existsSync(join(process.cwd(), 'src', 'generated', 'quiz', `${l.data.slug}.quiz.yaml`)),
+).length;
+
+const latestLessons = sorted.slice(0, 10);
 ---
 
 <BaseLayout
   title="QA Learning"
-  description={`Interactive study site for QA fundamentals. ${sorted.length} lessons across ${groups.size} categories.`}
+  description={`Interactive study site for QA fundamentals. ${totalLessons} lessons across ${groups.size} tracks.`}
 >
-  <main class="px-6 py-12 max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold mb-2">QA Learning</h1>
-    <p class="text-gray-600 dark:text-gray-400 mb-10">
-      Interactive study site for QA fundamentals. {sorted.length} lessons across {groups.size} categories.
-    </p>
+  <section class="hero">
+    <div>
+      <span class="eyebrow">QA · curriculum + practice</span>
+      <h1>
+        A QA curriculum,<br />
+        built like <em>production code.</em>
+      </h1>
+      <p class="hero__lead">
+        {totalLessons} hand-written lessons across {groups.size} tracks, with practice quizzes,
+        a build pipeline of self-directed projects, and a profile that tracks what you've shipped.
+        Open-source and statically generated.
+      </p>
+      <div class="hero__cta">
+        <a href={`/lessons/${sorted[0]?.data.slug ?? ''}`} class="btn btn--primary btn--lg">
+          Start with {categoryRows[0]?.title ?? 'lesson 1'}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/projects" class="btn btn--ghost btn--lg">Browse build briefs</a>
+      </div>
+    </div>
+    <div class="hero__stats">
+      <div class="hero__stat">
+        <div class="num">{totalLessons}</div>
+        <div class="lbl">Lessons across {groups.size} tracks</div>
+      </div>
+      <div class="hero__stat">
+        <div class="num">{quizCount}</div>
+        <div class="lbl">Practice quizzes</div>
+      </div>
+      <div class="hero__stat">
+        <div class="num">{totalMinutes}<small>m</small></div>
+        <div class="lbl">Total read time</div>
+      </div>
+      <div class="hero__stat">
+        <div class="num num--accent">{groups.size}</div>
+        <div class="lbl">Curriculum tracks</div>
+      </div>
+    </div>
+  </section>
 
-    {[...groups.entries()].map(([category, lessons]) => (
-      <section class="mb-12">
-        <h2 class="text-xl font-semibold mb-4 pb-2 border-b border-gray-200 dark:border-gray-800 capitalize">
-          {formatCategory(category)}
-        </h2>
-        <ul class="space-y-3">
-          {lessons.map((lesson) => (
-            <li>
-              <a
-                href={`/lessons/${lesson.data.slug}`}
-                class="flex items-center justify-between gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors group"
-              >
-                <span class="font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                  {lesson.data.title}
-                </span>
-                <span class="flex items-center gap-3 shrink-0 text-sm text-gray-500 dark:text-gray-400">
-                  <span>{lesson.data.est_minutes} min</span>
-                  <span
-                    class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${diffColor[lesson.data.difficulty]}`}
-                  >
-                    {lesson.data.difficulty}
+  <section class="section">
+    <div class="section__head">
+      <div>
+        <span class="eyebrow">curriculum</span>
+        <h2>{groups.size} tracks, ordered through the foundation.</h2>
+      </div>
+      <p>
+        Each track maps to a numbered category folder in the vault. Lessons are MDX, quizzes are YAML;
+        every wikilink resolves at build time or fails CI.
+      </p>
+    </div>
+    <div class="cat-grid">
+      {categoryRows.map((c) => (
+        <a class="cat" href={`/lessons/${c.lessons[0].data.slug}`}>
+          <div class="cat__num">{c.num} · TRACK</div>
+          <div class="cat__title">{c.title}</div>
+          <div class="cat__blurb">
+            Start with <em style="font-style: italic;">{c.lessons[0].data.title}</em>.
+          </div>
+          <div class="cat__bar"><i style="width: 100%"></i></div>
+          <div class="cat__meta">
+            <span>{c.count} lesson{c.count === 1 ? '' : 's'}</span>
+            <span>{c.minutes}m read</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section__head">
+      <div>
+        <span class="eyebrow">recent · ordered</span>
+        <h2>Latest lessons.</h2>
+      </div>
+      <a href="#all" class="btn btn--ghost">
+        All {totalLessons} lessons
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <div class="lessons-list">
+      {latestLessons.map((l, i) => {
+        const num = folderPrefix(l);
+        const idx = `${num}.${(i % 9) + 1}`;
+        const diff = l.data.difficulty === 'beginner' ? 'b' : l.data.difficulty === 'intermediate' ? 'i' : 'a';
+        return (
+          <a class="lrow" href={`/lessons/${l.data.slug}`}>
+            <span class="lrow__idx">{idx}</span>
+            <div class="lrow__title">
+              {l.data.title}
+              <small>{formatCategory(l.data.category)}</small>
+            </div>
+            <span class="lrow__min">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              {l.data.est_minutes}m
+            </span>
+            <span class={`lrow__diff diff-${diff}`} title={l.data.difficulty}></span>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="section" id="all">
+    {[...groups.entries()]
+      .map(([cat, lessons]) => ({ cat, lessons, num: folderPrefix(lessons[0]) }))
+      .sort((a, b) => a.num.localeCompare(b.num))
+      .map(({ cat, lessons }) => (
+        <div style="margin-bottom: 40px;">
+          <div class="section__head" style="margin-bottom: 16px;">
+            <div>
+              <span class="eyebrow">{folderPrefix(lessons[0])} · {lessons.length} lesson{lessons.length === 1 ? '' : 's'}</span>
+              <h2 style="font-size: 26px;">{formatCategory(cat)}</h2>
+            </div>
+          </div>
+          <div class="lessons-list">
+            {lessons.map((l, i) => {
+              const idx = `${folderPrefix(l)}.${i + 1}`;
+              const diff = l.data.difficulty === 'beginner' ? 'b' : l.data.difficulty === 'intermediate' ? 'i' : 'a';
+              return (
+                <a class="lrow" href={`/lessons/${l.data.slug}`}>
+                  <span class="lrow__idx">{idx}</span>
+                  <div class="lrow__title">
+                    {l.data.title}
+                    <small>{l.data.tags.slice(0, 3).join(' · ')}</small>
+                  </div>
+                  <span class="lrow__min">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    {l.data.est_minutes}m
                   </span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </section>
-    ))}
-  </main>
+                  <span class={`lrow__diff diff-${diff}`} title={l.data.difficulty}></span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+  </section>
+
+  <footer class="site-footer">
+    <span>© 2026 · MIT · QA Learning</span>
+    <span>{totalLessons} lessons · {quizCount} quizzes</span>
+  </footer>
 </BaseLayout>

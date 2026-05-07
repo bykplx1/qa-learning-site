@@ -15,15 +15,13 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
 {tocHeadings.length > 0 && (
   <nav aria-label="Table of contents">
-    <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
-      On this page
-    </p>
-    <ul class="space-y-1 text-sm">
+    <p class="eyebrow" style="margin-bottom: 14px;">on this page</p>
+    <ul class="toc-list">
       {tocHeadings.map((h) => (
-        <li class={h.depth === 3 ? 'pl-3' : ''}>
+        <li class={h.depth === 3 ? 'toc-l3' : ''}>
           <a
             href={`#${h.slug}`}
-            class="toc-link block py-0.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            class="toc-link"
             data-heading={h.slug}
           >
             {h.text}
@@ -35,12 +33,31 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
 )}
 
 <style is:global>
-  .toc-link.is-active {
-    color: rgb(37 99 235);
-    font-weight: 500;
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+    font-size: 12px;
+    border-left: 1px solid var(--rule);
   }
-  [data-theme="dark"] .toc-link.is-active {
-    color: rgb(96 165 250);
+  .toc-l3 { padding-left: 12px; }
+  .toc-link {
+    display: block;
+    padding: 2px 0 2px 12px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--ink-3);
+    text-decoration: none;
+    line-height: 1.5;
+    transition: color 120ms ease;
+  }
+  .toc-link:hover { color: var(--ink-2); }
+  .toc-link.is-active {
+    color: var(--ink);
+    border-left-color: var(--accent);
+    font-weight: 500;
   }
 </style>
 

@@ -27,9 +27,37 @@ interface LoginBannerProps {
 function LoginBanner({ signedIn }: LoginBannerProps) {
   if (signedIn === null || signedIn) return null;
   return (
-    <div className="mb-5 px-4 py-2.5 rounded-lg text-sm bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-      <a href="/api/auth/sign-in/github" className="underline">Sign in</a> to save your score
+    <div className="banner banner--info" style={{ marginBottom: 20 }}>
+      You're playing anonymously.{' '}
+      <a href="/api/auth/sign-in/github" style={{ color: 'var(--ink)', textDecoration: 'underline' }}>
+        Sign in with GitHub
+      </a>{' '}
+      to save this attempt to your profile.
     </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+      <path d="M5 12l5 5 9-11" />
+    </svg>
+  );
+}
+
+function XIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+      <path d="M5 12h14M13 5l7 7-7 7" />
+    </svg>
   );
 }
 
@@ -73,117 +101,158 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
     <div>
       <LoginBanner signedIn={signedIn} />
 
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div>
+          <span className="eyebrow">practice mode · sessionStorage</span>
+          <h2
+            style={{
+              fontFamily: 'var(--serif)',
+              fontSize: 30,
+              fontWeight: 400,
+              letterSpacing: '-0.02em',
+              margin: '8px 0 0',
+              color: 'var(--ink)',
+              lineHeight: 1.15,
+            }}
+          >
+            Practice quiz
+          </h2>
+        </div>
+        <span className="pill" style={{ padding: '5px 12px', fontSize: 12 }}>
           Question {state.currentIndex + 1} / {state.questions.length}
-        </p>
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 28 }}>
+        {state.questions.map((_, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: 4,
+              borderRadius: 2,
+              background:
+                i < state.currentIndex
+                  ? 'var(--ink)'
+                  : i === state.currentIndex
+                    ? 'var(--accent)'
+                    : 'var(--paper-3)',
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="card" style={{ padding: 28 }}>
+        <div className="eyebrow" style={{ marginBottom: 12 }}>
+          Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--serif)',
+            fontSize: 24,
+            lineHeight: 1.3,
+            letterSpacing: '-0.015em',
+            margin: '0 0 24px',
+            color: 'var(--ink)',
+          }}
+        >
+          {q.q}
+        </div>
+
+        {q.options && (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {q.options.map((opt, i) => {
+              const isSelected = isMulti
+                ? state.feedback
+                  ? Array.isArray(answer) && answer.includes(i)
+                  : multiSelection.includes(i)
+                : answer === i;
+              const isExpected = Array.isArray(q.answer) ? q.answer.includes(i) : q.answer === i;
+
+              let stateClass = 'qopt qopt--idle';
+              if (!state.feedback) {
+                if (isMulti && isSelected) stateClass = 'qopt qopt--selected';
+              } else {
+                if (isExpected) stateClass = 'qopt qopt--correct';
+                else if (isSelected && !isExpected) stateClass = 'qopt qopt--wrong';
+                else stateClass = 'qopt qopt--reveal';
+              }
+
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className={stateClass}
+                  disabled={!!state.feedback}
+                  onClick={() => handleOptionClick(i)}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {isMulti && !state.feedback && (
-          <p className="text-xs text-gray-400 dark:text-gray-500">Select all that apply</p>
+          <button
+            type="button"
+            className="btn btn--primary"
+            style={{ marginTop: 18 }}
+            disabled={multiSelection.length === 0}
+            onClick={handleMultiSubmit}
+          >
+            Submit answer
+          </button>
+        )}
+
+        {state.feedback && (
+          <div
+            style={{
+              marginTop: 24,
+              padding: 18,
+              borderRadius: 10,
+              background: correct ? 'var(--pass-soft)' : 'var(--accent-soft)',
+              border: '1px solid transparent',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  background: correct ? 'var(--pass)' : 'var(--accent)',
+                  color: 'white',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                {correct ? <CheckIcon /> : <XIcon />}
+              </span>
+              <span style={{ fontWeight: 600, color: correct ? 'var(--pass-strong)' : 'var(--accent-strong)' }}>
+                {correct ? '✓ Correct!' : '✗ Incorrect'}
+              </span>
+            </div>
+            {q.hint && !correct && (
+              <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55, marginBottom: 6 }}>
+                <strong style={{ color: 'var(--ink)' }}>Hint:</strong> {q.hint}
+              </div>
+            )}
+            {q.explanation && (
+              <div style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+                <strong style={{ color: 'var(--ink)' }}>Why:</strong> {q.explanation}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mb-6">
-        <div
-          className="bg-blue-500 h-1 rounded-full transition-all duration-300"
-          style={{
-            width: `${((state.currentIndex + (state.feedback ? 1 : 0)) / state.questions.length) * 100}%`,
-          }}
-        />
-      </div>
-
-      <h3 className="text-base font-semibold mb-5 text-gray-900 dark:text-gray-100 leading-snug">
-        {q.q}
-      </h3>
-
-      {q.options && (
-        <div className="space-y-2 mb-5">
-          {q.options.map((opt, i) => {
-            const isSelected = isMulti
-              ? state.feedback
-                ? Array.isArray(answer) && answer.includes(i)
-                : multiSelection.includes(i)
-              : answer === i;
-            const isExpected = Array.isArray(q.answer) ? q.answer.includes(i) : q.answer === i;
-
-            let cls =
-              'w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ';
-
-            if (!state.feedback) {
-              if (isMulti && isSelected) {
-                cls +=
-                  'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200 cursor-pointer';
-              } else {
-                cls +=
-                  'border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 text-gray-800 dark:text-gray-200 cursor-pointer';
-              }
-            } else {
-              if (isExpected) {
-                cls +=
-                  'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-950 text-green-800 dark:text-green-200';
-              } else if (isSelected && !isExpected) {
-                cls +=
-                  'border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-950 text-red-800 dark:text-red-200';
-              } else {
-                cls +=
-                  'border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500';
-              }
-            }
-
-            return (
-              <button
-                key={i}
-                className={cls}
-                disabled={state.feedback}
-                onClick={() => handleOptionClick(i)}
-              >
-                {opt}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {isMulti && !state.feedback && (
-        <button
-          className="mb-5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition-colors"
-          disabled={multiSelection.length === 0}
-          onClick={handleMultiSubmit}
-        >
-          Submit
-        </button>
-      )}
-
       {state.feedback && (
-        <div
-          className={`p-4 rounded-lg mb-5 border ${
-            correct
-              ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
-              : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
-          }`}
-        >
-          <p
-            className={`font-semibold mb-2 ${correct ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}
-          >
-            {correct ? '✓ Correct!' : '✗ Incorrect'}
-          </p>
-          {q.hint && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-              <span className="font-medium">Hint:</span> {q.hint}
-            </p>
-          )}
-          {q.explanation && (
-            <p className="text-sm text-gray-700 dark:text-gray-300">{q.explanation}</p>
-          )}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+          <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: 'next' })}>
+            {isLast ? 'See Results' : 'Next Question'} <ArrowIcon />
+          </button>
         </div>
-      )}
-
-      {state.feedback && (
-        <button
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-          onClick={() => dispatch({ type: 'next' })}
-        >
-          {isLast ? 'See Results' : 'Next Question →'}
-        </button>
       )}
     </div>
   );
@@ -203,6 +272,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComplete, onRestart }: SummaryScreenProps) {
   const { correct, total } = getScore(state);
   const missed = state.questions.filter((q, i) => !isCorrect(q, state.answers[i]));
+  const passed = correct / total >= 0.65;
 
   const savedNote = signedIn
     ? saveStatus === 'saving'
@@ -216,26 +286,60 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComp
 
   return (
     <div>
-      <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-gray-100">Quiz Complete</h3>
-      <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-        {correct} / {total}
-      </p>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-7">
-        {correct === total ? 'Perfect score!' : `${total - correct} question${total - correct !== 1 ? 's' : ''} missed`}
-      </p>
+      <span className="eyebrow">Quiz Complete · practice</span>
+      <div
+        style={{
+          fontFamily: 'var(--serif)',
+          fontSize: 72,
+          fontWeight: 400,
+          letterSpacing: '-0.04em',
+          lineHeight: 1,
+          margin: '10px 0 4px',
+          color: 'var(--ink)',
+        }}
+      >
+        {correct}
+        <span style={{ color: 'var(--ink-3)', fontSize: 40 }}>/{total}</span>
+      </div>
+      <div
+        className={passed ? 'pill pill--pass' : 'pill pill--accent'}
+        style={{ padding: '8px 14px', fontSize: 13, fontFamily: 'var(--sans)', fontWeight: 500 }}
+      >
+        <span
+          style={{
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            background: passed ? 'var(--pass)' : 'var(--accent)',
+            color: 'white',
+            display: 'grid',
+            placeItems: 'center',
+            marginRight: 4,
+          }}
+        >
+          {passed ? <CheckIcon /> : <XIcon />}
+        </span>
+        {passed
+          ? `Passed · ${Math.round((correct / total) * 100)}%`
+          : `${total - correct} missed · ${Math.round((correct / total) * 100)}%`}
+      </div>
 
       {missed.length > 0 && (
-        <div className="mb-7">
-          <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Missed Questions</h4>
-          <div className="space-y-3">
+        <div style={{ marginTop: 32 }}>
+          <span className="eyebrow">review · {missed.length} missed</span>
+          <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
             {missed.map((q) => (
-              <div
-                key={q.id}
-                className="p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950"
-              >
-                <p className="font-medium text-gray-900 dark:text-gray-100 mb-2 text-sm">{q.q}</p>
+              <div key={q.id} className="card" style={{ padding: '18px 22px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                  <span className="pill pill--accent">incorrect</span>
+                </div>
+                <div style={{ fontFamily: 'var(--serif)', fontSize: 18, letterSpacing: '-0.01em', marginBottom: 10, color: 'var(--ink)' }}>
+                  {q.q}
+                </div>
                 {q.explanation && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{q.explanation}</p>
+                  <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55 }}>
+                    <strong style={{ color: 'var(--ink)' }}>Why:</strong> {q.explanation}
+                  </div>
                 )}
               </div>
             ))}
@@ -243,30 +347,22 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComp
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-          onClick={onRestart}
-        >
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 28 }}>
+        <button type="button" className="btn btn--primary" onClick={onRestart}>
           Retry Quiz
         </button>
-
         {!markedComplete ? (
-          <button
-            className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            onClick={onMarkComplete}
-          >
+          <button type="button" className="btn btn--ghost" onClick={onMarkComplete}>
             Mark complete
           </button>
         ) : (
-          <span className="text-sm text-green-600 dark:text-green-400">
-            ✓ Marked complete
+          <span className="pill pill--pass">
+            <CheckIcon /> Marked complete
           </span>
         )}
-
         {savedNote && (
           <span
-            className="text-xs text-gray-400 dark:text-gray-500"
+            style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}
             data-testid="quiz-save-status"
             data-status={saveStatus}
           >
@@ -362,17 +458,7 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
   }, [questions, quizSlug]);
 
   return (
-    <div className="mt-10 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-      <div className="flex items-center gap-2 mb-5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          Practice Quiz
-        </span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">·</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">
-          {questions.length} question{questions.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-
+    <section style={{ marginTop: 56, paddingTop: 40, borderTop: '1px solid var(--rule)' }}>
       {state.status === 'summary' ? (
         <SummaryScreen
           state={state}
@@ -385,6 +471,6 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
       ) : (
         <QuestionScreen state={state} dispatch={dispatch} signedIn={signedIn} />
       )}
-    </div>
+    </section>
   );
 }

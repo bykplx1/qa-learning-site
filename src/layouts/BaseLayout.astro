@@ -18,6 +18,11 @@ const {
   canonicalUrl = Astro.url.href,
   ogType = 'website',
 } = Astro.props;
+
+const path = Astro.url.pathname;
+const isLessons = path === '/' || path.startsWith('/lessons');
+const isProjects = path.startsWith('/projects');
+const isProfile = path.startsWith('/profile');
 ---
 
 <html lang="en" class="min-h-screen">
@@ -54,16 +59,23 @@ const {
       })();
     </script>
   </head>
-  <body class="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
-    <nav class="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800">
-      <a href="/" class="font-semibold text-lg hover:underline">QA Learning</a>
-      <div class="flex items-center gap-3">
-        <a href="/projects" class="text-sm font-medium hover:underline">Build</a>
+  <body>
+    <header class="nav">
+      <a class="nav__brand" href="/">
+        <span class="nav__mark">qa</span>
+        <span>QA&nbsp;Learning</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="/" class={isLessons ? 'is-active' : ''}>Lessons</a>
+        <a href="/projects" class={isProjects ? 'is-active' : ''}>Build</a>
+        <a href="/profile" class={isProfile ? 'is-active' : ''}>Profile</a>
+      </nav>
+      <div class="nav__right">
         <SearchTrigger client:only="react" />
         <ThemeToggle client:only="react" />
         <AuthNav client:only="react" />
       </div>
-    </nav>
+    </header>
     <SearchModal client:only="react" />
     <slot />
   </body>

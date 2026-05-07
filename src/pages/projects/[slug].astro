@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SelfAttestChecklist from '../../components/projects/SelfAttestChecklist';
 import SubmitProjectForm from '../../components/projects/SubmitProjectForm';
-import { TIER_LABELS, type ProjectTier } from '../../lib/projects/schema';
+import { TIER_LABELS } from '../../lib/projects/schema';
 import { auth } from '../../lib/auth';
 import { getSubmission } from '../../db/queries';
 
@@ -31,11 +31,12 @@ const existingProp = existing
     }
   : null;
 
-const tierBadge: Record<ProjectTier, string> = {
-  starter: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-  mid: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-  capstone: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
-};
+function splitTitleAccent(t: string): { head: string; tail: string } {
+  const idx = t.lastIndexOf(' ');
+  if (idx <= 0 || t.split(' ').length < 2) return { head: '', tail: t };
+  return { head: t.slice(0, idx), tail: t.slice(idx + 1) };
+}
+const { head, tail } = splitTitleAccent(title);
 
 const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
 ---
@@ -46,37 +47,51 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
   canonicalUrl={canonicalUrl}
   ogType="article"
 >
-  <main class="px-6 py-10 max-w-3xl mx-auto">
-    <nav class="text-sm text-gray-500 dark:text-gray-400 mb-6 flex items-center gap-1.5">
-      <a href="/" class="hover:text-gray-900 dark:hover:text-gray-100">Home</a>
-      <span>›</span>
-      <a href="/projects" class="hover:text-gray-900 dark:hover:text-gray-100">Build</a>
-      <span>›</span>
-      <span class="text-gray-900 dark:text-gray-100">{title}</span>
+  <main class="brief">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">QA Learning</a>
+      <span class="sep">/</span>
+      <a href="/projects">Build</a>
+      <span class="sep">/</span>
+      <span class="crumb-current">{title}</span>
     </nav>
 
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold mb-3">{title}</h1>
-      <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-        <span class={`px-2 py-0.5 rounded-full text-xs font-medium ${tierBadge[tier]}`}>
-          {TIER_LABELS[tier]}
-        </span>
-        <span>·</span>
-        <span>{estimate}</span>
+    <header style="margin-bottom: 32px;">
+      <h1 class="brief__title">
+        {head ? (
+          <>
+            {head}{' '}
+            <em>{tail}</em>
+          </>
+        ) : (
+          tail
+        )}
+      </h1>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px;">
+        <span class="pill pill--accent">{TIER_LABELS[tier]}</span>
+        <span class="pill">{estimate}</span>
+        <span class="pill">{acceptanceCriteria.length} acceptance criteria</span>
       </div>
     </header>
 
-    <article class="prose dark:prose-invert max-w-none">
+    <article class="prose">
       <Content />
     </article>
 
-    <section class="mt-10" aria-label="Acceptance criteria">
-      <h2 class="text-xl font-semibold mb-3">Acceptance criteria</h2>
-      <ul class="list-disc pl-6 space-y-2 text-gray-800 dark:text-gray-200">
-        {acceptanceCriteria.map((c) => (
-          <li>{c}</li>
+    <section style="margin-top: 40px;" aria-label="Acceptance criteria">
+      <span class="eyebrow">acceptance criteria</span>
+      <ol style="list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 8px;">
+        {acceptanceCriteria.map((c, i) => (
+          <li
+            style="display: grid; grid-template-columns: 32px 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid var(--rule);"
+          >
+            <span style="font-family: var(--mono); font-size: 11px; color: var(--ink-3); padding-top: 3px; letter-spacing: 0.04em;">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <div style="font-size: 14px; color: var(--ink-2); line-height: 1.55;">{c}</div>
+          </li>
         ))}
-      </ul>
+      </ol>
     </section>
 
     <SelfAttestChecklist
@@ -92,11 +107,36 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
         existing={existingProp}
       />
     ) : (
-      <section class="mt-8 p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-        <p class="text-sm text-gray-700 dark:text-gray-300 m-0">
-          <a href="/api/auth/sign-in/github" class="underline">Sign in</a> to submit your build.
+      <section class="card" style="margin-top: 32px;">
+        <div class="eyebrow" style="margin-bottom: 8px;">submit your build</div>
+        <p style="font-size: 14px; color: var(--ink-2); margin: 0;">
+          <a href="/api/auth/sign-in/github" style="color: var(--accent); text-decoration: underline;">
+            Sign in
+          </a>{' '}
+          to submit your repo URL and a short reflection on what you learned.
         </p>
       </section>
     )}
   </main>
 </BaseLayout>
+
+<style>
+  .brief {
+    padding: 44px 56px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) { .brief { padding: 28px 20px; } }
+
+  .brief__title {
+    font-family: var(--serif);
+    font-size: 52px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .brief__title em { font-style: italic; color: var(--accent); font-weight: 400; }
+  @media (max-width: 768px) { .brief__title { font-size: 38px; } }
+</style>
