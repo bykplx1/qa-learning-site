@@ -2,7 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SubmissionsList from '../components/profile/SubmissionsList';
 import { auth } from '../lib/auth';
-import { getCompletedLessonCount, getQuizAttemptCount, getStreak, listSubmissions } from '../db/queries';
+import {
+  getCategoryProgress,
+  getCompletedLessonCount,
+  getQuizAttemptCount,
+  getStreak,
+  listSubmissions,
+} from '../db/queries';
 
 export const prerender = false;
 
@@ -12,6 +18,7 @@ const completedCount = user?.id ? await getCompletedLessonCount(user.id) : 0;
 const attemptCount = user?.id ? await getQuizAttemptCount(user.id) : 0;
 const streak = user?.id ? await getStreak(user.id) : { current: 0, longest: 0 };
 const submissions = user?.id ? await listSubmissions(user.id) : [];
+const categoryProgress = user?.id ? await getCategoryProgress(user.id) : [];
 const submissionsProp = submissions.map((s) => ({
   projectSlug: s.projectSlug,
   repoUrl: s.repoUrl,
@@ -51,6 +58,36 @@ const submissionsProp = submissions.map((s) => ({
             </div>
           </div>
         </div>
+
+        <section class="mt-8" aria-label="Category progress" data-testid="category-progress-section">
+          <h2 class="text-xl font-semibold mb-3">Category progress</h2>
+          {categoryProgress.length === 0 ? (
+            <p class="text-sm text-gray-500 dark:text-gray-400">No lessons yet.</p>
+          ) : (
+            <ul class="space-y-3">
+              {categoryProgress.map((cp) => (
+                <li data-testid={`category-progress-${cp.category}`}>
+                  <div class="flex justify-between text-sm mb-1">
+                    <span class="font-medium">{cp.category}</span>
+                    <span class="text-gray-500 dark:text-gray-400">
+                      {cp.completed}/{cp.total} ({cp.percent}%)
+                    </span>
+                  </div>
+                  <div
+                    class="h-2 rounded bg-gray-200 dark:bg-gray-800 overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={cp.percent}
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-label={`${cp.category} ${cp.percent}% complete`}
+                  >
+                    <div class="h-full bg-blue-600 dark:bg-blue-500" style={`width: ${cp.percent}%`}></div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <section class="mt-8" aria-label="Project submissions" data-testid="submissions-section">
           <h2 class="text-xl font-semibold mb-3">Project submissions</h2>

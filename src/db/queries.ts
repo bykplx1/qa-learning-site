@@ -3,12 +3,14 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import { db } from './index';
 import {
   dailyActivity,
+  lessonsMeta,
   lessonViews,
   projectSubmissions,
   quizAttempts,
   type ProjectSubmission,
 } from './schema';
 import { streakOf, type StreakResult } from '../lib/streak/streak';
+import { categoryProgressOf, type CategoryProgress } from '../lib/progress/progress';
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -181,6 +183,21 @@ export async function getStreak(userId: string, today: Date = new Date()): Promi
     .from(dailyActivity)
     .where(eq(dailyActivity.userId, userId));
   return streakOf(rows, today);
+}
+
+export async function getCategoryProgress(userId: string): Promise<CategoryProgress[]> {
+  const [views, attempts, meta] = await Promise.all([
+    db
+      .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
+      .from(lessonViews)
+      .where(eq(lessonViews.userId, userId)),
+    db
+      .select({ quizSlug: quizAttempts.quizSlug })
+      .from(quizAttempts)
+      .where(eq(quizAttempts.userId, userId)),
+    db.select({ slug: lessonsMeta.slug, category: lessonsMeta.category }).from(lessonsMeta),
+  ]);
+  return categoryProgressOf(views, attempts, meta);
 }
 
 export async function setSubmissionPublic(
