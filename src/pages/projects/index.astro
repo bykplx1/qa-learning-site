@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { PROJECT_TIERS, TIER_LABELS, type ProjectTier } from '../../lib/projects/schema';
+
+const allProjects = await getCollection('projects');
+
+const grouped = new Map<ProjectTier, typeof allProjects>();
+for (const tier of PROJECT_TIERS) grouped.set(tier, []);
+for (const p of allProjects) {
+  grouped.get(p.data.tier)!.push(p);
+}
+for (const list of grouped.values()) {
+  list.sort((a, b) => a.data.title.localeCompare(b.data.title));
+}
+
+const tierBadge: Record<ProjectTier, string> = {
+  starter: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
+  mid: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
+  capstone: 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200',
+};
+
+const tierBlurb: Record<ProjectTier, string> = {
+  starter: '≈ 1–2 hours. A focused exercise in one diagnostic skill.',
+  mid: '≈ 1 day. A deeper integration project with multiple moving parts.',
+  capstone: '≈ 1 week. A full-stack QA artifact you can put on your resume.',
+};
+---
+
+<BaseLayout
+  title="Build — Project Briefs — QA Learning"
+  description={`Tiered QA project briefs: ${allProjects.length} projects across Starter, Mid, and Capstone tiers.`}
+>
+  <main class="px-6 py-12 max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-2">Build</h1>
+    <p class="text-gray-600 dark:text-gray-400 mb-10">
+      Project briefs grouped by time commitment. Pick one matching what you have to give this week.
+    </p>
+
+    {PROJECT_TIERS.map((tier) => {
+      const list = grouped.get(tier)!;
+      if (list.length === 0) return null;
+      return (
+        <section class="mb-12">
+          <div class="mb-4 pb-2 border-b border-gray-200 dark:border-gray-800 flex items-baseline gap-3">
+            <h2 class="text-xl font-semibold">{TIER_LABELS[tier]}</h2>
+            <span class="text-sm text-gray-500 dark:text-gray-400">{tierBlurb[tier]}</span>
+          </div>
+          <ul class="space-y-3">
+            {list.map((project) => (
+              <li>
+                <a
+                  href={`/projects/${project.data.slug}`}
+                  class="flex items-center justify-between gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors group"
+                >
+                  <span class="font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                    {project.data.title}
+                  </span>
+                  <span class="flex items-center gap-3 shrink-0 text-sm text-gray-500 dark:text-gray-400">
+                    <span>{project.data.estimate}</span>
+                    <span class={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${tierBadge[tier]}`}>
+                      {TIER_LABELS[tier]}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      );
+    })}
+  </main>
+</BaseLayout>

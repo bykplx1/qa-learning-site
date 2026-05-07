@@ -1,0 +1,35 @@
+---
+slug: full-stack-qa-pipeline
+title: Full-Stack QA Pipeline
+tier: capstone
+estimate: 1 week
+acceptanceCriteria:
+  - You stand up a small full-stack app (frontend + backend + database) — or fork an existing one.
+  - You add unit, integration, and E2E test layers, each with at least one meaningful test.
+  - You configure CI (GitHub Actions or equivalent) to run all three layers on every push.
+  - The CI pipeline produces a single pass/fail signal and reports per-layer coverage or duration.
+  - You write a one-page postmortem describing one real bug your suite caught (or would have caught) and which layer caught it.
+---
+
+## Brief
+
+Build — or adopt — a small full-stack application and wrap it in a complete test pyramid: unit at the base, integration in the middle, E2E at the top. Wire it all into CI so every push runs the full suite.
+
+This is the project that proves you can think about quality at the system level, not just at the test-case level. You will make trade-offs about where to test what, and you will feel the cost of putting tests at the wrong layer.
+
+## Suggested approach
+
+1. Pick or build a small app. A todo list with auth and a database is plenty.
+2. Identify the riskiest behaviors. List them. These drive your test choices.
+3. Cover internal logic with unit tests (fast, many).
+4. Cover backend boundaries — API endpoints, DB queries — with integration tests (medium speed, real services where it matters).
+5. Cover the one or two flows a user actually cares about with E2E tests (slow, few — Playwright is a good default).
+6. Wire everything into CI. Make the failure output debuggable.
+
+## What "done" looks like
+
+A repo with a green CI badge, a README that explains how to run each layer locally, and a short postmortem document.
+
+## Why this matters
+
+Anyone can write a unit test. Few engineers can architect a test strategy across an entire stack and defend it. This project is the evidence that you can.

@@ -15,7 +15,9 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: process.env.CI ? 'npm run preview' : 'npm run dev',
+    // The Vercel adapter writes build output to `dist/client/`, which `astro preview`
+    // does not serve. Use a plain static file server in CI to mirror the deployed shape.
+    command: process.env.CI ? 'npx --yes serve@14 dist/client -l 4321' : 'npm run dev',
     url: 'http://localhost:4321',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
