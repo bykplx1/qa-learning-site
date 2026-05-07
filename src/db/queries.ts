@@ -8,6 +8,7 @@ import {
   quizAttempts,
   type ProjectSubmission,
 } from './schema';
+import { streakOf, type StreakResult } from '../lib/streak/streak';
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -17,21 +18,37 @@ export interface MarkLessonCompleteInput {
 
 export async function markLessonComplete(input: MarkLessonCompleteInput): Promise<void> {
   const { userId, lessonSlug, timeSpentSec = 0 } = input;
-  await db
-    .insert(lessonViews)
-    .values({
-      id: randomUUID(),
-      userId,
-      lessonSlug,
-      completedAt: new Date(),
-      timeSpentSec,
-    })
-    .onConflictDoUpdate({
-      target: [lessonViews.userId, lessonViews.lessonSlug],
-      set: {
-        timeSpentSec: sql`excluded.time_spent_sec`,
-      },
-    });
+  const completedAt = new Date();
+  const day = completedAt.toISOString().slice(0, 10);
+
+  await db.transaction(async (tx) => {
+    const result = await tx
+      .insert(lessonViews)
+      .values({
+        id: randomUUID(),
+        userId,
+        lessonSlug,
+        completedAt,
+        timeSpentSec,
+      })
+      .onConflictDoUpdate({
+        target: [lessonViews.userId, lessonViews.lessonSlug],
+        set: {
+          timeSpentSec: sql`excluded.time_spent_sec`,
+        },
+      })
+      .returning({ inserted: sql<boolean>`(xmax = 0)` });
+
+    if (result[0]?.inserted) {
+      await tx
+        .insert(dailyActivity)
+        .values({ userId, day, attemptsCount: 0, lessonsCount: 1 })
+        .onConflictDoUpdate({
+          target: [dailyActivity.userId, dailyActivity.day],
+          set: { lessonsCount: sql`${dailyActivity.lessonsCount} + 1` },
+        });
+    }
+  });
 }
 
 export async function getCompletedLessonCount(userId: string): Promise<number> {
@@ -156,6 +173,14 @@ export async function getSubmission(
     .where(and(eq(projectSubmissions.userId, userId), eq(projectSubmissions.projectSlug, projectSlug)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+export async function getStreak(userId: string, today: Date = new Date()): Promise<StreakResult> {
+  const rows = await db
+    .select({ day: dailyActivity.day })
+    .from(dailyActivity)
+    .where(eq(dailyActivity.userId, userId));
+  return streakOf(rows, today);
 }
 
 export async function setSubmissionPublic(

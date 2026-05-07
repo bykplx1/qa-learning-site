@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SubmissionsList from '../components/profile/SubmissionsList';
 import { auth } from '../lib/auth';
-import { getCompletedLessonCount, getQuizAttemptCount, listSubmissions } from '../db/queries';
+import { getCompletedLessonCount, getQuizAttemptCount, getStreak, listSubmissions } from '../db/queries';
 
 export const prerender = false;
 
@@ -10,6 +10,7 @@ const session = await auth.api.getSession({ headers: Astro.request.headers });
 const user = session?.user ?? null;
 const completedCount = user?.id ? await getCompletedLessonCount(user.id) : 0;
 const attemptCount = user?.id ? await getQuizAttemptCount(user.id) : 0;
+const streak = user?.id ? await getStreak(user.id) : { current: 0, longest: 0 };
 const submissions = user?.id ? await listSubmissions(user.id) : [];
 const submissionsProp = submissions.map((s) => ({
   projectSlug: s.projectSlug,
@@ -36,6 +37,18 @@ const submissionsProp = submissions.map((s) => ({
           <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
             <div class="text-sm text-gray-500 dark:text-gray-400">Quiz attempts</div>
             <div class="text-3xl font-semibold mt-1" data-testid="attempt-count">{attemptCount}</div>
+          </div>
+          <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Current streak</div>
+            <div class="text-3xl font-semibold mt-1" data-testid="streak-current">
+              {streak.current}<span class="text-base font-normal text-gray-500 dark:text-gray-400 ml-1">day{streak.current === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+          <div class="p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Longest streak</div>
+            <div class="text-3xl font-semibold mt-1" data-testid="streak-longest">
+              {streak.longest}<span class="text-base font-normal text-gray-500 dark:text-gray-400 ml-1">day{streak.longest === 1 ? '' : 's'}</span>
+            </div>
           </div>
         </div>
 
