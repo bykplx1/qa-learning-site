@@ -415,11 +415,11 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
   useEffect(() => {
     if (state.status !== 'summary') return;
     if (submittedRef.current) return;
-    if (signedIn !== true) return;
+    if (signedIn === null) return;
     submittedRef.current = true;
     const { correct, total } = getScore(state);
     const durationSec = Math.floor((Date.now() - startedAtRef.current) / 1000);
-    setSaveStatus('saving');
+    if (signedIn) setSaveStatus('saving');
     adapter
       .recordAttempt({
         quizSlug,
@@ -430,9 +430,11 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
         durationSec,
       })
       .then(({ id }) => {
-        setSaveStatus(id ? 'saved' : 'error');
+        if (signedIn) setSaveStatus(id ? 'saved' : 'error');
       })
-      .catch(() => setSaveStatus('error'));
+      .catch(() => {
+        if (signedIn) setSaveStatus('error');
+      });
   }, [adapter, quizSlug, signedIn, state]);
 
   const dispatch = useCallback((action: QuizAction) => {

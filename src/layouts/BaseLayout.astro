@@ -4,6 +4,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import SearchModal from '../components/search/SearchModal';
 import SearchTrigger from '../components/search/SearchTrigger';
 import { AuthNav } from '../components/AuthNav';
+import { SessionMerge } from '../components/SessionMerge';
 
 interface Props {
   title: string;
@@ -77,6 +78,7 @@ const isProfile = path.startsWith('/profile');
       </div>
     </header>
     <SearchModal client:only="react" />
+    <SessionMerge client:only="react" />
     <slot />
   </body>
 </html>

@@ -17,6 +17,7 @@ export interface QuizPersistenceAdapter {
 }
 
 const STORAGE_KEY = (slug: string) => `quiz_${slug}`;
+export const PENDING_ATTEMPT_KEY = (slug: string) => `quiz_attempt_${slug}`;
 
 export const sessionStorageAdapter: QuizPersistenceAdapter = {
   loadProgress(quizSlug) {
@@ -37,7 +38,10 @@ export const sessionStorageAdapter: QuizPersistenceAdapter = {
       sessionStorage.removeItem(STORAGE_KEY(quizSlug));
     } catch {}
   },
-  async recordAttempt() {
+  async recordAttempt(attempt) {
+    try {
+      sessionStorage.setItem(PENDING_ATTEMPT_KEY(attempt.quizSlug), JSON.stringify(attempt));
+    } catch {}
     return { id: null };
   },
 };
