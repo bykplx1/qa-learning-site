@@ -8,6 +8,7 @@ export const lessonFrontmatterSchema = z
     est_minutes: z.number().int().positive(),
     difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
     tags: z.array(z.string().min(1)).min(1),
+    published_at: z.coerce.date().optional(),
   })
   .strict();
 
