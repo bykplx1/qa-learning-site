@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_visual_baselines:
+        description: 'Run the visual job with --update-snapshots and upload regenerated PNGs as artifact (deliberate baseline update — see CONTRIBUTING.md).'
+        type: boolean
+        default: false
 
 jobs:
   test:
@@ -75,3 +81,53 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  visual:
+    # Visual regression — Linux only. Cross-OS font rendering produces
+    # noise that's impossible to manage, so baselines live in CI exclusively.
+    # Fails the PR on any unexpected pixel diff. There is NO auto-update path:
+    # baseline updates are deliberate, see CONTRIBUTING.md.
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Visual regression tests
+        if: ${{ inputs.update_visual_baselines != true }}
+        run: npm run test:visual
+
+      - name: Regenerate baselines (deliberate)
+        if: ${{ inputs.update_visual_baselines == true }}
+        run: npm run test:visual:update
+
+      - name: Upload regenerated baselines artifact
+        if: ${{ inputs.update_visual_baselines == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines
+          path: tests/visual/**/*-snapshots/**
+          retention-days: 14
+
+      - name: Upload visual report
+        if: always() && inputs.update_visual_baselines != true
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-report
+          path: |
+            playwright-visual-report/
+            test-results/
+          retention-days: 14
