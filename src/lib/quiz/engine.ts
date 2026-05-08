@@ -1,6 +1,6 @@
 import type { QuizQuestion } from './schema.js';
 
-export type QuizMode = 'practice';
+export type QuizMode = 'practice' | 'exam';
 export type QuizStatus = 'active' | 'summary';
 
 export interface QuizState {

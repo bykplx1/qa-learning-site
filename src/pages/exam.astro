@@ -1,0 +1,104 @@
+---
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'yaml';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { sortLessons } from '../lib/lessons/order';
+import { quizFileSchema } from '../lib/quiz/schema';
+import type { QuizQuestion } from '../lib/quiz/schema';
+import ExamRunner from '../components/exam/ExamRunner';
+
+export const prerender = true;
+
+const EXAM_QUESTION_COUNT = 40;
+const EXAM_DURATION_MINUTES = 60;
+
+const allLessons = await getCollection('lessons');
+const sorted = sortLessons(allLessons);
+
+// Pull one question from each lesson quiz, round-robin, until we hit EXAM_QUESTION_COUNT
+// or exhaust the pool. Deterministic at build, so each run of the exam is the same set.
+const buckets: QuizQuestion[][] = [];
+for (const lesson of sorted) {
+  const path = join(process.cwd(), 'src', 'generated', 'quiz', `${lesson.data.slug}.quiz.yaml`);
+  if (!existsSync(path)) continue;
+  const parsed = quizFileSchema.safeParse(parse(readFileSync(path, 'utf-8')));
+  if (!parsed.success) continue;
+  buckets.push(parsed.data.questions);
+}
+
+const pool: QuizQuestion[] = [];
+let cursor = 0;
+while (pool.length < EXAM_QUESTION_COUNT) {
+  let added = 0;
+  for (const bucket of buckets) {
+    if (pool.length >= EXAM_QUESTION_COUNT) break;
+    if (cursor < bucket.length) {
+      pool.push(bucket[cursor]);
+      added++;
+    }
+  }
+  if (added === 0) break;
+  cursor++;
+}
+
+const examQuestions = pool.slice(0, EXAM_QUESTION_COUNT);
+const durationMs = EXAM_DURATION_MINUTES * 60 * 1000;
+---
+
+<BaseLayout
+  title="Mock exam — QA Learning"
+  description={`${examQuestions.length}-question, ${EXAM_DURATION_MINUTES}-minute ISTQB-style mock exam.`}
+>
+  <div class="exam-page">
+    <header class="exam-page__head">
+      <span class="eyebrow">exam mode · ISTQB-style</span>
+      <h1>Mock exam</h1>
+      <p class="lead">
+        {examQuestions.length} questions · {EXAM_DURATION_MINUTES} minutes · auto-submits when the timer expires.
+        No correctness feedback until you finish.
+      </p>
+    </header>
+
+    {examQuestions.length === 0 ? (
+      <div class="card" style="padding: 28px;">
+        No quiz content available yet. Add some quiz YAML files under <code>src/generated/quiz/</code>.
+      </div>
+    ) : (
+      <ExamRunner
+        client:only="react"
+        questions={examQuestions}
+        examSlug="mock-exam"
+        durationMs={durationMs}
+      />
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .exam-page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+  .exam-page__head {
+    margin-bottom: 28px;
+  }
+  .exam-page__head h1 {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 8px 0 12px;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+  .lead {
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 640px;
+  }
+</style>
