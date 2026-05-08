@@ -78,6 +78,10 @@ test.describe('a11y — WCAG 2.2 AA', () => {
   test('search modal opened', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1').first()).toBeVisible();
+    // SearchModal is client:only — its `search:open` listener is attached on
+    // mount. Waiting for the SearchTrigger button confirms the React islands
+    // hydrated; dispatching beforehand misses the listener.
+    await expect(page.getByRole('button', { name: /Search.*Ctrl\+K/i })).toBeVisible();
     await page.evaluate(() => window.dispatchEvent(new CustomEvent('search:open')));
     const dialog = page.getByRole('dialog', { name: 'Search' });
     await expect(dialog).toBeVisible();
