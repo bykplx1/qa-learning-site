@@ -201,7 +201,7 @@ jobs:
               '',
               ...lines,
               '',
-              '_Budgets: perf ≥ 90 mobile / 95 desktop · a11y ≥ 95 · SEO ≥ 95 · best-practices ≥ 95._',
+              '_Budgets (current floor): perf ≥ 70 mobile / 85 desktop · a11y ≥ 95 · SEO ≥ 95 · best-practices ≥ 95. Ratcheting tracked separately._',
             ].join('\n');
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
