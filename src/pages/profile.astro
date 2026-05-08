@@ -5,40 +5,26 @@ import Heatmap from '../components/profile/Heatmap.astro';
 import RecentActivity from '../components/profile/RecentActivity.astro';
 import SubmissionsList from '../components/profile/SubmissionsList';
 import { auth } from '../lib/auth';
-import {
-  getCategoryProgress,
-  getCompletedLessonCount,
-  getHeatmap,
-  getQuizAccuracyByTopic,
-  getQuizAttemptCount,
-  getRecentActivity,
-  getStreak,
-  listSubmissions,
-} from '../db/queries';
+import { loadProfile } from '../lib/profile/load-profile';
 
 export const prerender = false;
 
 const session = await auth.api.getSession({ headers: Astro.request.headers });
 const user = session?.user ?? null;
-const completedCount = user?.id ? await getCompletedLessonCount(user.id) : 0;
-const attemptCount = user?.id ? await getQuizAttemptCount(user.id) : 0;
-const streak = user?.id ? await getStreak(user.id) : { current: 0, longest: 0 };
-const submissions = user?.id ? await listSubmissions(user.id) : [];
-const categoryProgress = user?.id ? await getCategoryProgress(user.id) : [];
-const quizAccuracy = user?.id ? await getQuizAccuracyByTopic(user.id) : [];
-const heatmapYear = new Date().getUTCFullYear();
-const heatmapCells = user?.id ? await getHeatmap(user.id, heatmapYear) : [];
-const projectTitleBySlug = new Map(
-  (await getCollection('projects')).map((p) => [p.data.slug, p.data.title]),
-);
-const recentActivity = user?.id ? await getRecentActivity(user.id, 10, projectTitleBySlug) : [];
-const submissionsProp = submissions.map((s) => ({
-  projectSlug: s.projectSlug,
-  repoUrl: s.repoUrl,
-  reflection: s.reflection,
-  isPublic: s.isPublic,
-  submittedAt: s.submittedAt.toISOString(),
-}));
+const projectTitleBySlug = user?.id
+  ? new Map((await getCollection('projects')).map((p) => [p.data.slug, p.data.title]))
+  : new Map<string, string>();
+const profile = user?.id ? await loadProfile(user.id, { projectTitleBySlug }) : null;
+
+const completedCount = profile?.completedCount ?? 0;
+const attemptCount = profile?.attemptCount ?? 0;
+const streak = profile?.streak ?? { current: 0, longest: 0 };
+const categoryProgress = profile?.categoryProgress ?? [];
+const quizAccuracy = profile?.accuracyByTopic ?? [];
+const heatmapYear = profile?.heatmap.year ?? new Date().getUTCFullYear();
+const heatmapCells = profile?.heatmap.cells ?? [];
+const recentActivity = profile?.recentActivity ?? [];
+const submissionsProp = profile?.submissions ?? [];
 
 function initials(name: string | null | undefined, email: string | null | undefined): string {
   const src = (name ?? email ?? '').trim();

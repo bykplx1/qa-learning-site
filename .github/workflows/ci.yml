@@ -64,6 +64,8 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
+        env:
+          E2E_OAUTH_MOCK: '1'
         run: npm run test:e2e
 
       - name: Upload Playwright report

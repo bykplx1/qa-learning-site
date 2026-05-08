@@ -15,9 +15,9 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    // The Vercel adapter writes build output to `dist/client/`, which `astro preview`
-    // does not serve. Use a plain static file server in CI to mirror the deployed shape.
-    command: process.env.CI ? 'npx --yes serve@14 dist/client -l 4321' : 'npm run dev',
+    // Dev server runs SSR endpoints (profile, /api/*) needed by the v2 auth E2E.
+    // The Vercel adapter's `dist/client/` static output cannot serve these routes.
+    command: 'npm run dev',
     url: 'http://localhost:4321',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
