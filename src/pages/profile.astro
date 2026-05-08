@@ -1,10 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Heatmap from '../components/profile/Heatmap.astro';
 import SubmissionsList from '../components/profile/SubmissionsList';
 import { auth } from '../lib/auth';
 import {
   getCategoryProgress,
   getCompletedLessonCount,
+  getHeatmap,
   getQuizAccuracyByTopic,
   getQuizAttemptCount,
   getStreak,
@@ -21,6 +23,8 @@ const streak = user?.id ? await getStreak(user.id) : { current: 0, longest: 0 };
 const submissions = user?.id ? await listSubmissions(user.id) : [];
 const categoryProgress = user?.id ? await getCategoryProgress(user.id) : [];
 const quizAccuracy = user?.id ? await getQuizAccuracyByTopic(user.id) : [];
+const heatmapYear = new Date().getUTCFullYear();
+const heatmapCells = user?.id ? await getHeatmap(user.id, heatmapYear) : [];
 const submissionsProp = submissions.map((s) => ({
   projectSlug: s.projectSlug,
   repoUrl: s.repoUrl,
@@ -86,6 +90,10 @@ const totalLessons = categoryProgress.reduce((s, c) => s + c.total, 0);
         </section>
 
         <section class="profile-grid">
+          <div class="profile-grid__wide">
+            <Heatmap cells={heatmapCells} year={heatmapYear} />
+          </div>
+
           <div class="card profile-grid__wide" data-testid="category-progress-section" aria-label="Category progress">
             <span class="eyebrow">progress by track</span>
             {categoryProgress.length === 0 ? (
