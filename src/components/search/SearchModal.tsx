@@ -207,7 +207,7 @@ export default function SearchModal() {
             }}
             aria-label="Search query"
             aria-autocomplete="list"
-            aria-controls="search-results"
+            aria-controls={results.length > 0 ? 'search-results' : undefined}
             aria-activedescendant={results[selected] ? `result-${selected}` : undefined}
           />
           <button onClick={close} className="kbd" aria-label="Close search" style={{ cursor: 'pointer' }}>
