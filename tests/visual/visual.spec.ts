@@ -44,11 +44,26 @@ async function clearQuizState(page: Page) {
   }, QUIZ_STORAGE_KEY);
 }
 
+async function disableStickyNav(page: Page) {
+  // Element screenshots of #quiz include the sticky nav overlap; sub-pixel
+  // font AA on the nav varies between runs and trips strict diff comparison.
+  await page.addInitScript(() => {
+    const apply = () => {
+      const s = document.createElement('style');
+      s.textContent = '.nav{position:static !important}';
+      document.head.appendChild(s);
+    };
+    if (document.head) apply();
+    else document.addEventListener('DOMContentLoaded', apply, { once: true });
+  });
+}
+
 for (const theme of ['light', 'dark'] as const) {
   test.describe(`${theme} theme`, () => {
     test.beforeEach(async ({ page }) => {
       await setTheme(page, theme);
       await dismissDevOverlay(page);
+      await disableStickyNav(page);
     });
 
     test('home', async ({ page }) => {
