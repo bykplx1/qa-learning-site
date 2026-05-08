@@ -46,6 +46,7 @@ Both providers write to the same `users` table; matching verified emails are lin
 | `npm run build` | Production build |
 | `npm test` | Vitest unit tests |
 | `npm run test:e2e` | Playwright E2E |
+| `npm run test:visual` | Playwright visual regression (Linux/CI only — see [CONTRIBUTING.md](./CONTRIBUTING.md)) |
 
 ## Roadmap
 
