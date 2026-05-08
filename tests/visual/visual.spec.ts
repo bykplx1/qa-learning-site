@@ -70,8 +70,13 @@ for (const theme of ['light', 'dark'] as const) {
       await page.goto(`/lessons/${LESSON_SLUG}`);
       const quiz = page.locator('#quiz');
       await expect(quiz).toBeVisible();
+      // React island hydration: the question indicator only paints after
+      // mount, so clicking before this races the handler binding.
+      await expect(quiz.getByText(/Question 1 \/ \d+/)).toBeVisible();
       await quiz.locator('button').first().click();
-      await expect(page.getByText(/✓ Correct!|✗ Incorrect/)).toBeVisible();
+      await expect(quiz.getByText(/✓ Correct!|✗ Incorrect/)).toBeVisible({
+        timeout: 10_000,
+      });
       await settle(page);
       await expect(quiz).toHaveScreenshot(`quiz-mid-${theme}.png`);
     });
