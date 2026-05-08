@@ -1,10 +1,17 @@
 import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { db } from '../../src/db';
-import { users } from '../../src/db/schema';
-import { auth } from '../../src/lib/auth';
-import { GET } from '../../src/pages/api/profile/me';
-import { markLessonComplete, recordQuizAttempt, submitProject } from '../../src/db/queries';
+
+vi.mock('astro:content', () => ({
+  getCollection: async () => [] as Array<{ data: { slug: string; title: string } }>,
+}));
+
+const { db } = await import('../../src/db');
+const { users } = await import('../../src/db/schema');
+const { auth } = await import('../../src/lib/auth');
+const { GET } = await import('../../src/pages/api/profile/me');
+const { markLessonComplete, recordQuizAttempt, submitProject } = await import(
+  '../../src/db/queries'
+);
 
 const baseUrl = process.env.BETTER_AUTH_URL ?? 'http://localhost:4321';
 
