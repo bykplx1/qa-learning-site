@@ -13,6 +13,7 @@ import { streakOf, type StreakResult } from '../lib/streak/streak';
 import { categoryProgressOf, type CategoryProgress } from '../lib/progress/progress';
 import { quizAccuracyByTopicOf, type TopicAccuracy } from '../lib/progress/quiz-accuracy';
 import { heatmapOf, type HeatmapCell } from '../lib/heatmap/heatmap';
+import { recentActivityOf, type ActivityItem } from '../lib/activity/activity';
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -235,6 +236,47 @@ export async function getQuizAccuracyByTopic(userId: string): Promise<TopicAccur
     db.select({ slug: lessonsMeta.slug, category: lessonsMeta.category }).from(lessonsMeta),
   ]);
   return quizAccuracyByTopicOf(attempts, meta);
+}
+
+export async function getRecentActivity(
+  userId: string,
+  limit = 10,
+  projectTitleBySlug: Map<string, string> = new Map(),
+): Promise<ActivityItem[]> {
+  const [views, attempts, submissions, meta] = await Promise.all([
+    db
+      .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
+      .from(lessonViews)
+      .where(and(eq(lessonViews.userId, userId), sql`${lessonViews.completedAt} IS NOT NULL`))
+      .orderBy(desc(lessonViews.completedAt))
+      .limit(limit),
+    db
+      .select({
+        quizSlug: quizAttempts.quizSlug,
+        mode: quizAttempts.mode,
+        score: quizAttempts.score,
+        total: quizAttempts.total,
+        attemptedAt: quizAttempts.attemptedAt,
+      })
+      .from(quizAttempts)
+      .where(eq(quizAttempts.userId, userId))
+      .orderBy(desc(quizAttempts.attemptedAt))
+      .limit(limit),
+    db
+      .select({
+        projectSlug: projectSubmissions.projectSlug,
+        submittedAt: projectSubmissions.submittedAt,
+        updatedAt: projectSubmissions.updatedAt,
+      })
+      .from(projectSubmissions)
+      .where(eq(projectSubmissions.userId, userId))
+      .orderBy(desc(projectSubmissions.updatedAt))
+      .limit(limit),
+    db.select({ slug: lessonsMeta.slug, title: lessonsMeta.title }).from(lessonsMeta),
+  ]);
+
+  const lessonTitleBySlug = new Map(meta.map((m) => [m.slug, m.title]));
+  return recentActivityOf(views, attempts, submissions, lessonTitleBySlug, projectTitleBySlug, limit);
 }
 
 export async function setSubmissionPublic(
