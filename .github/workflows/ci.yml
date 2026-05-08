@@ -131,3 +131,121 @@ jobs:
             playwright-visual-report/
             test-results/
           retention-days: 14
+
+  lhci:
+    # Lighthouse-CI budget gate — fails the PR on a single regression below
+    # any category threshold. Audits the production build via `vercel dev`
+    # because the vercel adapter does not implement `astro preview` for SSR
+    # routes (e.g. /profile, prerender:false). `vercel dev` serves both
+    # static dist/ and serverless functions, matching prod routing.
+    #
+    # Required org/repo secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      pull-requests: write
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: qa_learning_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/qa_learning_test
+      BETTER_AUTH_SECRET: test-secret-at-least-32-bytes-long-aaaaaaaaa
+      BETTER_AUTH_URL: http://localhost:4321
+      GITHUB_CLIENT_ID: test-client-id
+      GITHUB_CLIENT_SECRET: test-client-secret
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Apply DB migrations
+        run: npx drizzle-kit migrate
+
+      - name: Vercel pull (preview env)
+        run: npx vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+
+      - name: Vercel build
+        run: npx vercel build --token=$VERCEL_TOKEN
+
+      - name: Start vercel dev
+        run: npx vercel dev --listen 4321 --token=$VERCEL_TOKEN > vercel-dev.log 2>&1 &
+
+      - name: Wait for server
+        run: |
+          for i in {1..60}; do
+            curl -sf http://localhost:4321/ > /dev/null && echo "ready" && exit 0
+            sleep 2
+          done
+          echo "vercel dev did not start within 120s" >&2
+          cat vercel-dev.log >&2 || true
+          exit 1
+
+      - name: Lighthouse-CI (mobile)
+        run: npx lhci autorun --config=lighthouserc.json
+
+      - name: Lighthouse-CI (desktop)
+        if: always()
+        run: npx lhci autorun --config=lighthouserc.desktop.json
+
+      - name: Comment Lighthouse report links on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '.lighthouseci/links.json';
+            if (!fs.existsSync(path)) {
+              core.info('No links.json — lhci upload step did not run.');
+              return;
+            }
+            const links = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const lines = Object.entries(links).map(
+              ([url, report]) => `- [\`${url}\`](${report})`
+            );
+            const body = [
+              '### Lighthouse-CI reports',
+              '',
+              ...lines,
+              '',
+              '_Budgets: perf ≥ 90 mobile / 95 desktop · a11y ≥ 95 · SEO ≥ 95 · best-practices ≥ 95._',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      - name: Upload .lighthouseci artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouseci
+          path: .lighthouseci/
+          retention-days: 14
