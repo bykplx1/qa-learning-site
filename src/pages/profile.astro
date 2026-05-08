@@ -1,6 +1,8 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Heatmap from '../components/profile/Heatmap.astro';
+import RecentActivity from '../components/profile/RecentActivity.astro';
 import SubmissionsList from '../components/profile/SubmissionsList';
 import { auth } from '../lib/auth';
 import {
@@ -9,6 +11,7 @@ import {
   getHeatmap,
   getQuizAccuracyByTopic,
   getQuizAttemptCount,
+  getRecentActivity,
   getStreak,
   listSubmissions,
 } from '../db/queries';
@@ -25,6 +28,10 @@ const categoryProgress = user?.id ? await getCategoryProgress(user.id) : [];
 const quizAccuracy = user?.id ? await getQuizAccuracyByTopic(user.id) : [];
 const heatmapYear = new Date().getUTCFullYear();
 const heatmapCells = user?.id ? await getHeatmap(user.id, heatmapYear) : [];
+const projectTitleBySlug = new Map(
+  (await getCollection('projects')).map((p) => [p.data.slug, p.data.title]),
+);
+const recentActivity = user?.id ? await getRecentActivity(user.id, 10, projectTitleBySlug) : [];
 const submissionsProp = submissions.map((s) => ({
   projectSlug: s.projectSlug,
   repoUrl: s.repoUrl,
@@ -92,6 +99,10 @@ const totalLessons = categoryProgress.reduce((s, c) => s + c.total, 0);
         <section class="profile-grid">
           <div class="profile-grid__wide">
             <Heatmap cells={heatmapCells} year={heatmapYear} />
+          </div>
+
+          <div class="profile-grid__wide">
+            <RecentActivity items={recentActivity} />
           </div>
 
           <div class="card profile-grid__wide" data-testid="category-progress-section" aria-label="Category progress">
