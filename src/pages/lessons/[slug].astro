@@ -65,6 +65,7 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
   description={ogDescription}
   canonicalUrl={canonicalUrl}
   ogType="article"
+  image={`/og/${lesson.data.slug}.png`}
 >
   <div class="lesson-grid">
     <aside class="lesson-sidebar">

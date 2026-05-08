@@ -21,10 +21,14 @@ export function ogImagesIntegration(): AstroIntegration {
         mkdirSync(cacheDir, { recursive: true });
 
         const rows = readLessonsMetaFromVault(vaultPath);
+        const targets: Array<{ slug: string; title: string; category: string }> = [
+          ...rows,
+          { slug: 'default', title: 'QA Learning', category: 'Curriculum + practice' },
+        ];
         let cached = 0;
         let generated = 0;
 
-        for (const row of rows) {
+        for (const row of targets) {
           const input = { title: row.title, category: row.category };
           const hash = computeContentHash(input);
           const cacheFile = join(cacheDir, `${row.slug}-${hash}.png`);
@@ -41,7 +45,7 @@ export function ogImagesIntegration(): AstroIntegration {
           }
           writeFileSync(join(outDir, `${row.slug}.png`), png);
         }
-        logger.info(`OG images: ${rows.length} total (${generated} generated, ${cached} cached)`);
+        logger.info(`OG images: ${targets.length} total (${generated} generated, ${cached} cached)`);
       },
     },
   };

@@ -11,6 +11,8 @@ interface Props {
   description?: string;
   canonicalUrl?: string;
   ogType?: 'website' | 'article';
+  /** Path or absolute URL of the OG/Twitter image. Resolved against Astro.site. */
+  image?: string;
 }
 
 const {
@@ -18,7 +20,10 @@ const {
   description = 'Interactive study site for QA fundamentals — lessons, quizzes, and more.',
   canonicalUrl = Astro.url.href,
   ogType = 'website',
+  image = '/og/default.png',
 } = Astro.props;
+
+const imageUrl = new URL(image, Astro.site ?? Astro.url).href;
 
 const path = Astro.url.pathname;
 const isLessons = path === '/' || path.startsWith('/lessons');
@@ -42,11 +47,13 @@ const isProfile = path.startsWith('/profile');
     <meta property="og:description" content={description} />
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={imageUrl} />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageUrl} />
 
     <script is:inline>
       (function () {
