@@ -31,6 +31,8 @@ test.describe('exam mode wrapper', () => {
     await page.getByTestId('exam-option-0').click();
     await expect(page.getByText(/✓ Correct!/)).toHaveCount(0);
     await expect(page.getByText(/✗ Incorrect/)).toHaveCount(0);
+    await expect(page.getByTestId('exam-summary')).toHaveCount(0);
+    await expect(page.getByText(/Correct answer:/)).toHaveCount(0);
 
     // 5. Answer count reflects selection.
     await expect(page.getByTestId('exam-answered-count')).toContainText('1 answered');
@@ -42,9 +44,27 @@ test.describe('exam mode wrapper', () => {
 
     await page.getByTestId('exam-submit-early').click();
 
-    // 7. Summary screen renders with score + per-question review.
-    await expect(page.getByTestId('exam-summary')).toBeVisible();
+    // 7. Summary screen renders with all sections.
+    const summary = page.getByTestId('exam-summary');
+    await expect(summary).toBeVisible();
+
+    // raw score is a non-negative integer
+    await expect(page.getByTestId('exam-score')).toHaveText(/^\d+$/);
+
+    // pass/fail badge present, percentage shown, threshold quoted
+    const badge = page.getByTestId('exam-pass-badge');
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveAttribute('data-passed', /^(true|false)$/);
+    await expect(page.getByTestId('exam-pct')).toContainText(/\d+% \(.*65%/);
+
+    // time taken renders in mm:ss
+    await expect(page.getByTestId('exam-time-taken')).toHaveText(/time taken · \d{2}:\d{2}/);
+
+    // per-question grid: question text + user's answer + correct answer + explanation
+    await expect(page.getByTestId('exam-review-grid')).toBeVisible();
     await expect(page.getByTestId('exam-review-0')).toBeVisible();
+    await expect(page.getByTestId('exam-review-0-your')).toContainText('Your answer:');
+    await expect(page.getByTestId('exam-review-0-correct')).toContainText('Correct answer:');
 
     // 8. Anonymous run: persistence runs against sessionStorage; not signed in note shows.
     await expect(page.getByTestId('exam-save-status')).toContainText('not signed in');

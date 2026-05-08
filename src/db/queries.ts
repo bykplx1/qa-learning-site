@@ -115,6 +115,42 @@ export async function recordQuizAttempt(input: RecordQuizAttemptInput): Promise<
   return { id };
 }
 
+export interface ExamAttemptRecord {
+  id: string;
+  userId: string;
+  quizSlug: string;
+  mode: string;
+  score: number;
+  total: number;
+  answers: QuizAnswer[];
+  durationSec: number;
+  attemptedAt: Date;
+}
+
+export async function getQuizAttemptById(
+  userId: string,
+  attemptId: string,
+): Promise<ExamAttemptRecord | null> {
+  const rows = await db
+    .select()
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.id, attemptId)))
+    .limit(1);
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    id: r.id,
+    userId: r.userId,
+    quizSlug: r.quizSlug,
+    mode: r.mode,
+    score: r.score,
+    total: r.total,
+    answers: r.answers as QuizAnswer[],
+    durationSec: r.durationSec,
+    attemptedAt: r.attemptedAt,
+  };
+}
+
 export async function getQuizAttemptCount(userId: string): Promise<number> {
   const rows = await db
     .select({ count: sql<number>`count(*)::int` })
@@ -252,6 +288,7 @@ export async function getRecentActivity(
       .limit(limit),
     db
       .select({
+        id: quizAttempts.id,
         quizSlug: quizAttempts.quizSlug,
         mode: quizAttempts.mode,
         score: quizAttempts.score,

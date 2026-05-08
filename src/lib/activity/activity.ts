@@ -6,6 +6,7 @@ export interface LessonViewActivityRow {
 }
 
 export interface QuizAttemptActivityRow {
+  id?: string;
   quizSlug: string;
   mode: string;
   score: number;
@@ -28,6 +29,7 @@ export interface ActivityItem {
   score?: number;
   total?: number;
   mode?: string;
+  attemptId?: string;
 }
 
 function toDate(v: Date | string): Date {
@@ -60,15 +62,22 @@ export function recentActivityOf(
   }
 
   for (const a of attempts) {
+    const isExam = a.mode === 'exam';
+    const href = isExam && a.id
+      ? `/exam/attempts/${a.id}`
+      : `/lessons/${a.quizSlug}#quiz`;
     items.push({
       kind: 'quiz',
       slug: a.quizSlug,
-      title: lessonTitleBySlug.get(a.quizSlug) ?? formatSlug(a.quizSlug),
+      title: isExam
+        ? 'Mock exam'
+        : lessonTitleBySlug.get(a.quizSlug) ?? formatSlug(a.quizSlug),
       timestamp: toDate(a.attemptedAt),
-      href: `/lessons/${a.quizSlug}#quiz`,
+      href,
       score: a.score,
       total: a.total,
       mode: a.mode,
+      attemptId: a.id,
     });
   }
 

@@ -73,13 +73,13 @@ describe('recentActivityOf', () => {
     expect(items[1].title).toBe('Intro to QA');
   });
 
-  it('quiz items carry score/total/mode and a deep link with #quiz', () => {
+  it('practice quiz items carry score/total/mode and a deep link with #quiz', () => {
     const [item] = recentActivityOf(
       [],
       [
         {
           quizSlug: 'bug-reporting',
-          mode: 'exam',
+          mode: 'practice',
           score: 8,
           total: 10,
           attemptedAt: '2026-01-01T00:00:00Z',
@@ -94,9 +94,50 @@ describe('recentActivityOf', () => {
       slug: 'bug-reporting',
       score: 8,
       total: 10,
-      mode: 'exam',
+      mode: 'practice',
       href: '/lessons/bug-reporting#quiz',
     });
+  });
+
+  it('exam attempts with id link to the saved summary view', () => {
+    const [item] = recentActivityOf(
+      [],
+      [
+        {
+          id: 'attempt-123',
+          quizSlug: 'mock-exam',
+          mode: 'exam',
+          score: 28,
+          total: 40,
+          attemptedAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      [],
+      NO_LESSON_TITLES,
+      NO_PROJECT_TITLES,
+    );
+    expect(item.href).toBe('/exam/attempts/attempt-123');
+    expect(item.attemptId).toBe('attempt-123');
+    expect(item.title).toBe('Mock exam');
+  });
+
+  it('exam attempts without id fall back to the lesson deep-link', () => {
+    const [item] = recentActivityOf(
+      [],
+      [
+        {
+          quizSlug: 'mock-exam',
+          mode: 'exam',
+          score: 28,
+          total: 40,
+          attemptedAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      [],
+      NO_LESSON_TITLES,
+      NO_PROJECT_TITLES,
+    );
+    expect(item.href).toBe('/lessons/mock-exam#quiz');
   });
 
   it('project items prefer updatedAt over submittedAt for ordering', () => {

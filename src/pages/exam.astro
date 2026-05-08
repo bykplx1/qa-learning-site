@@ -1,50 +1,18 @@
 ---
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { parse } from 'yaml';
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { sortLessons } from '../lib/lessons/order';
-import { quizFileSchema } from '../lib/quiz/schema';
-import type { QuizQuestion } from '../lib/quiz/schema';
 import ExamRunner from '../components/exam/ExamRunner';
+import { buildExamPool } from '../lib/exam/pool';
+import {
+  EXAM_DURATION_MINUTES,
+  EXAM_DURATION_MS,
+  EXAM_SLUG,
+} from '../lib/exam/config';
 
 export const prerender = true;
 
-const EXAM_QUESTION_COUNT = 40;
-const EXAM_DURATION_MINUTES = 60;
-
 const allLessons = await getCollection('lessons');
-const sorted = sortLessons(allLessons);
-
-// Pull one question from each lesson quiz, round-robin, until we hit EXAM_QUESTION_COUNT
-// or exhaust the pool. Deterministic at build, so each run of the exam is the same set.
-const buckets: QuizQuestion[][] = [];
-for (const lesson of sorted) {
-  const path = join(process.cwd(), 'src', 'generated', 'quiz', `${lesson.data.slug}.quiz.yaml`);
-  if (!existsSync(path)) continue;
-  const parsed = quizFileSchema.safeParse(parse(readFileSync(path, 'utf-8')));
-  if (!parsed.success) continue;
-  buckets.push(parsed.data.questions);
-}
-
-const pool: QuizQuestion[] = [];
-let cursor = 0;
-while (pool.length < EXAM_QUESTION_COUNT) {
-  let added = 0;
-  for (const bucket of buckets) {
-    if (pool.length >= EXAM_QUESTION_COUNT) break;
-    if (cursor < bucket.length) {
-      pool.push(bucket[cursor]);
-      added++;
-    }
-  }
-  if (added === 0) break;
-  cursor++;
-}
-
-const examQuestions = pool.slice(0, EXAM_QUESTION_COUNT);
-const durationMs = EXAM_DURATION_MINUTES * 60 * 1000;
+const examQuestions = buildExamPool(allLessons);
 ---
 
 <BaseLayout
@@ -69,8 +37,8 @@ const durationMs = EXAM_DURATION_MINUTES * 60 * 1000;
       <ExamRunner
         client:only="react"
         questions={examQuestions}
-        examSlug="mock-exam"
-        durationMs={durationMs}
+        examSlug={EXAM_SLUG}
+        durationMs={EXAM_DURATION_MS}
       />
     )}
   </div>

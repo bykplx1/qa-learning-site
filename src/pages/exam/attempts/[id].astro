@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ExamSummary from '../../../components/exam/ExamSummary';
+import { auth } from '../../../lib/auth';
+import { getQuizAttemptById } from '../../../db/queries';
+import { buildExamPool } from '../../../lib/exam/pool';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+const session = await auth.api.getSession({ headers: Astro.request.headers });
+
+if (!session?.user?.id) {
+  return Astro.redirect('/api/auth/sign-in/github');
+}
+
+if (!id) return new Response('Not found', { status: 404 });
+
+const attempt = await getQuizAttemptById(session.user.id, id);
+if (!attempt || attempt.mode !== 'exam') {
+  return new Response('Not found', { status: 404 });
+}
+
+const allLessons = await getCollection('lessons');
+const pool = buildExamPool(allLessons);
+const questions = pool.slice(0, attempt.total);
+
+const attemptedAtIso = attempt.attemptedAt.toISOString();
+---
+
+<BaseLayout title="Exam summary — QA Learning" description="Review of a saved mock exam attempt.">
+  <div class="exam-page">
+    <header class="exam-page__head">
+      <span class="eyebrow">exam attempt · saved review</span>
+      <h1>Mock exam · review</h1>
+      <p class="lead">
+        Submitted <time datetime={attemptedAtIso}>{attempt.attemptedAt.toLocaleString()}</time>.
+      </p>
+    </header>
+
+    {questions.length === 0 ? (
+      <div class="card" style="padding: 28px;">
+        Exam content is unavailable for this attempt — the question pool has changed since the attempt was saved.
+      </div>
+    ) : (
+      <ExamSummary
+        questions={questions}
+        answers={attempt.answers}
+        score={attempt.score}
+        total={attempt.total}
+        durationSec={attempt.durationSec}
+        reason="submitted"
+        retryHref="/exam"
+      />
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .exam-page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+  .exam-page__head {
+    margin-bottom: 28px;
+  }
+  .exam-page__head h1 {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 8px 0 12px;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+  .lead {
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 640px;
+  }
+</style>
