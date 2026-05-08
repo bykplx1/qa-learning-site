@@ -16,6 +16,10 @@ test.describe('keyboard-only operability', () => {
   test('search modal: Ctrl+K opens, focuses input, Esc closes', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1').first()).toBeVisible();
+    // SearchModal is client:only — its keydown listener is attached on mount.
+    // Waiting for the (also client:only) SearchTrigger button confirms the
+    // React islands hydrated; pressing Ctrl+K beforehand races the listener.
+    await expect(page.getByRole('button', { name: /Search.*Ctrl\+K/i })).toBeVisible();
 
     await page.keyboard.press('Control+k');
     const dialog = page.getByRole('dialog', { name: 'Search' });
