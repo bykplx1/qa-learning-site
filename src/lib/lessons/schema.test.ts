@@ -26,6 +26,18 @@ describe('lessonFrontmatterSchema', () => {
     }
   });
 
+  it('coerces published_at string into Date', () => {
+    const withDate = { ...valid, published_at: '2026-05-01T12:00:00Z' };
+    const parsed = lessonFrontmatterSchema.parse(withDate);
+    expect(parsed.published_at).toBeInstanceOf(Date);
+    expect(parsed.published_at?.toISOString()).toBe('2026-05-01T12:00:00.000Z');
+  });
+
+  it('allows missing published_at', () => {
+    const parsed = lessonFrontmatterSchema.parse(valid);
+    expect(parsed.published_at).toBeUndefined();
+  });
+
   it('rejects unknown fields in strict mode', () => {
     const withExtra = { ...valid, surprise: 'nope' };
     const result = lessonFrontmatterSchema.safeParse(withExtra);
