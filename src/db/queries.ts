@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from './index';
 import {
   dailyActivity,
@@ -12,6 +12,7 @@ import {
 import { streakOf, type StreakResult } from '../lib/streak/streak';
 import { categoryProgressOf, type CategoryProgress } from '../lib/progress/progress';
 import { quizAccuracyByTopicOf, type TopicAccuracy } from '../lib/progress/quiz-accuracy';
+import { heatmapOf, type HeatmapCell } from '../lib/heatmap/heatmap';
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -184,6 +185,26 @@ export async function getStreak(userId: string, today: Date = new Date()): Promi
     .from(dailyActivity)
     .where(eq(dailyActivity.userId, userId));
   return streakOf(rows, today);
+}
+
+export async function getHeatmap(userId: string, year: number): Promise<HeatmapCell[]> {
+  const start = `${year}-01-01`;
+  const end = `${year}-12-31`;
+  const rows = await db
+    .select({
+      day: dailyActivity.day,
+      attemptsCount: dailyActivity.attemptsCount,
+      lessonsCount: dailyActivity.lessonsCount,
+    })
+    .from(dailyActivity)
+    .where(
+      and(
+        eq(dailyActivity.userId, userId),
+        gte(dailyActivity.day, start),
+        lte(dailyActivity.day, end),
+      ),
+    );
+  return heatmapOf(rows, year);
 }
 
 export async function getCategoryProgress(userId: string): Promise<CategoryProgress[]> {

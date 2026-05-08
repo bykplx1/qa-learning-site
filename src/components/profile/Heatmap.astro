@@ -1,0 +1,216 @@
+---
+import type { HeatmapCell } from '../../lib/heatmap/heatmap';
+
+interface Props {
+  cells: HeatmapCell[];
+  year: number;
+}
+
+const { cells, year } = Astro.props;
+
+const CELL = 12;
+const GAP = 3;
+const STEP = CELL + GAP;
+const ROWS = 7;
+const TOP_PAD = 18;
+const LEFT_PAD = 26;
+
+const cols = cells.length === 0 ? 0 : Math.max(...cells.map((c) => c.col)) + 1;
+const width = LEFT_PAD + cols * STEP;
+const height = TOP_PAD + ROWS * STEP + 4;
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthLabels: { col: number; label: string }[] = [];
+const seenMonth = new Set<number>();
+for (const c of cells) {
+  if (c.row !== 0 || c.date === null) continue;
+  const m = Number(c.date.slice(5, 7)) - 1;
+  if (seenMonth.has(m)) continue;
+  seenMonth.add(m);
+  monthLabels.push({ col: c.col, label: MONTHS[m] });
+}
+
+const totalCount = cells.reduce((s, c) => s + c.count, 0);
+const activeDays = cells.filter((c) => c.count > 0).length;
+---
+
+<section class="card heatmap" data-testid="heatmap-section" aria-label={`Activity heatmap for ${year}`}>
+  <div class="heatmap__header">
+    <span class="eyebrow">activity · {year}</span>
+    <span class="heatmap__summary">
+      <span data-testid="heatmap-total">{totalCount}</span> events across <span data-testid="heatmap-active-days">{activeDays}</span> days
+    </span>
+  </div>
+
+  <div class="heatmap__scroll">
+    <svg
+      class="heatmap__svg"
+      width={width}
+      height={height}
+      role="img"
+      aria-label={`Activity heatmap for ${year}: ${totalCount} events across ${activeDays} active days`}
+      data-testid="heatmap-svg"
+    >
+      {monthLabels.map((m) => (
+        <text
+          x={LEFT_PAD + m.col * STEP}
+          y={TOP_PAD - 6}
+          class="heatmap__month-label"
+        >
+          {m.label}
+        </text>
+      ))}
+
+      {['Mon', 'Wed', 'Fri'].map((label, i) => {
+        const row = i * 2 + 1;
+        return (
+          <text
+            x={LEFT_PAD - 6}
+            y={TOP_PAD + row * STEP + CELL - 2}
+            class="heatmap__dow-label"
+            text-anchor="end"
+          >
+            {label}
+          </text>
+        );
+      })}
+
+      {cells.map((c) => {
+        if (c.date === null) return null;
+        const x = LEFT_PAD + c.col * STEP;
+        const y = TOP_PAD + c.row * STEP;
+        const dateLabel = new Date(`${c.date}T00:00:00Z`).toLocaleDateString(undefined, {
+          weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+        });
+        const aria = c.count === 0
+          ? `${dateLabel}: no activity`
+          : `${dateLabel}: ${c.count} ${c.count === 1 ? 'event' : 'events'}`;
+        return (
+          <rect
+            x={x}
+            y={y}
+            width={CELL}
+            height={CELL}
+            rx="2"
+            class={`heatmap__cell heatmap__cell--l${c.level}`}
+            tabindex="0"
+            role="gridcell"
+            aria-label={aria}
+            data-date={c.date}
+            data-count={c.count}
+            data-label={aria}
+          >
+            <title>{aria}</title>
+          </rect>
+        );
+      })}
+    </svg>
+  </div>
+
+  <div class="heatmap__footer">
+    <div class="heatmap__tooltip" role="status" aria-live="polite" data-testid="heatmap-tooltip"></div>
+    <div class="heatmap__legend" aria-hidden="true">
+      <span>Less</span>
+      <span class="heatmap__cell heatmap__cell--l0 heatmap__legend-cell"></span>
+      <span class="heatmap__cell heatmap__cell--l1 heatmap__legend-cell"></span>
+      <span class="heatmap__cell heatmap__cell--l2 heatmap__legend-cell"></span>
+      <span class="heatmap__cell heatmap__cell--l3 heatmap__legend-cell"></span>
+      <span class="heatmap__cell heatmap__cell--l4 heatmap__legend-cell"></span>
+      <span>More</span>
+    </div>
+  </div>
+</section>
+
+<script>
+  const sections = document.querySelectorAll<HTMLElement>('[data-testid="heatmap-section"]');
+  for (const section of sections) {
+    const tooltip = section.querySelector<HTMLElement>('[data-testid="heatmap-tooltip"]');
+    if (!tooltip) continue;
+    const cells = section.querySelectorAll<SVGRectElement>('.heatmap__cell[data-label]');
+    const show = (el: SVGRectElement) => {
+      tooltip.textContent = el.getAttribute('data-label') ?? '';
+    };
+    const clear = () => { tooltip.textContent = ''; };
+    cells.forEach((cell) => {
+      cell.addEventListener('mouseenter', () => show(cell));
+      cell.addEventListener('focus', () => show(cell));
+      cell.addEventListener('touchstart', () => show(cell), { passive: true });
+      cell.addEventListener('mouseleave', clear);
+      cell.addEventListener('blur', clear);
+    });
+  }
+</script>
+
+<style>
+  .heatmap__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .heatmap__summary {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .heatmap__scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .heatmap__svg {
+    display: block;
+  }
+  .heatmap__month-label,
+  .heatmap__dow-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--ink-3);
+  }
+  .heatmap__cell {
+    transition: stroke 80ms ease;
+    cursor: pointer;
+  }
+  .heatmap__cell:focus,
+  .heatmap__cell:hover {
+    outline: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+  /* WCAG AA contrast against --paper (~oklch 97.5%): each step adds noticeable lightness drop. */
+  .heatmap__cell--l0 { fill: var(--paper-3); }
+  .heatmap__cell--l1 { fill: oklch(82% 0.09 35); }
+  .heatmap__cell--l2 { fill: oklch(70% 0.14 35); }
+  .heatmap__cell--l3 { fill: oklch(56% 0.17 35); }
+  .heatmap__cell--l4 { fill: var(--accent-strong); }
+
+  .heatmap__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .heatmap__tooltip {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-2);
+    min-height: 1.2em;
+  }
+  .heatmap__legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .heatmap__legend-cell {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin: 0 1px;
+  }
+</style>
