@@ -43,7 +43,6 @@
     "@astrojs/check": "^0.9.9",
     "@axe-core/playwright": "^4.11.3",
     "@fontsource/inter": "^5.2.8",
-    "@lhci/cli": "^0.15.1",
     "@playwright/test": "1.59.1",
     "@resvg/resvg-js": "^2.6.2",
     "@types/pg": "^8.20.0",
@@ -54,7 +53,6 @@
     "pagefind": "^1.5.2",
     "satori": "^0.26.0",
     "typescript": "^5.9.3",
-    "vercel": "^53.2.0",
     "vitest": "^4.1.5"
   }
 }
