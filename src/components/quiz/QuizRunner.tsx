@@ -12,6 +12,7 @@ import {
   type QuizAction,
 } from '../../lib/quiz/engine.js';
 import { selectAdapter, type QuizPersistenceAdapter } from '../../lib/quiz/persistence.js';
+import { SAVE_PROMPT_DISMISSED_KEY, shouldShowSavePrompt } from '../../lib/quiz/save-prompt.js';
 
 const COMPLETE_KEY = (slug: string) => `quiz_${slug}_complete`;
 
@@ -263,16 +264,75 @@ interface SummaryScreenProps {
   markedComplete: boolean;
   signedIn: boolean | null;
   saveStatus: SaveStatus;
+  promptDismissed: boolean;
+  onDismissPrompt: () => void;
   onMarkComplete: () => void;
   onRestart: () => void;
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComplete, onRestart }: SummaryScreenProps) {
+function SavePrompt({ onDismiss }: { onDismiss: () => void }) {
+  const handleSignIn = (provider: 'github' | 'google') => {
+    authClient.signIn.social({ provider, callbackURL: window.location.href });
+  };
+  return (
+    <div
+      role="region"
+      aria-label="Save your score"
+      data-testid="quiz-save-prompt"
+      className="card"
+      style={{
+        marginTop: 28,
+        padding: 22,
+        borderColor: 'var(--rule)',
+        background: 'var(--paper-2)',
+        display: 'flex',
+        gap: 16,
+        alignItems: 'flex-start',
+        flexWrap: 'wrap',
+      }}
+    >
+      <div style={{ flex: '1 1 260px' }}>
+        <div className="eyebrow" style={{ marginBottom: 6 }}>save progress</div>
+        <div style={{ fontFamily: 'var(--serif)', fontSize: 19, color: 'var(--ink)', letterSpacing: '-0.01em', marginBottom: 4 }}>
+          Log in to save your score.
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+          Sign in and this attempt will be added to your profile automatically.
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button type="button" className="btn btn--primary btn--sm" onClick={() => handleSignIn('github')}>
+          Sign in with GitHub
+        </button>
+        <button type="button" className="btn btn--ghost btn--sm" onClick={() => handleSignIn('google')}>
+          Sign in with Google
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost btn--sm"
+          onClick={onDismiss}
+          data-testid="quiz-save-prompt-dismiss"
+          aria-label="Dismiss"
+        >
+          Dismiss
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryScreen({ state, markedComplete, signedIn, saveStatus, promptDismissed, onDismissPrompt, onMarkComplete, onRestart }: SummaryScreenProps) {
   const { correct, total } = getScore(state);
   const missed = state.questions.filter((q, i) => !isCorrect(q, state.answers[i]));
   const passed = correct / total >= 0.65;
+
+  const showSavePrompt = shouldShowSavePrompt({
+    status: state.status,
+    signedIn,
+    dismissed: promptDismissed,
+  });
 
   const savedNote = signedIn
     ? saveStatus === 'saving'
@@ -282,7 +342,9 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComp
         : saveStatus === 'error'
           ? 'Could not save attempt'
           : ''
-    : '(practice only — not saved to account)';
+    : promptDismissed
+      ? '(practice only — not saved to account)'
+      : '';
 
   return (
     <div>
@@ -347,6 +409,8 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, onMarkComp
         </div>
       )}
 
+      {showSavePrompt && <SavePrompt onDismiss={onDismissPrompt} />}
+
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 28 }}>
         <button type="button" className="btn btn--primary" onClick={onRestart}>
           Retry Quiz
@@ -379,6 +443,7 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
   const [state, setState] = useState<QuizState>(() => createQuizState(questions, 'practice'));
   const [markedComplete, setMarkedComplete] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [promptDismissed, setPromptDismissed] = useState(false);
 
   const startedAtRef = useRef<number>(Date.now());
   const submittedRef = useRef<boolean>(false);
@@ -405,8 +470,16 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
     if (restored) setState(restoreQuizState(questions, 'practice', restored));
     try {
       setMarkedComplete(sessionStorage.getItem(COMPLETE_KEY(quizSlug)) === 'true');
+      setPromptDismissed(sessionStorage.getItem(SAVE_PROMPT_DISMISSED_KEY) === 'true');
     } catch {}
   }, [adapter, quizSlug, questions]);
+
+  const handleDismissPrompt = useCallback(() => {
+    try {
+      sessionStorage.setItem(SAVE_PROMPT_DISMISSED_KEY, 'true');
+    } catch {}
+    setPromptDismissed(true);
+  }, []);
 
   useEffect(() => {
     adapter.saveProgress(quizSlug, persistQuizState(state));
@@ -467,6 +540,8 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
           markedComplete={markedComplete}
           signedIn={signedIn}
           saveStatus={saveStatus}
+          promptDismissed={promptDismissed}
+          onDismissPrompt={handleDismissPrompt}
           onMarkComplete={handleMarkComplete}
           onRestart={handleRestart}
         />
