@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_visual_baselines:
+        description: 'Run the visual job with --update-snapshots and upload regenerated PNGs as artifact (deliberate baseline update — see CONTRIBUTING.md).'
+        type: boolean
+        default: false
 
 jobs:
   test:
