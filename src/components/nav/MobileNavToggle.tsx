@@ -97,7 +97,7 @@ export default function MobileNavToggle({ links }: Props) {
         aria-label="Primary mobile"
         aria-hidden={!open}
         className={`mobile-nav__drawer${open ? ' is-open' : ''}`}
-        inert={!open ? ('' as unknown as undefined) : undefined}
+        inert={!open}
       >
         <ul role="list" className="mobile-nav__list">
           {links.map(({ href, label, active }) => (
