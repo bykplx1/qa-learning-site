@@ -95,14 +95,14 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
     </section>
 
     <SelfAttestChecklist
-      client:load
+      client:visible
       projectSlug={project.data.slug}
       criteria={acceptanceCriteria}
     />
 
     {userId ? (
       <SubmitProjectForm
-        client:load
+        client:visible
         projectSlug={project.data.slug}
         existing={existingProp}
       />

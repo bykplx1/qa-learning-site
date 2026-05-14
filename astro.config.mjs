@@ -59,6 +59,7 @@ export default defineConfig({
   output: 'static',
   adapter: vercel(),
   site: 'https://qa-learning-site.vercel.app',
+  build: { inlineStylesheets: 'auto' },
   // Astro 6 dev toolbar injects extra <h1> elements into light DOM
   // (Audit / Settings / Inspect panels), which collide with strict-mode
   // locator('h1') in Playwright tests against the dev server.
