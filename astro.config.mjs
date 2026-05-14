@@ -14,6 +14,17 @@ import { quizExtractorIntegration } from './src/integrations/quizExtractor.ts';
 import { seedLessonsMetaIntegration } from './src/integrations/seedLessonsMeta.ts';
 import { ogImagesIntegration } from './src/integrations/ogImages.ts';
 import { sitemapAliasIntegration } from './src/integrations/sitemapAlias.ts';
+import { remarkDemoteH1 } from './src/lib/lessons/remarkDemoteH1.ts';
+
+/** @type {import('astro').AstroIntegration} */
+const demoteH1Integration = {
+  name: 'demote-h1',
+  hooks: {
+    'astro:config:setup': ({ updateConfig }) => {
+      updateConfig({ markdown: { remarkPlugins: [remarkDemoteH1] } });
+    },
+  },
+};
 
 /** @type {import('astro').AstroIntegration} */
 const pagefindIntegration = {
@@ -63,5 +74,5 @@ export default defineConfig({
     },
   },
 
-  integrations: [mdx({ extendMarkdownConfig: false }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), seedLessonsMetaIntegration(), ogImagesIntegration(), pagefindIntegration]
+  integrations: [mdx({ extendMarkdownConfig: false }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), seedLessonsMetaIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
 });
