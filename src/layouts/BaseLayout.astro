@@ -5,6 +5,7 @@ import SearchModal from '../components/search/SearchModal';
 import SearchTrigger from '../components/search/SearchTrigger';
 import { AuthNav } from '../components/AuthNav';
 import { SessionMerge } from '../components/SessionMerge';
+import MobileNavToggle from '../components/nav/MobileNavToggle';
 
 interface Props {
   title: string;
@@ -29,6 +30,12 @@ const path = Astro.url.pathname;
 const isLessons = path.startsWith('/lessons');
 const isProjects = path.startsWith('/projects');
 const isProfile = path.startsWith('/profile');
+
+const navLinks = [
+  { href: '/lessons', label: 'Lessons', active: isLessons },
+  { href: '/projects', label: 'Build', active: isProjects },
+  { href: '/profile', label: 'Profile', active: isProfile },
+];
 ---
 
 <html lang="en" class="min-h-screen">
@@ -79,6 +86,7 @@ const isProfile = path.startsWith('/profile');
         <a href="/profile" class={isProfile ? 'is-active' : ''}>Profile</a>
       </nav>
       <div class="nav__right">
+        <MobileNavToggle client:idle links={navLinks} />
         <SearchTrigger client:only="react" />
         <ThemeToggle client:only="react" />
         <AuthNav client:only="react" />
