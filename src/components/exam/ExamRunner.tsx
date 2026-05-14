@@ -25,6 +25,137 @@ function formatClock(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+// ── Confirm modal ────────────────────────────────────────────────────────────
+
+interface ConfirmModalProps {
+  answeredCount: number;
+  totalCount: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+  returnFocusRef: React.RefObject<HTMLButtonElement | null>;
+}
+
+function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFocusRef }: ConfirmModalProps) {
+  const skipped = totalCount - answeredCount;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const cancelBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    cancelBtnRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      returnFocusRef.current?.focus();
+    };
+  }, [returnFocusRef]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      onCancel();
+      return;
+    }
+    if (e.key === 'Tab') {
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingLeft: 16,
+        paddingRight: 16,
+        background: 'rgba(20, 20, 18, 0.45)',
+        backdropFilter: 'blur(2px)',
+      }}
+      onClick={onCancel}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-modal-title"
+        aria-describedby="confirm-modal-body"
+        onKeyDown={handleKeyDown}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 440,
+          maxWidth: '95%',
+          background: 'var(--paper)',
+          border: '1px solid var(--rule)',
+          borderRadius: 14,
+          boxShadow: '0 30px 80px -20px rgba(0,0,0,0.4)',
+          padding: 28,
+        }}
+      >
+        <h2
+          id="confirm-modal-title"
+          style={{
+            fontFamily: 'var(--serif)',
+            fontSize: 22,
+            fontWeight: 400,
+            letterSpacing: '-0.02em',
+            margin: '0 0 12px',
+            color: 'var(--ink)',
+          }}
+        >
+          Submit exam?
+        </h2>
+        <p
+          id="confirm-modal-body"
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: 15,
+            color: 'var(--ink-2)',
+            lineHeight: 1.6,
+            margin: '0 0 24px',
+          }}
+        >
+          {answeredCount} of {totalCount} answered, {skipped} skipped — submit anyway?
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+          <button
+            ref={cancelBtnRef}
+            type="button"
+            className="btn btn--ghost"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={onConfirm}
+            data-testid="exam-confirm-submit"
+          >
+            Submit exam
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Question screen ──────────────────────────────────────────────────────────
+
 interface QuestionScreenProps {
   state: ExamState;
   remainingMs: number;
@@ -33,9 +164,10 @@ interface QuestionScreenProps {
   onNext: () => void;
   onSubmit: () => void;
   onGoto: (i: number) => void;
+  submitBtnRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit, onGoto }: QuestionScreenProps) {
+function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit, onGoto, submitBtnRef }: QuestionScreenProps) {
   const q = state.questions[state.currentIndex];
   const answer = state.answers[state.currentIndex];
   const isMulti = q.type === 'multi';
@@ -44,6 +176,8 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
   const lowTime = remainingMs <= 5 * 60 * 1000;
 
   const [multiSelection, setMultiSelection] = useState<number[]>([]);
+  const radioGroupRef = useRef<HTMLDivElement>(null);
+  const questionStemId = `question-stem-${state.currentIndex}`;
 
   useEffect(() => {
     if (isMulti && Array.isArray(answer)) setMultiSelection(answer);
@@ -60,6 +194,26 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
       onAnswer(sorted.length ? sorted : null);
     } else {
       onAnswer(i);
+    }
+  };
+
+  // Arrow-key navigation for single-choice radiogroup
+  const handleRadioGroupKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isMulti) return;
+    const opts = q.options ?? [];
+    const currentAnswer = typeof answer === 'number' ? answer : 0;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = (currentAnswer + 1) % opts.length;
+      onAnswer(next);
+      const buttons = radioGroupRef.current?.querySelectorAll<HTMLElement>('[role="radio"]');
+      buttons?.[next]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = (currentAnswer - 1 + opts.length) % opts.length;
+      onAnswer(prev);
+      const buttons = radioGroupRef.current?.querySelectorAll<HTMLElement>('[role="radio"]');
+      buttons?.[prev]?.focus();
     }
   };
 
@@ -143,6 +297,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>
         <div
+          id={questionStemId}
           style={{
             fontFamily: 'var(--serif)',
             fontSize: 22,
@@ -156,16 +311,31 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         </div>
 
         {q.options && (
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div
+            ref={radioGroupRef}
+            role={isMulti ? 'group' : 'radiogroup'}
+            aria-labelledby={questionStemId}
+            style={{ display: 'grid', gap: 10 }}
+            onKeyDown={isMulti ? undefined : handleRadioGroupKeyDown}
+          >
             {q.options.map((opt, i) => {
               const isSelected = isMulti
                 ? multiSelection.includes(i)
                 : answer === i;
               const stateClass = isSelected ? 'qopt qopt--selected' : 'qopt qopt--idle';
+              // Single-choice: roving tabindex — only selected (or first if none) is in tab order
+              const tabIndex = isMulti
+                ? 0
+                : (typeof answer === 'number' ? answer === i : i === 0)
+                  ? 0
+                  : -1;
               return (
                 <button
                   key={i}
                   type="button"
+                  role={isMulti ? 'checkbox' : 'radio'}
+                  aria-checked={isSelected}
+                  tabIndex={tabIndex}
                   className={stateClass}
                   onClick={() => handleOption(i)}
                   data-testid={`exam-option-${i}`}
@@ -184,6 +354,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         </button>
         <div style={{ display: 'flex', gap: 12 }}>
           <button
+            ref={submitBtnRef}
             type="button"
             className="btn btn--ghost"
             onClick={onSubmit}
@@ -200,6 +371,8 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
   );
 }
 
+// ── Root component ───────────────────────────────────────────────────────────
+
 export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS }: Props) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [state, setState] = useState<ExamState>(() => ({
@@ -211,9 +384,11 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
   const [remainingMs, setRemainingMs] = useState<number>(durationMs);
   const [result, setResult] = useState<ExamResult | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const runnerRef = useRef<ExamRunnerHandle | null>(null);
   const submittedRef = useRef<boolean>(false);
+  const submitBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
@@ -284,12 +459,20 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
     runnerRef.current?.dispatch({ type: 'next' });
   }, []);
   const handleSubmit = useCallback(() => {
-    if (!confirm('Submit exam now? Your remaining time will be discarded.')) return;
+    setShowConfirm(true);
+  }, []);
+  const handleConfirmSubmit = useCallback(() => {
+    setShowConfirm(false);
     runnerRef.current?.dispatch({ type: 'submit' });
+  }, []);
+  const handleCancelSubmit = useCallback(() => {
+    setShowConfirm(false);
   }, []);
   const handleGoto = useCallback((i: number) => {
     runnerRef.current?.dispatch({ type: 'goto', index: i });
   }, []);
+
+  const answeredCount = state.answers.filter((a) => a !== null).length;
 
   return (
     <section style={{ marginTop: 24 }} data-testid="exam-runner">
@@ -306,15 +489,27 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
           retryHref="?reset=1"
         />
       ) : (
-        <QuestionScreen
-          state={state}
-          remainingMs={remainingMs}
-          onAnswer={handleAnswer}
-          onPrev={handlePrev}
-          onNext={handleNext}
-          onSubmit={handleSubmit}
-          onGoto={handleGoto}
-        />
+        <>
+          <QuestionScreen
+            state={state}
+            remainingMs={remainingMs}
+            onAnswer={handleAnswer}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onSubmit={handleSubmit}
+            onGoto={handleGoto}
+            submitBtnRef={submitBtnRef}
+          />
+          {showConfirm && (
+            <ConfirmModal
+              answeredCount={answeredCount}
+              totalCount={state.questions.length}
+              onConfirm={handleConfirmSubmit}
+              onCancel={handleCancelSubmit}
+              returnFocusRef={submitBtnRef}
+            />
+          )}
+        </>
       )}
     </section>
   );

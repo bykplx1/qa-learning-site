@@ -6,8 +6,7 @@ test.describe('exam mode wrapper', () => {
       await el.locator('button').first().click();
     });
 
-    // Suppress the submit confirm() so the early-submit path runs unattended.
-    page.on('dialog', (d) => d.accept());
+    // The submit button now opens an in-app modal; no native dialog to suppress.
 
     // 1. Home loads, exam CTA visible.
     await page.goto('/');
@@ -43,6 +42,8 @@ test.describe('exam mode wrapper', () => {
     await expect(page.getByTestId('exam-answered-count')).toContainText('2 answered');
 
     await page.getByTestId('exam-submit-early').click();
+    // Confirm in the in-app modal
+    await page.getByTestId('exam-confirm-submit').click();
 
     // 7. Summary screen renders with all sections.
     const summary = page.getByTestId('exam-summary');
