@@ -6,6 +6,7 @@ import type { AstroIntegration } from 'astro';
 import { parseQuiz } from '../lib/quiz/quizParser.js';
 import { parseTasks } from '../lib/quiz/tasksParser.js';
 import { remarkStripQuizSections } from '../lib/quiz/remarkStripQuizSections.js';
+import { repairWin1252 } from '../lib/encoding/repair.js';
 
 function parseFrontmatterSlug(raw: string): string | null {
   const normalized = raw.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -45,7 +46,7 @@ export function quizExtractorIntegration(): AstroIntegration {
 
           let raw: string;
           try {
-            raw = readFileSync(filePath, 'utf-8');
+            raw = repairWin1252(readFileSync(filePath, 'utf-8'));
           } catch {
             continue;
           }
