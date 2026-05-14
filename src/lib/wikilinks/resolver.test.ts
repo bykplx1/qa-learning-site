@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveWikilinks } from './resolver';
+import { resolveWikilinks, stripWikilinks } from './resolver';
 import type { SlugEntry } from './resolver';
 
 function makeMap(entries: Record<string, Partial<SlugEntry>>): Map<string, SlugEntry> {
@@ -86,5 +86,53 @@ describe('resolveWikilinks', () => {
     const result = resolveWikilinks('Hello **world** [[Defect-Lifecycle]]!', slugMap, 'test.md');
     expect(result).toContain('Hello **world** ');
     expect(result).toContain('!');
+  });
+
+  it('resolves anchor-only [[#Section]] as local href', () => {
+    const result = resolveWikilinks('See [[#WCAG Principles (POUR)]].', slugMap, 'test.md');
+    expect(result).toContain('href="#wcag-principles-pour-"');
+    expect(result).toContain('>WCAG Principles (POUR)<');
+    expect(result).toContain('class="wikilink"');
+  });
+
+  it('resolves anchor-only [[#Section|alias]] using alias', () => {
+    const result = resolveWikilinks('[[#WCAG Principles (POUR)|POUR]].', slugMap, 'test.md');
+    expect(result).toContain('href="#wcag-principles-pour-"');
+    expect(result).toContain('>POUR<');
+  });
+});
+
+describe('stripWikilinks', () => {
+  it('strips [[Target]] using slugMap title', () => {
+    expect(stripWikilinks('See [[Defect-Lifecycle]].', slugMap)).toBe('See Defect Lifecycle.');
+  });
+
+  it('strips [[Target]] to key when no slugMap provided', () => {
+    expect(stripWikilinks('See [[Defect-Lifecycle]].')).toBe('See Defect-Lifecycle.');
+  });
+
+  it('strips [[Target|alias]] to alias', () => {
+    expect(stripWikilinks('See [[Defect-Lifecycle|bugs]].', slugMap)).toBe('See bugs.');
+  });
+
+  it('strips [[#Section]] to section text', () => {
+    expect(stripWikilinks('See [[#WCAG Principles (POUR)]].', slugMap)).toBe('See WCAG Principles (POUR).');
+  });
+
+  it('strips [[#Section|alias]] to alias', () => {
+    expect(stripWikilinks('See [[#WCAG Principles (POUR)|POUR]].', slugMap)).toBe('See POUR.');
+  });
+
+  it('strips [[Target#Section]] to title', () => {
+    expect(stripWikilinks('[[Defect-Lifecycle#Standard States]]', slugMap)).toBe('Defect Lifecycle');
+  });
+
+  it('leaves escaped \\[[X]] as [[X]] literal', () => {
+    expect(stripWikilinks('\\[[Defect-Lifecycle]]', slugMap)).toBe('[[Defect-Lifecycle]]');
+  });
+
+  it('handles multiple wikilinks', () => {
+    const result = stripWikilinks('[[#WCAG Principles (POUR)]] and [[Defect-Lifecycle]].', slugMap);
+    expect(result).toBe('WCAG Principles (POUR) and Defect Lifecycle.');
   });
 });

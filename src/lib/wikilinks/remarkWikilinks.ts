@@ -8,7 +8,8 @@ export function remarkWikilinks(slugMap: Map<string, SlugEntry>) {
     const sourcePath: string = file?.history?.[0] ?? file?.path ?? '<unknown>';
 
     // Fresh regex per file to avoid shared lastIndex state
-    const re = /(\\?)\[\[([^\]#|\n]+?)(?:#([^\]|\n]*?))?(?:\|([^\]\n]*?))?\]\]/g;
+    // Target group is optional to support anchor-only [[#section]] links.
+    const re = /(\\?)\[\[([^\]#|\n]*?)(?:#([^\]|\n]*?))?(?:\|([^\]\n]*?))?\]\]/g;
 
     findAndReplace(tree, [
       [
@@ -29,6 +30,20 @@ export function remarkWikilinks(slugMap: Map<string, SlugEntry>) {
           }
 
           const key = target.trim();
+
+          // Anchor-only link: [[#Section]] — resolves as a local in-page anchor
+          if (!key && section) {
+            const display = alias ? alias.trim() : section.trim();
+            const href = `#${section.trim().toLowerCase().replace(/[^\w]+/g, '-')}`;
+            return {
+              type: 'link' as const,
+              url: href,
+              title: null,
+              data: { hProperties: { class: 'wikilink' } },
+              children: [{ type: 'text' as const, value: display }],
+            };
+          }
+
           const entry = slugMap.get(key);
           if (!entry) {
             throw new Error(`Unresolved wikilink [[${key}]] in ${sourcePath}`);
