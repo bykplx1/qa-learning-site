@@ -5,7 +5,7 @@ questions:
     q: Failure =
     options:
       - A) Human mistake
-      - B) Flaw in artefact
+      - B) Flaw in artifact
       - C) Observable deviation from expected at execution
       - D) Code smell
     answer: 2
@@ -87,7 +87,7 @@ questions:
       - C) Error â†’ defect â†’ failure
       - D) Error â†’ failure â†’ defect
     answer: 2
-    hint: Human â†’ artefact â†’ observable.
+    hint: Human â†’ artifact â†’ observable.
     explanation: Standard chain. See [[#Fault Chain]].
   - id: ig-009
     type: single

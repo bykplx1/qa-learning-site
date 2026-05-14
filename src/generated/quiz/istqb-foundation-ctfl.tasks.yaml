@@ -4,7 +4,7 @@ tasks:
     type: fill_blank
     q: "Fill: order of fault chain = ______ â†’ ______ â†’ ______."
     answer: error â†’ defect â†’ failure
-    hint: Human, artefact, observable.
+    hint: Human, artifact, observable.
     explanation: Common exam wording trap. See [[#Key Vocabulary (Glossary Highlights)]].
   - id: ifc-t002
     type: fill_blank

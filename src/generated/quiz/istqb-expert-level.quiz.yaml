@@ -114,7 +114,7 @@ questions:
       - D) Project mgr
     answer: 1
     hint: Org-level.
-    explanation: Strategic artefact. See [[#CTEL-TM Strategic]].
+    explanation: Strategic artifact. See [[#CTEL-TM Strategic]].
   - id: iel-011
     type: single
     q: "ROI communication best metric:"

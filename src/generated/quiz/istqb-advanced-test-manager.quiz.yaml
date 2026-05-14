@@ -125,7 +125,7 @@ questions:
       [[#Standards & Compliance]]."
   - id: iatm-012
     type: single
-    q: "Highest-leverage test mgmt artefact for cross-project consistency:"
+    q: "Highest-leverage test mgmt artifact for cross-project consistency:"
     options:
       - A) Bug report
       - B) Test policy / strategy
@@ -209,7 +209,7 @@ questions:
       - C) Dev lead
       - D) Sales
     answer: 1
-    hint: Org-level artefact.
+    hint: Org-level artifact.
     explanation: Policy spans org. See [[#Test Policy â†’ Strategy â†’ Plan]].
   - id: iatm-020
     type: single
