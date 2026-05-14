@@ -74,6 +74,8 @@ test.describe('mobile nav drawer', () => {
 
     await page.keyboard.press('Escape');
     await expect(drawer).not.toBeVisible();
+    await expect(drawer).toHaveAttribute('aria-hidden', 'true');
+    await expect(drawer).toHaveAttribute('inert');
 
     await expect(page.getByRole('button', { name: /Open menu/i })).toBeFocused();
   });
@@ -94,6 +96,8 @@ test.describe('mobile nav drawer', () => {
     await scrim.click();
 
     await expect(drawer).not.toBeVisible();
+    await expect(drawer).toHaveAttribute('aria-hidden', 'true');
+    await expect(drawer).toHaveAttribute('inert');
   });
 
   test('mobile: first nav link has expected href', async ({ page }) => {
