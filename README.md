@@ -1,6 +1,7 @@
 # qa-learning-site
 
 [![CI](https://github.com/bykplx1/qa-learning-site/actions/workflows/ci.yml/badge.svg)](https://github.com/bykplx1/qa-learning-site/actions/workflows/ci.yml)
+[![Lighthouse CI](https://github.com/bykplx1/qa-learning-site/actions/workflows/ci.yml/badge.svg?label=lighthouse-ci&event=push)](https://github.com/bykplx1/qa-learning-site/actions/workflows/ci.yml)
 
 **Production:** https://qa-learning-site.vercel.app
 

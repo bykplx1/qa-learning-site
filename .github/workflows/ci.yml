@@ -12,9 +12,68 @@ on:
         type: boolean
         default: false
 
+# ─── STAGE OVERVIEW ──────────────────────────────────────────────────────────
+#
+#  Stage 1 — fast checks (parallel, no DB, no browser)
+#    lint-typecheck   npx astro check
+#    unit             vitest unit suite
+#
+#  Stage 2 — integration (needs Stage 1 green)
+#    integration      vitest integration suite against real Postgres
+#
+#  Stage 3 — heavy gates (parallel, all need Stage 2 green)
+#    e2e-a11y         Playwright E2E + axe-core a11y assertions
+#    visual           Playwright visual regression (non-blocking while UI churns)
+#    lhci             Lighthouse-CI budget gate (mobile + desktop)
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
 jobs:
-  test:
+
+  # ── Stage 1a: type-check ──────────────────────────────────────────────────
+  lint-typecheck:
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Type check (astro check)
+        run: npx astro check
+
+  # ── Stage 1b: unit tests ──────────────────────────────────────────────────
+  unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Unit tests
+        run: npm test
+
+  # ── Stage 2: integration tests ────────────────────────────────────────────
+  integration:
+    runs-on: ubuntu-latest
+    needs: [lint-typecheck, unit]
 
     services:
       postgres:
@@ -51,17 +110,35 @@ jobs:
 
       - run: npm ci --legacy-peer-deps
 
-      - name: Type check
-        run: npx astro check
-
-      - name: Unit tests
-        run: npm test
-
       - name: Apply DB migrations
         run: npx drizzle-kit migrate
 
       - name: Integration tests
         run: npm run test:integration
+
+  # ── Stage 3a: E2E + a11y ──────────────────────────────────────────────────
+  e2e-a11y:
+    runs-on: ubuntu-latest
+    needs: integration
+
+    env:
+      BETTER_AUTH_SECRET: test-secret-at-least-32-bytes-long-aaaaaaaaa
+      BETTER_AUTH_URL: http://localhost:4321
+      GITHUB_CLIENT_ID: test-client-id
+      GITHUB_CLIENT_SECRET: test-client-secret
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npm run build
@@ -69,7 +146,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: E2E tests
+      - name: E2E + a11y tests
         env:
           E2E_OAUTH_MOCK: '1'
         run: npm run test:e2e
@@ -82,15 +159,17 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # ── Stage 3b: visual regression ───────────────────────────────────────────
   visual:
-    # Visual regression — Linux only. Cross-OS font rendering produces
-    # noise that's impossible to manage, so baselines live in CI exclusively.
-    # Currently non-blocking (continue-on-error) while UI is churning;
-    # diffs are still uploaded as artifacts for manual review. Re-enable as
-    # a hard gate once the design system rollout stabilizes. See
-    # CONTRIBUTING.md for the deliberate baseline-update workflow.
+    # Linux only — cross-OS font rendering produces diffs that are impossible
+    # to manage. Baselines live in CI exclusively; see CONTRIBUTING.md for the
+    # deliberate baseline-update workflow (workflow_dispatch → update_visual_baselines).
+    #
+    # Non-blocking (continue-on-error) while the design system rollout is in
+    # progress. Re-enable as a hard gate once the UI stabilises. Diffs are
+    # still uploaded as artifacts for manual review. See commit af4889d.
     runs-on: ubuntu-latest
-    needs: test
+    needs: integration
     continue-on-error: true
 
     steps:
@@ -135,15 +214,14 @@ jobs:
             test-results/
           retention-days: 14
 
+  # ── Stage 3c: Lighthouse-CI budget gate ───────────────────────────────────
   lhci:
-    # Lighthouse-CI budget gate — fails the PR on a single regression below
-    # any category threshold. Serves the static portion of the production
-    # build (`dist/client/`) via a static file server. SSR routes such as
-    # /profile (prerender:false) are not audited here because the vercel
-    # adapter does not implement `astro preview`; auditing them requires a
-    # live preview deployment URL — see the linked issue for follow-up.
+    # Audits static pages from `dist/client/` against score budgets.
+    # SSR routes (prerender:false) are not audited here — the Vercel adapter
+    # does not implement `astro preview`; auditing them requires a live preview
+    # deployment URL (tracked as a follow-up issue).
     runs-on: ubuntu-latest
-    needs: test
+    needs: integration
     permissions:
       contents: read
       pull-requests: write
