@@ -144,7 +144,7 @@ questions:
       - C) Aesthetics of UI mockup
       - D) Completeness
     answer: 2
-    hint: Wrong artefact.
+    hint: Wrong artifact.
     explanation: Aesthetics is design review, not reqs. See [[#Reviews from TA
       Perspective]].
   - id: iata-014
