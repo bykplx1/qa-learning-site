@@ -1,6 +1,7 @@
 import type { QuizQuestion } from '../../lib/quiz/schema.js';
 import { isCorrect } from '../../lib/quiz/engine.js';
 import { EXAM_PASS_THRESHOLD } from '../../lib/exam/config.js';
+import { stripWikilinks } from '../../lib/wikilinks/resolver.js';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 export type ExamFinishReason = 'expired' | 'submitted';
@@ -163,7 +164,7 @@ export default function ExamSummary({
                   </div>
                   {q.explanation && (
                     <div data-testid={`exam-review-${i}-explanation`} style={{ marginTop: 4 }}>
-                      <strong style={{ color: 'var(--ink)' }}>Why:</strong> {q.explanation}
+                      <strong style={{ color: 'var(--ink)' }}>Why:</strong> {stripWikilinks(q.explanation)}
                     </div>
                   )}
                 </div>
