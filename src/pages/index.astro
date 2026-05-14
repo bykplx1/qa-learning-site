@@ -1,7 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { sortLessons, groupByCategory } from '../lib/lessons/order';
 import type { LessonEntry } from '../lib/lessons/order';
@@ -34,6 +35,14 @@ const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
 const quizCount = sorted.filter((l) =>
   existsSync(join(process.cwd(), 'src', 'generated', 'quiz', `${l.data.slug}.quiz.yaml`)),
 ).length;
+
+const quizDir = join(process.cwd(), 'src', 'generated', 'quiz');
+const totalQuizQuestions = readdirSync(quizDir)
+  .filter((f) => f.endsWith('.quiz.yaml'))
+  .reduce((sum, f) => {
+    const parsed = parseYaml(readFileSync(join(quizDir, f), 'utf-8')) as { questions?: unknown[] };
+    return sum + (parsed?.questions?.length ?? 0);
+  }, 0);
 
 const latestLessons = sorted.slice(0, 10);
 ---
@@ -72,8 +81,8 @@ const latestLessons = sorted.slice(0, 10);
         <div class="lbl">Lessons across {groups.size} tracks</div>
       </div>
       <div class="hero__stat">
-        <div class="num">{quizCount}</div>
-        <div class="lbl">Practice quizzes</div>
+        <div class="num">{totalQuizQuestions}</div>
+        <div class="lbl">Quiz questions</div>
       </div>
       <div class="hero__stat">
         <div class="num">{totalMinutes}<small>m</small></div>
