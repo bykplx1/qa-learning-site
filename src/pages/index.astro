@@ -106,7 +106,7 @@ const latestLessons = sorted.slice(0, 10);
         every wikilink resolves at build time or fails CI.
       </p>
     </div>
-    <div class="cat-grid">
+    <div class="cat-grid" data-testid="curated-tracks">
       {categoryRows.map((c) => (
         <a class="cat" href={`/lessons/${c.lessons[0].data.slug}`}>
           <div class="cat__num">{c.num} · TRACK</div>
