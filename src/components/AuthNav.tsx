@@ -23,6 +23,8 @@ export function AuthNav() {
       const data = (res && 'data' in res ? res.data : res) as { user?: SessionUser } | null;
       setUser(data?.user ?? null);
       setLoading(false);
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
     });
     return () => {
       cancelled = true;
