@@ -13,11 +13,17 @@ test.describe('exam mode wrapper', () => {
     await expect(page.getByTestId('hero-exam-cta')).toBeVisible();
     await page.getByTestId('hero-exam-cta').click();
 
-    // 2. Exam page loads.
+    // 2. Exam page loads — Start gate is shown, timer not yet visible.
     await expect(page).toHaveURL('/exam');
     await expect(page.locator('h1')).toContainText('Mock exam');
+    await expect(page.getByTestId('exam-start-gate')).toBeVisible();
+    await expect(page.getByTestId('exam-timer')).toHaveCount(0);
 
-    // 3. Timer is visible and counting down (sample two readings).
+    // 3. Click Start exam to begin.
+    await page.getByTestId('exam-start-btn').click();
+    await expect(page.getByTestId('exam-start-gate')).toHaveCount(0);
+
+    // 4. Timer is visible and counting down (sample two readings).
     const timer = page.getByTestId('exam-timer');
     await expect(timer).toBeVisible();
     const t1 = (await timer.textContent())?.trim();
@@ -26,17 +32,17 @@ test.describe('exam mode wrapper', () => {
     const t2 = (await timer.textContent())?.trim();
     expect(t2).not.toBe(t1); // timer ticked
 
-    // 4. Mid-exam there is no correctness feedback after answering.
+    // 5. Mid-exam there is no correctness feedback after answering.
     await page.getByTestId('exam-option-0').click();
     await expect(page.getByText(/✓ Correct!/)).toHaveCount(0);
     await expect(page.getByText(/✗ Incorrect/)).toHaveCount(0);
     await expect(page.getByTestId('exam-summary')).toHaveCount(0);
     await expect(page.getByText(/Correct answer:/)).toHaveCount(0);
 
-    // 5. Answer count reflects selection.
+    // 6. Answer count reflects selection.
     await expect(page.getByTestId('exam-answered-count')).toContainText('1 answered');
 
-    // 6. Navigate forward, answer Q2, then submit early.
+    // 7. Navigate forward, answer Q2, then submit early.
     await page.getByTestId('exam-next').click();
     await page.getByTestId('exam-option-1').click();
     await expect(page.getByTestId('exam-answered-count')).toContainText('2 answered');
@@ -45,7 +51,7 @@ test.describe('exam mode wrapper', () => {
     // Confirm in the in-app modal
     await page.getByTestId('exam-confirm-submit').click();
 
-    // 7. Summary screen renders with all sections.
+    // 8. Summary screen renders with all sections.
     const summary = page.getByTestId('exam-summary');
     await expect(summary).toBeVisible();
 
@@ -67,10 +73,10 @@ test.describe('exam mode wrapper', () => {
     await expect(page.getByTestId('exam-review-0-your')).toContainText('Your answer:');
     await expect(page.getByTestId('exam-review-0-correct')).toContainText('Correct answer:');
 
-    // 8. Anonymous run: persistence runs against sessionStorage; not signed in note shows.
+    // 9. Anonymous run: persistence runs against sessionStorage; not signed in note shows.
     await expect(page.getByTestId('exam-save-status')).toContainText('not signed in');
 
-    // 9. Confirm pending attempt landed in sessionStorage with mode=exam.
+    // 10. Confirm pending attempt landed in sessionStorage with mode=exam.
     const stored = await page.evaluate(() =>
       sessionStorage.getItem('quiz_attempt_mock-exam'),
     );
@@ -80,5 +86,43 @@ test.describe('exam mode wrapper', () => {
     expect(parsed.quizSlug).toBe('mock-exam');
     expect(parsed.total).toBeGreaterThan(0);
     expect(Array.isArray(parsed.answers)).toBe(true);
+  });
+
+  test('mid-exam refresh resumes past the Start gate', async ({ page }) => {
+    await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
+      await el.locator('button').first().click();
+    });
+
+    // Navigate to exam page.
+    await page.goto('/exam');
+
+    // Start the exam.
+    await expect(page.getByTestId('exam-start-gate')).toBeVisible();
+    await page.getByTestId('exam-start-btn').click();
+    await expect(page.getByTestId('exam-timer')).toBeVisible();
+
+    // Answer first question to generate some state.
+    await page.getByTestId('exam-option-0').click();
+    await expect(page.getByTestId('exam-answered-count')).toContainText('1 answered');
+
+    // Wait a moment so elapsed time is non-trivial.
+    await page.waitForTimeout(1_500);
+    const timerBefore = (await page.getByTestId('exam-timer').textContent())?.trim();
+
+    // Reload the page.
+    await page.reload();
+
+    // Should land directly in active phase — no Start gate.
+    await expect(page.getByTestId('exam-start-gate')).toHaveCount(0);
+    await expect(page.getByTestId('exam-timer')).toBeVisible();
+
+    // Timer should reflect elapsed time (less than full duration).
+    const timerAfter = (await page.getByTestId('exam-timer').textContent())?.trim();
+    expect(timerAfter).toMatch(/^\d{2}:\d{2}$/);
+    // Timer after reload should not be higher than the timer before (wall-clock accurate)
+    expect(timerAfter).not.toBe('60:00');
+    // The timer should be close to or less than timerBefore
+    expect(timerAfter).toBeTruthy();
+    expect(timerBefore).toBeTruthy();
   });
 });

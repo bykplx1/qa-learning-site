@@ -9,6 +9,11 @@ import {
 } from '../../lib/exam-mode/runner.js';
 import { selectAdapter, type QuizPersistenceAdapter } from '../../lib/quiz/persistence.js';
 import ExamSummary, { type SaveStatus } from './ExamSummary';
+import {
+  loadExamState,
+  saveExamState,
+  clearExamState,
+} from '../../lib/exam/persistence.js';
 
 interface Props {
   questions: QuizQuestion[];
@@ -17,6 +22,8 @@ interface Props {
 }
 
 const DEFAULT_DURATION_MS = 60 * 60 * 1000;
+
+type Phase = 'idle' | 'active' | 'summary';
 
 function formatClock(ms: number): string {
   const totalSec = Math.max(0, Math.ceil(ms / 1000));
@@ -150,6 +157,55 @@ function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFo
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Start gate ───────────────────────────────────────────────────────────────
+
+interface StartGateProps {
+  questionCount: number;
+  durationMs: number;
+  onStart: () => void;
+}
+
+function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
+  const durationMin = Math.round(durationMs / 60_000);
+  return (
+    <div className="card" style={{ maxWidth: 540, margin: '48px auto', padding: 36 }} data-testid="exam-start-gate">
+      <span className="eyebrow">ISTQB exam mode</span>
+      <h2
+        style={{
+          fontFamily: 'var(--serif)',
+          fontSize: 30,
+          fontWeight: 400,
+          letterSpacing: '-0.02em',
+          margin: '12px 0 16px',
+          color: 'var(--ink)',
+          lineHeight: 1.15,
+        }}
+      >
+        Start exam
+      </h2>
+      <p
+        style={{
+          fontFamily: 'var(--sans)',
+          fontSize: 15,
+          color: 'var(--ink-2)',
+          lineHeight: 1.6,
+          margin: '0 0 28px',
+        }}
+      >
+        {questionCount} questions · {durationMin}-minute time limit · navigate freely between questions · no feedback until you submit.
+      </p>
+      <button
+        type="button"
+        className="btn btn--primary btn--lg"
+        onClick={onStart}
+        data-testid="exam-start-btn"
+      >
+        Start exam
+      </button>
     </div>
   );
 }
@@ -375,6 +431,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
 
 export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS }: Props) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [phase, setPhase] = useState<Phase>('idle');
   const [state, setState] = useState<ExamState>(() => ({
     questions,
     currentIndex: 0,
@@ -389,6 +446,8 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
   const runnerRef = useRef<ExamRunnerHandle | null>(null);
   const submittedRef = useRef<boolean>(false);
   const submitBtnRef = useRef<HTMLButtonElement | null>(null);
+  // Captures the wall-clock start time for sessionStorage persistence
+  const startedAtRef = useRef<number>(0);
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
@@ -407,24 +466,94 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
     };
   }, []);
 
+  // On mount, check sessionStorage for a saved active exam session
   useEffect(() => {
+    const saved = loadExamState(examSlug);
+    if (!saved) return;
+    const elapsed = Date.now() - saved.startedAt;
+    const remaining = saved.durationMs - elapsed;
+    if (remaining <= 0) {
+      clearExamState();
+      return;
+    }
+    startedAtRef.current = saved.startedAt;
+    setState({
+      questions,
+      currentIndex: saved.currentIndex,
+      answers: saved.answers,
+      status: 'active',
+    });
+    setRemainingMs(remaining);
+    setPhase('active');
+  }, [examSlug, questions]);
+
+  // Create and start the runner whenever we enter the active phase
+  useEffect(() => {
+    if (phase !== 'active') return;
+
+    const elapsed = startedAtRef.current > 0 ? Date.now() - startedAtRef.current : 0;
+    const effectiveDuration = Math.max(1, durationMs - elapsed);
+
     const runner = createExamRunner({
       questions,
-      durationMs,
-      onTick: (ms) => setRemainingMs(ms),
-      onStateChange: (s) => setState(s),
+      durationMs: effectiveDuration,
+      onTick: (ms) => {
+        setRemainingMs(ms);
+        // Persist on every tick
+        if (startedAtRef.current > 0) {
+          const currentState = runner.getState();
+          saveExamState({
+            examSlug,
+            startedAt: startedAtRef.current,
+            durationMs,
+            currentIndex: currentState.currentIndex,
+            answers: currentState.answers,
+          });
+        }
+      },
+      onStateChange: (s) => {
+        setState(s);
+        // Persist on state changes (navigation, answers)
+        if (startedAtRef.current > 0) {
+          saveExamState({
+            examSlug,
+            startedAt: startedAtRef.current,
+            durationMs,
+            currentIndex: s.currentIndex,
+            answers: s.answers,
+          });
+        }
+      },
       onFinalize: (r) => {
+        clearExamState();
         setRemainingMs(0);
         setResult(r);
+        setPhase('summary');
       },
     });
+
+    // Restore answers from current state into the runner via dispatches
+    // (runner starts fresh, so we replay the saved answer state)
+    const currentState = state;
     runnerRef.current = runner;
     runner.start();
     setRemainingMs(runner.getRemaining());
+
+    // Replay saved answers so the runner's internal state matches
+    currentState.answers.forEach((ans, idx) => {
+      if (ans !== null) {
+        runner.dispatch({ type: 'goto', index: idx });
+        runner.dispatch({ type: 'answer', value: ans });
+      }
+    });
+    // Restore navigation position
+    runner.dispatch({ type: 'goto', index: currentState.currentIndex });
+
     return () => {
       runner.stop();
     };
-  }, [questions, durationMs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   useEffect(() => {
     if (!result) return;
@@ -448,6 +577,19 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
         if (signedIn) setSaveStatus('error');
       });
   }, [adapter, examSlug, result, signedIn]);
+
+  const handleStart = useCallback(() => {
+    startedAtRef.current = Date.now();
+    // Reset state for a fresh exam
+    setState({
+      questions,
+      currentIndex: 0,
+      answers: new Array(questions.length).fill(null),
+      status: 'active',
+    });
+    setRemainingMs(durationMs);
+    setPhase('active');
+  }, [questions, durationMs]);
 
   const handleAnswer = useCallback((value: number | number[] | null) => {
     runnerRef.current?.dispatch({ type: 'answer', value });
@@ -476,19 +618,14 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
 
   return (
     <section style={{ marginTop: 24 }} data-testid="exam-runner">
-      {state.status === 'summary' && result ? (
-        <ExamSummary
-          questions={state.questions}
-          answers={state.answers}
-          score={result.score}
-          total={result.total}
-          durationSec={result.durationSec}
-          reason={result.reason}
-          signedIn={signedIn}
-          saveStatus={saveStatus}
-          retryHref="?reset=1"
+      {phase === 'idle' && (
+        <StartGate
+          questionCount={questions.length}
+          durationMs={durationMs}
+          onStart={handleStart}
         />
-      ) : (
+      )}
+      {phase === 'active' && (
         <>
           <QuestionScreen
             state={state}
@@ -510,6 +647,19 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
             />
           )}
         </>
+      )}
+      {phase === 'summary' && result && (
+        <ExamSummary
+          questions={state.questions}
+          answers={state.answers}
+          score={result.score}
+          total={result.total}
+          durationSec={result.durationSec}
+          reason={result.reason}
+          signedIn={signedIn}
+          saveStatus={saveStatus}
+          retryHref="?reset=1"
+        />
       )}
     </section>
   );

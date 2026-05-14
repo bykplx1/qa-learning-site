@@ -27,16 +27,20 @@ const LEAK_PATTERNS = [
 ];
 
 describe('ExamRunner — no correctness leak before submission', () => {
-  it('initial render has status=active and contains no correctness or summary markers', () => {
+  it('initial SSR render shows Start gate (idle phase), contains no correctness or summary markers', () => {
     const html = renderToStaticMarkup(
       <ExamRunner questions={makeQuestions(3)} examSlug="mock-exam" durationMs={60_000} />,
     );
     for (const p of LEAK_PATTERNS) {
       expect(html, `leaked pattern ${p}`).not.toMatch(p);
     }
-    // QuestionScreen rendered (positive control)
-    expect(html).toMatch(/exam-timer/);
-    expect(html).toMatch(/exam-option-0/);
+    // Start gate is rendered in idle phase (SSR never runs useEffect)
+    expect(html).toMatch(/exam-start-gate/);
+    expect(html).toMatch(/exam-start-btn/);
+    // Timer chip is NOT rendered in idle phase
+    expect(html).not.toMatch(/exam-timer/);
+    // Question options are NOT rendered in idle phase
+    expect(html).not.toMatch(/exam-option-0/);
   });
 });
 
