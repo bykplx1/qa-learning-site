@@ -5,6 +5,7 @@ import type { AstroIntegration } from 'astro';
 import { remarkWikilinks } from '../lib/wikilinks/remarkWikilinks.js';
 import { extractExcerpt } from '../lib/wikilinks/excerpt.js';
 import type { SlugEntry } from '../lib/wikilinks/resolver.js';
+import { repairWin1252 } from '../lib/encoding/repair.js';
 
 function parseFrontmatter(raw: string): { slug: string; title: string } | null {
   // Strip BOM, match --- block
@@ -39,7 +40,7 @@ function buildSlugMap(vaultPath: string): Map<string, SlugEntry> {
 
     let raw: string;
     try {
-      raw = readFileSync(filePath, 'utf-8');
+      raw = repairWin1252(readFileSync(filePath, 'utf-8'));
     } catch {
       continue;
     }

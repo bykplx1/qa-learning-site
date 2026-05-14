@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { lessonsMeta } from '../../db/schema';
 import { lessonFrontmatterSchema, type LessonFrontmatter } from './schema';
+import { repairWin1252 } from '../encoding/repair.js';
 
 const CATEGORY_RE = /[/\\]\d{2}-[^/\\]+[/\\]/;
 
@@ -35,7 +36,7 @@ export function readLessonsMetaFromVault(vaultPath: string): LessonFrontmatter[]
   const out: LessonFrontmatter[] = [];
   for (const file of walkMd(vaultPath)) {
     if (!CATEGORY_RE.test(file)) continue;
-    const raw = readFileSync(file, 'utf-8');
+    const raw = repairWin1252(readFileSync(file, 'utf-8'));
     const fm = parseFrontmatter(raw);
     if (fm) out.push(fm);
   }

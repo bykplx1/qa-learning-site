@@ -12,6 +12,7 @@ import { sortLessons, getPrevNext, groupByCategory } from '../../lib/lessons/ord
 import { quizFileSchema } from '../../lib/quiz/schema';
 import type { QuizQuestion } from '../../lib/quiz/schema';
 import { extractExcerpt } from '../../lib/wikilinks/excerpt';
+import { repairWin1252 } from '../../lib/encoding/repair';
 
 export async function getStaticPaths() {
   const allLessons = await getCollection('lessons');
@@ -52,11 +53,11 @@ const difficultyClass =
 const quizYamlPath = join(process.cwd(), 'src', 'generated', 'quiz', `${lesson.data.slug}.quiz.yaml`);
 let quizQuestions: QuizQuestion[] = [];
 if (existsSync(quizYamlPath)) {
-  const result = quizFileSchema.safeParse(parse(readFileSync(quizYamlPath, 'utf-8')));
+  const result = quizFileSchema.safeParse(parse(repairWin1252(readFileSync(quizYamlPath, 'utf-8'))));
   if (result.success) quizQuestions = result.data.questions;
 }
 
-const ogDescription = lesson.body ? extractExcerpt(lesson.body) : undefined;
+const ogDescription = lesson.body ? repairWin1252(extractExcerpt(lesson.body)) : undefined;
 const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
 ---
 
