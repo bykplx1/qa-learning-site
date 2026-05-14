@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface PagefindResultData {
   url: string;
-  meta: { title?: string };
+  meta: { title?: string; type?: string };
   excerpt: string;
   filters: Record<string, string[]>;
 }
@@ -118,7 +118,7 @@ export default function SearchModal() {
         setSelected((s) => Math.max(s - 1, 0));
       } else if (e.key === 'Enter' && results[selected]) {
         const r = results[selected];
-        const href = r.filters?.section?.includes('quiz') ? `${r.url}#quiz` : r.url;
+        const href = (r.meta?.type ?? (r.filters?.section?.includes('quiz') ? 'quiz' : 'lesson')) === 'quiz' ? `${r.url}#quiz` : r.url;
         navigate(href);
       } else if (e.key === 'Tab') {
         const focusable = (e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(
@@ -141,8 +141,9 @@ export default function SearchModal() {
   if (!open) return null;
 
   const selectedResult = results[selected];
-  const lessonResults = results.filter((r) => !r.filters?.section?.includes('quiz'));
-  const quizResults = results.filter((r) => r.filters?.section?.includes('quiz'));
+  const getType = (r: PagefindResultData): string => r.meta?.type ?? (r.filters?.section?.includes('quiz') ? 'quiz' : 'lesson');
+  const lessonResults = results.filter((r) => getType(r) !== 'quiz');
+  const quizResults = results.filter((r) => getType(r) === 'quiz');
 
   return (
     <div
@@ -229,7 +230,8 @@ export default function SearchModal() {
                 </li>
               )}
               {results.map((r, i) => {
-                const isQuiz = r.filters?.section?.includes('quiz');
+                const type = getType(r);
+                const isQuiz = type === 'quiz';
                 const href = isQuiz ? `${r.url}#quiz` : r.url;
                 const isSelected = i === selected;
                 if (isQuiz && i === lessonResults.length) {
@@ -261,7 +263,7 @@ export default function SearchModal() {
                         {r.meta.title ?? 'Untitled'}
                       </div>
                       <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>
-                        {isQuiz ? 'quiz' : 'lesson'}
+                        {type}
                       </div>
                       <div
                         style={{

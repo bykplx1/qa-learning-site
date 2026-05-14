@@ -130,7 +130,7 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
           </div>
         </header>
 
-        <div class="prose" data-pagefind-body>
+        <div class="prose" data-pagefind-body data-pagefind-meta="type:lesson">
           <WikiLink client:idle />
           <Content />
         </div>
@@ -142,7 +142,7 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
 
       {quizQuestions.length > 0 && (
         <section id="quiz">
-          <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz">
+          <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz" data-pagefind-meta="type:quiz">
             <h2>Practice Quiz</h2>
             {quizQuestions.map((q) => <p>{q.q}</p>)}
           </div>
