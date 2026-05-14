@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sortLessons, groupByCategory, getPrevNext } from './order';
+import { sortLessons, groupByCategory, getPrevNext, categoryOrder, categoryDisplay } from './order';
 import type { LessonEntry } from './order';
 
 function makeLesson(
@@ -69,5 +69,35 @@ describe('getPrevNext', () => {
     const { prev, next } = getPrevNext(sorted, 'beta');
     expect(prev?.data.slug).toBe('zeta');
     expect(next?.data.slug).toBe('gamma');
+  });
+});
+
+describe('categoryOrder', () => {
+  it('orders fake entries by NN prefix', () => {
+    const istqb   = makeLesson('07-ISTQB/x.md',       'x', 'istqb');
+    const fund    = makeLesson('01-Fundamentals/y.md', 'y', 'fundamentals');
+    const cicd    = makeLesson('06-CI-CD-DevOps/z.md', 'z', 'ci-cd-devops');
+
+    const sorted = sortLessons([istqb, fund, cicd]);
+    expect(sorted.map((l) => categoryOrder(l))).toEqual([1, 6, 7]);
+  });
+
+  it('returns MAX_SAFE_INTEGER for entry with no NN- prefix', () => {
+    const entry = makeLesson('no-prefix/file.md', 'nopfx', 'unknown-cat');
+    expect(categoryOrder(entry)).toBe(Number.MAX_SAFE_INTEGER);
+  });
+});
+
+describe('categoryDisplay', () => {
+  it('returns correct display for ci-cd-devops', () => {
+    expect(categoryDisplay('ci-cd-devops')).toBe('CI / CD & DevOps');
+  });
+
+  it('returns correct display for istqb', () => {
+    expect(categoryDisplay('istqb')).toBe('ISTQB');
+  });
+
+  it('falls back to naive title-case for unknown slug', () => {
+    expect(categoryDisplay('foo-bar')).toBe('Foo Bar');
   });
 });
