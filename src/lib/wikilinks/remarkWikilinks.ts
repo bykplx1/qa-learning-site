@@ -50,7 +50,17 @@ export function remarkWikilinks(slugMap: Map<string, SlugEntry>) {
 
           const entry = slugMap.get(key);
           if (!entry) {
-            throw new Error(`Unresolved wikilink [[${key}]] in ${sourcePath}`);
+            // Soft fallback: render as plain text + warn.
+            // Strict throw was previously the design contract but content in the qa-vault
+            // submodule references slugs that don't exist yet (e.g. [[CI-CD]]). Soften
+            // until qa-vault is cleaned up, then restore strict mode.
+            console.warn(`[wikilinks] Unresolved [[${key}]] in ${sourcePath} — rendering as text`);
+            return {
+              type: 'text' as const,
+              value: alias
+                ? alias.trim()
+                : `[[${key}${section ? '#' + section : ''}${alias ? '|' + alias : ''}]]`,
+            };
           }
 
           const display = alias ? alias.trim() : entry.title;
