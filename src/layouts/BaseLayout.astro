@@ -86,7 +86,7 @@ const navLinks = [
         <a href="/profile" class={isProfile ? 'is-active' : ''}>Profile</a>
       </nav>
       <div class="nav__right">
-        <MobileNavToggle client:idle links={navLinks} />
+        <MobileNavToggle client:media="(max-width: 767px)" links={navLinks} />
         <SearchTrigger client:only="react" />
         <ThemeToggle client:only="react" />
         <AuthNav client:only="react" />
