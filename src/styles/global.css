@@ -196,11 +196,14 @@ a { color: inherit; }
   border-left: 1px solid var(--rule);
   padding: 24px 0;
   transform: translateX(100%);
-  transition: transform 250ms ease;
+  visibility: hidden;
+  transition: transform 250ms ease, visibility 0s linear 250ms;
   overflow-y: auto;
 }
 .mobile-nav__drawer.is-open {
   transform: translateX(0);
+  visibility: visible;
+  transition: transform 250ms ease, visibility 0s linear 0s;
 }
 .mobile-nav__list {
   list-style: none;
