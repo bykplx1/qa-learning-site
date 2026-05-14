@@ -78,6 +78,7 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
             <a
               href={`/lessons/${s.data.slug}`}
               class={`sib-link${s.data.slug === lesson.data.slug ? ' is-active' : ''}`}
+              aria-current={s.data.slug === lesson.data.slug ? 'page' : undefined}
             >
               {s.data.title}
             </a>
