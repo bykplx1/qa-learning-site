@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { auth } from '../../../../lib/auth';
+import { getSession } from '../../../../lib/auth';
 import { setSubmissionPublic, submitProject } from '../../../../db/queries';
 
 export const prerender = false;
@@ -19,7 +19,7 @@ export const POST: APIRoute = async ({ request, params }) => {
     return new Response('Bad slug', { status: 400 });
   }
 
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
   let raw: unknown;
@@ -62,7 +62,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     return new Response('Bad slug', { status: 400 });
   }
 
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
   let raw: unknown;

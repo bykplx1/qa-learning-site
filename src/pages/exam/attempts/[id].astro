@@ -2,14 +2,14 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ExamSummary from '../../../components/exam/ExamSummary';
-import { auth } from '../../../lib/auth';
+import { getSession } from '../../../lib/auth';
 import { getQuizAttemptById } from '../../../db/queries';
 import { buildExamPool } from '../../../lib/exam/pool';
 
 export const prerender = false;
 
 const { id } = Astro.params;
-const session = await auth.api.getSession({ headers: Astro.request.headers });
+const session = await getSession(Astro.request.headers);
 
 if (!session?.user?.id) {
   return Astro.redirect('/api/auth/sign-in/github');

@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { auth } from '../../../lib/auth';
+import { getSession } from '../../../lib/auth';
 import { recordQuizAttempt } from '../../../db/queries';
+import { mockRecordQuizAttempt } from '../../../lib/test-auth-mock';
 
 export const prerender = false;
 
@@ -21,7 +22,7 @@ const bodySchema = z.object({
 });
 
 export const POST: APIRoute = async ({ request }) => {
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
   let raw: unknown;
@@ -45,7 +46,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('answers length mismatch', { status: 400 });
   }
 
-  const { id } = await recordQuizAttempt({
+  const args = {
     userId: session.user.id,
     quizSlug: body.quiz_slug,
     mode: body.mode,
@@ -53,7 +54,10 @@ export const POST: APIRoute = async ({ request }) => {
     total: body.total,
     answers: body.answers,
     durationSec: body.duration_sec ?? 0,
-  });
+  };
+  const { id } = process.env.E2E_OAUTH_MOCK === '1'
+    ? await mockRecordQuizAttempt(args)
+    : await recordQuizAttempt(args);
 
   return new Response(JSON.stringify({ id }), {
     status: 200,
