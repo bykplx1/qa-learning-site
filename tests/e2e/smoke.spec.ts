@@ -16,7 +16,7 @@ test('home → lesson → quiz → refresh restores state → finish → summary
   await expect(page.locator('h1')).toBeVisible();
 
   // 2. Navigate to lesson via link
-  await page.getByRole('link', { name: 'Testing Principles' }).click();
+  await page.locator('[data-testid="curated-tracks"]').getByRole('link', { name: 'Testing Principles' }).click();
   await expect(page).toHaveURL(LESSON_URL);
   await expect(page.locator('h1').first()).toContainText('Testing Principles');
 
