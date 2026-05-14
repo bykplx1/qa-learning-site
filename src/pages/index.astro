@@ -1,7 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { sortLessons, groupByCategory } from '../lib/lessons/order';
 import type { LessonEntry } from '../lib/lessons/order';
@@ -35,6 +36,14 @@ const quizCount = sorted.filter((l) =>
   existsSync(join(process.cwd(), 'src', 'generated', 'quiz', `${l.data.slug}.quiz.yaml`)),
 ).length;
 
+const quizDir = join(process.cwd(), 'src', 'generated', 'quiz');
+const totalQuizQuestions = readdirSync(quizDir)
+  .filter((f) => f.endsWith('.quiz.yaml'))
+  .reduce((sum, f) => {
+    const parsed = parseYaml(readFileSync(join(quizDir, f), 'utf-8')) as { questions?: unknown[] };
+    return sum + (parsed?.questions?.length ?? 0);
+  }, 0);
+
 const latestLessons = sorted.slice(0, 10);
 ---
 
@@ -59,7 +68,10 @@ const latestLessons = sorted.slice(0, 10);
           Start with {categoryRows[0]?.title ?? 'lesson 1'}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
-        <a href="/projects" class="btn btn--ghost btn--lg">Browse build briefs</a>
+        <a href="/projects" class="btn btn--ghost btn--lg">
+          Browse build briefs
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
         <a href="/exam" class="btn btn--ghost btn--lg" data-testid="hero-exam-cta">
           Take mock exam
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -72,8 +84,8 @@ const latestLessons = sorted.slice(0, 10);
         <div class="lbl">Lessons across {groups.size} tracks</div>
       </div>
       <div class="hero__stat">
-        <div class="num">{quizCount}</div>
-        <div class="lbl">Practice quizzes</div>
+        <div class="num">{totalQuizQuestions}</div>
+        <div class="lbl">Quiz questions</div>
       </div>
       <div class="hero__stat">
         <div class="num">{totalMinutes}<small>m</small></div>
@@ -90,7 +102,7 @@ const latestLessons = sorted.slice(0, 10);
     <div class="section__head">
       <div>
         <span class="eyebrow">curriculum</span>
-        <h2>{groups.size} tracks, ordered through the foundation.</h2>
+        <h2>{groups.size} tracks, ordered from the foundation up.</h2>
       </div>
       <p>
         Each track maps to a numbered category folder in the vault. Lessons are MDX, quizzes are YAML;
