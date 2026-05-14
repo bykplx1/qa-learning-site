@@ -645,6 +645,8 @@ a { color: inherit; }
   text-underline-offset: 2px;
 }
 .prose a:hover { text-decoration-color: var(--accent); }
+.prose a.wikilink, a.wikilink { color: var(--accent-strong); }
+.prose a.wikilink:hover, a.wikilink:hover { text-decoration-color: var(--accent-strong); }
 .prose code {
   font-family: var(--mono);
   font-size: 0.9em;
