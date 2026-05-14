@@ -2,18 +2,39 @@ import type { CollectionEntry } from 'astro:content';
 
 export type LessonEntry = CollectionEntry<'lessons'>;
 
-// Ordering rule: primary = category folder prefix number (01, 02, …);
-// secondary = slug alphabetically within the category.
-// The folder prefix is the two-digit number at the start of the entry id
-// (e.g. "01-Fundamentals/Testing-Principles.md" → prefix "01").
-function folderPrefix(entry: LessonEntry): string {
-  return entry.id.split('/')[0].slice(0, 2);
+export const TRACK_META: Record<string, { display: string; order: number }> = {
+  fundamentals:        { display: 'Fundamentals',        order: 1 },
+  'testing-strategies':{ display: 'Testing Strategies',  order: 2 },
+  'specialized-testing':{ display: 'Specialized Testing', order: 3 },
+  programming:         { display: 'Programming for QA',  order: 4 },
+  frameworks:          { display: 'Frameworks',           order: 5 },
+  'ci-cd-devops':      { display: 'CI / CD & DevOps',    order: 6 },
+  istqb:               { display: 'ISTQB',                order: 7 },
+  'soft-skills':       { display: 'Soft Skills',          order: 8 },
+  resources:           { display: 'Resources',            order: 99 },
+};
+
+// Fallback: naive title-case for unknown slugs.
+function naiveTitleCase(slug: string): string {
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function categoryOrder(entry: LessonEntry): number {
+  const match = entry.id.match(/^(\d{2})-/);
+  if (match) return parseInt(match[1], 10);
+  const meta = TRACK_META[entry.data.category];
+  if (meta) return meta.order;
+  return Number.MAX_SAFE_INTEGER;
+}
+
+export function categoryDisplay(slugOrCategory: string): string {
+  return TRACK_META[slugOrCategory]?.display ?? naiveTitleCase(slugOrCategory);
 }
 
 export function sortLessons(lessons: LessonEntry[]): LessonEntry[] {
   return [...lessons].sort((a, b) => {
-    const prefixCmp = folderPrefix(a).localeCompare(folderPrefix(b));
-    if (prefixCmp !== 0) return prefixCmp;
+    const orderCmp = categoryOrder(a) - categoryOrder(b);
+    if (orderCmp !== 0) return orderCmp;
     return a.data.slug.localeCompare(b.data.slug);
   });
 }

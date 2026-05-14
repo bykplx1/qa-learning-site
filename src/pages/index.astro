@@ -4,31 +4,28 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { sortLessons, groupByCategory } from '../lib/lessons/order';
+import { sortLessons, groupByCategory, categoryOrder, categoryDisplay } from '../lib/lessons/order';
 import type { LessonEntry } from '../lib/lessons/order';
 
 const allLessons = await getCollection('lessons');
 const sorted = sortLessons(allLessons);
 const groups = groupByCategory(sorted);
 
-function formatCategory(cat: string): string {
-  return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function folderPrefix(entry: LessonEntry): string {
-  return entry.id.split('/')[0].slice(0, 2);
+  return entry.id.match(/^(\d{2})-/)?.[1] ?? entry.id.split('/')[0].slice(0, 2);
 }
 
 const categoryRows = Array.from(groups.entries())
   .map(([cat, lessons]) => ({
     cat,
-    title: formatCategory(cat),
+    title: categoryDisplay(cat),
     num: folderPrefix(lessons[0]),
     lessons,
     count: lessons.length,
     minutes: lessons.reduce((s, l) => s + l.data.est_minutes, 0),
+    order: categoryOrder(lessons[0]),
   }))
-  .sort((a, b) => a.num.localeCompare(b.num));
+  .sort((a, b) => a.order - b.order);
 
 const totalLessons = sorted.length;
 const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
@@ -148,7 +145,7 @@ const latestLessons = sorted.slice(0, 10);
             <span class="lrow__idx">{idx}</span>
             <div class="lrow__title">
               {l.data.title}
-              <small>{formatCategory(l.data.category)}</small>
+              <small>{categoryDisplay(l.data.category)}</small>
             </div>
             <span class="lrow__min">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -163,14 +160,14 @@ const latestLessons = sorted.slice(0, 10);
 
   <section class="section" id="all">
     {[...groups.entries()]
-      .map(([cat, lessons]) => ({ cat, lessons, num: folderPrefix(lessons[0]) }))
-      .sort((a, b) => a.num.localeCompare(b.num))
-      .map(({ cat, lessons }) => (
+      .map(([cat, lessons]) => ({ cat, lessons, order: categoryOrder(lessons[0]), num: folderPrefix(lessons[0]) }))
+      .sort((a, b) => a.order - b.order)
+      .map(({ cat, lessons, num }) => (
         <div style="margin-bottom: 40px;">
           <div class="section__head" style="margin-bottom: 16px;">
             <div>
-              <span class="eyebrow">{folderPrefix(lessons[0])} · {lessons.length} lesson{lessons.length === 1 ? '' : 's'}</span>
-              <h2 style="font-size: 26px;">{formatCategory(cat)}</h2>
+              <span class="eyebrow">{num} · {lessons.length} lesson{lessons.length === 1 ? '' : 's'}</span>
+              <h2 style="font-size: 26px;">{categoryDisplay(cat)}</h2>
             </div>
           </div>
           <div class="lessons-list">
