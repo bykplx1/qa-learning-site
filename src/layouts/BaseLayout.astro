@@ -26,7 +26,7 @@ const {
 const imageUrl = new URL(image, Astro.site ?? Astro.url).href;
 
 const path = Astro.url.pathname;
-const isLessons = path === '/' || path.startsWith('/lessons');
+const isLessons = path.startsWith('/lessons');
 const isProjects = path.startsWith('/projects');
 const isProfile = path.startsWith('/profile');
 ---
@@ -74,7 +74,7 @@ const isProfile = path.startsWith('/profile');
         <span>QA&nbsp;Learning</span>
       </a>
       <nav class="nav__links" aria-label="Primary">
-        <a href="/" class={isLessons ? 'is-active' : ''}>Lessons</a>
+        <a href="/lessons" class={isLessons ? 'is-active' : ''}>Lessons</a>
         <a href="/projects" class={isProjects ? 'is-active' : ''}>Build</a>
         <a href="/profile" class={isProfile ? 'is-active' : ''}>Profile</a>
       </nav>

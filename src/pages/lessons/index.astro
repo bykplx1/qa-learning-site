@@ -1,0 +1,80 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { sortLessons, groupByCategory } from '../../lib/lessons/order';
+import type { LessonEntry } from '../../lib/lessons/order';
+
+const allLessons = await getCollection('lessons');
+const sorted = sortLessons(allLessons);
+const groups = groupByCategory(sorted);
+
+function formatCategory(cat: string): string {
+  return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function folderPrefix(entry: LessonEntry): string {
+  return entry.id.split('/')[0].slice(0, 2);
+}
+
+const categoryRows = Array.from(groups.entries())
+  .map(([cat, lessons]) => ({
+    cat,
+    lessons,
+    num: folderPrefix(lessons[0]),
+  }))
+  .sort((a, b) => a.num.localeCompare(b.num));
+
+const totalLessons = sorted.length;
+const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
+---
+
+<BaseLayout
+  title="Lessons — QA Learning"
+  description={`All ${totalLessons} QA lessons grouped by track. ${totalMinutes} minutes of reading across ${groups.size} curriculum tracks.`}
+>
+  <section class="section">
+    <div class="section__head">
+      <div>
+        <span class="eyebrow">curriculum · {groups.size} tracks</span>
+        <h1>Lessons</h1>
+      </div>
+      <p>{totalLessons} lessons · {totalMinutes}m total read time</p>
+    </div>
+
+    {categoryRows.map(({ cat, lessons, num }) => (
+      <div style="margin-bottom: 40px;">
+        <div class="section__head" style="margin-bottom: 16px;">
+          <div>
+            <span class="eyebrow">{num} · {lessons.length} lesson{lessons.length === 1 ? '' : 's'}</span>
+            <h2 style="font-size: 26px;">{formatCategory(cat)}</h2>
+          </div>
+        </div>
+        <div class="lessons-list">
+          {lessons.map((l, i) => {
+            const idx = `${folderPrefix(l)}.${i + 1}`;
+            const diff = l.data.difficulty === 'beginner' ? 'b' : l.data.difficulty === 'intermediate' ? 'i' : 'a';
+            return (
+              <a class="lrow" href={`/lessons/${l.data.slug}`}>
+                <span class="lrow__idx">{idx}</span>
+                <div class="lrow__title">
+                  {l.data.title}
+                  <small>{l.data.tags.slice(0, 3).join(' · ')}</small>
+                </div>
+                <span class="lrow__min">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                  {l.data.est_minutes}m
+                </span>
+                <span class={`lrow__diff diff-${diff}`} title={l.data.difficulty}></span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </section>
+
+  <footer class="site-footer">
+    <span>© 2026 · MIT · QA Learning</span>
+    <span>{totalLessons} lessons across {groups.size} tracks</span>
+  </footer>
+</BaseLayout>
