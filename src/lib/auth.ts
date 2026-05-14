@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
-import { installOAuthMock } from './test-oauth-mock';
+import { installOAuthMock, getMockSession } from './test-auth-mock';
 
 if (process.env.E2E_OAUTH_MOCK === '1') {
   installOAuthMock();
@@ -41,5 +41,17 @@ export const auth = betterAuth({
     },
   },
 });
+
+/**
+ * Session helper used by all API route handlers.
+ * When E2E_OAUTH_MOCK=1, returns the mock session from the test cookie without
+ * touching the DB. Otherwise delegates to better-auth's real getSession.
+ */
+export async function getSession(headers: Headers) {
+  if (process.env.E2E_OAUTH_MOCK === '1') {
+    return getMockSession(headers);
+  }
+  return auth.api.getSession({ headers });
+}
 
 export type Auth = typeof auth;

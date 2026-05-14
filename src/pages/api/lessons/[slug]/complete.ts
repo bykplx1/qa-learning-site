@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
-import { auth } from '../../../../lib/auth';
+import { getSession } from '../../../../lib/auth';
 import { markLessonComplete } from '../../../../db/queries';
+import { mockMarkLessonComplete } from '../../../../lib/test-auth-mock';
 
 export const prerender = false;
 
@@ -8,7 +9,7 @@ export const POST: APIRoute = async ({ request, params }) => {
   const slug = params.slug;
   if (!slug) return new Response('Bad slug', { status: 400 });
 
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
   let timeSpentSec = 0;
@@ -23,7 +24,11 @@ export const POST: APIRoute = async ({ request, params }) => {
     }
   }
 
-  await markLessonComplete({ userId: session.user.id, lessonSlug: slug, timeSpentSec });
+  if (process.env.E2E_OAUTH_MOCK === '1') {
+    mockMarkLessonComplete({ lessonSlug: slug });
+  } else {
+    await markLessonComplete({ userId: session.user.id, lessonSlug: slug, timeSpentSec });
+  }
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { 'content-type': 'application/json' },

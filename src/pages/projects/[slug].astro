@@ -4,7 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SelfAttestChecklist from '../../components/projects/SelfAttestChecklist';
 import SubmitProjectForm from '../../components/projects/SubmitProjectForm';
 import { TIER_LABELS } from '../../lib/projects/schema';
-import { auth } from '../../lib/auth';
+import { getSession } from '../../lib/auth';
 import { getSubmission } from '../../db/queries';
 
 export const prerender = false;
@@ -19,9 +19,11 @@ if (!project) {
 const { Content } = await render(project);
 const { title, tier, estimate, acceptanceCriteria } = project.data;
 
-const session = await auth.api.getSession({ headers: Astro.request.headers });
+const session = await getSession(Astro.request.headers);
 const userId = session?.user?.id ?? null;
-const existing = userId ? await getSubmission(userId, project.data.slug) : null;
+const existing = userId && process.env.E2E_OAUTH_MOCK !== '1'
+  ? await getSubmission(userId, project.data.slug)
+  : null;
 const existingProp = existing
   ? {
       repoUrl: existing.repoUrl,
