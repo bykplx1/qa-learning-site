@@ -148,6 +148,7 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
             <h2>Practice Quiz</h2>
             {quizQuestions.map((q) => <p>{q.q}</p>)}
           </div>
+          {/* client:load — must NOT be client:idle; e2e clicks fire before requestIdleCallback (#106) */}
           <QuizRunner client:load questions={quizQuestions} quizSlug={lesson.data.slug} />
         </section>
       )}
