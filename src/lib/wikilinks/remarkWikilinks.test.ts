@@ -80,4 +80,31 @@ describe('remarkWikilinks — unified plugin registration', () => {
     expect(out).toContain('[Defect Lifecycle](/lessons/defect-lifecycle)');
     expect(out).toContain('[Testing Principles](/lessons/testing-principles)');
   });
+
+  it('renders unresolved [[X]] as literal text (soft fallback, no throw)', async () => {
+    const warn = console.warn;
+    const calls: string[] = [];
+    console.warn = (msg: string) => calls.push(String(msg));
+    try {
+      const out = await process('See [[Nonexistent-Target]] here.');
+      // remark-stringify escapes `[` in plain text; the visible text is still `[[X]]`
+      expect(out).toContain('Nonexistent-Target');
+      expect(out).not.toContain('](/lessons/');
+      expect(calls.some((m) => m.includes('Unresolved [[Nonexistent-Target]]'))).toBe(true);
+    } finally {
+      console.warn = warn;
+    }
+  });
+
+  it('renders unresolved [[X|alias]] using alias as plain text', async () => {
+    const warn = console.warn;
+    console.warn = () => {};
+    try {
+      const out = await process('See [[Nonexistent|the topic]] here.');
+      expect(out).toContain('the topic');
+      expect(out).not.toContain('](/lessons/');
+    } finally {
+      console.warn = warn;
+    }
+  });
 });
