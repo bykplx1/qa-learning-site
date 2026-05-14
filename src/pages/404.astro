@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="404 — Not found · QA Learning"
+  description="The page you're looking for doesn't exist."
+>
+  <section class="hero">
+    <div>
+      <span class="eyebrow">404 · not found</span>
+      <h1>Page not found.</h1>
+      <p class="hero__lead">
+        The URL you followed doesn't match any page on this site. It may have
+        moved, been deleted, or never existed.
+      </p>
+      <div class="hero__cta">
+        <a href="/" class="btn btn--primary btn--lg">Go to home</a>
+        <a href="/lessons" class="btn btn--ghost btn--lg">Browse lessons</a>
+        <a href="/projects" class="btn btn--ghost btn--lg">See projects</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <span>© 2026 · MIT · QA Learning</span>
+  </footer>
+</BaseLayout>
