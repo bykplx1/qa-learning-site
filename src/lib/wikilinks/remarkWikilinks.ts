@@ -3,8 +3,12 @@ import type { Root } from 'mdast';
 import type { SlugEntry } from './resolver.js';
 
 export function remarkWikilinks(slugMap: Map<string, SlugEntry>) {
+  // Return a proper unified plugin factory (a function that returns the transform).
+  // Passing the transform directly to remarkPlugins causes unified to call it as
+  // the factory during freeze(), passing the processor instead of the AST tree,
+  // which makes findAndReplace crash with "Cannot use 'in' operator … in undefined".
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (tree: Root, file?: any) => {
+  return () => (tree: Root, file?: any) => {
     const sourcePath: string = file?.history?.[0] ?? file?.path ?? '<unknown>';
 
     // Fresh regex per file to avoid shared lastIndex state
