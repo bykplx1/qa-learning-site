@@ -44,6 +44,8 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
   const lowTime = remainingMs <= 5 * 60 * 1000;
 
   const [multiSelection, setMultiSelection] = useState<number[]>([]);
+  const radioGroupRef = useRef<HTMLDivElement>(null);
+  const questionStemId = `question-stem-${state.currentIndex}`;
 
   useEffect(() => {
     if (isMulti && Array.isArray(answer)) setMultiSelection(answer);
@@ -60,6 +62,26 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
       onAnswer(sorted.length ? sorted : null);
     } else {
       onAnswer(i);
+    }
+  };
+
+  // Arrow-key navigation for single-choice radiogroup
+  const handleRadioGroupKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isMulti) return;
+    const opts = q.options ?? [];
+    const currentAnswer = typeof answer === 'number' ? answer : 0;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = (currentAnswer + 1) % opts.length;
+      onAnswer(next);
+      const buttons = radioGroupRef.current?.querySelectorAll<HTMLElement>('[role="radio"]');
+      buttons?.[next]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = (currentAnswer - 1 + opts.length) % opts.length;
+      onAnswer(prev);
+      const buttons = radioGroupRef.current?.querySelectorAll<HTMLElement>('[role="radio"]');
+      buttons?.[prev]?.focus();
     }
   };
 
@@ -143,6 +165,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>
         <div
+          id={questionStemId}
           style={{
             fontFamily: 'var(--serif)',
             fontSize: 22,
@@ -156,16 +179,31 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         </div>
 
         {q.options && (
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div
+            ref={radioGroupRef}
+            role={isMulti ? 'group' : 'radiogroup'}
+            aria-labelledby={questionStemId}
+            style={{ display: 'grid', gap: 10 }}
+            onKeyDown={isMulti ? undefined : handleRadioGroupKeyDown}
+          >
             {q.options.map((opt, i) => {
               const isSelected = isMulti
                 ? multiSelection.includes(i)
                 : answer === i;
               const stateClass = isSelected ? 'qopt qopt--selected' : 'qopt qopt--idle';
+              // Single-choice: roving tabindex — only selected (or first if none) is in tab order
+              const tabIndex = isMulti
+                ? 0
+                : (typeof answer === 'number' ? answer === i : i === 0)
+                  ? 0
+                  : -1;
               return (
                 <button
                   key={i}
                   type="button"
+                  role={isMulti ? 'checkbox' : 'radio'}
+                  aria-checked={isSelected}
+                  tabIndex={tabIndex}
                   className={stateClass}
                   onClick={() => handleOption(i)}
                   data-testid={`exam-option-${i}`}
