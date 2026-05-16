@@ -74,6 +74,8 @@ Domain code goes under `src/lib/<feature>/`. UI components mirror by feature fol
 
 `content/qa-vault` is a git submodule. Clone with `--recurse-submodules`. Don't commit content changes here — they belong in the `qa-vault` repo.
 
+The vault is being migrated to a new `curriculum` collection under `content/curriculum/<cluster>/<slug>.mdx`. Track per-topic state in `revamp-doc/migration-matrix.md` — update the matching row whenever a topic moves `pending → drafted → shipped → retired`. See `revamp-doc/revamp-plan.md` §9 for the full strategy.
+
 ## Design
 
 UI follows Anthropic-inspired tokens. Reference assets live in `claude-design-ref/` (gitignored — local only). New UI work should consume the documented tokens, not inline styles.
