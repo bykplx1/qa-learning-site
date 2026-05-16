@@ -114,6 +114,19 @@ export const projectSubmissions = pgTable(
   ],
 );
 
+// Denormalized content lookup keyed by sourceRef — upserted at seed time.
+// Decoupled from FSRS state so card history survives prompt text edits.
+export const prompts = pgTable('prompts', {
+  sourceRef: text('source_ref').primaryKey(),
+  cluster: text('cluster').notNull(),
+  question: text('question').notNull(),
+  answer: text('answer').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type Prompt = typeof prompts.$inferSelect;
+export type InsertPrompt = typeof prompts.$inferInsert;
+
 // FSRS scheduler state — one row per (user, card)
 export const reviewCards = pgTable(
   'review_cards',

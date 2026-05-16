@@ -1,22 +1,45 @@
 import { randomUUID } from 'node:crypto';
 import { getCollection } from 'astro:content';
 import { db } from '../../db';
-import { reviewCards } from '../../db/schema';
+import { reviewCards, prompts } from '../../db/schema';
 import { createNewCard } from './fsrs';
 
 // sourceRef format: "<cluster>/<topic-slug>#<prompt-id>"
 // This is the stable composite key. If a prompt id is renamed, the old card
 // is orphaned (history preserved) and a new card is created for the new id.
-const PROMPT_ID_RE = /<Prompt[^>]*\bid=["']([^"']+)["']/g;
+const PROMPT_FULL_RE =
+  /<Prompt[^>]*\bid=["']([^"']+)["'][^>]*\bquestion=["']([^"']+)["'][^>]*\banswer=["']([^"']+)["'][^>]*/g;
 
-function extractPromptIds(body: string): string[] {
-  const ids: string[] = [];
+interface PromptData {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+function extractPrompts(body: string): PromptData[] {
+  const results: PromptData[] = [];
   let m: RegExpExecArray | null;
-  PROMPT_ID_RE.lastIndex = 0;
-  while ((m = PROMPT_ID_RE.exec(body)) !== null) {
-    ids.push(m[1]);
+  PROMPT_FULL_RE.lastIndex = 0;
+  while ((m = PROMPT_FULL_RE.exec(body)) !== null) {
+    results.push({ id: m[1], question: m[2], answer: m[3] });
   }
-  return ids;
+  // Fallback: if attributes are in different order, try permutations
+  if (results.length === 0) {
+    const altRe =
+      /<Prompt\b([^>]*)>/g;
+    altRe.lastIndex = 0;
+    let am: RegExpExecArray | null;
+    while ((am = altRe.exec(body)) !== null) {
+      const attrs = am[1];
+      const idM = /\bid=["']([^"']+)["']/.exec(attrs);
+      const qM = /\bquestion=["']([^"']+)["']/.exec(attrs);
+      const aM = /\banswer=["']([^"']+)["']/.exec(attrs);
+      if (idM && qM && aM) {
+        results.push({ id: idM[1], question: qM[1], answer: aM[1] });
+      }
+    }
+  }
+  return results;
 }
 
 export interface SeedResult {
@@ -39,10 +62,30 @@ export async function seedForUser(userId: string): Promise<SeedResult> {
 
     // body may be undefined if the MDX has no prose — guard defensively
     const body: string = (topic as unknown as { body?: string }).body ?? '';
-    const promptIds = extractPromptIds(body);
+    const promptDatas = extractPrompts(body);
 
-    for (const promptId of promptIds) {
-      const sourceRef = `${cluster}/${slug}#${promptId}`;
+    for (const promptData of promptDatas) {
+      const sourceRef = `${cluster}/${slug}#${promptData.id}`;
+
+      // Upsert the prompts lookup — keeps question/answer current with content edits.
+      await db
+        .insert(prompts)
+        .values({
+          sourceRef,
+          cluster,
+          question: promptData.question,
+          answer: promptData.answer,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: prompts.sourceRef,
+          set: {
+            question: promptData.question,
+            answer: promptData.answer,
+            updatedAt: now,
+          },
+        });
+
       const cardInit = createNewCard(now);
 
       const result = await db

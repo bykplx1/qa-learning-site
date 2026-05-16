@@ -36,6 +36,13 @@
       "when": 1778929520842,
       "tag": "0004_needy_agent_zero",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1747612800000,
+      "tag": "0005_prompts_lookup",
+      "breakpoints": true
     }
   ]
 }
