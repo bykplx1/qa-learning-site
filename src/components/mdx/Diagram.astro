@@ -1,0 +1,36 @@
+---
+interface Props {
+  skip?: 'atomic-fact';
+  caption?: string;
+}
+
+const { skip, caption } = Astro.props;
+---
+
+{skip === 'atomic-fact' ? (
+  <div class="mdx-diagram mdx-diagram--skipped" data-skip={skip} aria-hidden="true"></div>
+) : (
+  <figure class="mdx-diagram">
+    <div class="mdx-diagram__body">
+      <slot />
+    </div>
+    {caption && <figcaption class="mdx-diagram__caption">{caption}</figcaption>}
+  </figure>
+)}
+
+<style>
+  .mdx-diagram {
+    margin: 24px 0;
+    padding: 16px;
+    border: 1px dashed var(--rule);
+    border-radius: 8px;
+    background: var(--paper-2);
+  }
+  .mdx-diagram--skipped { display: none; }
+  .mdx-diagram__caption {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--ink-3);
+    font-family: var(--mono);
+  }
+</style>
