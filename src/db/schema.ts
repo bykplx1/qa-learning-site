@@ -172,6 +172,23 @@ export const reviewLogs = pgTable(
   (t) => [index('review_logs_user_graded_idx').on(t.userId, t.gradedAt)],
 );
 
+// Private self-explanation submissions (Feynman surface). No public read path.
+export const selfExplanations = pgTable(
+  'self_explanations',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    conceptSlug: text('concept_slug').notNull(),
+    bodyMd: text('body_md').notNull(),
+    rubricScores: jsonb('rubric_scores').notNull().default({}),
+    submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('self_explanations_user_concept_idx').on(t.userId, t.conceptSlug),
+    index('self_explanations_user_submitted_idx').on(t.userId, t.submittedAt),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
@@ -184,3 +201,5 @@ export type ReviewCard = typeof reviewCards.$inferSelect;
 export type InsertReviewCard = typeof reviewCards.$inferInsert;
 export type ReviewLog = typeof reviewLogs.$inferSelect;
 export type InsertReviewLog = typeof reviewLogs.$inferInsert;
+export type SelfExplanation = typeof selfExplanations.$inferSelect;
+export type InsertSelfExplanation = typeof selfExplanations.$inferInsert;
