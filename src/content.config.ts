@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { lessonFrontmatterSchema } from './lib/lessons/schema';
 import { projectFrontmatterSchema } from './lib/projects/schema';
+import { curriculumFrontmatterSchema } from './lib/curriculum/schema';
 
 const lessons = defineCollection({
   loader: glob({
@@ -20,4 +21,12 @@ const projects = defineCollection({
   schema: projectFrontmatterSchema,
 });
 
-export const collections = { lessons, projects };
+const curriculum = defineCollection({
+  loader: glob({
+    pattern: '**/*.mdx',
+    base: './content/curriculum',
+  }),
+  schema: curriculumFrontmatterSchema,
+});
+
+export const collections = { lessons, projects, curriculum };

@@ -1,0 +1,28 @@
+---
+interface Props {
+  id: string;
+  rubric: string;
+}
+
+const { id, rubric } = Astro.props;
+---
+
+<div class="mdx-task" data-task-id={id} data-rubric={rubric}>
+  <p class="eyebrow mdx-task__label">practice task · {id} · rubric: {rubric}</p>
+  <div class="mdx-task__body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .mdx-task {
+    margin: 20px 0;
+    padding: 16px 18px;
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    background: var(--paper-2);
+  }
+  .mdx-task__label { margin: 0 0 8px; }
+  .mdx-task__body { font-size: 15px; color: var(--ink); }
+</style>
