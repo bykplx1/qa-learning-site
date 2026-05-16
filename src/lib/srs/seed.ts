@@ -2,19 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { getCollection } from 'astro:content';
 import { db } from '../../db';
 import { reviewCards } from '../../db/schema';
-
-// TODO(#136-merge): replace with fsrs.createNewCard
-function createNewCard(now: Date) {
-  return {
-    stability: 0,
-    difficulty: 0,
-    dueAt: now,
-    lastReviewedAt: null as Date | null,
-    reps: 0,
-    lapses: 0,
-    state: 0 as const,
-  };
-}
+import { createNewCard } from './fsrs';
 
 // sourceRef format: "<cluster>/<topic-slug>#<prompt-id>"
 // This is the stable composite key. If a prompt id is renamed, the old card
