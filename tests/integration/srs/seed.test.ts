@@ -44,11 +44,12 @@ Some prose here.
   },
 ];
 
+const mocks = vi.hoisted(() => ({
+  getCollection: vi.fn(),
+}));
+
 vi.mock('astro:content', () => ({
-  getCollection: async (name: string) => {
-    if (name === 'curriculum') return FIXTURE_TOPICS;
-    return [];
-  },
+  getCollection: mocks.getCollection,
 }));
 
 const { db } = await import('../../../src/db');
@@ -91,7 +92,12 @@ function buildPostRequest() {
 }
 
 describe('seedForUser', () => {
-  beforeEach(() => vi.restoreAllMocks());
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    mocks.getCollection.mockImplementation(async (name: string) =>
+      name === 'curriculum' ? FIXTURE_TOPICS : [],
+    );
+  });
   afterEach(() => vi.restoreAllMocks());
 
   it('Test 1: seed for fresh user inserts all prompt cards with expected sourceRefs', async () => {
@@ -162,8 +168,7 @@ describe('seedForUser', () => {
 
     // Now simulate renaming: override the mock so "what-is-qa" → "what-is-qa-v2".
     // We re-seed with an updated fixture that has the new id.
-    const { getCollection } = await import('astro:content');
-    vi.mocked(getCollection).mockResolvedValueOnce([
+    mocks.getCollection.mockResolvedValueOnce([
       {
         ...FIXTURE_TOPICS[0],
         body: `
@@ -172,7 +177,7 @@ describe('seedForUser', () => {
         `.trim(),
       },
       FIXTURE_TOPICS[1],
-    ] as unknown as Awaited<ReturnType<typeof getCollection>>);
+    ]);
 
     const result = await seedForUser(userId);
 
@@ -197,7 +202,12 @@ describe('seedForUser', () => {
 });
 
 describe('POST /api/review/seed', () => {
-  beforeEach(() => vi.restoreAllMocks());
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    mocks.getCollection.mockImplementation(async (name: string) =>
+      name === 'curriculum' ? FIXTURE_TOPICS : [],
+    );
+  });
   afterEach(() => vi.restoreAllMocks());
 
   it('returns 401 when no session', async () => {
