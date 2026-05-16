@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index, real, smallint } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -114,6 +114,51 @@ export const projectSubmissions = pgTable(
   ],
 );
 
+// FSRS scheduler state — one row per (user, card)
+export const reviewCards = pgTable(
+  'review_cards',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    // Opaque stable pointer: "<cluster>/<topic-slug>#<prompt-id>". Renamed lessons keep history.
+    sourceRef: text('source_ref').notNull(),
+    cluster: text('cluster').notNull(),
+    stability: real('stability').notNull().default(0),
+    difficulty: real('difficulty').notNull().default(0),
+    dueAt: timestamp('due_at', { withTimezone: true }).notNull().defaultNow(),
+    lastReviewedAt: timestamp('last_reviewed_at', { withTimezone: true }),
+    reps: integer('reps').notNull().default(0),
+    lapses: integer('lapses').notNull().default(0),
+    // FSRS State enum: 0=New, 1=Learning, 2=Review, 3=Relearning (matches ts-fsrs State)
+    state: smallint('state').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('review_cards_user_due_idx').on(t.userId, t.dueAt),
+    uniqueIndex('review_cards_user_source_uniq').on(t.userId, t.sourceRef),
+  ],
+);
+
+// INSERT-only: do not UPDATE rows here
+export const reviewLogs = pgTable(
+  'review_logs',
+  {
+    id: text('id').primaryKey(),
+    cardId: text('card_id').notNull().references(() => reviewCards.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    // rating: 1=Again, 2=Hard, 3=Good, 4=Easy
+    rating: smallint('rating').notNull(),
+    stability: real('stability').notNull(),
+    difficulty: real('difficulty').notNull(),
+    dueAt: timestamp('due_at', { withTimezone: true }).notNull(),
+    state: smallint('state').notNull(),
+    elapsedDays: real('elapsed_days').notNull(),
+    gradedAt: timestamp('graded_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('review_logs_user_graded_idx').on(t.userId, t.gradedAt)],
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
@@ -122,3 +167,7 @@ export type LessonView = typeof lessonViews.$inferSelect;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type DailyActivity = typeof dailyActivity.$inferSelect;
 export type ProjectSubmission = typeof projectSubmissions.$inferSelect;
+export type ReviewCard = typeof reviewCards.$inferSelect;
+export type InsertReviewCard = typeof reviewCards.$inferInsert;
+export type ReviewLog = typeof reviewLogs.$inferSelect;
+export type InsertReviewLog = typeof reviewLogs.$inferInsert;
