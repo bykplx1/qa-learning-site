@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import ReviewEmptyState from './ReviewEmptyState';
 
 export interface InitialCard {
   id: string;
@@ -71,20 +72,7 @@ export default function ReviewQueue({ initialCard }: Props) {
   );
 
   if (!card || phase === 'done') {
-    return (
-      <div
-        style={{
-          padding: '48px 24px',
-          textAlign: 'center',
-          color: 'var(--ink-2)',
-          fontFamily: 'var(--serif)',
-          fontSize: 22,
-        }}
-        data-testid="review-empty"
-      >
-        No cards due. Check back later.
-      </div>
-    );
+    return <ReviewEmptyState />;
   }
 
   return (
