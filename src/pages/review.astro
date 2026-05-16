@@ -1,0 +1,73 @@
+---
+import { eq, and, lte, asc } from 'drizzle-orm';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ReviewQueue from '../components/quiz/ReviewQueue';
+import { getSession } from '../lib/auth';
+import { db } from '../db';
+import { reviewCards, prompts } from '../db/schema';
+
+export const prerender = false;
+
+const session = await getSession(Astro.request.headers);
+if (!session?.user?.id) {
+  return Astro.redirect('/api/auth/sign-in/github');
+}
+const userId = session.user.id;
+
+const now = new Date();
+const [nextCard] = await db
+  .select({
+    id: reviewCards.id,
+    sourceRef: reviewCards.sourceRef,
+    cluster: reviewCards.cluster,
+    dueAt: reviewCards.dueAt,
+    question: prompts.question,
+    answer: prompts.answer,
+  })
+  .from(reviewCards)
+  .leftJoin(prompts, eq(reviewCards.sourceRef, prompts.sourceRef))
+  .where(and(eq(reviewCards.userId, userId), lte(reviewCards.dueAt, now)))
+  .orderBy(asc(reviewCards.dueAt))
+  .limit(1);
+
+const initialCard = nextCard
+  ? {
+      id: nextCard.id,
+      sourceRef: nextCard.sourceRef,
+      cluster: nextCard.cluster,
+      question: nextCard.question ?? nextCard.sourceRef,
+      answer: nextCard.answer ?? null,
+    }
+  : null;
+---
+
+<BaseLayout title="Review — QA Learning" description="Spaced repetition review queue.">
+  <main class="review-page">
+    <header class="review-page__head">
+      <span class="eyebrow">spaced repetition · review</span>
+      <h1>Review</h1>
+    </header>
+
+    <ReviewQueue client:load initialCard={initialCard} />
+  </main>
+</BaseLayout>
+
+<style>
+  .review-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+  .review-page__head {
+    margin-bottom: 8px;
+  }
+  .review-page__head h1 {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 8px 0 0;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+</style>
