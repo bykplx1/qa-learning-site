@@ -17,7 +17,7 @@ This is the cluster where the curriculum's **paradigm-shift layer** is set. Clus
 - **LLM fundamentals for testers is *the substrate* — tokens, sampling, context, fingerprint, cost, latency, why determinism dies and how to test anyway.** The lesson dislodges the "LLMs are just APIs" framing and installs the bounded-stochasticity discipline. *(See [`llm-fundamentals-for-testers`](./cluster-6-ai-llm-quality-engineering/llm-fundamentals-for-testers.md).)*
 - **Eval design is *the spine of LLM QA* — datasets as fixtures, rubrics as assertions, statistical thresholds, judge calibration, eval-as-contract.** It is the LLM-era integration test, the regression suite, and the release decision tool, all in one. *(See [`eval-design`](./cluster-6-ai-llm-quality-engineering/eval-design.md).)*
 - **RAG testing is *pipeline testing for grounded generation* — five testable stages (ingest, chunk, embed, retrieve, rerank, generate), per-stage metrics, the refusal eval, the lost-in-the-middle reality.** Most LLM products are RAG products; this is where most LLM bugs live. *(See [`rag-testing`](./cluster-6-ai-llm-quality-engineering/rag-testing.md).)*
-- **Prompt engineering and regression is *prompts-as-code with the regression discipline to match* — versioning, structured outputs, A/B / shadow eval, model-pair regression, prompt-token budgets.** The lesson treats the prompt as the most-changed code in the system, with the test discipline that demands. *(See [`prompt-engineering-and-regression`](./cluster-6-ai-llm-quality-engineering/prompt-engineering-and-regression.md).)*
+- **Prompt engineering and regression is *prompts-as-code with the regression discipline to match* — versioning, structured outputs, A/B / shadow eval, model-pair regression, prompt-token budgets.** The lesson treats the prompt as the most-changed code in the system, with the test discipline that demands. *(See [`prompt-engineering-regression`](./cluster-6-ai-llm-quality-engineering/prompt-engineering-regression.md).)*
 - **AI safety testing is *adversarial testing where every input is also an instruction* — OWASP LLM Top 10, prompt injection (direct and indirect), jailbreaks, the lethal trifecta, tool-call authZ, the layered-defence architecture.** It is the direct continuation of `[[security-testing]]` for systems where the model is not a security boundary. *(See [`ai-safety-testing`](./cluster-6-ai-llm-quality-engineering/ai-safety-testing.md).)*
 - **AI observability and drift is *production-truth feedback for stochastic systems* — traces, prompt logs, eval signals, drift metrics, fingerprint logging, cost as a quality signal, eval-in-prod as the chaos analogue.** It closes the loop from production reality back to release decisions. *(See [`ai-observability-and-drift`](./cluster-6-ai-llm-quality-engineering/ai-observability-and-drift.md).)*
 
@@ -295,7 +295,7 @@ revamp-knowledge/
 └── cluster-6-ai-llm-quality-engineering/
     ├── llm-fundamentals-for-testers.md                           # pilot — substrate
     ├── eval-design.md                                            # pilot — cluster spine
-    ├── prompt-engineering-and-regression.md
+    ├── prompt-engineering-regression.md
     ├── rag-testing.md
     ├── ai-safety-testing.md
     └── ai-observability-and-drift.md                             # cluster closer

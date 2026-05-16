@@ -14,10 +14,10 @@ This is the cluster where the curriculum's **operationalisation layer** is set. 
 
 - **Frontend prereqs are *the substrate* — not a tool.** Every later Cluster-4 tool assumes the learner understands DOM vs source HTML, hydration timing, the accessibility tree, network panels, and SPA navigation. *(See [`frontend-prereqs-for-testers`](./cluster-4-automation-and-cicd/frontend-prereqs-for-testers.md).)*
 - **Playwright is *a system of orthogonal primitives*, not a feature checklist.** Locators, fixtures, traces, auth state, parallelism, web-first assertions — internalising the primitives prevents most of the flake class. *(See [`playwright`](./cluster-4-automation-and-cicd/playwright.md).)*
-- **Selenium · Cypress · Playwright are *three architectural bets* — protocol stability vs in-browser ergonomics vs out-of-process control + isolation.** The lesson is the decision frame, not the endorsement. *(See [`selenium-cypress-playwright`](./cluster-4-automation-and-cicd/selenium-cypress-playwright.md).)*
+- **Selenium · Cypress · Playwright are *three architectural bets* — protocol stability vs in-browser ergonomics vs out-of-process control + isolation.** The lesson is the decision frame, not the endorsement. *(See [`selenium-vs-cypress-vs-playwright`](./cluster-4-automation-and-cicd/selenium-vs-cypress-vs-playwright.md).)*
 - **API tests are *a layered practice*: ad-hoc → scripted → contract — and the highest-leverage cost-saving move in the entire automation stack.** *(See [`api-testing`](./cluster-4-automation-and-cicd/api-testing.md).)*
 - **Mobile testing is *its own discipline* — the "one tool, two platforms" promise structurally underdelivers; the emulator/real-device distinction is not optional.** *(See [`mobile-testing-overview`](./cluster-4-automation-and-cicd/mobile-testing-overview.md).)*
-- **CI/CD is *the production environment for tests* — hermeticity, artefacts, reporting, flake budget, parallelism, TIA, build-once-test-many are all consequences of that framing.** *(See [`ci-cd-for-testing`](./cluster-4-automation-and-cicd/ci-cd-for-testing.md).)*
+- **CI/CD is *the production environment for tests* — hermeticity, artefacts, reporting, flake budget, parallelism, TIA, build-once-test-many are all consequences of that framing.** *(See [`cicd-for-testing`](./cluster-4-automation-and-cicd/cicd-for-testing.md).)*
 
 A learner who finishes Cluster 4 with these six framings internalised is *automation-fluent* — equipped for Cluster 5 (non-functional specialisations — where the toolbelt extends with K6, axe-core, OWASP ZAP, Grafana, Sentry, Testcontainers-for-DB) and Cluster 6 (AI/LLM QA — which reuses the toolbelt for non-deterministic systems where every primitive in this cluster must be re-derived). Cluster 4 is the **toolbelt** cluster; everything before it produces the artefacts the toolbelt runs, and everything after it specialises the toolbelt for a non-functional or non-deterministic concern.
 
@@ -252,10 +252,10 @@ revamp-knowledge/
 └── cluster-4-automation-and-cicd/
     ├── frontend-prereqs-for-testers.md                             # pilot — substrate
     ├── playwright.md                                               # pilot — flagship
-    ├── selenium-cypress-playwright.md
+    ├── selenium-vs-cypress-vs-playwright.md
     ├── api-testing.md
     ├── mobile-testing-overview.md
-    └── ci-cd-for-testing.md
+    └── cicd-for-testing.md
 ```
 
 Six topic files, one cluster overview, no other artefacts. Ready as inputs to the authoring loop in `content-template-and-mechanics-map.md` §4.
