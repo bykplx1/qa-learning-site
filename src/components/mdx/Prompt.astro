@@ -1,17 +1,29 @@
 ---
+// `id` is the stable key. Renaming a prompt creates a new card and orphans history — see lint rule (P2).
 interface Props {
   id: string;
-  requiresDiagram?: boolean;
+  question: string;
+  answer: string;
+  cluster?: string;
 }
 
-const { id, requiresDiagram } = Astro.props;
+const { id, question, answer, cluster } = Astro.props;
 ---
 
-<div class="mdx-prompt" data-prompt-id={id} data-requires-diagram={requiresDiagram ? 'true' : undefined}>
+<div
+  class="mdx-prompt"
+  data-prompt-id={id}
+  data-cluster={cluster ?? undefined}
+>
   <p class="eyebrow mdx-prompt__label">retrieval prompt · {id}</p>
   <div class="mdx-prompt__body">
     <slot />
+    <p class="mdx-prompt__question">{question}</p>
   </div>
+  <details class="mdx-prompt__reveal">
+    <summary>Reveal answer</summary>
+    <div class="mdx-prompt__answer">{answer}</div>
+  </details>
 </div>
 
 <style>
@@ -24,4 +36,21 @@ const { id, requiresDiagram } = Astro.props;
   }
   .mdx-prompt__label { margin: 0 0 6px; }
   .mdx-prompt__body { font-size: 15px; color: var(--ink); }
+  .mdx-prompt__question { font-weight: 600; margin: 8px 0 0; }
+  .mdx-prompt__reveal {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  .mdx-prompt__reveal summary {
+    cursor: pointer;
+    color: var(--accent);
+    user-select: none;
+  }
+  .mdx-prompt__answer {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--paper-3, var(--paper-2));
+    border-radius: 6px;
+    color: var(--ink);
+  }
 </style>
