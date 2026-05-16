@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import type { APIRoute } from 'astro';
-import { eq, and, lte, asc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../../db';
-import { reviewCards, reviewLogs, prompts } from '../../../db/schema';
+import { reviewCards, reviewLogs } from '../../../db/schema';
 import { getSession } from '../../../lib/auth';
 import { grade, type CardState, Rating } from '../../../lib/srs/fsrs';
+import { composeQueueForUser } from '../../../lib/srs/queue';
 
 export const prerender = false;
 
@@ -88,23 +89,19 @@ export const POST: APIRoute = async ({ request }) => {
     });
   });
 
-  // Fetch next due card (excludes the just-graded card which is now scheduled in the future)
-  const [nextCard] = await db
-    .select({
-      id: reviewCards.id,
-      sourceRef: reviewCards.sourceRef,
-      cluster: reviewCards.cluster,
-      dueAt: reviewCards.dueAt,
-      question: prompts.question,
-    })
-    .from(reviewCards)
-    .leftJoin(prompts, eq(reviewCards.sourceRef, prompts.sourceRef))
-    .where(and(eq(reviewCards.userId, userId), lte(reviewCards.dueAt, now)))
-    .orderBy(asc(reviewCards.dueAt))
-    .limit(1);
+  // Compose the interleaved queue and return the first card.
+  const queue = await composeQueueForUser(userId, now);
+  const nextCard = queue[0] ?? null;
 
   return new Response(
-    JSON.stringify({ nextCard: nextCard ?? null }),
+    JSON.stringify({ nextCard: nextCard ? {
+      id: nextCard.id,
+      sourceRef: nextCard.sourceRef,
+      cluster: nextCard.cluster,
+      dueAt: nextCard.dueAt,
+      question: nextCard.question,
+      answer: nextCard.answer,
+    } : null }),
     { status: 200, headers: { 'content-type': 'application/json' } },
   );
 };
