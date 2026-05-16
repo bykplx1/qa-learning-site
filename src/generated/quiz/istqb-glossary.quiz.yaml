@@ -5,7 +5,7 @@ questions:
     q: Failure =
     options:
       - A) Human mistake
-      - B) Flaw in artifact
+      - B) Flaw in artefact
       - C) Observable deviation from expected at execution
       - D) Code smell
     answer: 2
@@ -82,12 +82,12 @@ questions:
     type: single
     q: "Fault chain order:"
     options:
-      - A) Defect â†’ error â†’ failure
-      - B) Failure â†’ defect â†’ error
-      - C) Error â†’ defect â†’ failure
-      - D) Error â†’ failure â†’ defect
+      - A) Defect → error → failure
+      - B) Failure → defect → error
+      - C) Error → defect → failure
+      - D) Error → failure → defect
     answer: 2
-    hint: Human â†’ artifact â†’ observable.
+    hint: Human → artefact → observable.
     explanation: Standard chain. See [[#Fault Chain]].
   - id: ig-009
     type: single
@@ -105,7 +105,7 @@ questions:
     q: SBTM =
     options:
       - A) System Based Test Mgmt
-      - B) Session-Based Test Management â€” charters, sessions, debriefs
+      - B) Session-Based Test Management — charters, sessions, debriefs
       - C) Static Build Test Mode
       - D) Standard Boundary Test Method
     answer: 1
@@ -139,7 +139,7 @@ questions:
     q: Endurance testing =
     options:
       - A) Stress
-      - B) Soak â€” sustained load to find leaks
+      - B) Soak — sustained load to find leaks
       - C) Spike
       - D) Smoke
     answer: 1

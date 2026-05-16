@@ -2,16 +2,16 @@ lesson: istqb-foundation-ctfl
 tasks:
   - id: ifc-t001
     type: fill_blank
-    q: "Fill: order of fault chain = ______ â†’ ______ â†’ ______."
-    answer: error â†’ defect â†’ failure
-    hint: Human, artifact, observable.
+    q: "Fill: order of fault chain = ______ → ______ → ______."
+    answer: error → defect → failure
+    hint: Human, artefact, observable.
     explanation: Common exam wording trap. See [[#Key Vocabulary (Glossary Highlights)]].
   - id: ifc-t002
     type: fill_blank
-    q: "Task: For age input 18â€“65, list BVA test values (3-value method)."
+    q: "Task: For age input 18–65, list BVA test values (3-value method)."
     answer: "17, 18, 19 (lower); 64, 65, 66 (upper). Plus EP partitions: invalid
-      <18, valid 18â€“65, invalid >65."
-    hint: Â±1 around boundary.
+      <18, valid 18–65, invalid >65."
+    hint: ±1 around boundary.
     explanation: Standard BVA exercise. See [[#Black-box Techniques]].
   - id: ifc-t003
     type: fill_blank

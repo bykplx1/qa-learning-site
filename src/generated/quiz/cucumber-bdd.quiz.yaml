@@ -134,7 +134,7 @@ questions:
     answer: 1
     hint: Decorators.
     explanation: pytest-bdd integrates pytest fixtures + Gherkin. See [[#Step
-      Definitions (Python â€” pytest-bdd)]].
+      Definitions (Python — pytest-bdd)]].
   - id: cb-013
     type: single
     q: "Anti-pattern in BDD:"
@@ -184,7 +184,7 @@ questions:
     q: "Best practice scenario length:"
     options:
       - A) 30+ steps
-      - B) â‰¤ ~7 steps
+      - B) ≤ ~7 steps
       - C) Always 1
       - D) None
     answer: 1

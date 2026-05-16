@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QA Learning Site — Hi-fi prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..500&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<style>
+  /* page-level background to tone with the canvas */
+  body { background: #f0eee9; }
+  /* Mark a frame as a slide/screen for comment context */
+  [data-screen-label] { isolation: isolate; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="home.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="extras.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+function App() {
+  return (
+    <DesignCanvas
+      title="QA Learning Site"
+      subtitle="v1 read-only · v2 auth + tracking · v3 exam mode + a11y/perf gates"
+    >
+      <DCSection id="anchor" title="Public site" subtitle="The unauthenticated entry — what a recruiter or new visitor lands on">
+        <DCArtboard id="home" label="01 · Home / curriculum index" width={1280} height={1480}>
+          <div data-screen-label="01 Home"><Home/></div>
+        </DCArtboard>
+        <DCArtboard id="search" label="02 · ⌘K search · Pagefind" width={1280} height={820}>
+          <div data-screen-label="02 Search"><SearchOverlay/></div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="reading" title="Lesson reader" subtitle="Editorial + technical — TOC, breadcrumb, wikilink hover preview">
+        <DCArtboard id="lesson" label="03 · Lesson · Testing Principles" width={1280} height={1320}>
+          <div data-screen-label="03 Lesson"><Lesson/></div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="quizzing" title="Quiz & exam runners" subtitle="Practice mode (instant feedback) and CTFL exam mode (timed, blind)">
+        <DCArtboard id="quiz" label="04 · Practice quiz · mid-attempt" width={1280} height={1100}>
+          <div data-screen-label="04 Quiz · practice"><Quiz/></div>
+        </DCArtboard>
+        <DCArtboard id="exam" label="05 · Exam mode · timed · dark" width={1280} height={820}>
+          <div data-screen-label="05 Exam · in progress"><Exam/></div>
+        </DCArtboard>
+        <DCArtboard id="exam-summary" label="06 · Exam summary · post-submit" width={1280} height={1480}>
+          <div data-screen-label="06 Exam · summary"><ExamSummary/></div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="logged-in" title="Logged-in surfaces" subtitle="v2 — better-auth + Drizzle + Postgres. Streak, heatmap, accuracy, portfolio.">
+        <DCArtboard id="profile" label="07 · Profile · /me" width={1280} height={1320}>
+          <div data-screen-label="07 Profile"><Profile/></div>
+        </DCArtboard>
+        <DCArtboard id="build" label="08 · Build · project briefs" width={1280} height={1500}>
+          <div data-screen-label="08 Build"><Build/></div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCPostIt x={40} y={20}>
+        Static-rendered Astro · MDX lessons + YAML quizzes · session-storage for anon, Postgres + better-auth once signed in.
+      </DCPostIt>
+      <DCPostIt x={1320} y={20} color="#dbe6c5">
+        Visual language: warm-paper background, Newsreader serif for editorial weight, JetBrains Mono for QA-flavoured meta. One accent (coral) reserved for "find a defect" semantics — wrong answers, weak topics, errors.
+      </DCPostIt>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

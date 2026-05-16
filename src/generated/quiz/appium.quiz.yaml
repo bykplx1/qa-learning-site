@@ -67,7 +67,7 @@ questions:
       - D) `driver.context = web`
     answer: 1
     hint: Contexts API.
-    explanation: Native â†” WebView via context switch. See [[#Hybrid + WebView]].
+    explanation: Native ↔ WebView via context switch. See [[#Hybrid + WebView]].
   - id: a-007
     type: single
     q: Appium Inspector =

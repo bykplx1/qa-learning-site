@@ -43,7 +43,7 @@ questions:
       - D) Use prose paragraphs
     answer: 1
     hint: Atomicity.
-    explanation: One action = unambiguous repro. See [[#Steps to Reproduce â€” Rules]].
+    explanation: One action = unambiguous repro. See [[#Steps to Reproduce — Rules]].
   - id: br-005
     type: single
     q: Heisenbug =
@@ -101,11 +101,11 @@ questions:
     explanation: State machine per defect. See [[#Common Anti-Patterns]].
   - id: br-010
     type: single
-    q: "Defect cost curve â€” prod vs requirements:"
+    q: "Defect cost curve — prod vs requirements:"
     options:
       - A) Same
-      - B) ~100â€“1000Ã— more in prod
-      - C) 2Ã— more
+      - B) ~100–1000× more in prod
+      - C) 2× more
       - D) Cheaper in prod
     answer: 1
     hint: Boehm's data.
@@ -123,7 +123,7 @@ questions:
     explanation: Strips noise from repro. See [[#Reproduction Aids]].
   - id: br-012
     type: single
-    q: "Reopen rate â€” high indicates:"
+    q: "Reopen rate — high indicates:"
     options:
       - A) Strong verification
       - B) Poor verification or premature close
@@ -181,7 +181,7 @@ questions:
     q: "Frequency 1/10 means:"
     options:
       - A) Always reproduces
-      - B) Intermittent â€” note conditions
+      - B) Intermittent — note conditions
       - C) Cannot reproduce
       - D) Never seen
     answer: 1
@@ -205,7 +205,7 @@ questions:
       - A) Title only
       - B) Evidence section, with timestamp + timezone
       - C) Tags
-      - D) Skip â€” devs don't need
+      - D) Skip — devs don't need
     answer: 1
     hint: Trace lookup.
     explanation: Lets dev pull server logs. See [[#Evidence Hierarchy]].

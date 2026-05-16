@@ -117,13 +117,13 @@ questions:
     type: single
     q: "CVSS High range:"
     options:
-      - A) 0.1â€“3.9
-      - B) 4.0â€“6.9
-      - C) 7.0â€“8.9
+      - A) 0.1–3.9
+      - B) 4.0–6.9
+      - C) 7.0–8.9
       - D) 9.0+
     answer: 2
     hint: High vs Critical.
-    explanation: High = 7.0â€“8.9; Critical = 9.0+. See [[#Risk Scoring (CVSS)]].
+    explanation: High = 7.0–8.9; Critical = 9.0+. See [[#Risk Scoring (CVSS)]].
   - id: st-012
     type: single
     q: "SSRF means:"
@@ -163,10 +163,10 @@ questions:
     type: single
     q: "Vertical privilege escalation:"
     options:
-      - A) User â†’ other user
-      - B) User â†’ admin
-      - C) Admin â†’ user
-      - D) Read â†’ write
+      - A) User → other user
+      - B) User → admin
+      - C) Admin → user
+      - D) Read → write
     answer: 1
     hint: Role uplift.
     explanation: Vertical = gain higher role; horizontal = peer access. See [[#Auth

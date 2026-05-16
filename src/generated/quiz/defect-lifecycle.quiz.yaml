@@ -34,7 +34,7 @@ questions:
       - D) Closed
     answer: 1
     hint: Awaits retest.
-    explanation: Fixed code in test env â†’ Ready for Test. See [[#Standard States]].
+    explanation: Fixed code in test env → Ready for Test. See [[#Standard States]].
   - id: dl-004
     type: single
     q: "Reopened state means:"
@@ -74,9 +74,9 @@ questions:
     type: single
     q: "Defect Density formula:"
     options:
-      - A) bugs Ã— KLOC
+      - A) bugs × KLOC
       - B) bugs / KLOC or bugs / module
-      - C) bugs âˆ’ KLOC
+      - C) bugs − KLOC
       - D) prod bugs only
     answer: 1
     hint: Per unit code.
@@ -94,7 +94,7 @@ questions:
     explanation: High DRE = strong pre-prod catch rate. See [[#Defect Metrics]].
   - id: dl-009
     type: single
-    q: "Reopen rate spikes â€” most likely cause:"
+    q: "Reopen rate spikes — most likely cause:"
     options:
       - A) Too many tests
       - B) Poor fix quality or unclear repro steps
@@ -182,7 +182,7 @@ questions:
       - D) Slow tooltip
     answer: 1
     hint: Blocks core flow.
-    explanation: Crash prevents use â†’ critical. See [[#Severity Levels]].
+    explanation: Crash prevents use → critical. See [[#Severity Levels]].
   - id: dl-017
     type: single
     q: "Defect Leakage measures:"

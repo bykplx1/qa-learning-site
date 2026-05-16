@@ -10,8 +10,8 @@ questions:
       - D) Performance
     answer: 2
     hint: Many, fast, cheap.
-    explanation: Unit tests form base â€” most numerous, fastest, isolated. See
-      [[#The Layers]].
+    explanation: Unit tests form base — most numerous, fastest, isolated. See [[#The
+      Layers]].
   - id: tp-002
     type: single
     q: "Top of pyramid:"
@@ -106,7 +106,7 @@ questions:
       - D) Days
     answer: 2
     hint: Sub-second.
-    explanation: Units run in ms â€” enables thousands per CI run. See [[#The Layers]].
+    explanation: Units run in ms — enables thousands per CI run. See [[#The Layers]].
   - id: tp-010
     type: single
     q: "Best candidate to replace flaky UI test:"
@@ -158,7 +158,7 @@ questions:
     q: "Why E2E flake harmful:"
     options:
       - A) Forces faster CI
-      - B) Erodes trust â†’ ignored failures
+      - B) Erodes trust → ignored failures
       - C) Improves coverage
       - D) Lowers cost
     answer: 1

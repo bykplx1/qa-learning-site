@@ -8,8 +8,8 @@ tasks:
     explanation: Required for real load runs. See [[#Basic HTTP Test (CLI)]].
   - id: jk-t002
     type: fill_blank
-    q: "Task: Write k6 options block for ramp 0â†’100 VUs over 1m, hold 3m, ramp
-      down 1m."
+    q: "Task: Write k6 options block for ramp 0→100 VUs over 1m, hold 3m, ramp down
+      1m."
     answer: |-
       ```js
       export const options = {

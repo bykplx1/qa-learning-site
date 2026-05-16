@@ -11,7 +11,7 @@ questions:
     answer: 1
     hint: Three steps.
     explanation: Red (fail), Green (pass), Refactor (clean) is canonical TDD loop.
-      See [[#TDD â€” Red, Green, Refactor]].
+      See [[#TDD — Red, Green, Refactor]].
   - id: bta-002
     type: single
     q: "BDD scenario language:"
@@ -34,7 +34,7 @@ questions:
     answer: 1
     hint: Spec by example.
     explanation: ATDD aligns team on "done" via tests-first acceptance. See [[#ATDD
-      â€” Acceptance Test-Driven Development]].
+      — Acceptance Test-Driven Development]].
   - id: bta-004
     type: single
     q: "BDD coined by:"
@@ -45,7 +45,7 @@ questions:
       - D) Cem Kaner
     answer: 1
     hint: ~2006.
-    explanation: Dan North introduced BDD as TDD evolution. See [[#BDD â€”
+    explanation: Dan North introduced BDD as TDD evolution. See [[#BDD —
       Behavior-Driven Development]].
   - id: bta-005
     type: single
@@ -57,7 +57,7 @@ questions:
       - D) Rewrite all code
     answer: 1
     hint: Clean while safe.
-    explanation: Tests pin behavior; refactor improves design. See [[#TDD â€” Red,
+    explanation: Tests pin behavior; refactor improves design. See [[#TDD — Red,
       Green, Refactor]].
   - id: bta-006
     type: single
@@ -203,7 +203,7 @@ questions:
     answer: 1
     hint: Format flexible.
     explanation: ATDD focuses on examples; format varies (Fit, Concordion, Gherkin).
-      See [[#ATDD â€” Acceptance Test-Driven Development]].
+      See [[#ATDD — Acceptance Test-Driven Development]].
   - id: bta-019
     type: single
     q: "BDD step explosion happens when:"
@@ -217,7 +217,7 @@ questions:
     explanation: Lack of step library bloats maintenance. See [[#Pitfalls]].
   - id: bta-020
     type: single
-    q: "BDD âŠ† ATDD relationship:"
+    q: "BDD ⊆ ATDD relationship:"
     options:
       - A) BDD replaces ATDD
       - B) BDD = ATDD with structured natural-language scenarios

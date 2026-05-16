@@ -10,7 +10,7 @@ questions:
       - D) Pre-cached
     answer: 1
     hint: Sampling.
-    explanation: Models sample from distribution â†’ varying outputs. See [[#What
+    explanation: Models sample from distribution → varying outputs. See [[#What
       Makes AI Different]].
   - id: at-002
     type: single
@@ -39,7 +39,7 @@ questions:
     q: Concept drift =
     options:
       - A) New columns
-      - B) Xâ†’Y relationship changes
+      - B) X→Y relationship changes
       - C) Schema mismatch
       - D) Cache miss
     answer: 1

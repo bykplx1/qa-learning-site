@@ -22,8 +22,8 @@ questions:
       - D) None
     answer: 1
     hint: Re-run same result.
-    explanation: PUT replaces resource â€” repeat = same state. POST creates new
-      each call. See [[#Test Categories]].
+    explanation: PUT replaces resource — repeat = same state. POST creates new each
+      call. See [[#Test Categories]].
   - id: at-003
     type: single
     q: 'Status code for "rate limited":'
@@ -121,8 +121,8 @@ questions:
     type: single
     q: "Negative API test example:"
     options:
-      - A) Valid login â†’ 200
-      - B) Missing required field â†’ 400
+      - A) Valid login → 200
+      - B) Missing required field → 400
       - C) Healthy ping
       - D) Schema valid
     answer: 1
@@ -138,7 +138,7 @@ questions:
       - C) UI snapshot
       - D) Mock browser
     answer: 1
-    hint: Providerâ€“consumer contracts.
+    hint: Provider–consumer contracts.
     explanation: Pact pins integration shape between services. See [[#Tools]].
   - id: at-013
     type: single
@@ -150,7 +150,7 @@ questions:
       - D) 404
     answer: 2
     hint: No Content.
-    explanation: 204 signals success with empty body â€” common for DELETE. See
+    explanation: 204 signals success with empty body — common for DELETE. See
       [[#HTTP Status Quick Map]].
   - id: at-014
     type: single
@@ -174,7 +174,7 @@ questions:
       - D) IP only
     answer: 1
     hint: Mutual TLS.
-    explanation: Both sides present certs â€” strong identity. See [[#Auth Patterns]].
+    explanation: Both sides present certs — strong identity. See [[#Auth Patterns]].
   - id: at-016
     type: single
     q: "502 vs 504:"
@@ -208,7 +208,7 @@ questions:
       - D) Browser
     answer: 1
     hint: YAML/JSON spec.
-    explanation: OpenAPI describes endpoints, schemas â€” basis for contract
+    explanation: OpenAPI describes endpoints, schemas — basis for contract
       validation. See [[#Test Categories]].
   - id: at-019
     type: single

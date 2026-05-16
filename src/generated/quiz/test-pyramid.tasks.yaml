@@ -12,12 +12,12 @@ tasks:
     q: 'Task: Login flow has flaky Selenium test for "wrong password shows error".
       Suggest a faster, more stable replacement layer.'
     answer: >-
-      - Move check to API test: `POST /login` with bad creds â†’ expect 401 +
+      - Move check to API test: `POST /login` with bad creds → expect 401 +
       error code in body.
 
       - Keep one E2E for the happy login path only.
     hint: Push down.
-    explanation: Logic verifiable at API; UI test just renders message â€” split
+    explanation: Logic verifiable at API; UI test just renders message — split
       concerns. See [[#Practical Rules]].
   - id: tp-t003
     type: fill_blank

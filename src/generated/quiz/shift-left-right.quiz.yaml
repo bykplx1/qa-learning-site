@@ -194,7 +194,7 @@ questions:
       - D) 1:0.1
     answer: 2
     hint: Two orders of magnitude.
-    explanation: Industry studies show ~100Ã— cost increase prod vs reqs. See
+    explanation: Industry studies show ~100× cost increase prod vs reqs. See
       [[#Cost-of-Defect Curve]].
   - id: slr-018
     type: single

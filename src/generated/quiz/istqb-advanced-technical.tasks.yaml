@@ -18,9 +18,9 @@ tasks:
       | 3 | T | F | F | F | (B flips when C=F) |
       | 4 | T | F | T | T | (C flips when B=F) |
 
-      A: 1â†’2 isolates A.
-      B: 1â†’3 isolates B (C constant F).
-      C: 3â†’4 isolates C (B constant F).
+      A: 1→2 isolates A.
+      B: 1→3 isolates B (C constant F).
+      C: 3→4 isolates C (B constant F).
     hint: Isolate each atom.
     explanation: Independence requirement. See [[#MC/DC Example]].
   - id: iat-t003

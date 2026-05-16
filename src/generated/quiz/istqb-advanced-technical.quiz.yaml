@@ -16,10 +16,10 @@ questions:
     type: single
     q: "Cyclomatic complexity formula:"
     options:
-      - A) E âˆ’ N
-      - B) E âˆ’ N + 2
-      - C) N âˆ’ E
-      - D) Decisions Ã— 2
+      - A) E − N
+      - B) E − N + 2
+      - C) N − E
+      - D) Decisions × 2
     answer: 1
     hint: Edges, nodes.
     explanation: McCabe's formula. See [[#Cyclomatic Complexity (V(G))]].
@@ -179,13 +179,13 @@ questions:
       - D) Path
     answer: 1
     hint: Weakest bar.
-    explanation: Lines â‰  all paths. See [[#Coverage Hierarchy (loose order)]].
+    explanation: Lines ≠ all paths. See [[#Coverage Hierarchy (loose order)]].
   - id: iat-017
     type: single
     q: "Cyclomatic complexity > 10 implies:"
     options:
       - A) Good code
-      - B) Refactor â€” testability/maintainability concern
+      - B) Refactor — testability/maintainability concern
       - C) High coverage
       - D) Performance issue
     answer: 1

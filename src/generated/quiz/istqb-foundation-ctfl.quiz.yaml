@@ -10,7 +10,7 @@ questions:
       - D) Pesticide paradox
     answer: 2
     hint: Inverse principle.
-    explanation: Principle 1 â€” testing shows presence, not absence. See [[#Seven
+    explanation: Principle 1 — testing shows presence, not absence. See [[#Seven
       Principles]].
   - id: ifc-002
     type: single
@@ -33,7 +33,7 @@ questions:
       - C) All values
       - D) Random values
     answer: 1
-    hint: Â±1 around boundary.
+    hint: ±1 around boundary.
     explanation: 3-value BVA covers each side. See [[#Black-box Techniques]].
   - id: ifc-004
     type: single
@@ -50,12 +50,12 @@ questions:
     type: single
     q: "Order of fault chain:"
     options:
-      - A) Failure â†’ defect â†’ error
-      - B) Error â†’ defect â†’ failure
-      - C) Defect â†’ error â†’ failure
-      - D) Failure â†’ error â†’ defect
+      - A) Failure → defect → error
+      - B) Error → defect → failure
+      - C) Defect → error → failure
+      - D) Failure → error → defect
     answer: 1
-    hint: Human â†’ code â†’ observable.
+    hint: Human → code → observable.
     explanation: Mistake creates defect, defect causes failure. See [[#Key
       Vocabulary (Glossary Highlights)]].
   - id: ifc-006
@@ -84,7 +84,7 @@ questions:
     type: single
     q: Risk =
     options:
-      - A) Likelihood Ã— impact
+      - A) Likelihood × impact
       - B) Severity alone
       - C) Defect count
       - D) Test count
@@ -123,8 +123,8 @@ questions:
       - C) Planning
       - D) Completion
     answer: 1
-    hint: Conditions â†’ cases.
-    explanation: Analysis â†’ Design â†’ Implementation. See [[#Test Process (generic)]].
+    hint: Conditions → cases.
+    explanation: Analysis → Design → Implementation. See [[#Test Process (generic)]].
   - id: ifc-012
     type: single
     q: "Pesticide paradox solution:"
@@ -168,13 +168,13 @@ questions:
       - D) Smoke
     answer: 1
     hint: End-to-end.
-    explanation: Component â†’ Integration â†’ System â†’ Acceptance. See [[#Test Levels]].
+    explanation: Component → Integration → System → Acceptance. See [[#Test Levels]].
   - id: ifc-016
     type: single
     q: "Risk-based testing prioritizes:"
     options:
       - A) Easy areas
-      - B) High likelihood Ã— impact areas first
+      - B) High likelihood × impact areas first
       - C) Low risk
       - D) Random
     answer: 1
@@ -212,7 +212,7 @@ questions:
       - C) Retirement
       - D) New product launch
     answer: 3
-    hint: Maintenance â‰  greenfield.
+    hint: Maintenance ≠ greenfield.
     explanation: Maintenance applies to existing. See [[#Maintenance Triggers]].
   - id: ifc-020
     type: single
@@ -223,7 +223,7 @@ questions:
       - C) 90 min
       - D) 120 min
     answer: 1
-    hint: 1.5 min Ã— 40.
+    hint: 1.5 min × 40.
     explanation: |-
       60 minutes total. See [[00-ISTQB-Roadmap]].
 

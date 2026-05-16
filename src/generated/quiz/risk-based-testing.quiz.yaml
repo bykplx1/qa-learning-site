@@ -5,13 +5,13 @@ questions:
     q: Risk = ?
     options:
       - A) Likelihood + Impact
-      - B) Likelihood Ã— Impact
+      - B) Likelihood × Impact
       - C) Bug count / day
       - D) Coverage %
     answer: 1
     hint: Product, not sum.
     explanation: Combined product weighs both probability + consequence. See [[#Risk
-      = Likelihood Ã— Impact]].
+      = Likelihood × Impact]].
   - id: rbt-002
     type: single
     q: "Primary purpose of RBT:"
@@ -80,7 +80,7 @@ questions:
     answer: 1
     hint: Source-side.
     explanation: Complexity, churn, novelty drive bug probability. See [[#Risk =
-      Likelihood Ã— Impact]].
+      Likelihood × Impact]].
   - id: rbt-008
     type: single
     q: "Impact factor:"
@@ -92,7 +92,7 @@ questions:
     answer: 1
     hint: Consequence.
     explanation: Impact measures cost if defect manifests. See [[#Risk = Likelihood
-      Ã— Impact]].
+      × Impact]].
   - id: rbt-009
     type: single
     q: "Risk-based test plan should be:"
@@ -119,7 +119,7 @@ questions:
       See [[#Pitfalls]].
   - id: rbt-011
     type: single
-    q: "Risk score 25 implies (5Ã—5 scale):"
+    q: "Risk score 25 implies (5×5 scale):"
     options:
       - A) Lowest priority
       - B) Critical, max test effort
@@ -127,7 +127,7 @@ questions:
       - D) Same as 1
     answer: 1
     hint: Top right corner.
-    explanation: Max likelihood Ã— impact = critical priority. See [[#Risk Matrix]].
+    explanation: Max likelihood × impact = critical priority. See [[#Risk Matrix]].
   - id: rbt-012
     type: single
     q: "Three amigos contributes to RBT by:"
@@ -145,7 +145,7 @@ questions:
     q: "Best signal for hot risk areas:"
     options:
       - A) Random files
-      - B) High-churn Ã— high-complexity hotspots + defect history
+      - B) High-churn × high-complexity hotspots + defect history
       - C) Newest commits only
       - D) Untouched legacy
     answer: 1

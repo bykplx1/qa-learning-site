@@ -9,7 +9,7 @@ questions:
       - C) Penetration test
       - D) Code review
     answer: 1
-    hint: Wire glow â†’ on/off check.
+    hint: Wire glow → on/off check.
     explanation: Smoke = shallow broad sanity right after build to catch fundamental
       brokenness. See [[#Functional Test Types]].
   - id: tt-002
@@ -113,7 +113,7 @@ questions:
     q: "Compatibility testing matrix typically covers:"
     options:
       - A) Languages only
-      - B) Browser Ã— OS Ã— device
+      - B) Browser × OS × device
       - C) Authors only
       - D) Editors only
     answer: 1
@@ -193,7 +193,7 @@ questions:
       decommission). See [[#Maintenance Testing]].
   - id: tt-017
     type: single
-    q: "Re-test â‰  regression because:"
+    q: "Re-test ≠ regression because:"
     options:
       - A) Re-test rerun all suite, regression rerun one
       - B) Re-test = specific fix; regression = side-effects

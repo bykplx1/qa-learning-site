@@ -27,7 +27,7 @@ questions:
     q: "Q4 of testing quadrants:"
     options:
       - A) Business-facing supporting
-      - B) Technology-facing critiquing â€” perf/sec/reliability
+      - B) Technology-facing critiquing — perf/sec/reliability
       - C) Unit
       - D) Exploratory
     answer: 1
@@ -37,10 +37,10 @@ questions:
     type: single
     q: "TDD cycle:"
     options:
-      - A) Code â†’ test â†’ refactor
-      - B) Red â†’ green â†’ refactor
-      - C) Plan â†’ exec â†’ close
-      - D) Spec â†’ impl â†’ release
+      - A) Code → test → refactor
+      - B) Red → green → refactor
+      - C) Plan → exec → close
+      - D) Spec → impl → release
     answer: 1
     hint: Failing first.
     explanation: Test-first cycle. See [[#In-Sprint Testing Techniques]].
@@ -148,7 +148,7 @@ questions:
     q: "Exploratory session typical length:"
     options:
       - A) 5 min
-      - B) 60â€“120 min charter
+      - B) 60–120 min charter
       - C) 8 hr
       - D) Whole sprint
     answer: 1

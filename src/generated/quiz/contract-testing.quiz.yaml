@@ -177,7 +177,7 @@ questions:
       - D) Consumer expectation
     answer: 1
     hint: Shape vs behavior.
-    explanation: Contracts pin shape only â€” flow scenarios still need E2E. See
+    explanation: Contracts pin shape only — flow scenarios still need E2E. See
       [[#Pitfalls]].
   - id: ct-016
     type: single

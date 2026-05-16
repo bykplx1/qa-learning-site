@@ -10,7 +10,7 @@ questions:
       - D) The Mythical Man-Month
     answer: 1
     hint: 293 lessons.
-    explanation: Foundational, field-tested. See [[#Tier 1 â€” Foundational (Read First)]].
+    explanation: Foundational, field-tested. See [[#Tier 1 — Foundational (Read First)]].
   - id: rb-002
     type: single
     q: "xUnit Test Patterns covers:"
@@ -21,7 +21,7 @@ questions:
       - D) UI design
     answer: 1
     hint: Smells + cures.
-    explanation: Bible for automation patterns. See [[#Tier 3 â€” Automation]].
+    explanation: Bible for automation patterns. See [[#Tier 3 — Automation]].
   - id: rb-003
     type: single
     q: "Specification by Example author:"
@@ -32,7 +32,7 @@ questions:
       - D) Boris Beizer
     answer: 1
     hint: Living documentation.
-    explanation: BDD foundation. See [[#Tier 2 â€” Test Design + Strategy]].
+    explanation: BDD foundation. See [[#Tier 2 — Test Design + Strategy]].
   - id: rb-004
     type: single
     q: "Working Effectively with Legacy Code introduces:"
@@ -43,7 +43,7 @@ questions:
       - D) Test pyramid
     answer: 1
     hint: Place to alter behavior without editing.
-    explanation: Make untestable testable. See [[#Tier 3 â€” Automation]].
+    explanation: Make untestable testable. See [[#Tier 3 — Automation]].
   - id: rb-005
     type: single
     q: "Accelerate book metric framework:"
@@ -54,7 +54,7 @@ questions:
       - D) CMMI
     answer: 1
     hint: Lead time, deploy freq, MTTR, change-fail.
-    explanation: Quality + speed link. See [[#Tier 8 â€” Modern / Emerging]].
+    explanation: Quality + speed link. See [[#Tier 8 — Modern / Emerging]].
   - id: rb-006
     type: single
     q: "Explore It! by:"
@@ -65,7 +65,7 @@ questions:
       - D) Beizer
     answer: 0
     hint: Charters + heuristics.
-    explanation: Exploratory playbook. See [[#Tier 1 â€” Foundational (Read First)]].
+    explanation: Exploratory playbook. See [[#Tier 1 — Foundational (Read First)]].
   - id: rb-007
     type: single
     q: "SQL Performance Explained focus:"
@@ -76,18 +76,18 @@ questions:
       - D) NoSQL
     answer: 1
     hint: Plan reading.
-    explanation: Practical perf book. See [[#Tier 7 â€” Programming (QA Adjacent)]].
+    explanation: Practical perf book. See [[#Tier 7 — Programming (QA Adjacent)]].
   - id: rb-008
     type: single
     q: "CTAL-TM aligned book:"
     options:
       - A) Vol. 1
-      - B) Vol. 2 â€” Rex Black
+      - B) Vol. 2 — Rex Black
       - C) Vol. 3
       - D) Foundations
     answer: 1
     hint: Test Manager.
-    explanation: Cert-aligned. See [[#Tier 6 â€” ISTQB-Aligned]].
+    explanation: Cert-aligned. See [[#Tier 6 — ISTQB-Aligned]].
   - id: rb-009
     type: single
     q: "Best mindset book on cognitive bias for testers:"
@@ -98,7 +98,7 @@ questions:
       - D) Peopleware
     answer: 1
     hint: Kahneman.
-    explanation: Bias drives bug-finding. See [[#Tier 5 â€” Mindset + Career]].
+    explanation: Bias drives bug-finding. See [[#Tier 5 — Mindset + Career]].
   - id: rb-010
     type: single
     q: "Reading retention rule:"
@@ -120,29 +120,29 @@ questions:
       - D) Manual scripting
     answer: 1
     hint: Google ops.
-    explanation: Informs perf + reliability tests. See [[#Tier 4 â€” Specialty]].
+    explanation: Informs perf + reliability tests. See [[#Tier 4 — Specialty]].
   - id: rb-012
     type: single
     q: "Continuous Delivery main thesis:"
     options:
       - A) Manual gates
-      - B) Pipeline thinking â€” test embedded in deploy chain
+      - B) Pipeline thinking — test embedded in deploy chain
       - C) Cert-driven QA
       - D) Waterfall
     answer: 1
     hint: Deploy = button.
-    explanation: Modern release model. See [[#Tier 3 â€” Automation]].
+    explanation: Modern release model. See [[#Tier 3 — Automation]].
   - id: rb-013
     type: single
     q: "Designing Data-Intensive Applications value to QA:"
     options:
       - A) Replace SQL
-      - B) System internals â€” informs DB/integration tests
+      - B) System internals — informs DB/integration tests
       - C) UI patterns
       - D) Marketing
     answer: 1
     hint: Kleppmann.
-    explanation: Architectural literacy. See [[#Tier 4 â€” Specialty]].
+    explanation: Architectural literacy. See [[#Tier 4 — Specialty]].
   - id: rb-014
     type: single
     q: "Modern Testing Principles authors:"
@@ -153,7 +153,7 @@ questions:
       - D) Kim/Humble
     answer: 1
     hint: Coach trio.
-    explanation: Modern Testing canon. See [[#Tier 5 â€” Mindset + Career]] and
+    explanation: Modern Testing canon. See [[#Tier 5 — Mindset + Career]] and
       [[Career-Path]].
   - id: rb-015
     type: single
@@ -182,7 +182,7 @@ questions:
     q: "Anti-pattern: book hoarding ="
     options:
       - A) Reading too fast
-      - B) Buying â‰  reading
+      - B) Buying ≠ reading
       - C) Lending books
       - D) Annotating
     answer: 1
@@ -209,7 +209,7 @@ questions:
       - D) Kent Beck
     answer: 1
     hint: Recent AI-QA writer.
-    explanation: AI workflows â€” see [[AI-Testing]] and [[#Tier 8 â€” Modern / Emerging]].
+    explanation: AI workflows — see [[AI-Testing]] and [[#Tier 8 — Modern / Emerging]].
   - id: rb-020
     type: single
     q: "How Google Tests Software model roles:"
@@ -221,6 +221,6 @@ questions:
     answer: 1
     hint: Engineer / Engineer-in-Test / Test Manager triad.
     explanation: |-
-      Org structure model. See [[#Tier 2 â€” Test Design + Strategy]].
+      Org structure model. See [[#Tier 2 — Test Design + Strategy]].
 
       ---

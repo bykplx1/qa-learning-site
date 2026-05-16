@@ -32,7 +32,7 @@ questions:
       - D) Ticket comment
     answer: 2
     hint: Visibility + on-call.
-    explanation: Mobilize responders. See [[#Channels â€” Pick the Right One]].
+    explanation: Mobilize responders. See [[#Channels — Pick the Right One]].
   - id: cwd-004
     type: single
     q: '"Behavior not blame" means:'
@@ -49,7 +49,7 @@ questions:
     q: "Disagree-and-commit applies when:"
     options:
       - A) You're the decider
-      - B) You disagreed but lost the call â€” execute anyway
+      - B) You disagreed but lost the call — execute anyway
       - C) Always
       - D) Never
     answer: 1
@@ -79,7 +79,7 @@ questions:
     explanation: Faster ambiguity resolution. See [[#Async vs Sync Decision]].
   - id: cwd-008
     type: single
-    q: "Bug closed w/o retest by dev â€” first move:"
+    q: "Bug closed w/o retest by dev — first move:"
     options:
       - A) Public Slack callout
       - B) Reopen with repro video, calm note
@@ -148,7 +148,7 @@ questions:
     q: "Time-box for pairing session:"
     options:
       - A) Open-ended
-      - B) 45â€“90 min
+      - B) 45–90 min
       - C) 4 hours
       - D) Whole day
     answer: 1
@@ -159,7 +159,7 @@ questions:
     q: "Standup detail level:"
     options:
       - A) Full status
-      - B) Did / will / blockers â€” details in ticket
+      - B) Did / will / blockers — details in ticket
       - C) Skip
       - D) Code review
     answer: 1

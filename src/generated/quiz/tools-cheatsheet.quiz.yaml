@@ -137,7 +137,7 @@ questions:
     q: "Anti-pattern: Postman as source of truth ="
     options:
       - A) Best practice
-      - B) Not version-controlled â€” drift risk
+      - B) Not version-controlled — drift risk
       - C) Required
       - D) Faster CI
     answer: 1

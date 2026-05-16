@@ -158,7 +158,7 @@ questions:
       - D) `Sleep`
     answer: 1
     hint: Conditioned wait.
-    explanation: Polls until condition or timeout â€” beats `sleep`. See [[#Selenium
+    explanation: Polls until condition or timeout — beats `sleep`. See [[#Selenium
       (browser)]].
   - id: jfq-015
     type: single
@@ -228,8 +228,8 @@ questions:
     answer: 1
     hint: Resource leak.
     explanation: >-
-      Each test leaves browser/driver alive â†’ flaky CI. See [[#Common Bugs
-      Java Specific]].
+      Each test leaves browser/driver alive → flaky CI. See [[#Common Bugs Java
+      Specific]].
 
 
       ---

@@ -38,7 +38,7 @@ questions:
     q: "k6 threshold failure effect:"
     options:
       - A) Warning only
-      - B) Non-zero exit code â†’ CI fails
+      - B) Non-zero exit code → CI fails
       - C) Logged
       - D) Continues
     answer: 1

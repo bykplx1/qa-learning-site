@@ -210,7 +210,7 @@ New to Cluster 2:
 ## 9. File map
 
 ```
-revamp-doc/revamp-knowledge/
+revamp-knowledge/
 ├── cluster-1-foundations.md
 ├── cluster-2-test-design-strategy.md                            # this file
 ├── cluster-1-foundations/

@@ -10,7 +10,7 @@ questions:
       - D) Works on objects only
     answer: 1
     hint: Strict equality.
-    explanation: '`==` coerces (`"" == 0` true) â€” bug magnet. See [[#Equality]].'
+    explanation: '`==` coerces (`"" == 0` true) — bug magnet. See [[#Equality]].'
   - id: jtfq-002
     type: single
     q: "`const` array can be:"

@@ -10,7 +10,7 @@ questions:
       - D) Random
     answer: 2
     hint: Letter T.
-    explanation: Most marketable shape. See [[#Skill Stack â€” T-Shaped]].
+    explanation: Most marketable shape. See [[#Skill Stack — T-Shaped]].
   - id: cp-002
     type: single
     q: "Largest single-step raise typically:"
@@ -54,7 +54,7 @@ questions:
       - D) Setup/Test/Assert/Restore
     answer: 0
     hint: Behavioral interview frame.
-    explanation: Structures answers. See [[#Interview Stories â€” STAR]].
+    explanation: Structures answers. See [[#Interview Stories — STAR]].
   - id: cp-006
     type: single
     q: "Modern Testing principle 1:"
@@ -81,7 +81,7 @@ questions:
       Not Substance)]].
   - id: cp-008
     type: single
-    q: "Best 90-day day-1â€“30 focus:"
+    q: "Best 90-day day-1–30 focus:"
     options:
       - A) Ship a refactor
       - B) Read, ride-along, repro existing bugs, map systems
@@ -106,7 +106,7 @@ questions:
     q: "Pivot easiest from QA to:"
     options:
       - A) Director
-      - B) DevOps/SRE â€” test infra carries over
+      - B) DevOps/SRE — test infra carries over
       - C) HR
       - D) Sales
     answer: 1
@@ -162,7 +162,7 @@ questions:
     q: "Quality Coach role belongs to:"
     options:
       - A) Strict gatekeeper
-      - B) Modern Testing â€” coach team to own quality
+      - B) Modern Testing — coach team to own quality
       - C) Manual-only
       - D) Director track
     answer: 1

@@ -39,7 +39,7 @@ questions:
     q: "Branch coverage vs line coverage:"
     options:
       - A) Same
-      - B) Branch covers conditional paths â€” more informative
+      - B) Branch covers conditional paths — more informative
       - C) Line is stricter
       - D) Branch only frontend
     answer: 1
@@ -110,7 +110,7 @@ questions:
       - D) Plugin needed
     answer: 1
     hint: Goodhart's law.
-    explanation: Coverage â‰  quality. See [[#Anti-patterns]].
+    explanation: Coverage ≠ quality. See [[#Anti-patterns]].
   - id: tr-011
     type: single
     q: "SARIF format use:"
@@ -149,7 +149,7 @@ questions:
     q: "Reports stored as CI artifact downside:"
     options:
       - A) Slow
-      - B) Expire â€” no long-term history
+      - B) Expire — no long-term history
       - C) Insecure
       - D) Costly
     answer: 1
@@ -171,7 +171,7 @@ questions:
     q: "Retries hiding flakes silently:"
     options:
       - A) Best practice
-      - B) Anti-pattern â€” pass count masks instability
+      - B) Anti-pattern — pass count masks instability
       - C) Required
       - D) Helps coverage
     answer: 1
@@ -193,7 +193,7 @@ questions:
     q: "Owner mapping value:"
     options:
       - A) Audit
-      - B) Failing tests route to code owner â†’ faster fix
+      - B) Failing tests route to code owner → faster fix
       - C) Permissions
       - D) Compliance
     answer: 1

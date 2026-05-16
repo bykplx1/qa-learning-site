@@ -6,7 +6,7 @@ tasks:
       called the _______."
     answer: Traceability Matrix (RTM)
     hint: Coverage map.
-    explanation: RTM links reqs â†” cases â†” defects. See [[#Traceability Matrix (RTM)]].
+    explanation: RTM links reqs ↔ cases ↔ defects. See [[#Traceability Matrix (RTM)]].
   - id: td-t002
     type: fill_blank
     q: "Fill: Conditions that must be satisfied before testing begins are called
@@ -27,9 +27,9 @@ tasks:
 
       - Test Data: user@x.com / new password "N3wPass!"
 
-      - Steps: 1) /login â†’ click "Forgot password" 2) enter email â†’ submit
-      3) open email â†’ click reset link 4) enter new password twice â†’ submit
-      5) login with new password
+      - Steps: 1) /login → click "Forgot password" 2) enter email → submit 3)
+      open email → click reset link 4) enter new password twice → submit 5)
+      login with new password
 
       - Expected: step 2 shows "check email" toast; step 3 link opens reset
       form; step 4 redirects to /login with success banner; step 5 redirects to

@@ -5,7 +5,7 @@ tasks:
     q: "Fill: TDD's three-step loop is _______, _______, _______."
     answer: Red, Green, Refactor
     hint: Fail, pass, clean.
-    explanation: Canonical TDD micro-cycle. See [[#TDD â€” Red, Green, Refactor]].
+    explanation: Canonical TDD micro-cycle. See [[#TDD — Red, Green, Refactor]].
   - id: bta-t002
     type: fill_blank
     q: 'Task: Write a Gherkin scenario for "user with locked account cannot log
@@ -28,4 +28,4 @@ tasks:
     answer: Dan North
     hint: ~2006 article.
     explanation: Dan North reframed TDD vocabulary into behavior-centric BDD. See
-      [[#BDD â€” Behavior-Driven Development]].
+      [[#BDD — Behavior-Driven Development]].

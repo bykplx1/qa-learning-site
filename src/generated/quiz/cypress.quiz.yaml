@@ -87,7 +87,7 @@ questions:
       - D) Browser reset
     answer: 1
     hint: Debug aid.
-    explanation: Hover commands â†’ DOM snapshot. See [[#Time Travel]].
+    explanation: Hover commands → DOM snapshot. See [[#Time Travel]].
   - id: c-009
     type: single
     q: '`cy.get("h1").should("be.visible")` does:'
@@ -217,7 +217,7 @@ questions:
     q: "Default reason E2E tests considered slow in Cypress:"
     options:
       - A) JS
-      - B) Real browser, real network â€” but Cypress fast inside browser;
+      - B) Real browser, real network — but Cypress fast inside browser;
         perceived slow when not stubbing
       - C) Always slower than Selenium
       - D) GUI overhead

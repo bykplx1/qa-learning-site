@@ -10,10 +10,10 @@ tasks:
     type: fill_blank
     q: "Task: List the four CTAL streams and their target audiences."
     answer: |-
-      - CTAL-TM â†’ test managers (strategy, risk, metrics).
-      - CTAL-TA â†’ analyst (domain-driven test design).
-      - CTAL-TTA â†’ technical analyst (perf, security basics, code-based).
-      - CTAL-TAE â†’ automation engineer (automation architecture).
+      - CTAL-TM → test managers (strategy, risk, metrics).
+      - CTAL-TA → analyst (domain-driven test design).
+      - CTAL-TTA → technical analyst (perf, security basics, code-based).
+      - CTAL-TAE → automation engineer (automation architecture).
     hint: TM, TA, TTA, TAE.
     explanation: Lane choice drives study plan. See [[#Advanced Level (CTAL)]].
   - id: ir-t003
@@ -21,4 +21,4 @@ tasks:
     q: "Fill: Specialist cert for AI/ML system testing = ______."
     answer: CT-AI
     hint: Specialist tier.
-    explanation: Hot specialist for 2024â€“2026. See [[#Specialist (Hot 2024â€“2026)]].
+    explanation: Hot specialist for 2024–2026. See [[#Specialist (Hot 2024–2026)]].

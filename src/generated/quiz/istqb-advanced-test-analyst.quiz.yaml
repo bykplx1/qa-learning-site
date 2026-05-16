@@ -144,7 +144,7 @@ questions:
       - C) Aesthetics of UI mockup
       - D) Completeness
     answer: 2
-    hint: Wrong artifact.
+    hint: Wrong artefact.
     explanation: Aesthetics is design review, not reqs. See [[#Reviews from TA
       Perspective]].
   - id: iata-014
@@ -207,7 +207,7 @@ questions:
     q: Boundary off-by-one =
     options:
       - A) Type error
-      - B) Inclusive/exclusive boundary mistake (e.g., < vs â‰¤)
+      - B) Inclusive/exclusive boundary mistake (e.g., < vs ≤)
       - C) Floating-point
       - D) Race condition
     answer: 1

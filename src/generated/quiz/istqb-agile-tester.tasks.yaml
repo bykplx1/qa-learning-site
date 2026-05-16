@@ -8,10 +8,10 @@ tasks:
     explanation: Behavior spec template. See [[#In-Sprint Testing Techniques]].
   - id: iat-t002
     type: fill_blank
-    q: "Task: Write a DoD checklist (â‰¥6 items) for a new payment-flow story."
+    q: "Task: Write a DoD checklist (≥6 items) for a new payment-flow story."
     answer: |-
       - [ ] Code reviewed and merged
-      - [ ] Unit tests added, â‰¥80% coverage on payment module
+      - [ ] Unit tests added, ≥80% coverage on payment module
       - [ ] Integration test against sandbox PSP green
       - [ ] Acceptance criteria validated by tester
       - [ ] No critical/major open defects

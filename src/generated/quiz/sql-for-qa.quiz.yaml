@@ -155,7 +155,7 @@ questions:
     options:
       - A) min(left, right)
       - B) max(left, right)
-      - C) left Ã— right (cartesian)
+      - C) left × right (cartesian)
       - D) sum
     answer: 2
     hint: Cartesian.

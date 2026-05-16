@@ -26,11 +26,11 @@ tasks:
       - Cross-quarter: weekly blog/notebook entry, 1 meetup talk, mentor a newer
       tester.
     hint: Anchor each quarter to a deliverable.
-    explanation: Visible artifacts + breadth-then-depth. See [[#Skill Stack â€”
+    explanation: Visible artifacts + breadth-then-depth. See [[#Skill Stack —
       T-Shaped]] and [[#Building a Portfolio]].
   - id: cp-t003
     type: fill_blank
     q: "Fill: STAR = ____ / ____ / ____ / ____."
     answer: Situation / Task / Action / Result
     hint: Behavioral story frame.
-    explanation: Standard interview structure. See [[#Interview Stories â€” STAR]].
+    explanation: Standard interview structure. See [[#Interview Stories — STAR]].

@@ -12,15 +12,15 @@ tasks:
       L2."
     answer: >-
       - **Yr 1**: Establish org test process, training programme, standardize
-      templates â†’ reach L3 process areas (org test process, lifecycle, peer
+      templates → reach L3 process areas (org test process, lifecycle, peer
       reviews, training, non-functional).
 
       - **Yr 2**: Build test measurement system, dashboards, product quality
-      evaluation, advanced reviews â†’ reach L4.
+      evaluation, advanced reviews → reach L4.
 
       - **Yr 3**: Launch defect prevention, test process optimization, quality
-      control programmes â†’ enter L5 trajectory; reassess externally.
-    hint: L2 â†’ L3 â†’ L4 â†’ L5.
+      control programmes → enter L5 trajectory; reassess externally.
+    hint: L2 → L3 → L4 → L5.
     explanation: Demonstrates capability uplift planning. See [[#CTEL-TM Strategic]].
   - id: iel-t003
     type: fill_blank

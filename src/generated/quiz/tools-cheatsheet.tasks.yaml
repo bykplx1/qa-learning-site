@@ -2,7 +2,7 @@ lesson: tools-cheatsheet
 tasks:
   - id: tc-t001
     type: fill_blank
-    q: "Fill: Selection rule â€” pick ____ per layer; tool ____ > tool count."
+    q: "Fill: Selection rule — pick ____ per layer; tool ____ > tool count."
     answer: one / depth
     hint: Compounding.
     explanation: Avoid tool collector anti-pattern. See [[#Selection Heuristic]].
@@ -11,28 +11,28 @@ tasks:
     q: "Task: Pick a 2026 default stack for a small product team (web app, 1
       backend, mobile-light, perf-light)."
     answer: >-
-      - e2e: Playwright (TS) â€” [[Playwright]]
+      - e2e: Playwright (TS) — [[Playwright]]
 
-      - API: RestAssured (if JVM backend) or Bruno + Hurl in CI â€”
+      - API: RestAssured (if JVM backend) or Bruno + Hurl in CI —
       [[RestAssured-Postman]]
 
-      - Unit: Vitest (TS) / JUnit 5 (Java) â€” [[TestNG-JUnit]]
+      - Unit: Vitest (TS) / JUnit 5 (Java) — [[TestNG-JUnit]]
 
-      - BDD (only if PO needs it): Cucumber â€” [[Cucumber-BDD]]
+      - BDD (only if PO needs it): Cucumber — [[Cucumber-BDD]]
 
-      - Perf smoke: k6 â€” [[JMeter-K6]]
+      - Perf smoke: k6 — [[JMeter-K6]]
 
       - a11y: axe-core in CI; Lighthouse PR comment
 
       - Security: ZAP baseline + Semgrep + Gitleaks
 
-      - Containers: Docker + Testcontainers â€” [[Docker-for-Testing]]
+      - Containers: Docker + Testcontainers — [[Docker-for-Testing]]
 
-      - CI: GitHub Actions â€” [[Jenkins-GitHub-Actions]]
+      - CI: GitHub Actions — [[Jenkins-GitHub-Actions]]
 
       - Reporting: Allure or built-in PW HTML
 
-      - Mobile (light): Appium or Maestro â€” [[Appium]]
+      - Mobile (light): Appium or Maestro — [[Appium]]
     hint: One per layer, deep.
     explanation: "Coherent stack with low overlap. See [[#Decision: Which Tool?]]
       and [[#Selection Heuristic]]."

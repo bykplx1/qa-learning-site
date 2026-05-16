@@ -74,7 +74,7 @@ questions:
     q: "axe-core covers what % of issues:"
     options:
       - A) 100%
-      - B) ~30â€“40%
+      - B) ~30–40%
       - C) 80%
       - D) None
     answer: 1
@@ -138,14 +138,14 @@ questions:
       - D) AAA only
     answer: 1
     hint: Color blind users.
-    explanation: Color cannot be sole signal â€” pair with text/shape. See [[#Manual
+    explanation: Color cannot be sole signal — pair with text/shape. See [[#Manual
       Test Checklist]].
   - id: at-013
     type: single
     q: "Heading order rule:"
     options:
       - A) Random
-      - B) No skipping levels (h1â†’h3 wrong)
+      - B) No skipping levels (h1→h3 wrong)
       - C) Always h1 only
       - D) h6 first
     answer: 1

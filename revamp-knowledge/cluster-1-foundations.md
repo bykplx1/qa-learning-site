@@ -166,7 +166,7 @@ The density of outgoing edges from Cluster 1 to *every* later cluster is itself 
 ## 9. File map
 
 ```
-revamp-doc/revamp-knowledge/
+revamp-knowledge/
 ├── cluster-1-foundations.md                                    # this file
 └── cluster-1-foundations/
     ├── what-is-qa-quality.md

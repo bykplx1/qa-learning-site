@@ -29,7 +29,7 @@ questions:
     options:
       - A) 1 year
       - B) 3 years
-      - C) Never â€” lifetime
+      - C) Never — lifetime
       - D) 5 years
     answer: 2
     hint: No CPD points.
@@ -66,7 +66,7 @@ questions:
       - D) ChatGPT prompting
     answer: 1
     hint: Test the AI.
-    explanation: Specialist for AI system QA. See [[#Specialist (Hot 2024â€“2026)]].
+    explanation: Specialist for AI system QA. See [[#Specialist (Hot 2024–2026)]].
   - id: ir-007
     type: single
     q: "Foundation prereq:"
@@ -82,9 +82,9 @@ questions:
     type: single
     q: "Best path for automation engineer:"
     options:
-      - A) CTFL â†’ CTAL-TM
-      - B) CTFL â†’ CTAL-TAE (+ optional CTAL-TTA)
-      - C) CTEL â†’ CTAL
+      - A) CTFL → CTAL-TM
+      - B) CTFL → CTAL-TAE (+ optional CTAL-TTA)
+      - C) CTEL → CTAL
       - D) CT-AI only
     answer: 1
     hint: Automation-engineer cert.
@@ -160,7 +160,7 @@ questions:
     q: "CTAL-TTA target:"
     options:
       - A) Manager
-      - B) Technical test analyst â€” code-based, perf, security basics
+      - B) Technical test analyst — code-based, perf, security basics
       - C) Business analyst
       - D) Agile coach
     answer: 1

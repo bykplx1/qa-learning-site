@@ -268,7 +268,7 @@ New to Cluster 5:
 ## 9. File map
 
 ```
-revamp-doc/revamp-knowledge/
+revamp-knowledge/
 ├── cluster-1-foundations.md
 ├── cluster-2-test-design-strategy.md
 ├── cluster-3-functional-execution-test-management.md

@@ -84,7 +84,7 @@ questions:
     q: "Risk of using SQLite in tests for Postgres app:"
     options:
       - A) None
-      - B) Dialect / behavior diverges â†’ false confidence
+      - B) Dialect / behavior diverges → false confidence
       - C) Slower
       - D) No FK support ever
     answer: 1
@@ -150,7 +150,7 @@ questions:
     q: "Time zone bug:"
     options:
       - A) Layout
-      - B) Mixing UTC and local time â†’ off by hours
+      - B) Mixing UTC and local time → off by hours
       - C) Charset
       - D) Slow query
     answer: 1
@@ -166,7 +166,7 @@ questions:
       - D) Error
     answer: 1
     hint: Three-valued logic.
-    explanation: NULL â‰  NULL; need IS NULL. See [[#Common Bugs]].
+    explanation: NULL ≠ NULL; need IS NULL. See [[#Common Bugs]].
   - id: dt-016
     type: single
     q: "Index missing symptom:"

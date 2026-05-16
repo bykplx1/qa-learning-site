@@ -2,7 +2,7 @@ lesson: istqb-glossary
 tasks:
   - id: ig-t001
     type: fill_blank
-    q: "Fill: Risk = ______ Ã— ______."
+    q: "Fill: Risk = ______ × ______."
     answer: Likelihood / Impact (or probability / impact)
     hint: Two-factor.
     explanation: Standard formula. See [[#Risk]].

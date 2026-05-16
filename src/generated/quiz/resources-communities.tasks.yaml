@@ -2,7 +2,7 @@ lesson: resources-communities
 tasks:
   - id: rc-t001
     type: fill_blank
-    q: "Fill: Engagement rule â€” answer ____ before asking ____; lurk ____ first."
+    q: "Fill: Engagement rule — answer ____ before asking ____; lurk ____ first."
     answer: one / one / two weeks
     hint: 1 / 1 / 2 weeks.
     explanation: Reciprocity + norms. See [[#How to Engage Well]].
@@ -20,7 +20,7 @@ tasks:
       - Month 3: open 1 docs PR to a tool you use ([[#Open Source to Contribute
       To]]); attend 1 local meetup.
 
-      - Month 4: brown-bag at work â€” share one learning broadly.
+      - Month 4: brown-bag at work — share one learning broadly.
 
       - Month 5: submit a lightning talk to a meetup; subscribe to Pragmatic
       Engineer + Test Guild Weekly.
@@ -33,8 +33,8 @@ tasks:
       [[Career-Path#Building a Portfolio]].
   - id: rc-t003
     type: fill_blank
-    q: "Fill: Personal brand minimum â€” pick ____ of (repo / blog / LinkedIn /
-      talk) and ____ it."
+    q: "Fill: Personal brand minimum — pick ____ of (repo / blog / LinkedIn / talk)
+      and ____ it."
     answer: one / maintain
     hint: Sustainability over scope.
     explanation: Consistency wins. See [[#Building Your Personal Brand (Lightweight)]].

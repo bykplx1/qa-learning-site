@@ -66,7 +66,7 @@ questions:
       - D) Date
     answer: 1
     hint: Invalidates on dep change.
-    explanation: Lockfile changes â†’ new cache. See [[#Caching]].
+    explanation: Lockfile changes → new cache. See [[#Caching]].
   - id: jga-007
     type: single
     q: "Secrets in GHA logs:"
@@ -94,7 +94,7 @@ questions:
     q: "`pull_request_target` risk:"
     options:
       - A) Slow
-      - B) Runs with repo secrets â€” checking out fork code can leak them
+      - B) Runs with repo secrets — checking out fork code can leak them
       - C) No PR support
       - D) Always blocked
     answer: 1
@@ -105,7 +105,7 @@ questions:
     q: "Build matrix value:"
     options:
       - A) UI only
-      - B) Run combinations (OS Ã— version Ã— browser) in parallel
+      - B) Run combinations (OS × version × browser) in parallel
       - C) Sequential only
       - D) Single job
     answer: 1
@@ -116,7 +116,7 @@ questions:
     q: "`needs:` in GHA:"
     options:
       - A) Permissions
-      - B) Job dependency â€” run after listed job(s) succeed
+      - B) Job dependency — run after listed job(s) succeed
       - C) Required action
       - D) Marketplace
     answer: 1
@@ -138,7 +138,7 @@ questions:
     q: "Pinning action by SHA reason:"
     options:
       - A) Faster
-      - B) Immutable â€” tag could be moved to malicious commit
+      - B) Immutable — tag could be moved to malicious commit
       - C) Required by GitHub
       - D) Cleaner
     answer: 1
@@ -149,7 +149,7 @@ questions:
     q: "Self-hosted ephemeral runner:"
     options:
       - A) Stays running
-      - B) One job per runner, then destroyed â†’ no state leak
+      - B) One job per runner, then destroyed → no state leak
       - C) Slower
       - D) UI only
     answer: 1

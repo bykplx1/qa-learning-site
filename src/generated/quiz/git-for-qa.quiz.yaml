@@ -10,7 +10,7 @@ questions:
       - D) Push, pull, fetch
     answer: 1
     hint: Index in middle.
-    explanation: Working dir â†’ staged â†’ committed defines git's state model. See
+    explanation: Working dir → staged → committed defines git's state model. See
       [[#Mental Model]].
   - id: gfq-002
     type: single
@@ -34,8 +34,8 @@ questions:
       - D) `--rebase`
     answer: 1
     hint: Lease.
-    explanation: Aborts if remote changed since last fetch â€” prevents stomping.
-      See [[#Sync With Remote]].
+    explanation: Aborts if remote changed since last fetch — prevents stomping. See
+      [[#Sync With Remote]].
   - id: gfq-004
     type: single
     q: "Find first bad commit causing test failure:"

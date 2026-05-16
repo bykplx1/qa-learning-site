@@ -6,7 +6,7 @@ tasks:
     answer: System design
     hint: Mirror image, top half.
     explanation: "V-model parallel design: each left-side dev phase produces test
-      design for matching right-side level. System design â†” system tests. See
+      design for matching right-side level. System design ↔ system tests. See
       [[#V-Model (Tester favorite)]]."
   - id: ss-t002
     type: fill_blank
@@ -22,7 +22,7 @@ tasks:
       - **Entry**: User story Done-defined, build deployed to QA env, test data
       seeded, smoke passing
 
-      - **Exit**: 100% planned cases executed, 0 Sev-1/Sev-2 open, â‰¥90% pass
+      - **Exit**: 100% planned cases executed, 0 Sev-1/Sev-2 open, ≥90% pass
       rate, defects triaged
     hint: Pre-conditions vs post-conditions.
     explanation: "Sprint regression needs both gates: ready-to-start +

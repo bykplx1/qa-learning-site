@@ -67,8 +67,8 @@ questions:
       - D) Manual scripts
     answer: 1
     hint: Can't measure outcome otherwise.
-    explanation: No observability â†’ can't validate hypothesis. See
-      [[#Observability is a Prerequisite]].
+    explanation: No observability → can't validate hypothesis. See [[#Observability
+      is a Prerequisite]].
   - id: ce-007
     type: single
     q: "Toxiproxy operates at:"
@@ -115,7 +115,7 @@ questions:
     explanation: Prevent experiment becoming real outage. See [[#Blast Radius Control]].
   - id: ce-011
     type: single
-    q: "Failure mode example â€” dependency:"
+    q: "Failure mode example — dependency:"
     options:
       - A) Disk full
       - B) Downstream returns 5xx / slow
@@ -130,7 +130,7 @@ questions:
     q: "Running chaos in production is:"
     options:
       - A) Forbidden
-      - B) Encouraged because staging â‰  prod
+      - B) Encouraged because staging ≠ prod
       - C) Pointless
       - D) Optional always
     answer: 1

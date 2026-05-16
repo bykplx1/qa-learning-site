@@ -25,7 +25,7 @@ tasks:
       | R4 | Coupon abuse | H | M | Rate limit + audit |
 
       | R5 | PII leakage in logs | L | H | Static analysis + log scrubber |
-    hint: LÃ—I prioritization.
+    hint: L×I prioritization.
     explanation: Drives test depth. See [[#Risk-Based Test Mgmt]].
   - id: iatm-t003
     type: fill_blank

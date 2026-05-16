@@ -5,7 +5,7 @@ questions:
     q: Risk =
     options:
       - A) Severity alone
-      - B) Likelihood Ã— Impact
+      - B) Likelihood × Impact
       - C) Defect count
       - D) Coverage
     answer: 1
@@ -125,7 +125,7 @@ questions:
       [[#Standards & Compliance]]."
   - id: iatm-012
     type: single
-    q: "Highest-leverage test mgmt artifact for cross-project consistency:"
+    q: "Highest-leverage test mgmt artefact for cross-project consistency:"
     options:
       - A) Bug report
       - B) Test policy / strategy
@@ -133,7 +133,7 @@ questions:
       - D) Run log
     answer: 1
     hint: Org-level.
-    explanation: Strategy spans projects. See [[#Test Policy â†’ Strategy â†’ Plan]].
+    explanation: Strategy spans projects. See [[#Test Policy → Strategy → Plan]].
   - id: iatm-013
     type: single
     q: "Inspection most cost-effective at:"
@@ -161,7 +161,7 @@ questions:
     q: Tool ROI =
     options:
       - A) Tool cost / saved-hours
-      - B) (Manual effort saved âˆ’ tool TCO) / tool TCO
+      - B) (Manual effort saved − tool TCO) / tool TCO
       - C) Tool sale price
       - D) Vendor margin
     answer: 1
@@ -209,8 +209,8 @@ questions:
       - C) Dev lead
       - D) Sales
     answer: 1
-    hint: Org-level artifact.
-    explanation: Policy spans org. See [[#Test Policy â†’ Strategy â†’ Plan]].
+    hint: Org-level artefact.
+    explanation: Policy spans org. See [[#Test Policy → Strategy → Plan]].
   - id: iatm-020
     type: single
     q: "Master Test Plan vs Level Test Plan:"

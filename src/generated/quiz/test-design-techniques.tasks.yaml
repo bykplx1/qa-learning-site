@@ -18,14 +18,14 @@ tasks:
   - id: tdt-t003
     type: fill_blank
     q: "Task: Build decision table for a discount rule: members get 10%, orders
-      â‰¥$100 get 5%, both stack to 15%."
+      ≥$100 get 5%, both stack to 15%."
     answer: |-
-      | Member? | Order â‰¥ $100? | Discount |
+      | Member? | Order ≥ $100? | Discount |
       |---------|---------------|----------|
       | Y | Y | 15% |
       | Y | N | 10% |
       | N | Y | 5% |
       | N | N | 0% |
-    hint: 2 conditions â†’ 2Â² rows.
+    hint: 2 conditions → 2² rows.
     explanation: Decision table enumerates all rule combinations explicitly. See
       [[#Decision Tables]].

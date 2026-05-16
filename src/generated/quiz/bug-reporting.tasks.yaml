@@ -2,7 +2,7 @@ lesson: bug-reporting
 tasks:
   - id: br-t001
     type: fill_blank
-    q: "Fill: Title pattern = `[____] [____] â†’ [____] ([____])`."
+    q: "Fill: Title pattern = `[____] [____] → [____] ([____])`."
     answer: Area / Action(or trigger) / Symptom / Context
     hint: Four slots.
     explanation: Searchable + scoped titles. See [[#Title Patterns]].
@@ -29,13 +29,13 @@ tasks:
 
       3. Click "Save"
 
-      4. Repeat 3Ã— with same input
+      4. Repeat 3× with same input
 
 
       **Expected:** 200 OK, toast "Profile updated" (AC-2 STORY-512)
 
       **Actual:** ~1/3 attempts returns 500, no toast; response:
-      {"error":"internal"}; request-id 7f2a-â€¦ (15:42 UTC)
+      {"error":"internal"}; request-id 7f2a-… (15:42 UTC)
 
 
       **Evidence:** HAR, console.log, screenshot, Sentry link

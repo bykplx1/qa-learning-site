@@ -153,8 +153,7 @@ questions:
       - D) Slow start
     answer: 0
     hint: Routing.
-    explanation: Deep link testing verifies URL/intent â†’ screen. See [[#Common
-      Bugs Found]].
+    explanation: Deep link testing verifies URL/intent → screen. See [[#Common Bugs Found]].
   - id: mt-015
     type: single
     q: "Permissions test should:"
@@ -204,7 +203,7 @@ questions:
     type: single
     q: "Push notification test step:"
     options:
-      - A) Verify delivery + deep link tap â†’ correct screen + state
+      - A) Verify delivery + deep link tap → correct screen + state
       - B) Just send
       - C) Manual screenshot only
       - D) Skip

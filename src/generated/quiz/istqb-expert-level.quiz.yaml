@@ -28,10 +28,10 @@ questions:
     type: single
     q: "IDEAL cycle order:"
     options:
-      - A) Diagnose â†’ Initiate â†’ Establish â†’ Act â†’ Learn
-      - B) Initiate â†’ Diagnose â†’ Establish â†’ Act â†’ Learn
-      - C) Establish â†’ Initiate â†’ Act â†’ Diagnose â†’ Learn
-      - D) Initiate â†’ Act â†’ Establish â†’ Diagnose â†’ Learn
+      - A) Diagnose → Initiate → Establish → Act → Learn
+      - B) Initiate → Diagnose → Establish → Act → Learn
+      - C) Establish → Initiate → Act → Diagnose → Learn
+      - D) Initiate → Act → Establish → Diagnose → Learn
     answer: 1
     hint: I-D-E-A-L.
     explanation: Standard SEI improvement cycle. See [[#Approach (IDEAL Cycle)]].
@@ -114,7 +114,7 @@ questions:
       - D) Project mgr
     answer: 1
     hint: Org-level.
-    explanation: Strategic artifact. See [[#CTEL-TM Strategic]].
+    explanation: Strategic artefact. See [[#CTEL-TM Strategic]].
   - id: iel-011
     type: single
     q: "ROI communication best metric:"
@@ -131,7 +131,7 @@ questions:
     q: "Reassessment cadence after improvement roll-out:"
     options:
       - A) 1 mo
-      - B) 12â€“18 mo typically
+      - B) 12–18 mo typically
       - C) 5 yr
       - D) Never
     answer: 1

@@ -29,7 +29,7 @@ questions:
     q: "Typical SBTM session length:"
     options:
       - A) 5 min
-      - B) 60â€“120 min
+      - B) 60–120 min
       - C) 8 hr
       - D) Days
     answer: 1
@@ -46,7 +46,7 @@ questions:
       - D) Ad-hoc records bugs better
     answer: 1
     hint: Structure.
-    explanation: ET is disciplined; ad-hoc is unstructured. See [[#ET â‰  Ad-hoc]].
+    explanation: ET is disciplined; ad-hoc is unstructured. See [[#ET ≠ Ad-hoc]].
   - id: et-005
     type: single
     q: "SFDIPOT is a heuristic for:"

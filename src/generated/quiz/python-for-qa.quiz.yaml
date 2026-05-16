@@ -186,7 +186,7 @@ questions:
     explanation: Converts HTTP error codes to exceptions. See [[#requests (HTTP)]].
   - id: pfq-017
     type: single
-    q: "List â†’ set converts because:"
+    q: "List → set converts because:"
     options:
       - A) Sorts
       - B) Dedupes (loses order)

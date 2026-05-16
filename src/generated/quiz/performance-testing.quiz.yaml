@@ -89,7 +89,7 @@ questions:
       - C) Memory
       - D) Throughput
     answer: 1
-    hint: 0â€“1 score.
+    hint: 0–1 score.
     explanation: Apdex = ratio of satisfied/tolerating/frustrated requests. See
       [[#Key Metrics]].
   - id: pt-009
@@ -130,7 +130,7 @@ questions:
     q: "Why warmup before measuring:"
     options:
       - A) Save energy
-      - B) JIT, caches, pools cold initially â†’ skewed numbers
+      - B) JIT, caches, pools cold initially → skewed numbers
       - C) Free CPU
       - D) Avoid lint
     answer: 1
@@ -179,7 +179,7 @@ questions:
       - D) Cache TTL = 0
     answer: 1
     hint: Thundering herd.
-    explanation: Expiry triggers many parallel rebuilds â†’ backend overload. See
+    explanation: Expiry triggers many parallel rebuilds → backend overload. See
       [[#Common Bottlenecks]].
   - id: pt-017
     type: single

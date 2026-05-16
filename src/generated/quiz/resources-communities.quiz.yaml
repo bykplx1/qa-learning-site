@@ -10,7 +10,7 @@ questions:
       - D) Reddit r/programming
     answer: 1
     hint: TestBash organizer.
-    explanation: Forum + Slack + events. See [[#Tier 1 â€” Highest Signal]].
+    explanation: Forum + Slack + events. See [[#Tier 1 — Highest Signal]].
   - id: rc-002
     type: single
     q: "Free practical automation courses platform:"
@@ -65,10 +65,10 @@ questions:
       - D) Agile Alliance
     answer: 1
     hint: BBST courses.
-    explanation: Bach/Bolton tradition. See [[#Tier 1 â€” Highest Signal]].
+    explanation: Bach/Bolton tradition. See [[#Tier 1 — Highest Signal]].
   - id: rc-007
     type: single
-    q: "Conference tip â€” talks vs hallway:"
+    q: "Conference tip — talks vs hallway:"
     options:
       - A) Skip hallway
       - B) 1 talk + 5 hallway > 10 talks alone
@@ -180,7 +180,7 @@ questions:
     type: single
     q: "Modern testing thinker active on socials:"
     options:
-      - A) Maaret PyhÃ¤jÃ¤rvi
+      - A) Maaret Pyhäjärvi
       - B) Anonymous
       - C) Vendor only
       - D) Recruiter only

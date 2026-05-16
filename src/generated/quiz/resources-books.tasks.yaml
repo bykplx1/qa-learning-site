@@ -2,7 +2,7 @@ lesson: resources-books
 tasks:
   - id: rb-t001
     type: fill_blank
-    q: "Fill: Reading retention â€” apply ____ within ____ weeks or it fades."
+    q: "Fill: Reading retention — apply ____ within ____ weeks or it fades."
     answer: one idea / two
     hint: 1 idea, 2 weeks.
     explanation: Application beats completion. See [[#How to Read Technical Books]].
@@ -31,9 +31,9 @@ tasks:
     explanation: Application + visibility. See [[#Reading Strategy]] and [[Career-Path]].
   - id: rb-t003
     type: fill_blank
-    q: "Fill: Tier 6 ISTQB-aligned â€” *Advanced Software Testing Vol. 2* maps to
-      ____ cert; written by ____."
+    q: "Fill: Tier 6 ISTQB-aligned — *Advanced Software Testing Vol. 2* maps to ____
+      cert; written by ____."
     answer: CTAL-TM (Test Manager) / Rex Black
     hint: TM = Test Manager.
-    explanation: Cert-aligned reading. See [[#Tier 6 â€” ISTQB-Aligned]] and
+    explanation: Cert-aligned reading. See [[#Tier 6 — ISTQB-Aligned]] and
       [[03-Advanced-Test-Manager]].

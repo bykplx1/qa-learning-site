@@ -16,7 +16,7 @@ questions:
     q: "Multi-stage Dockerfile primary benefit:"
     options:
       - A) Faster runtime
-      - B) Smaller final image â€” build deps stay in earlier stage
+      - B) Smaller final image — build deps stay in earlier stage
       - C) Required syntax
       - D) Multi-arch only
     answer: 1
@@ -83,7 +83,7 @@ questions:
     q: "DinD vs DooD:"
     options:
       - A) Same
-      - B) DinD = nested daemon; DooD = mount host socket â€” DooD lighter but
+      - B) DinD = nested daemon; DooD = mount host socket — DooD lighter but
         escapes container
       - C) Both safe
       - D) DinD faster
@@ -95,7 +95,7 @@ questions:
     q: "Pin `python:3.12-slim` not `python:latest` because:"
     options:
       - A) Smaller
-      - B) Reproducibility â€” `latest` floats and breaks builds
+      - B) Reproducibility — `latest` floats and breaks builds
       - C) Security only
       - D) Required
     answer: 1
@@ -150,7 +150,7 @@ questions:
     q: "M1 Mac local pass / CI fail likely cause:"
     options:
       - A) Network
-      - B) ARM vs x86 image â€” pin `--platform linux/amd64`
+      - B) ARM vs x86 image — pin `--platform linux/amd64`
       - C) DNS
       - D) Disk
     answer: 1
@@ -183,7 +183,7 @@ questions:
     q: "tmpfs benefit for test DB:"
     options:
       - A) Persistent
-      - B) In-memory, fast, ephemeral â€” clean state per run
+      - B) In-memory, fast, ephemeral — clean state per run
       - C) Larger
       - D) Encrypted
     answer: 1

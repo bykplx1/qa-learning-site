@@ -75,7 +75,7 @@ questions:
     q: "RTM purpose:"
     options:
       - A) Track salaries
-      - B) Map reqs â†” tests â†” defects
+      - B) Map reqs ↔ tests ↔ defects
       - C) Schedule sprints
       - D) Generate code
     answer: 1
@@ -199,7 +199,7 @@ questions:
       829 / ISO 29119)]].
   - id: td-018
     type: single
-    q: 'RTM finds "orphan tests" â€” meaning:'
+    q: 'RTM finds "orphan tests" — meaning:'
     options:
       - A) Tests with no assigned tester
       - B) Tests not linked to any requirement
