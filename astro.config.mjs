@@ -68,6 +68,14 @@ export default defineConfig({
     resolve: {
       dedupe: ['react', 'react-dom'],
     },
+    // Bundle React into the dev-server's SSR graph so client and SSR share
+    // one module instance. Without this Vite can resolve React twice during
+    // dev (once as external, once via the island bundle), and any island
+    // calling hooks during SSR fires "Invalid hook call". The prod build
+    // already bundles these via Rollup, so this only changes dev behavior.
+    ssr: {
+      noExternal: ['react', 'react-dom'],
+    },
     build: {
       rollupOptions: {
         external: ['/pagefind/pagefind.js'],
