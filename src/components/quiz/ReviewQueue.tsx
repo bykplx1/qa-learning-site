@@ -117,20 +117,21 @@ export default function ReviewQueue({ initialCard }: Props) {
           </button>
         )}
 
-        {(phase === 'submitted' || phase === 'grading') && card.answer && (
+        {(phase === 'submitted' || phase === 'grading') && (
           <div
             style={{
               marginTop: 16,
               padding: '14px 16px',
               background: 'var(--paper-3, var(--paper-2))',
               borderRadius: 8,
-              color: 'var(--ink)',
+              color: card.answer ? 'var(--ink)' : 'var(--ink-3)',
               fontSize: 15,
               lineHeight: 1.55,
+              fontStyle: card.answer ? 'normal' : 'italic',
             }}
             data-testid="review-answer"
           >
-            {card.answer}
+            {card.answer || 'No canonical answer — self-grade based on recall.'}
           </div>
         )}
       </div>
