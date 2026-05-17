@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+
 function CheckCircleIcon() {
   return (
     <svg
@@ -17,6 +19,16 @@ function CheckCircleIcon() {
 }
 
 export default function ReviewEmptyState() {
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+
+  // Anchor focus inside the empty-state region on mount so a subsequent Tab
+  // moves to the first CTA, not the top-nav. The heading is given tabindex=-1
+  // so it can receive programmatic focus without becoming part of the natural
+  // tab order.
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+  }, []);
+
   return (
     <div
       data-testid="review-empty"
@@ -34,6 +46,8 @@ export default function ReviewEmptyState() {
       <CheckCircleIcon />
 
       <h2
+        ref={headingRef}
+        tabIndex={-1}
         style={{
           fontFamily: 'var(--serif)',
           fontSize: 32,
@@ -42,6 +56,7 @@ export default function ReviewEmptyState() {
           lineHeight: 1.15,
           color: 'var(--ink)',
           margin: 0,
+          outline: 'none',
         }}
       >
         You're done for now
