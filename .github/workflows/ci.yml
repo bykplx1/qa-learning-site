@@ -16,6 +16,7 @@ on:
 #
 #  Stage 1 — fast checks (parallel, no DB, no browser)
 #    lint-typecheck   npx astro check
+#    lint-curriculum  scripts/lint-curriculum.ts depth-gate enforcement
 #    unit             vitest unit suite
 #
 #  Stage 2 — integration (needs Stage 1 green)
@@ -50,7 +51,27 @@ jobs:
       - name: Type check (astro check)
         run: npx astro check
 
-  # ── Stage 1b: unit tests ──────────────────────────────────────────────────
+  # ── Stage 1b: curriculum depth-gate lint ─────────────────────────────────
+  lint-curriculum:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.VAULT_PAT }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Curriculum depth-gate lint
+        run: npx tsx scripts/lint-curriculum.ts
+
+  # ── Stage 1c: unit tests ──────────────────────────────────────────────────
   unit:
     runs-on: ubuntu-latest
 
@@ -73,7 +94,7 @@ jobs:
   # ── Stage 2: integration tests ────────────────────────────────────────────
   integration:
     runs-on: ubuntu-latest
-    needs: [lint-typecheck, unit]
+    needs: [lint-typecheck, lint-curriculum, unit]
 
     services:
       postgres:

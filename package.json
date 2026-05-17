@@ -19,7 +19,8 @@
     "test:visual": "playwright test --config=playwright.visual.config.ts",
     "test:visual:update": "playwright test --config=playwright.visual.config.ts --update-snapshots",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "lint:curriculum": "tsx scripts/lint-curriculum.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.4",
