@@ -1,29 +1,41 @@
 ---
+import FeynmanEditor from '../explain/FeynmanEditor';
+
 interface Props {
   id: string;
   wordTarget?: number;
 }
 
-const { id, wordTarget } = Astro.props;
+const { id, wordTarget = 150 } = Astro.props;
 ---
 
-<div class="mdx-feynman" data-feynman-id={id} data-word-target={wordTarget}>
+<div class="mdx-feynman" data-feynman-id={id}>
   <p class="eyebrow mdx-feynman__label">
-    feynman prompt · {id}{wordTarget ? ` · ~${wordTarget} words` : ''}
+    feynman prompt · {id} · ~{wordTarget} words
   </p>
-  <div class="mdx-feynman__body">
+  <div class="mdx-feynman__prompt">
     <slot />
+  </div>
+  <div class="mdx-feynman__editor">
+    <FeynmanEditor client:load conceptSlug={id} wordTarget={wordTarget} />
   </div>
 </div>
 
 <style>
   .mdx-feynman {
-    margin: 20px 0;
-    padding: 16px 18px;
+    margin: 28px 0;
+    padding: 20px 22px;
     border: 1px solid var(--rule);
-    border-radius: 8px;
+    border-radius: 10px;
     background: var(--paper);
   }
-  .mdx-feynman__label { margin: 0 0 8px; }
-  .mdx-feynman__body { font-size: 15px; color: var(--ink); }
+  .mdx-feynman__label { margin: 0 0 10px; }
+  .mdx-feynman__prompt {
+    font-size: 15px;
+    color: var(--ink);
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .mdx-feynman__editor { margin-top: 4px; }
 </style>
