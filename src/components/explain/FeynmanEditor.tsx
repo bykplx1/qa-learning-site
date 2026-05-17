@@ -33,6 +33,7 @@ interface Props {
   conceptSlug: string;
   wordTarget: number;
   rubric?: RubricCriterion[];
+  showGapPrompt?: boolean;
 }
 
 type Phase = 'writing' | 'scoring' | 'saved' | 'error';
@@ -45,12 +46,16 @@ export default function FeynmanEditor({
   conceptSlug,
   wordTarget,
   rubric = DEFAULT_RUBRIC,
+  showGapPrompt = false,
 }: Props) {
   const [body, setBody] = useState('');
   const [scores, setScores] = useState<Record<string, number>>({});
   const [phase, setPhase] = useState<Phase>('writing');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [gapQuestions, setGapQuestions] = useState<string[] | null>(null);
+  const [gapLoading, setGapLoading] = useState(false);
+  const [gapRefused, setGapRefused] = useState(false);
 
   const wc = wordCount(body);
   const targetMet = wc >= wordTarget;
@@ -63,6 +68,34 @@ export default function FeynmanEditor({
     },
     [targetMet],
   );
+
+  const handleGapPrompt = useCallback(async () => {
+    setGapLoading(true);
+    setGapRefused(false);
+    try {
+      const res = await fetch('/api/explain/gap-prompt', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ explanation: body }),
+      });
+      if (!res.ok) {
+        setGapRefused(true);
+        return;
+      }
+      const data = (await res.json()) as
+        | { questions: string[] }
+        | { refused: true; reason: string };
+      if ('refused' in data && data.refused) {
+        setGapRefused(true);
+      } else if ('questions' in data) {
+        setGapQuestions(data.questions);
+      }
+    } catch {
+      setGapRefused(true);
+    } finally {
+      setGapLoading(false);
+    }
+  }, [body]);
 
   const handleSave = useCallback(
     async (e: React.FormEvent) => {
@@ -121,6 +154,46 @@ export default function FeynmanEditor({
         >
           id: {savedId}
         </p>
+
+        {showGapPrompt && !gapQuestions && !gapRefused && (
+          <button
+            type="button"
+            onClick={handleGapPrompt}
+            disabled={gapLoading}
+            className="btn btn--secondary"
+            data-testid="gap-prompt-btn"
+            style={{ marginTop: 16 }}
+          >
+            {gapLoading ? 'Loading…' : 'Get follow-up questions'}
+          </button>
+        )}
+
+        {gapRefused && (
+          <p
+            data-testid="gap-prompt-refused"
+            style={{ marginTop: 14, fontSize: 13, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}
+          >
+            Couldn't generate questions right now.
+          </p>
+        )}
+
+        {gapQuestions && gapQuestions.length > 0 && (
+          <div
+            data-testid="gap-prompt-questions"
+            style={{ marginTop: 18, textAlign: 'left' }}
+          >
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
+              Follow-up questions:
+            </p>
+            <ol style={{ paddingLeft: 20, margin: 0, display: 'grid', gap: 6 }}>
+              {gapQuestions.map((q, i) => (
+                <li key={i} style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+                  {q}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
     );
   }

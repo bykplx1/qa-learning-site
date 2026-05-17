@@ -7,6 +7,7 @@ interface Props {
 }
 
 const { id, wordTarget = 150 } = Astro.props;
+const showGapPrompt = import.meta.env.FEATURE_AI_GAP_PROMPT === '1';
 ---
 
 <div class="mdx-feynman" data-feynman-id={id}>
@@ -17,7 +18,7 @@ const { id, wordTarget = 150 } = Astro.props;
     <slot />
   </div>
   <div class="mdx-feynman__editor">
-    <FeynmanEditor client:load conceptSlug={id} wordTarget={wordTarget} />
+    <FeynmanEditor client:load conceptSlug={id} wordTarget={wordTarget} showGapPrompt={showGapPrompt} />
   </div>
 </div>
 
