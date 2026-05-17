@@ -14,6 +14,8 @@ import type { QuizQuestion } from '../../lib/quiz/schema';
 import { extractExcerpt } from '../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../lib/encoding/repair';
 import { findEntryByLegacySlug } from '../../lib/lessons/migrationMatrix';
+import SegmentedLesson from '../../components/lessons/SegmentedLesson';
+import { computeSegments, estimateWordCount } from '../../lib/lessons/segmenter';
 
 export async function getStaticPaths() {
   const allLessons = await getCollection('lessons');
@@ -68,6 +70,9 @@ if (existsSync(quizYamlPath)) {
 
 const ogDescription = lesson.body ? repairWin1252(extractExcerpt(lesson.body)) : undefined;
 const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
+
+const wordCount = estimateWordCount(lesson.body);
+const lessonSegments = computeSegments(headings, wordCount);
 ---
 
 <BaseLayout
@@ -154,10 +159,17 @@ const canonicalUrl = new URL(`/lessons/${lesson.data.slug}`, Astro.site).href;
           </div>
         </header>
 
-        <div class="prose" data-pagefind-body data-pagefind-meta="type:lesson">
+        <div class="prose" data-pagefind-body data-pagefind-meta="type:lesson" data-lesson-body>
           <WikiLink client:idle />
           <Content />
         </div>
+
+        {lessonSegments.length > 0 && (
+          <SegmentedLesson
+            client:load
+            segments={lessonSegments}
+          />
+        )}
 
         <div style="margin-top: 28px;">
           <MarkComplete client:only="react" slug={lesson.data.slug} />

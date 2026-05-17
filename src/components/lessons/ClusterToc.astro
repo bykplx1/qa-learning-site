@@ -1,0 +1,143 @@
+---
+/**
+ * ClusterToc — sidebar navigation for curriculum lessons.
+ *
+ * Renders a two-level list: Cluster → Topics within that cluster.
+ * This replaces the legacy flat category sidebar for curriculum-routed lessons.
+ *
+ * The existing TableOfContents.astro (in-page anchor links) is still rendered in
+ * the right column — this component fills the left sidebar where [slug].astro
+ * used to show `groupByCategory` siblings.
+ */
+
+import { getCollection } from 'astro:content';
+import { CURRICULUM_CLUSTERS, type CurriculumCluster } from '../../lib/curriculum/schema';
+
+interface Props {
+  /** The cluster slug of the currently-viewed lesson. */
+  currentCluster: CurriculumCluster;
+  /** The slug of the currently-viewed lesson. */
+  currentSlug: string;
+  /**
+   * Route base — where curriculum lessons live.
+   * Defaults to /lessons (pre-cluster-route era). Pass /lessons when the
+   * cluster-prefixed route (#225) hasn't landed yet; once it lands callers
+   * can pass /lessons/<cluster>/<slug> directly.
+   */
+  routeBase?: string;
+}
+
+const { currentCluster, currentSlug, routeBase = '/lessons' } = Astro.props;
+
+const allCurriculum = await getCollection('curriculum');
+
+// Group entries by cluster preserving canonical cluster order.
+const byCluster = new Map<CurriculumCluster, typeof allCurriculum>();
+for (const cluster of CURRICULUM_CLUSTERS) {
+  byCluster.set(cluster, []);
+}
+for (const entry of allCurriculum) {
+  byCluster.get(entry.data.cluster)?.push(entry);
+}
+
+// Sort entries within each cluster by slug for stable ordering.
+for (const entries of byCluster.values()) {
+  entries.sort((a, b) => a.data.slug.localeCompare(b.data.slug));
+}
+
+const CLUSTER_LABELS: Record<CurriculumCluster, string> = {
+  'foundations':          'Foundations',
+  'test-design':          'Test Design',
+  'functional-execution': 'Functional Execution',
+  'automation-cicd':      'Automation & CI/CD',
+  'non-functional':       'Non-Functional',
+  'ai-llm-qa':            'AI / LLM QA',
+};
+
+function lessonHref(slug: string): string {
+  // Until #225 lands, all curriculum lessons are at /lessons/<slug>.
+  // After #225 they will be at /lessons/<cluster>/<slug>; update routeBase then.
+  return `${routeBase}/${slug}`;
+}
+---
+
+<nav aria-label="Curriculum navigation" class="cluster-toc">
+  {Array.from(byCluster.entries()).map(([cluster, entries]) => {
+    if (entries.length === 0) return null;
+    const isCurrentCluster = cluster === currentCluster;
+    return (
+      <section class={`cluster-toc__cluster${isCurrentCluster ? ' is-active-cluster' : ''}`}>
+        <p class="cluster-toc__cluster-label eyebrow">
+          {CLUSTER_LABELS[cluster]}
+        </p>
+        <ul class="cluster-toc__list">
+          {entries.map((entry) => {
+            const isActive = entry.data.slug === currentSlug;
+            return (
+              <li>
+                <a
+                  href={lessonHref(entry.data.slug)}
+                  class={`cluster-toc__link${isActive ? ' is-active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {entry.data.title}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    );
+  })}
+</nav>
+
+<style>
+  .cluster-toc {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .cluster-toc__cluster {
+    /* Non-active clusters are slightly muted. */
+    opacity: 0.6;
+    transition: opacity 120ms ease;
+  }
+  .cluster-toc__cluster:hover,
+  .cluster-toc__cluster.is-active-cluster {
+    opacity: 1;
+  }
+
+  .cluster-toc__cluster-label {
+    margin: 0 0 6px 10px;
+  }
+
+  .cluster-toc__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 2px;
+    font-size: 13px;
+  }
+
+  .cluster-toc__link {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .cluster-toc__link:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  .cluster-toc__link.is-active {
+    color: var(--ink);
+    background: var(--paper-2);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+</style>
