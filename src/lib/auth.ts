@@ -1,10 +1,13 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
-import { installOAuthMock, getMockSession } from './test-auth-mock';
+import { ensureMockUser, getMockSession, installOAuthMock } from './test-auth-mock';
 
 if (process.env.E2E_OAUTH_MOCK === '1') {
   installOAuthMock();
+  // Fire-and-forget; getSession() below awaits the same promise so the row
+  // exists before any API route attempts a FK-bound write.
+  void ensureMockUser();
 }
 
 export const auth = betterAuth({
@@ -49,6 +52,9 @@ export const auth = betterAuth({
  */
 export async function getSession(headers: Headers) {
   if (process.env.E2E_OAUTH_MOCK === '1') {
+    // Block until the mock user row is committed — otherwise the next FK-bound
+    // INSERT (self_explanations, review_cards, quiz_attempts, ...) races and 500s.
+    await ensureMockUser();
     return getMockSession(headers);
   }
   return auth.api.getSession({ headers });

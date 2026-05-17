@@ -150,6 +150,48 @@ export function getMockSession(headers: Headers): MockSession {
   return hasMockToken(headers) ? { session: MOCK_SESSION, user: MOCK_USER } : null;
 }
 
+// ─── Mock user seeding ────────────────────────────────────────────────────────
+// FK-bound tables (review_cards, self_explanations, quiz_attempts, ...) require
+// the mock user row to exist before any write referencing MOCK_USER_ID succeeds.
+// Idempotent and memoized — first caller does the insert, subsequent callers
+// await the same promise.
+
+let mockUserSeeded: Promise<void> | null = null;
+
+export function ensureMockUser(): Promise<void> {
+  if (mockUserSeeded) return mockUserSeeded;
+  // No DB attached (e.g. e2e-a11y job before PR #216) — nothing to seed.
+  if (!process.env.DATABASE_URL) {
+    mockUserSeeded = Promise.resolve();
+    return mockUserSeeded;
+  }
+  mockUserSeeded = (async () => {
+    const { db } = await import('../db');
+    const { users, sessions } = await import('../db/schema');
+    await db
+      .insert(users)
+      .values({
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        name: MOCK_USER.name,
+        avatar: MOCK_USER.image,
+        githubHandle: MOCK_USER.githubHandle,
+        emailVerified: MOCK_USER.emailVerified,
+      })
+      .onConflictDoNothing();
+    await db
+      .insert(sessions)
+      .values({
+        id: MOCK_SESSION.id,
+        userId: MOCK_SESSION.userId,
+        token: MOCK_SESSION.token,
+        expiresAt: MOCK_SESSION.expiresAt,
+      })
+      .onConflictDoNothing();
+  })();
+  return mockUserSeeded;
+}
+
 // ─── Mock auth handler ────────────────────────────────────────────────────────
 
 const SESSION_COOKIE = `better-auth.session_token=${MOCK_SESSION_TOKEN}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800`;
