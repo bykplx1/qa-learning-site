@@ -684,6 +684,41 @@ a { color: inherit; }
   letter-spacing: -0.01em;
   font-style: normal;
 }
+/* Takeaway blockquote — Core Idea section signaling (Phase 3, #147).
+   Non-color cues: background fill, thicker border, heavier weight, "→" marker.
+   Tokens only — no inline styles. */
+.prose blockquote.lesson-takeaway {
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 20px 14px 18px;
+  margin: 1.4em 0;
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--accent-strong);
+  letter-spacing: -0.01em;
+  font-style: normal;
+  position: relative;
+}
+.prose blockquote.lesson-takeaway::before {
+  content: "→";
+  position: absolute;
+  left: -1.6em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+  display: none;
+}
+[data-theme="dark"] .prose blockquote.lesson-takeaway {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 .prose ul, .prose ol { padding-left: 1.4em; }
 .prose ul { list-style: disc; }
 .prose ol { list-style: decimal; }
