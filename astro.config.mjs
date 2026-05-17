@@ -16,6 +16,8 @@ import { ogImagesIntegration } from './src/integrations/ogImages.ts';
 import { sitemapAliasIntegration } from './src/integrations/sitemapAlias.ts';
 import { remarkDemoteH1 } from './src/lib/lessons/remarkDemoteH1.ts';
 import { remarkRepairMojibake } from './src/lib/encoding/remarkRepairMojibake.ts';
+import { remarkSectionOrder } from './src/lib/lessons/remarkSectionOrder.ts';
+import { rehypeTakeawayBlockquote } from './src/lib/lessons/rehypeTakeawayBlockquote.ts';
 
 /** @type {import('astro').AstroIntegration} */
 const demoteH1Integration = {
@@ -79,5 +81,5 @@ export default defineConfig({
     remarkPlugins: [remarkRepairMojibake],
   },
 
-  integrations: [mdx({ extendMarkdownConfig: false }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), seedLessonsMetaIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
+  integrations: [mdx({ extendMarkdownConfig: false, remarkPlugins: [remarkSectionOrder], rehypePlugins: [rehypeTakeawayBlockquote] }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), seedLessonsMetaIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
 });

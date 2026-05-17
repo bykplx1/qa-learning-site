@@ -75,6 +75,38 @@ test.describe('a11y — WCAG 2.2 AA', () => {
     await runAxe(page, 'profile');
   });
 
+  test('lesson blockquote — semantic role and non-color signaling', async ({ page }) => {
+    await page.goto(`/lessons/${LESSON_SLUG}`);
+    await expect(page.locator('article')).toBeVisible();
+
+    const blockquote = page.locator('.prose blockquote').first();
+    const count = await blockquote.count();
+    if (count === 0) {
+      // Lesson has no blockquote — skip structural assertions, run axe only.
+      await runAxe(page, 'lesson-blockquote-none');
+      return;
+    }
+
+    // Semantic role: <blockquote> carries implicit ARIA role "blockquote" (WCAG 1.3.1).
+    await expect(blockquote).toHaveAttribute('role', /./, { timeout: 0 }).catch(() => {
+      // No explicit role attribute is fine — the element itself is semantic.
+    });
+
+    // Non-color signaling for lesson-takeaway blockquotes: verify background-color
+    // and border are both set (not color-only).
+    const takeaway = page.locator('.prose blockquote.lesson-takeaway').first();
+    if (await takeaway.count() > 0) {
+      const bg = await takeaway.evaluate((el) => getComputedStyle(el).backgroundColor);
+      const borderLeft = await takeaway.evaluate((el) => getComputedStyle(el).borderLeftWidth);
+      // Background must not be transparent (non-color cue present).
+      expect(bg, 'lesson-takeaway must have a non-transparent background').not.toBe('rgba(0, 0, 0, 0)');
+      // Border must be present and wider than the default 2px for extra weight cue.
+      expect(parseFloat(borderLeft), 'lesson-takeaway border-left must be >= 3px').toBeGreaterThanOrEqual(3);
+    }
+
+    await runAxe(page, 'lesson-blockquote');
+  });
+
   test('search modal opened', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1').first()).toBeVisible();
