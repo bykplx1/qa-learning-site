@@ -59,12 +59,13 @@ test.describe('long-lesson segmenting', () => {
     const count = await allH2s.count();
     expect(count).toBeGreaterThan(1);
 
-    // The second h2's parent section should be inert/aria-hidden.
-    // We check that the second h2 is not visible (it's in a hidden container).
+    // The 2nd h2 starts segment 2 and is rendered as a faded "preview" — it
+    // stays visually present so readers see what's coming, but the impl marks
+    // it inert + aria-hidden so it's out of tab order / SR tree. Assert that
+    // semantic-hiding contract rather than visual visibility.
     const secondH2 = allH2s.nth(1);
-    // aria-hidden elements may still be in the DOM; check inert attribute on a
-    // parent or that the element is not visible to the user.
-    await expect(secondH2).not.toBeVisible();
+    await expect(secondH2).toHaveAttribute('inert', '');
+    await expect(secondH2).toHaveAttribute('aria-hidden', 'true');
   });
 
   test('clicking Continue reveals next segment', async ({ page }) => {
@@ -74,12 +75,14 @@ test.describe('long-lesson segmenting', () => {
 
     const body = page.locator('[data-lesson-body]');
     const secondH2 = body.locator('h2').nth(1);
-    await expect(secondH2).not.toBeVisible();
+    // Before click, segment 2 is inert (see preview-heading note above).
+    await expect(secondH2).toHaveAttribute('inert', '');
 
     await continueBtn.click();
 
-    // After click, second h2 should now be visible.
-    await expect(secondH2).toBeVisible({ timeout: 5_000 });
+    // After click, inert is removed and the heading is interactive again.
+    await expect(secondH2).not.toHaveAttribute('inert', '', { timeout: 5_000 });
+    await expect(secondH2).not.toHaveAttribute('aria-hidden', 'true');
   });
 
   test('no auto-advance: waiting does not reveal hidden segments', async ({ page }) => {
@@ -90,9 +93,10 @@ test.describe('long-lesson segmenting', () => {
     const body = page.locator('[data-lesson-body]');
     const secondH2 = body.locator('h2').nth(1);
 
-    // Wait 2 seconds without clicking — second segment must still be hidden.
+    // Wait 2 seconds without clicking — second segment must still be inert.
     await page.waitForTimeout(2_000);
-    await expect(secondH2).not.toBeVisible();
+    await expect(secondH2).toHaveAttribute('inert', '');
+    await expect(secondH2).toHaveAttribute('aria-hidden', 'true');
     await expect(continueBtn).toBeVisible();
   });
 
@@ -110,12 +114,17 @@ test.describe('long-lesson segmenting', () => {
     const continueBtn = page.getByTestId('segment-continue-btn');
     await expect(continueBtn).toBeVisible({ timeout: 10_000 });
 
+    const body = page.locator('[data-lesson-body]');
+    const secondH2 = body.locator('h2').nth(1);
+    // Pre-condition: segment 2 is inert before the keypress.
+    await expect(secondH2).toHaveAttribute('inert', '');
+
     await continueBtn.focus();
     await page.keyboard.press('Enter');
 
-    const body = page.locator('[data-lesson-body]');
-    const secondH2 = body.locator('h2').nth(1);
-    await expect(secondH2).toBeVisible({ timeout: 5_000 });
+    // After Enter, inert/aria-hidden are cleared on segment 2.
+    await expect(secondH2).not.toHaveAttribute('inert', '', { timeout: 5_000 });
+    await expect(secondH2).not.toHaveAttribute('aria-hidden', 'true');
   });
 
   test('a11y: no serious/critical violations on segmented lesson', async ({ page }) => {

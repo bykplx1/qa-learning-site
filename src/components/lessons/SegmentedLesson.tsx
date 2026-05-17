@@ -83,11 +83,15 @@ export default function SegmentedLesson({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleCount]);
 
-  // After "Continue" button mounts (i.e., after re-render), focus it.
+  // Autofocus the "Continue" button on mount so keyboard users land on it —
+  // but only if nothing else currently holds focus. Unconditionally calling
+  // focus() races with sibling islands (e.g. QuizRunner) and steals focus
+  // from in-flight user/test interactions on the same page.
   useEffect(() => {
-    if (visibleCount === 1) {
-      btnRef.current?.focus({ preventScroll: true });
-    }
+    if (visibleCount !== 1) return;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    btnRef.current?.focus({ preventScroll: true });
   }, [visibleCount]);
 
   if (segments.length === 0) return null;
