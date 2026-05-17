@@ -3,44 +3,13 @@ import { getCollection } from 'astro:content';
 import { db } from '../../db';
 import { reviewCards, prompts } from '../../db/schema';
 import { createNewCard } from './fsrs';
+import { extractPrompts } from './extract-prompts';
 
 // sourceRef format: "<cluster>/<topic-slug>#<prompt-id>"
 // This is the stable composite key. If a prompt id is renamed, the old card
 // is orphaned (history preserved) and a new card is created for the new id.
-const PROMPT_FULL_RE =
-  /<Prompt[^>]*\bid=["']([^"']+)["'][^>]*\bquestion=["']([^"']+)["'][^>]*\banswer=["']([^"']+)["'][^>]*/g;
 
-interface PromptData {
-  id: string;
-  question: string;
-  answer: string;
-}
-
-function extractPrompts(body: string): PromptData[] {
-  const results: PromptData[] = [];
-  let m: RegExpExecArray | null;
-  PROMPT_FULL_RE.lastIndex = 0;
-  while ((m = PROMPT_FULL_RE.exec(body)) !== null) {
-    results.push({ id: m[1], question: m[2], answer: m[3] });
-  }
-  // Fallback: if attributes are in different order, try permutations
-  if (results.length === 0) {
-    const altRe =
-      /<Prompt\b([^>]*)>/g;
-    altRe.lastIndex = 0;
-    let am: RegExpExecArray | null;
-    while ((am = altRe.exec(body)) !== null) {
-      const attrs = am[1];
-      const idM = /\bid=["']([^"']+)["']/.exec(attrs);
-      const qM = /\bquestion=["']([^"']+)["']/.exec(attrs);
-      const aM = /\banswer=["']([^"']+)["']/.exec(attrs);
-      if (idM && qM && aM) {
-        results.push({ id: idM[1], question: qM[1], answer: aM[1] });
-      }
-    }
-  }
-  return results;
-}
+export { extractPrompts };
 
 export interface SeedResult {
   inserted: number;
