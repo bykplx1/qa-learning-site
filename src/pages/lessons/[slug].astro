@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import { getCollection, render } from 'astro:content';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -8,7 +10,7 @@ import TableOfContents from '../../components/TableOfContents.astro';
 import WikiLink from '../../components/WikiLink';
 import QuizRunner from '../../components/quiz/QuizRunner';
 import { MarkComplete } from '../../components/MarkComplete';
-import { sortLessons, getPrevNext, groupByCategory } from '../../lib/lessons/order';
+import { sortLessons, groupByCategory } from '../../lib/lessons/order';
 import { quizFileSchema } from '../../lib/quiz/schema';
 import type { QuizQuestion } from '../../lib/quiz/schema';
 import { extractExcerpt } from '../../lib/wikilinks/excerpt';
@@ -16,17 +18,17 @@ import { repairWin1252 } from '../../lib/encoding/repair';
 import { findEntryByLegacySlug } from '../../lib/lessons/migrationMatrix';
 import SegmentedLesson from '../../components/lessons/SegmentedLesson';
 import { computeSegments, estimateWordCount } from '../../lib/lessons/segmenter';
+import EndOfLessonCTA from '../../components/lessons/EndOfLessonCTA.astro';
+import { resolveEndCta } from '../../lib/lessons/end-cta';
+import { getSession } from '../../lib/auth';
 
-export async function getStaticPaths() {
-  const allLessons = await getCollection('lessons');
-  const sorted = sortLessons(allLessons);
-  return sorted.map((lesson) => ({
-    params: { slug: lesson.data.slug },
-    props: { lesson, sorted },
-  }));
+const { slug } = Astro.params;
+const allLessons = await getCollection('lessons');
+const sorted = sortLessons(allLessons);
+const lesson = sorted.find((l) => l.data.slug === slug);
+if (!lesson) {
+  return new Response('Not Found', { status: 404 });
 }
-
-const { lesson, sorted } = Astro.props;
 
 // Redirect shipped/retired topics to their new clustered URL.
 const migrationEntry = findEntryByLegacySlug(lesson.data.slug);
@@ -37,7 +39,6 @@ const isBeingRewritten = !!migrationEntry && (migrationEntry.status === 'drafted
 
 const { Content, headings } = await render(lesson);
 const { title, est_minutes, difficulty, tags, category } = lesson.data;
-const { prev, next } = getPrevNext(sorted, lesson.data.slug);
 
 function formatCategory(cat: string): string {
   return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -57,6 +58,19 @@ const groups = groupByCategory(sorted);
 const siblings = groups.get(category) ?? [];
 const categoryNum = folderPrefix(siblings[0]?.id ?? lesson.id);
 const { head, tail } = splitTitleAccent(title);
+
+// End-of-lesson CTA resolution (server-side, no DB calls in the island)
+const session = await getSession(Astro.request.headers);
+const userId = session?.user?.id ?? null;
+
+const allProjects = await getCollection('projects');
+const projectForCluster = allProjects.find((p) => p.data.cluster === category) ?? null;
+const projectSlugForCluster = projectForCluster?.data.slug ?? null;
+
+const { options: endCtaOptions } = await resolveEndCta(
+  { userId, clusterSlug: category, conceptSlug: lesson.data.slug },
+  projectSlugForCluster,
+);
 
 const difficultyClass =
   difficulty === 'beginner' ? 'pill pill--pass' : difficulty === 'intermediate' ? 'pill pill--warn' : 'pill pill--accent';
@@ -100,17 +114,6 @@ const lessonSegments = computeSegments(headings, wordCount);
           </li>
         ))}
       </ul>
-      {next && (
-        <div class="continue-card">
-          <div class="eyebrow" style="margin-bottom: 6px;">continue</div>
-          <div style="font-family: var(--serif); font-size: 16px; letter-spacing: -0.01em; color: var(--ink);">
-            {next.data.title}
-          </div>
-          <div style="font-size: 12px; color: var(--ink-3); margin-top: 4px; font-family: var(--mono);">
-            up next · {next.data.est_minutes} min
-          </div>
-        </div>
-      )}
     </aside>
 
     <main class="lesson-main">
@@ -187,20 +190,7 @@ const lessonSegments = computeSegments(headings, wordCount);
         </section>
       )}
 
-      <nav class="lesson-footnav" aria-label="Lesson navigation">
-        {prev ? (
-          <a class="footnav-card footnav-card--prev" href={`/lessons/${prev.data.slug}`}>
-            <span class="eyebrow">← previous</span>
-            <span class="footnav-title">{prev.data.title}</span>
-          </a>
-        ) : <div></div>}
-        {next ? (
-          <a class="footnav-card footnav-card--next" href={`/lessons/${next.data.slug}`}>
-            <span class="eyebrow">next →</span>
-            <span class="footnav-title">{next.data.title}</span>
-          </a>
-        ) : <div></div>}
-      </nav>
+      <EndOfLessonCTA options={endCtaOptions} />
     </main>
 
     <aside class="lesson-toc">
@@ -273,14 +263,6 @@ const lessonSegments = computeSegments(headings, wordCount);
     font-weight: 500;
   }
 
-  .continue-card {
-    margin-top: 28px;
-    padding: 16px;
-    background: var(--paper-2);
-    border-radius: 8px;
-    border: 1px solid var(--rule);
-  }
-
   .lesson-title {
     font-family: var(--serif);
     font-size: 52px;
@@ -296,29 +278,6 @@ const lessonSegments = computeSegments(headings, wordCount);
     font-weight: 400;
   }
   @media (max-width: 768px) { .lesson-title { font-size: 38px; } }
-
-  .lesson-footnav {
-    margin-top: 56px;
-    padding-top: 24px;
-    border-top: 1px solid var(--rule);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .footnav-card {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 16px 18px;
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--ink);
-    transition: border-color 150ms ease, background 150ms ease;
-  }
-  .footnav-card:hover { border-color: var(--ink-3); background: var(--paper-2); }
-  .footnav-card--next { text-align: right; align-items: flex-end; }
-  .footnav-title { font-size: 14px; font-weight: 500; }
 
   .hidden { display: none !important; }
 
