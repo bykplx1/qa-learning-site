@@ -9,7 +9,7 @@ test.skip(process.platform !== 'linux', 'visual snapshots run on Linux only');
 
 test.describe('Diagram component visual', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/__fixture__/diagram');
+    await page.goto('/fixtures/diagram');
     // Wait for Mermaid island to hydrate and render SVG
     await page.waitForSelector('#mermaid-section .mdx-diagram__svg-wrap', { timeout: 15_000 });
   });
