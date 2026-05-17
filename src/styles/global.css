@@ -845,3 +845,71 @@ mark {
   padding: 0 2px;
   border-radius: 2px;
 }
+
+/* ====================================================================
+   Lesson segmenting (P3.4 — #149)
+   ==================================================================== */
+
+/* Faded preview: body container signals there is more below.
+   Non-colour cue: dashed rule at the bottom, visible in all themes. */
+[data-lesson-body].has-segment-preview {
+  position: relative;
+}
+[data-lesson-body].has-segment-preview::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--paper) 90%
+  );
+  pointer-events: none;
+  border-bottom: 2px dashed var(--rule-2);
+}
+
+/* Continue-to-segment affordance strip */
+.segment-continue {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.segment-next-label {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+}
+
+.segment-continue__btn {
+  /* Inherits .btn .btn--primary from global.css */
+  gap: 6px;
+}
+.segment-continue__btn svg {
+  transform: rotate(0deg);
+  transition: transform 150ms ease;
+}
+.segment-continue__btn:hover svg {
+  transform: translateY(2px);
+}
+
+/* Utility: visually hidden but in DOM for SR */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
