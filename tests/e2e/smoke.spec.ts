@@ -15,8 +15,10 @@ test('home → lesson → quiz → refresh restores state → finish → summary
   await page.goto('/');
   await expect(page.locator('h1')).toBeVisible();
 
-  // 2. Navigate to lesson via link
-  await page.locator('[data-testid="curated-tracks"]').getByRole('link', { name: 'Testing Principles' }).click();
+  // 2. Navigate to lesson via link. The home page surfaces lessons in two
+  // regions (curated track tiles + "Latest lessons" list) — scope by href
+  // so we pick the lesson row regardless of which surface is rendering it.
+  await page.locator(`a[href="${LESSON_URL}"]`).first().click();
   await expect(page).toHaveURL(LESSON_URL);
   await expect(page.locator('h1').first()).toContainText('Testing Principles');
 
