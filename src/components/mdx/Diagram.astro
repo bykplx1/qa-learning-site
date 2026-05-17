@@ -1,16 +1,25 @@
 ---
+import DiagramIsland from './DiagramIsland';
+
 interface Props {
-  skip?: 'atomic-fact';
+  /** Mermaid source string. If omitted, inline SVG children are rendered via slot. */
+  src?: string;
   caption?: string;
+  /** Depth-gate prop — accepted here, lint enforces correct usage (#144). */
+  skip?: 'atomic-fact';
 }
 
-const { skip, caption } = Astro.props;
+const { src, caption, skip } = Astro.props;
 ---
 
 {skip === 'atomic-fact' ? (
   <div class="mdx-diagram mdx-diagram--skipped" data-skip={skip} aria-hidden="true"></div>
+) : src ? (
+  <figure class="mdx-diagram mdx-diagram--mermaid">
+    <DiagramIsland client:idle src={src} caption={caption} />
+  </figure>
 ) : (
-  <figure class="mdx-diagram">
+  <figure class="mdx-diagram mdx-diagram--inline-svg">
     <div class="mdx-diagram__body">
       <slot />
     </div>
@@ -22,15 +31,62 @@ const { skip, caption } = Astro.props;
   .mdx-diagram {
     margin: 24px 0;
     padding: 16px;
-    border: 1px dashed var(--rule);
+    border: 1px solid var(--rule);
     border-radius: 8px;
     background: var(--paper-2);
+    overflow: hidden;
   }
   .mdx-diagram--skipped { display: none; }
-  .mdx-diagram__caption {
+
+  /* Reserve min-height to prevent layout shift while Mermaid hydrates */
+  .mdx-diagram--mermaid {
+    min-height: 160px;
+  }
+
+  .mdx-diagram__body {
+    overflow-x: auto;
+  }
+
+  :global(.mdx-diagram__mermaid) {
+    width: 100%;
+  }
+
+  /* Placeholder shown while Mermaid is loading */
+  :global(.mdx-diagram__placeholder) {
+    width: 100%;
+    min-height: 120px;
+    background: var(--paper);
+    border-radius: 4px;
+  }
+
+  :global(.mdx-diagram__svg-wrap) {
+    width: 100%;
+    overflow-x: auto;
+  }
+  :global(.mdx-diagram__svg-wrap svg) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  :global(.mdx-diagram__error) {
+    padding: 12px;
+    color: var(--ink-2);
+  }
+  :global(.mdx-diagram__error pre) {
+    font-family: var(--mono);
+    font-size: 12px;
+    white-space: pre-wrap;
+    margin: 8px 0 0;
+  }
+
+  .mdx-diagram__caption,
+  :global(.mdx-diagram__caption) {
     margin-top: 8px;
     font-size: 13px;
     color: var(--ink-3);
     font-family: var(--mono);
+    display: block;
   }
 </style>
