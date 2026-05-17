@@ -234,10 +234,14 @@ jobs:
 
       - name: Regenerate baselines (deliberate)
         if: ${{ inputs.update_visual_baselines == true }}
+        # `playwright test --update-snapshots` writes every passing test's PNG
+        # to its snapshots dir, then exits 1 if any test failed. We still want
+        # to capture the snapshots that *did* update — the upload step below
+        # runs on always() so a partial regen is still recoverable.
         run: npm run test:visual:update
 
       - name: Upload regenerated baselines artifact
-        if: ${{ inputs.update_visual_baselines == true }}
+        if: ${{ always() && inputs.update_visual_baselines == true }}
         uses: actions/upload-artifact@v4
         with:
           name: visual-baselines
