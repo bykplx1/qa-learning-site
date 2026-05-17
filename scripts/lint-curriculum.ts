@@ -138,10 +138,10 @@ function ruleValidFrontmatter(meta: FileMeta): LintError[] {
   const result = curriculumFrontmatterSchema.safeParse(meta.frontmatter);
   if (result.success) return [];
   const issues = result.error.issues ?? [];
-  return issues.map((e: { path: (string | number)[]; message: string }) => ({
+  return issues.map((e) => ({
     rule: 'R1:frontmatter',
     file: meta.filePath,
-    message: `${e.path.join('.')}: ${e.message}`,
+    message: `${e.path.map(String).join('.')}: ${e.message}`,
   }));
 }
 
