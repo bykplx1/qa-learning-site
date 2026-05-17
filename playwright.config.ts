@@ -9,6 +9,12 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }]],
   use: {
     baseURL: 'http://localhost:4321',
+    // Astro 6's security.checkOrigin returns 403 for non-GET requests whose
+    // Content-Type is form-like (incl. text/plain — Playwright's default for
+    // empty-body POSTs) when Origin doesn't match the URL origin. Setting
+    // Origin here keeps all page.request.* calls same-origin so the SRS
+    // /api/review/* endpoints accept them.
+    extraHTTPHeaders: { Origin: 'http://localhost:4321' },
     trace: 'on-first-retry',
   },
   projects: [
