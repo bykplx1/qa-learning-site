@@ -310,10 +310,12 @@ export default function ProfileShell() {
             <div className="eyebrow">lessons done</div>
           </div>
           <div className="istat">
-            <div className="istat__num" data-testid="attempt-count">
+            <div className="istat__num" data-testid="accuracy-percent">
               {overallAccuracy}<span className="istat__num-sub">%</span>
             </div>
-            <div className="eyebrow">quiz accuracy · {attemptCount} attempts</div>
+            <div className="eyebrow">
+              quiz accuracy · <span data-testid="attempt-count">{attemptCount}</span> attempts
+            </div>
           </div>
         </div>
       </section>
