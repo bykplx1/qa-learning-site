@@ -10,10 +10,20 @@ export const projectFrontmatterSchema = z
     tier: z.enum(PROJECT_TIERS),
     estimate: z.string().min(1),
     acceptanceCriteria: z.array(z.string().min(1)).min(1),
+    cluster: z.string().optional(),
   })
   .strict();
 
 export type ProjectFrontmatter = z.infer<typeof projectFrontmatterSchema>;
+
+export const CLUSTER_LABELS: Record<string, string> = {
+  foundations: 'Foundations',
+  'test-design': 'Test Design',
+  'functional-execution': 'Functional Execution',
+  'automation-cicd': 'Automation & CI/CD',
+  'non-functional': 'Non-Functional',
+  'ai-llm-qa': 'AI / LLM QA',
+};
 
 export const TIER_LABELS: Record<ProjectTier, string> = {
   starter: 'Starter',
