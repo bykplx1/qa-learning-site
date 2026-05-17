@@ -1,0 +1,165 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import TableOfContents from '../../../components/TableOfContents.astro';
+import { MarkComplete } from '../../../components/MarkComplete';
+import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
+import { repairWin1252 } from '../../../lib/encoding/repair';
+import type { CurriculumCluster } from '../../../lib/curriculum/schema';
+import { CURRICULUM_CLUSTERS } from '../../../lib/curriculum/schema';
+
+export async function getStaticPaths() {
+  const allTopics = await getCollection('curriculum');
+  return allTopics.map((topic) => ({
+    params: { cluster: topic.data.cluster, slug: topic.data.slug },
+    props: { topic },
+  }));
+}
+
+const { topic } = Astro.props;
+const { Content, headings } = await render(topic);
+const { title, cluster, estimatedEncodingMinutes, tags, layer } = topic.data;
+
+function formatCluster(c: string): string {
+  return c.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function splitTitleAccent(t: string): { head: string; tail: string } {
+  const idx = t.lastIndexOf(' ');
+  if (idx <= 0 || t.split(' ').length < 2) return { head: '', tail: t };
+  return { head: t.slice(0, idx), tail: t.slice(idx + 1) };
+}
+
+const { head, tail } = splitTitleAccent(title);
+
+const layerClass =
+  layer === 'facts'
+    ? 'pill pill--pass'
+    : layer === 'patterns'
+      ? 'pill pill--warn'
+      : 'pill pill--accent';
+
+const ogDescription = topic.body ? repairWin1252(extractExcerpt(topic.body)) : undefined;
+const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.site).href;
+---
+
+<BaseLayout
+  title={`${title} — QA Learning`}
+  description={ogDescription}
+  canonicalUrl={canonicalUrl}
+  ogType="article"
+  image={`/og/${topic.data.slug}.png`}
+>
+  <div class="lesson-grid">
+    <aside class="lesson-sidebar">
+      <div class="eyebrow" style="margin-bottom: 16px;">
+        {formatCluster(cluster)}
+      </div>
+    </aside>
+
+    <main class="lesson-main">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">QA Learning</a>
+        <span class="sep">/</span>
+        <a href="/lessons">Lessons</a>
+        <span class="sep">/</span>
+        <a href={`/lessons/${cluster}`}>{formatCluster(cluster)}</a>
+        <span class="sep">/</span>
+        <span class="crumb-current">{title}</span>
+      </nav>
+
+      <article>
+        <header style="margin-bottom: 28px;">
+          <h1 class="lesson-title">
+            {head ? (
+              <>
+                {head}{' '}
+                <em>{tail}</em>
+              </>
+            ) : (
+              tail
+            )}
+          </h1>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px;">
+            <span class="pill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              {estimatedEncodingMinutes} min read
+            </span>
+            <span class={layerClass}>
+              <span class="dot"></span>{layer}
+            </span>
+            {tags.map((t) => <span class="pill">{t}</span>)}
+          </div>
+        </header>
+
+        <div class="prose" data-pagefind-body data-pagefind-meta="type:curriculum">
+          <Content />
+        </div>
+
+        <div style="margin-top: 28px;">
+          <MarkComplete client:only="react" slug={topic.data.slug} />
+        </div>
+      </article>
+    </main>
+
+    <aside class="lesson-toc">
+      <TableOfContents headings={headings} />
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  .lesson-grid {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 240px;
+    gap: 0;
+    min-height: calc(100vh - 67px);
+  }
+  @media (max-width: 1100px) {
+    .lesson-grid {
+      grid-template-columns: minmax(0, 1fr) 240px;
+    }
+    .lesson-sidebar { display: none; }
+  }
+  @media (max-width: 768px) {
+    .lesson-grid { grid-template-columns: minmax(0, 1fr); }
+    .lesson-toc { display: none; }
+  }
+
+  .lesson-sidebar {
+    border-right: 1px solid var(--rule);
+    padding: 32px 24px;
+  }
+  .lesson-main {
+    padding: 44px 56px;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) { .lesson-main { padding: 28px 20px; } }
+  .lesson-toc {
+    border-left: 1px solid var(--rule);
+    padding: 44px 24px;
+    position: sticky;
+    top: 67px;
+    align-self: start;
+    max-height: calc(100vh - 67px);
+    overflow-y: auto;
+  }
+
+  .lesson-title {
+    font-family: var(--serif);
+    font-size: 52px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 0;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .lesson-title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  @media (max-width: 768px) { .lesson-title { font-size: 38px; } }
+</style>
