@@ -1,0 +1,85 @@
+---
+slug: qa-mindset
+title: The QA Mindset
+cluster: foundations
+layer: systems
+prerequisites: []
+related: []
+tags: [quality, mindset, testing-fundamentals]
+estimatedEncodingMinutes: 20
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+
+## Core Idea
+
+Quality Assurance is not a phase at the end of development — it is a discipline of asking "what could go wrong?" at every step. A QA mindset means treating software as a set of assumptions that need evidence, not a set of features that need checking.
+
+> The QA mindset is evidence-based skepticism applied continuously: every claim about behaviour is a hypothesis until a test confirms or refutes it.
+
+## Diagram
+
+<Diagram caption="QA as continuous evidence loop">
+```
+Hypothesis → Test Design → Execution → Evidence → Decision
+     ↑                                                ↓
+     └──────────────── Feedback ────────────────────┘
+```
+</Diagram>
+
+## Worked Example
+
+A team ships a login feature. A developer writes a passing unit test:
+
+```ts
+expect(login('alice', 'correct-password')).toBe(true);
+```
+
+A QA engineer with the right mindset asks: what happens with an empty password? SQL injection in the username? 429 after 100 rapid attempts? The unit test confirms one happy path; the QA mindset maps the boundary conditions and threat surface the developer did not think to test.
+
+The deliberate mistake: testing only the happy path and calling the feature "done."
+
+## Common Pitfalls
+
+- **Testing only happy paths.** Most bugs live at boundaries and error paths. Fix: write the unhappy path test first.
+- **Late-stage quality gates.** Integrating QA only at the end of a sprint means defects compound. Fix: embed testing in Definition of Done at the story level.
+- **Confusing test coverage with quality.** 90% line coverage can coexist with critical logic gaps. Fix: measure defect escape rate alongside coverage.
+- **Treating QA as a separate team responsibility.** When only dedicated QA engineers think about quality, developers ship assumptions. Fix: make testability a shared engineering standard.
+- **Skipping risk analysis.** Not every bug matters equally. Fix: triage by impact × probability before deciding what to automate.
+
+## Retrieval Prompts
+
+<Prompt id="qa-mindset-1">
+  What is the fundamental difference between a QA mindset and a verification mindset?
+</Prompt>
+
+<Prompt id="qa-mindset-2">
+  Name two testing activities that demonstrate the QA mindset being applied _before_ code is written.
+</Prompt>
+
+<Prompt id="qa-mindset-3">
+  Why does high line coverage not guarantee high quality? Give a concrete counter-example.
+</Prompt>
+
+<Prompt id="qa-mindset-4">
+  A developer says "I tested it and it works." What follow-up questions does a QA mindset suggest?
+</Prompt>
+
+<Prompt id="qa-mindset-5">
+  Explain the feedback loop shown in the diagram: what feeds back into hypothesis refinement?
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="qa-mindset-task-1" rubric="qa-mindset-rubric-v1">
+  Take any feature in a project you have access to (or use the login example above). Write a one-page test charter that covers: the feature under test, the risks you are investigating, the conditions you will and will not test, and the oracle (how you will know a failure is a failure). Submit the charter and a 2-line reflection on what assumptions you found that the developer did not state explicitly.
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="qa-mindset-feynman-1" wordTarget={150}>
+  Explain the QA mindset to a junior developer who thinks testing means running the app and clicking around. Why is that approach insufficient? What does "evidence-based skepticism" mean in practice? Rubric (revealed after submit): Did you name at least one concrete failure mode the ad-hoc approach misses? Did you describe a structured alternative? Did you avoid using the word "quality" as a definition of itself?
+</Feynman>
