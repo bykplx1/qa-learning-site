@@ -106,7 +106,9 @@ describe('POST /api/explain/gap-prompt', () => {
     const data = (await res.json()) as Record<string, unknown>;
     expect(data.refused).toBe(true);
     expect(data).not.toHaveProperty('questions');
-    expect(JSON.stringify(data)).not.toMatch(/\d+\/10|\d+%|score|rating|grade/i);
+    // Numeric score shapes only — the static guardrail reason intentionally
+    // contains "score" (see src/lib/ai/gap-prompt.ts).
+    expect(JSON.stringify(data)).not.toMatch(/\d+\s*\/\s*10|\d+\s*%/);
   });
 
   it('returns 400 for missing explanation body', async () => {
