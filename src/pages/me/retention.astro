@@ -213,6 +213,39 @@ const latestStability = stabilityPoints.at(-1)?.meanStability ?? null;
       )}
     </section>
 
+    <!-- ── Demoted metrics ──────────────────────────────────────────────
+         These four counters are intentionally NOT the goal.
+         <s> provides semantic strikethrough; the visually-hidden
+         "(demoted metric)" suffix ensures screen readers convey
+         the crossed-out meaning independently of CSS rendering.
+    ──────────────────────────────────────────────────────────────────── -->
+    <section class="retention-card demoted-card" aria-labelledby="demoted-heading" data-testid="demoted-metrics">
+      <h2 id="demoted-heading" class="retention-card__title">Not the goal</h2>
+      <p class="retention-card__desc">These numbers are available but are not what you should optimise for.</p>
+      <ul class="demoted-list" role="list">
+        <li class="demoted-item">
+          <s class="demoted-label" aria-label="Streak length — demoted metric">Streak length</s>
+          <span class="sr-only">(demoted metric)</span>
+          <span class="demoted-reason">Punishes correct spacing. Not what you should optimise.</span>
+        </li>
+        <li class="demoted-item">
+          <s class="demoted-label" aria-label="Lessons completed — demoted metric">Lessons completed</s>
+          <span class="sr-only">(demoted metric)</span>
+          <span class="demoted-reason">Doesn&apos;t measure retention.</span>
+        </li>
+        <li class="demoted-item">
+          <s class="demoted-label" aria-label="Time on site — demoted metric">Time on site</s>
+          <span class="sr-only">(demoted metric)</span>
+          <span class="demoted-reason">Engagement &ne; learning.</span>
+        </li>
+        <li class="demoted-item">
+          <s class="demoted-label" aria-label="Percentile rank — demoted metric">Percentile rank</s>
+          <span class="sr-only">(demoted metric)</span>
+          <span class="demoted-reason">Comparing learners is not the goal.</span>
+        </li>
+      </ul>
+    </section>
+
     <!-- ── Stability growth ───────────────────────────────────────────── -->
     <section class="retention-card" aria-labelledby="stab-heading">
       <h2 id="stab-heading" class="retention-card__title">Stability growth</h2>
@@ -465,6 +498,44 @@ const latestStability = stabilityPoints.at(-1)?.meanStability ?? null;
   .chart-table th {
     color: var(--ink);
     font-weight: 500;
+  }
+
+  /* ── Demoted metrics panel ── */
+  .demoted-card {
+    border-style: dashed;
+  }
+
+  .demoted-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .demoted-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .demoted-label {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--ink-3);
+    text-decoration-color: var(--ink-3);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 2px;
+    letter-spacing: -0.01em;
+  }
+
+  .demoted-reason {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    padding-left: 2px;
   }
 
   /* ── Utility ── */
