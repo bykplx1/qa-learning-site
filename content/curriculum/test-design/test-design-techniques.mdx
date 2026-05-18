@@ -1,0 +1,147 @@
+---
+slug: test-design-techniques
+title: Test Design Techniques
+cluster: test-design
+layer: systems
+prerequisites:
+  - qa-mindset
+  - test-oracles-and-prioritization
+  - black-white-gray-box-thinking
+related:
+  - test-pyramid-and-trophy
+  - risk-based-testing
+  - exploratory-testing
+  - tdd-bdd-atdd
+  - shift-left-and-shift-right
+tags: [test-design, equivalence-partitioning, boundary-value-analysis, decision-tables, state-transition, pairwise, error-guessing]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+
+## Core Idea
+
+A **test design technique** is a disciplined procedure for reducing an infinite input space to a finite, defensible set of tests. Testing without explicit technique is testing by intuition — intuition reproducibly under-tests the inputs you didn't think of and over-tests the ones you did. Six named techniques cover the most common models a system can expose: **Equivalence Partitioning** divides inputs into classes that behave identically; **Boundary Value Analysis** targets the edges where bugs cluster; **Decision Tables** map condition combinations to outcomes; **State Transition Testing** enumerates named states and the transitions between them; **Pairwise Testing** covers all two-variable interactions at a fraction of exhaustive cost; **Error Guessing** applies a written bug catalogue to direct intuition systematically. Every technique encodes an assumption that can be wrong — the tester's job is to notice when it is.
+
+> A technique is a model of the system. Build the model, enumerate its axes, choose one test per axis. If the model doesn't fit the system, the technique doesn't fit either.
+
+## Diagram
+
+<Diagram caption="Six test design techniques mapped to the model each imposes on the system under test">
+```
+Technique                 Model it imposes               Assumption that can fail
+─────────────────────────────────────────────────────────────────────────────────
+Equivalence Partitioning  Input space → disjoint classes  All values in a class behave identically
+Boundary Value Analysis   Bugs cluster at class edges     The boundary is where the defect lives
+Decision Tables           Behaviour = f(conditions)       Condition set is complete and enumerable
+State Transition          Named states + transitions      All reachable states are known up front
+Pairwise / Combinatorial  Most bugs are ≤ 2-variable       3-way+ interactions do exist (rarer)
+Error Guessing            Past bugs predict future bugs   Catalogue is representative of this system
+
+Coverage by technique (illustrative, 10 binary inputs)
+──────────────────────────────────────────────────
+Exhaustive testing:          1,024 tests  (100% of combinations)
+Pairwise (2-way coverage):  ~  14 tests  (~60–90% of multi-variable bug finds)
+Boundary + EP:              ~   8 tests  (edges + one interior per class)
+```
+</Diagram>
+
+## Worked Example
+
+**The triangle classifier — EP, BVA, and a decision table in one problem.**
+
+Myers (1979) posed: given three integers A, B, C, classify the triangle as scalene, isosceles, equilateral, or invalid. A naïve tester writes three tests — one of each valid shape. Myers reported that experienced developers averaged 7.8 out of 14 correct tests. Here is what the techniques surface.
+
+**Step 1 — Equivalence Partitioning.** Partition the output space, not just the input ranges:
+
+| Partition | Representative test |
+|---|---|
+| Equilateral (A=B=C, valid) | (5, 5, 5) |
+| Isosceles (exactly two sides equal, valid) | (5, 5, 8) |
+| Scalene (all sides distinct, valid) | (3, 4, 5) |
+| Invalid — degenerate (A+B=C or any permutation) | (1, 2, 3) |
+| Invalid — impossible (A+B < C or any permutation) | (1, 2, 10) |
+| Invalid — non-positive (any side ≤ 0) | (0, 5, 5) |
+| Invalid — non-integer (any side not whole) | (1.5, 2, 3) |
+
+Seven partitions; seven tests. The naïve tester had three.
+
+**Step 2 — Boundary Value Analysis.** Boundaries are (A+B = C) and (A = B), each producing tests just inside, just outside, and at the boundary:
+
+- (2, 3, 5): degenerate — sums exactly equal (at boundary).
+- (2, 3, 4): valid scalene — just inside the valid side.
+- (2, 3, 6): invalid — just outside the valid side.
+- (5, 5, 5): equilateral — all three equal (A=B and B=C boundaries coincide).
+
+**Step 3 — Decision Table.** Conditions: (A=B), (B=C), (A=C), (A+B>C and all permutations). Sixteen combinations; four are logically impossible (e.g., A=B and B=C but A≠C). The impossibilities are themselves tests — if the implementation produces output for an impossible input combination, that output is a defect by definition.
+
+**What each technique added:** EP found the partition the tester skipped (degenerate). BVA found the off-by-one at the degenerate boundary. The decision table found a logically impossible input that the implementation still handled — a hidden specification gap.
+
+## Common Pitfalls
+
+- **Technique as worksheet, not tool.** Testers name the technique, fill the cells, and declare done — without stating the assumption the technique makes. Fix: pair every technique invocation with a one-sentence statement of its assumption. Why it happens: ISTQB courses teach the *procedure*, not the *model*.
+- **Skipping partition discovery.** Beginners partition by obvious axes (input type, numeric range) and miss the axes that matter (account state, locale, time of day, surrounding system state). Fix: spend half the design session listing *what to partition by* before partitioning anything. Why it happens: the visible UI suggests the obvious axes and hides the rest.
+- **"BVA = test min and max."** The common shorthand omits the off-by-one values that BVA was invented to catch. Fix: test the values *at, just inside, and just outside* each boundary — and reason about which side the defect would live on. Why it happens: "min and max" is shorter to say and easier to remember.
+- **Pairwise sold as exhaustive.** Internally, pairwise testing gets described as "we tested all combinations." Pairwise covers all 2-way interactions; it does not cover 3-way. Fix: document the gap explicitly: "2-way coverage achieved; 3-way+ not covered." Why it happens: the reduction from 1,024 to 14 tests feels like proof of completeness.
+- **Decision tables without impossibility marking.** Impossible condition combinations are left blank or deleted. Fix: mark them explicitly and use each impossibility as a test — verify the implementation rejects or handles the logically-impossible case consistently. Why it happens: the cells look like noise when you expect them to be empty.
+- **State transition diagrams that copy the spec.** Drawing the diagram from the specification tests nothing. Fix: draw from the implementation, then diff against the spec — the diff is usually a list of undocumented transitions, which are either bugs or unspecified features. Why it happens: the spec is the easiest source; it is also the source of the defect being tested.
+- **Error guessing without a catalogue.** Pure intuition does not transfer between testers or survive team turnover. Fix: maintain a written bug catalogue; attach it to the project so new testers inherit it. Why it happens: "I have experience" feels sufficient until the experienced tester leaves.
+
+## Retrieval Prompts
+
+<Prompt id="tdt-1">
+  A signup form accepts an age between 13 and 120 inclusive. State the equivalence partitions, the boundary-value tests (with values), and the assumption that Boundary Value Analysis makes about where bugs live. How many distinct tests does that produce, and what specific defect does each boundary test target?
+</Prompt>
+
+<Prompt id="tdt-2">
+  Name the assumption each of the six techniques in this topic makes about the system. For each assumption, describe a realistic system where the assumption fails — and what the failure means for your test suite.
+</Prompt>
+
+<Prompt id="tdt-3">
+  A decision table for an authentication flow has 16 rows. Six rows have no defined output in the spec. What do you do with those six rows, and why is finding them before coding sometimes more valuable than finding a bug after?
+</Prompt>
+
+<Prompt id="tdt-4">
+  A configuration test matrix has 10 binary inputs. Exhaustive testing would require 1,024 tests. Pairwise reduces this to approximately 14. Explain the mathematical reason for the reduction, name the class of bug that pairwise systematically cannot find, and state when you would escalate to 3-way combinatorial coverage.
+</Prompt>
+
+<Prompt id="tdt-5">
+  A teammate says: "I used error guessing — I have eight years of experience, trust me." What is the single next question you ask, and what specific risk does the absence of a bug catalogue introduce when that tester leaves the team?
+</Prompt>
+
+<Prompt id="tdt-6" requiresDiagram>
+  Sketch the state diagram for a "forgot password" flow, including the invalid-token and expired-token states. Mark every transition the written specification is most likely to be silent about. Then identify which transition represents the highest-severity unspecified path and explain why.
+</Prompt>
+
+<Prompt id="tdt-7">
+  Rewrite the informal test plan "test the search, especially edge cases" as a designed test set using equivalence partitioning and boundary value analysis. Justify your choice of partition axes and explain which axis the informal plan would have missed.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="tdt-task-1" rubric="tdt-rubric-v1">
+  Pick a real public form — a flight-search page, a registration form, a tax or loan calculator. Without writing a single line of code, produce a designed test set using **at least three** of the six techniques in this topic.
+
+  Deliver:
+
+  1. **Form description** — URL or screenshot, plus a one-paragraph description of its input space (list every variable you can identify, including non-visible ones like locale, account state, and session state).
+  2. **Technique application** — for each of the three (or more) techniques you apply: state the model the technique assumes, list the partitions / boundaries / states / condition combinations it produces, and show the resulting test cases.
+  3. **Merged test list** — a de-duplicated final list of ≤ 30 tests. If you exceed 30, the techniques were not applied — they were padded.
+  4. **Reflection** — 150 words naming one partition axis you almost missed and the specific technique that surfaced it, plus one technique you mis-applied (not just skipped) and what you would do differently.
+
+  Rubric (revealed after submission):
+  - Did you state each technique's assumption in your own words — not just its name?
+  - Did you discover at least one partition axis the form's visible UI does not hint at (e.g., locale, account state, time of day)?
+  - Did your decision table or state diagram surface a specification gap — a condition combination with no defined output — before you ran any test?
+  - Did the final list compress to ≤ 30? Padding is a fail; these techniques exist to shrink the list.
+  - Did the reflection name a technique you *mis-applied*, not merely one you skipped? Self-honesty about misapplication is the signal the rubric is looking for.
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="tdt-feynman-1" wordTarget={150}>
+  Explain to a developer who writes tests by feel why named test design techniques exist. The developer objects: "I've been writing tests for five years and they catch bugs — why do I need a procedure?" Address the specific failure mode that intuition-based testing reproducibly produces, using the triangle classifier problem as your anchor. Then name one technique and state — in one sentence — the model it imposes on the system and the assumption that model makes. Rubric (revealed after submit): Did you name a concrete, quantified failure mode rather than a vague "you might miss things"? Did you distinguish the technique's *model* from its *procedure*? Did you avoid claiming that techniques guarantee completeness?
+</Feynman>
