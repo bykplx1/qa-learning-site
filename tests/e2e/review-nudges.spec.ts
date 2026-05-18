@@ -33,20 +33,14 @@ test.describe('session-cap overlay', () => {
   test('fires after synthetic cap duration, dismiss works, review continues', async ({ page }) => {
     await dismissDevOverlay(page);
 
-    // Shorten the cap to 200 ms via test hook before the island hydrates.
+    // Set the override before any navigation so the React island reads it on mount.
+    await page.addInitScript(() => {
+      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
+    });
+
+    await signInWithMockedGitHub(page);
     await page.goto('/review');
-
-    // Inject the cap override before the React island hydrates — evaluate on
-    // DOMContentLoaded since the page is already loaded we do it immediately.
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
-
-    // Reload so the island picks up the overridden cap value.
-    await page.reload();
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
+    await page.waitForLoadState('networkidle');
 
     // Wait for the overlay to appear.
     const overlay = page.getByTestId('session-cap-overlay');
@@ -73,14 +67,14 @@ test.describe('session-cap overlay', () => {
 
   test('dismiss via button works', async ({ page }) => {
     await dismissDevOverlay(page);
+
+    await page.addInitScript(() => {
+      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
+    });
+
+    await signInWithMockedGitHub(page);
     await page.goto('/review');
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
-    await page.reload();
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
+    await page.waitForLoadState('networkidle');
 
     const overlay = page.getByTestId('session-cap-overlay');
     await expect(overlay).toBeVisible({ timeout: 5_000 });
@@ -91,14 +85,14 @@ test.describe('session-cap overlay', () => {
 
   test('a11y — overlay passes axe when visible', async ({ page }) => {
     await dismissDevOverlay(page);
+
+    await page.addInitScript(() => {
+      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
+    });
+
+    await signInWithMockedGitHub(page);
     await page.goto('/review');
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
-    await page.reload();
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
+    await page.waitForLoadState('networkidle');
 
     await expect(page.getByTestId('session-cap-overlay')).toBeVisible({ timeout: 5_000 });
 
@@ -111,14 +105,14 @@ test.describe('session-cap overlay', () => {
 
   test('focus-trap: Tab cycles to dismiss button', async ({ page }) => {
     await dismissDevOverlay(page);
+
+    await page.addInitScript(() => {
+      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
+    });
+
+    await signInWithMockedGitHub(page);
     await page.goto('/review');
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
-    await page.reload();
-    await page.evaluate(() => {
-      (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ = 300;
-    });
+    await page.waitForLoadState('networkidle');
 
     await expect(page.getByTestId('session-cap-overlay')).toBeVisible({ timeout: 5_000 });
 
@@ -140,6 +134,7 @@ test.describe('sleep-gate notice', () => {
       (window as unknown as Record<string, unknown>).__REVIEW_AFTER_MIDNIGHT__ = true;
     });
 
+    await signInWithMockedGitHub(page);
     await page.goto('/review');
     await page.waitForLoadState('networkidle');
 
@@ -168,6 +163,7 @@ test.describe('sleep-gate notice', () => {
       (window as unknown as Record<string, unknown>).__REVIEW_AFTER_MIDNIGHT__ = false;
     });
 
+    await signInWithMockedGitHub(page);
     await page.goto('/review');
     await page.waitForLoadState('networkidle');
 

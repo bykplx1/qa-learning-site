@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// 25 minutes in milliseconds. Exposed via window for test hooks.
-const CAP_MS =
-  typeof window !== 'undefined' && typeof (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ === 'number'
-    ? ((window as unknown as Record<string, number>).__REVIEW_SESSION_CAP_MS__ as number)
-    : 25 * 60 * 1000;
+// 25 minutes in milliseconds default. Overridable via window.__REVIEW_SESSION_CAP_MS__ for tests.
+// Read inside component mount (not at module scope) so addInitScript overrides are visible.
+function getCapMs(): number {
+  if (
+    typeof window !== 'undefined' &&
+    typeof (window as unknown as Record<string, unknown>).__REVIEW_SESSION_CAP_MS__ === 'number'
+  ) {
+    return (window as unknown as Record<string, number>).__REVIEW_SESSION_CAP_MS__;
+  }
+  return 25 * 60 * 1000;
+}
 
 // Idle reset threshold — if the user is inactive for this long the cap timer restarts.
 const IDLE_RESET_MS = 3 * 60 * 1000;
@@ -24,7 +30,7 @@ export default function SessionCapOverlay({ onDismiss }: Props) {
     if (capTimer.current) clearTimeout(capTimer.current);
     capTimer.current = setTimeout(() => {
       setVisible(true);
-    }, CAP_MS);
+    }, getCapMs());
   }, []);
 
   const resetIdleTimer = useCallback(() => {
