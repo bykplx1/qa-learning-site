@@ -29,3 +29,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | foundations/what-is-qa-quality | foundations | shipped | n/a | Net-new topic — no legacy precursor. Authored for Knowledge P1 (#160). Layer: patterns. |
 | — | foundations/black-white-gray-box-thinking | foundations | shipped | n/a | Knowledge P1 — lenses not categories. New topic — no legacy precursor. PR closes #164. |
 | — | foundations/sdlc-delivery-models | foundations | shipped | n/a | Knowledge P1 (#162). New topic — no legacy precursor. layer: patterns. 7 retrieval prompts, 1 Feynman. |
+| — | test-design/exploratory-testing | test-design | shipped | n/a | Knowledge P2 (#168). New topic. layer: systems. PR: knowledge-p2/168-exploratory-testing. |

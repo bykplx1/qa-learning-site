@@ -1,0 +1,176 @@
+---
+slug: exploratory-testing
+title: Exploratory Testing — Charters, Sessions, and Note-Taking Discipline
+cluster: test-design
+layer: systems
+prerequisites:
+  - qa-mindset
+  - test-oracles-and-prioritization
+related:
+  - test-design-techniques
+  - test-pyramid-and-trophy
+  - risk-based-testing
+  - shift-left-and-shift-right
+  - tdd-bdd-atdd
+tags: [exploratory-testing, charters, sbtm, session-based-testing, test-design]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+
+## Core Idea
+
+Exploratory testing (ET) is **simultaneous learning, test design, and test execution, governed by a charter and a time-box**. It is not ad-hoc testing — the difference is governance. Ad-hoc testing has no charter, no time-box, no notes, no debrief; ET has all four.
+
+In scripted testing, learning, design, execution, and interpretation are *sequential*. In ET they are *coupled*: what the tester discovers in minute one changes the test designed in minute two, which changes the interpretation in minute three. This coupling — not the absence of scripts — is what produces unique-to-ET bug finds that no pre-written test would have caught.
+
+ET is the discipline that addresses **unknown-unknowns**: bugs no spec anticipated, paths no risk register named. Scripted tests find designed-for bugs; exploratory testing finds the surprises that designed-for tests cannot reach. The two are complements, not substitutes. See [[qa-mindset]] for the testing-vs-checking distinction that frames why ET requires a human.
+
+> Exploratory testing is systematic investigation governed by a charter — not freestyle clicking. The charter is the work.
+
+## Diagram
+
+<Diagram caption="SBTM session lifecycle — from charter assigned to next charter assigned">
+```
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  Session-Based Test Management (SBTM) Lifecycle                 │
+  └─────────────────────────────────────────────────────────────────┘
+
+  ① CHARTER ASSIGNED
+       Mission + Target + Oracle hint + Time-box
+       e.g. "Explore registration's interaction with existing
+       accounts (same email / Google OAuth) to discover surprising
+       error messages or account-linking behaviour. 60 min."
+                │
+                ▼
+  ② SESSION (≤ 90 min — cognitive load reality)
+       ┌───────────────────────────────────┐
+       │  Test design ──► Execute          │
+       │       ▲               │           │
+       │       │    learn      ▼           │
+       │       └────────── Interpret       │
+       │  (activities are coupled, not     │
+       │   sequential)                     │
+       └───────────────────────────────────┘
+       Note: every path taken, surprise noticed,
+       question raised, bug filed
+                │
+                ▼
+  ③ TBS TIMING BREAKDOWN
+       T — Test design & execution   e.g. 65%
+       B — Bug investigation              20%
+       S — Setup & overhead              15%
+       (the split itself is information)
+                │
+                ▼
+  ④ DEBRIEF (5–15 min)
+       What did you do? What surprised you?
+       Where were you blocked? What charter next?
+       → written record: notes leave the tester's head
+         and enter the team's knowledge
+                │
+                ▼
+  ⑤ NEXT CHARTER ASSIGNED
+       Derived from session surprises — not the spec
+```
+</Diagram>
+
+## Worked Example
+
+### Charter quality decides session value
+
+Two testers, same feature (user registration), 60 minutes each.
+
+**Tester A receives:** "Test the registration page."
+
+**Tester B receives the charter:** *"Explore the registration page's interaction with already-existing accounts — same email, same phone number, same OAuth-linked Google identity — using both the Sign-Up and Sign-Up-with-Google paths, to discover surprising error messages or account-linking behaviour. 60 minutes."*
+
+After the session, Tester A produces: five bug reports about form validation and missing field labels.
+
+Tester B produces: three bugs Tester A also found, plus a critical finding — signing up with a Google account whose email already exists in the system silently creates a duplicate account instead of prompting to link. Neither the spec nor any scripted regression test covered this path because nobody knew to look.
+
+**What the charter gave Tester B:**
+- **Mission**: discover account-linking surprises (not "verify the form works")
+- **Target**: already-existing accounts via two sign-up paths
+- **Oracle hint**: error messages and account-linking behaviour (connects to [[test-oracles-and-prioritization]] — which oracle type are we testing against?)
+- **Time-box**: 60 minutes of focused exploration
+
+The charter is the work. Without it, ET is ad-hoc testing with a better name.
+
+### TBS timing as a diagnostic
+
+Tester B's session log shows: T=55%, B=35%, S=10%.
+
+The high B percentage is a signal: bugs were found faster than expected and took time to investigate. The test lead's response at debrief: reduce the next session's time-box, assign a bug-investigation session to a second tester, and draft a charter focused specifically on the account-state edge cases the first session surfaced. This is SBTM working correctly — the debrief converts the session from "the tester's private experience" into "the team's next decision."
+
+## Common Pitfalls
+
+- **Calling ad-hoc testing "exploratory."** Ad-hoc has no charter, no time-box, no notes, no debrief. ET has all four. Without the floor, "exploratory doesn't work for us" becomes team folklore — because what they actually tried was wandering. Fix: adopt all four elements as the minimum contract before calling a session exploratory.
+- **Vague charters.** "Explore the cart" is not a charter; it is a location. A charter names mission, target, oracle hint, and time-box. Fix: refuse to start a session on a charter that lacks any of the four. Why it happens: writing a good charter takes 5–10 minutes; most teams skip the discipline under time pressure.
+- **Optimising solely for bug count.** Bug count steers ET toward shallow, repeated finds — the tester learns to file many small bugs rather than pursue deep surprises. Fix: track *questions raised* (things the team had not thought to ask) and *unique finds* (bugs no scripted test would have caught) alongside raw bug count. Why it happens: bug count is the only ET metric most dashboards surface.
+- **Treating session notes as test cases.** ET notes are *evidence* of what happened — time-stamped, path-aware, question-recording. They are not re-runnable scripts. Converting them to scripted tests destroys the continuity-of-thought that produced the finds. Fix: keep notes as evidence artefacts; create separate scripted tests for the bugs confirmed. Why it happens: teams want to "operationalise" ET output and reach for the nearest tool (a test case template).
+- **Using tours as a playbook.** Whittaker's product tours (feature tour, money tour, back-alley tour, etc.) are a charter-idea menu for when the tester is stuck — not a procedure to execute in order. Routine touring produces fatigue and shallow coverage. Fix: treat tours as a brainstorming device; stop when you have a real charter. Why it happens: tours are concrete and enumerable, which makes them feel like a safe process.
+- **Solo-only ET.** Two testers per session — one driving, one noting, rotating every 20 minutes — reliably produces more notes, more questions raised, and more "I never would have noticed that" bugs. Fix: run at least one paired session per sprint. Why it happens: ET is perceived as a solo discipline because the charter belongs to one person.
+- **Skipping the debrief.** An un-debriefed session is value locked in one tester's head. Even 5 minutes of structured debrief (what did you do, what surprised you, what charter next) converts it into a team record. Fix: treat the debrief as mandatory, not optional. Why it happens: testers move directly to the next session; the debrief feels like overhead when the backlog is full.
+
+## Retrieval Prompts
+
+<Prompt id="et-1">
+  In your own words, explain what Cem Kaner means by "mutually supportive activities" in the context of exploratory testing. What four activities are coupled — and what does the coupling produce that sequential scripted testing cannot?
+</Prompt>
+
+<Prompt id="et-2">
+  Distinguish exploratory testing from ad-hoc testing along four axes. Which axis matters most operationally, and why?
+</Prompt>
+
+<Prompt id="et-3">
+  A charter reads: "Explore the cart." Name the four elements a valid charter requires, explain which one this charter is missing (it is missing more than one), and rewrite it to pass the four-axis floor.
+</Prompt>
+
+<Prompt id="et-4">
+  Explain the TBS timing breakdown. A session reports T=10%, B=75%, S=15%. What does this tell the test lead, and what would you do differently for the next session?
+</Prompt>
+
+<Prompt id="et-5">
+  Why is "bugs found" a misleading sole metric for an ET session's value? Name two better metrics and identify one perverse incentive that each metric prevents.
+</Prompt>
+
+<Prompt id="et-6" requiresDiagram>
+  Sketch the SBTM session lifecycle from "charter assigned" to "next charter assigned." Mark the single step where ET loses the most value when teams skip it — and explain why that step is the management interface that makes ET visible to the rest of the organisation.
+</Prompt>
+
+<Prompt id="et-7">
+  A test lead asks you to convert your 90-minute session's notes into scripted test cases so the team can re-run them. How do you respond — and what is the specific value ET loses when notes are converted into re-runnable scripts?
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="et-task-1" rubric="et-rubric-v1">
+  Pick a real product — this site, any public web app, or a local application. Complete one full SBTM cycle and submit the following five artefacts.
+
+  **1. The charter.** One paragraph. Must include: mission (what you are exploring *for*, not just *where*), target (the specific feature, path, or interaction), oracle hint (what kind of wrong would you recognise? — connect to [[test-oracles-and-prioritization]]), and time-box (60–90 minutes). The charter fails if the mission is "explore X" without naming what you are looking for.
+
+  **2. Session notes.** Time-stamped (you may tidy them after, but the time signal must be honest). Record: the path taken, what surprised you, what you investigated, questions you raised that the spec does not answer, bugs you filed. At least two lines must be questions (not findings) — question-density is the best proxy for ET depth.
+
+  **3. TBS timing breakdown.** Three percentages summing to 100: T (test design and execution), B (bug investigation), S (setup and overhead). Add one sentence interpreting the split honestly — what does it tell you about where this session spent its energy?
+
+  **4. Bug reports.** Standard form for each bug found. (Reference [[test-oracles-and-prioritization]] — what oracle type applies to each bug?)
+
+  **5. Debrief artefact.** Write the debrief as if you were the test lead recording another tester's session. Answer: what did the tester do? What surprised them? What questions remain open? What charter would you assign next — and is it derived from a session surprise or from the spec?
+
+  Rubric (revealed after submission):
+  - Did the charter pass all four axes (mission, target, oracle hint, time-box)? Missing any one is a fail.
+  - Were at least 2 session-note lines questions rather than findings? If not, you may have done careful execution rather than exploration.
+  - Does the TBS split feel honest — or reverse-engineered to look balanced? The lesson is honesty, not balance.
+  - Did at least one bug come from a path the spec would not have suggested?
+  - Does your "next charter" come from a session surprise — or from the spec? A surprise-derived charter is the continuity-of-thought signal that ET is working.
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="et-feynman-1" wordTarget={150}>
+  Explain exploratory testing to a colleague whose team runs only scripted regression tests. They believe that "if it's not in the test plan, it's not worth testing." Explain: (1) what kind of bugs scripted tests structurally cannot find, (2) what a charter is and why it is not the same as a test case, and (3) why your team's ET sessions need a debrief, not just notes. Rubric (revealed after submit): Did you name the category of bugs scripted tests miss (unknown-unknowns, not just "edge cases")? Did you explain the charter as a mission-with-oracle-hint rather than a location? Did you explain the debrief as a management interface that makes ET visible to the organisation — not just a "reflection" step?
+</Feynman>
