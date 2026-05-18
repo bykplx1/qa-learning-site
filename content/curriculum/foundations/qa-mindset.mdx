@@ -4,7 +4,7 @@ title: The QA Mindset
 cluster: foundations
 layer: systems
 prerequisites: []
-related: []
+related: [what-is-qa-quality, test-oracles-and-prioritization, verification-vs-validation]
 tags: [quality, mindset, testing-fundamentals]
 estimatedEncodingMinutes: 20
 ---
@@ -17,6 +17,10 @@ import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
 ## Core Idea
 
 Quality Assurance is not a phase at the end of development — it is a discipline of asking "what could go wrong?" at every step. A QA mindset means treating software as a set of assumptions that need evidence, not a set of features that need checking.
+
+A critical distinction: **testing** (questioning, exploring, learning — a human activity) is not the same as **checking** (mechanically confirming known expectations — something automation does). Automation automates checks; it cannot replace testing. This distinction, from Bach & Bolton's Rapid Software Testing methodology, is the most useful conceptual divide in modern practice.
+
+This curriculum follows the **context-driven** school: no practice is universally good; the value of a practice depends on the situation it is applied in. "It depends" is never a full answer — always follow it with "depends on *what specifically?*"
 
 > The QA mindset is evidence-based skepticism applied continuously: every claim about behaviour is a hypothesis until a test confirms or refutes it.
 
@@ -70,6 +74,14 @@ The deliberate mistake: testing only the happy path and calling the feature "don
 
 <Prompt id="qa-mindset-5">
   Explain the feedback loop shown in the diagram: what feeds back into hypothesis refinement?
+</Prompt>
+
+<Prompt id="qa-mindset-6">
+  State the Bach & Bolton distinction between _testing_ and _checking_ in one sentence each. Why does the distinction matter when deciding what to automate?
+</Prompt>
+
+<Prompt id="qa-mindset-7">
+  A teammate justifies a test-design decision with "it's context-driven, so it depends." What is the next question you ask, and why?
 </Prompt>
 
 ## Practice Task
