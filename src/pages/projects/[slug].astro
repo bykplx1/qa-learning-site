@@ -159,6 +159,7 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
         client:load
         projectSlug={project.data.slug}
         existing={existingProp}
+        rubric={rubricDef}
       />
     ) : (
       <section class="card" style="margin-top: 32px;">

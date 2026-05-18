@@ -110,6 +110,8 @@ export const projectSubmissions = pgTable(
     artifactBody: text('artifact_body'),
     rubricScores: jsonb('rubric_scores').notNull().default({}),
     requiredConcepts: text('required_concepts').array().notNull().default([]),
+    // P4.4: tagged true when the user clicked "Start anyway" on a below-threshold gate
+    belowThreshold: boolean('below_threshold').notNull().default(false),
     submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { RubricDefinition } from '../../lib/projects/rubric';
 
 interface Existing {
   repoUrl: string | null;
@@ -10,11 +11,12 @@ interface Existing {
 interface Props {
   projectSlug: string;
   existing: Existing | null;
+  rubric?: RubricDefinition | null;
 }
 
 type Status = 'idle' | 'saving' | 'saved' | 'error';
 
-export default function SubmitProjectForm({ projectSlug, existing }: Props) {
+export default function SubmitProjectForm({ projectSlug, existing, rubric }: Props) {
   const [repoUrl, setRepoUrl] = useState(existing?.repoUrl ?? '');
   const [reflection, setReflection] = useState(existing?.reflection ?? '');
   const [isPublic, setIsPublic] = useState(existing?.isPublic ?? false);
@@ -22,10 +24,30 @@ export default function SubmitProjectForm({ projectSlug, existing }: Props) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(existing?.submittedAt ?? null);
 
+  // Rubric self-scores: key = row id, value = band index (0-based).
+  const [rubricScores, setRubricScores] = useState<Record<string, number>>(() => {
+    if (!rubric) return {};
+    return Object.fromEntries(rubric.rows.map((r) => [r.id, 0]));
+  });
+
+  function setScore(rowId: string, bandIndex: number) {
+    setRubricScores((prev) => ({ ...prev, [rowId]: bandIndex }));
+  }
+
+  function readBelowThresholdOverride(): boolean {
+    if (typeof document === 'undefined') return false;
+    const form = document.querySelector('[data-testid="concept-gate-form"]');
+    const input = (form as HTMLFormElement | null)?.elements?.namedItem(
+      'below_threshold_override',
+    ) as HTMLInputElement | null;
+    return input?.value === '1';
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus('saving');
     setErrorMsg(null);
+    const belowThreshold = readBelowThresholdOverride();
     try {
       const res = await fetch(`/api/projects/${encodeURIComponent(projectSlug)}/submit`, {
         method: 'POST',
@@ -34,6 +56,8 @@ export default function SubmitProjectForm({ projectSlug, existing }: Props) {
           repo_url: repoUrl.trim() || null,
           reflection: reflection.trim(),
           is_public: isPublic,
+          rubric_scores: rubric ? rubricScores : undefined,
+          below_threshold: belowThreshold,
         }),
       });
       if (!res.ok) {
@@ -98,6 +122,85 @@ export default function SubmitProjectForm({ projectSlug, existing }: Props) {
           />
           <div className="field-help">{reflection.length} / 4000</div>
         </div>
+
+        {rubric && (
+          <section aria-label="Self-score rubric" data-testid="rubric-self-score">
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--ink)',
+                marginBottom: 12,
+                fontFamily: 'var(--sans)',
+              }}
+            >
+              Rate your submission against each criterion
+            </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              {rubric.rows.map((row) => (
+                <div key={row.id} data-testid={`score-row-${row.id}`}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: 'var(--ink-2)',
+                      marginBottom: 6,
+                      fontFamily: 'var(--sans)',
+                    }}
+                  >
+                    {row.criterion}
+                  </div>
+                  <div
+                    role="group"
+                    aria-label={`Score for ${row.criterion}`}
+                    style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+                  >
+                    {row.band.map((descriptor, bandIndex) => {
+                      const selected = rubricScores[row.id] === bandIndex;
+                      const labelId = `score-${projectSlug}-${row.id}-${bandIndex}`;
+                      return (
+                        <label
+                          key={bandIndex}
+                          htmlFor={labelId}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '6px 10px',
+                            borderRadius: 6,
+                            border: `1px solid ${selected ? 'var(--accent)' : 'var(--rule)'}`,
+                            background: selected ? 'var(--accent-soft)' : 'var(--paper-2)',
+                            cursor: 'pointer',
+                            fontSize: 12,
+                            color: 'var(--ink-2)',
+                            transition: 'border-color 0.15s, background 0.15s',
+                          }}
+                          title={descriptor}
+                        >
+                          <input
+                            id={labelId}
+                            type="radio"
+                            name={`rubric-${projectSlug}-${row.id}`}
+                            value={bandIndex}
+                            checked={selected}
+                            onChange={() => setScore(row.id, bandIndex)}
+                            style={{ margin: 0, accentColor: 'var(--accent)' }}
+                          />
+                          <span>
+                            {bandIndex === 0
+                              ? 'Not yet'
+                              : bandIndex === row.band.length - 1
+                                ? 'Excellent'
+                                : `Level ${bandIndex}`}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <input

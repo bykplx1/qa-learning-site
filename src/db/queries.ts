@@ -165,10 +165,22 @@ export interface SubmitProjectInput {
   repoUrl?: string | null;
   reflection: string;
   isPublic?: boolean;
+  rubricScores?: Record<string, number>;
+  requiredConcepts?: string[];
+  belowThreshold?: boolean;
 }
 
 export async function submitProject(input: SubmitProjectInput): Promise<{ id: string }> {
-  const { userId, projectSlug, repoUrl = null, reflection, isPublic = false } = input;
+  const {
+    userId,
+    projectSlug,
+    repoUrl = null,
+    reflection,
+    isPublic = false,
+    rubricScores = {},
+    requiredConcepts = [],
+    belowThreshold = false,
+  } = input;
   const id = randomUUID();
   const now = new Date();
   const rows = await db
@@ -180,6 +192,9 @@ export async function submitProject(input: SubmitProjectInput): Promise<{ id: st
       repoUrl,
       reflection,
       isPublic,
+      rubricScores,
+      requiredConcepts,
+      belowThreshold,
       submittedAt: now,
       updatedAt: now,
     })
@@ -189,6 +204,9 @@ export async function submitProject(input: SubmitProjectInput): Promise<{ id: st
         repoUrl: sql`excluded.repo_url`,
         reflection: sql`excluded.reflection`,
         isPublic: sql`excluded.is_public`,
+        rubricScores: sql`excluded.rubric_scores`,
+        requiredConcepts: sql`excluded.required_concepts`,
+        belowThreshold: sql`excluded.below_threshold`,
         updatedAt: sql`excluded.updated_at`,
       },
     })

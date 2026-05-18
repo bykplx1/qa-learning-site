@@ -1,0 +1,1 @@
+ALTER TABLE "project_submissions" ADD COLUMN "below_threshold" boolean DEFAULT false NOT NULL;
