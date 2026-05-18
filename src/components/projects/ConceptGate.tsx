@@ -156,7 +156,7 @@ export default function ConceptGate({ projectSlug, gate }: Props) {
                   style={{
                     fontSize: 11,
                     fontFamily: 'var(--mono)',
-                    color: c.belowThreshold ? 'var(--warn)' : 'var(--pass)',
+                    color: c.belowThreshold ? 'var(--warn-strong)' : 'var(--pass-strong)',
                     flexShrink: 0,
                   }}
                   aria-label={`Stability ${Math.round(c.stability * 10) / 10}, ${c.belowThreshold ? 'below threshold' : 'above threshold'}`}

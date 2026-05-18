@@ -26,6 +26,7 @@
   --pass-soft: oklch(94% 0.025 180);
   --pass-strong: oklch(35% 0.07 180);
   --warn: oklch(72% 0.13 80);
+  --warn-strong: oklch(45% 0.13 60);
   --error: oklch(55% 0.18 25);
   --serif: "Newsreader", "Charter", "Iowan Old Style", Georgia, serif;
   --sans: "Inter Tight", "Inter", system-ui, sans-serif;
@@ -46,6 +47,7 @@
   --accent-strong: oklch(78% 0.12 35);
   --pass-soft: oklch(28% 0.04 180);
   --pass-strong: oklch(78% 0.08 180);
+  --warn-strong: oklch(85% 0.13 80);
 }
 
 /* ====================================================================
