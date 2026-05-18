@@ -19,9 +19,6 @@ function makeLog(
     difficulty: 5,
     dueAt: overrides.gradedAt,
     state: 2,
-    gradedAt: overrides.gradedAt,
-    rating: overrides.rating,
-    elapsedDays: overrides.elapsedDays,
     ...overrides,
   };
 }
