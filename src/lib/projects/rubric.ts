@@ -124,6 +124,54 @@ export const rubrics = {
     ],
   },
 
+  /** Cluster-1 (Foundations) — QA Foundations Field Report rubric */
+  'foundations-field-report': {
+    id: 'foundations-field-report',
+    label: 'QA Foundations Field Report',
+    rows: [
+      {
+        id: 'oracles',
+        criterion: 'Oracle clarity',
+        band: [
+          'No oracles named — observations stated without reference to expected behavior.',
+          'One implicit oracle (e.g. "it should work") without naming the heuristic used.',
+          'At least two distinct oracles named (e.g. consistency-with-claims, consistency-with-comparable-product) and applied to specific observations.',
+          'Multiple oracles named, applied per observation, and contrasted — calls out where two oracles disagreed and how the conflict was resolved.',
+        ],
+      },
+      {
+        id: 'quality_dimensions',
+        criterion: 'Quality dimensions covered',
+        band: [
+          'Functional defects only (does the feature work yes/no).',
+          'Functional plus one experiential note tacked on at the end.',
+          'Functional and experiential quality both audited with distinct findings under each.',
+          'Functional, experiential, and at least one non-functional concern (perf, accessibility, security smell) — each labeled and tied to a specific user impact.',
+        ],
+      },
+      {
+        id: 'risk_prioritization',
+        criterion: 'Risk-driven prioritization',
+        band: [
+          'Findings listed without ranking.',
+          'Findings ranked by severity with no rationale.',
+          'Findings ranked by likelihood × impact with a one-line rationale per rank.',
+          'Findings ranked with explicit likelihood × impact, called out which test would have caught each, and which findings the author deprioritized and why.',
+        ],
+      },
+      {
+        id: 'actionability',
+        criterion: 'Write-up actionability',
+        band: [
+          'Unreadable, or stream-of-consciousness with no structure.',
+          'Readable but a PM could not act on it — no repro steps or expected vs actual.',
+          'Structured: each finding has repro steps, expected behavior, actual behavior, and proposed next step.',
+          'PM-ready: structured findings plus a one-paragraph executive summary that a non-engineer can act on without reading the body.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',

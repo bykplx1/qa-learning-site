@@ -1,0 +1,49 @@
+---
+slug: qa-foundations-field-report
+title: QA Foundations Field Report
+tier: starter
+estimate: 60–90 min
+cluster: foundations
+rubric: foundations-field-report
+requiredConcepts:
+  - foundations
+acceptanceCriteria:
+  - You pick a real, currently-shipping product you can use for 30 minutes and audit it from a QA perspective.
+  - Your report names at least two oracles you used (consistency-with-claims, consistency-with-comparable-product, user-expectation, etc.) and ties each to a specific observation.
+  - Findings cover both functional quality (does it do what it claims) and experiential quality (is it pleasant, fast, trustworthy to use).
+  - Findings are ranked by likelihood × impact with a one-line rationale per rank; you state which finding you deprioritized and why.
+  - The report has a structured Findings section (repro steps, expected, actual, proposed next step) and a one-paragraph executive summary a non-engineer could act on.
+---
+
+## Brief
+
+Pick any real product you use — a website, a mobile app, an internal tool, a CLI. Spend 30 minutes auditing it as a QA engineer, not as a user. Write the field report another teammate would expect on Monday.
+
+The point is **investigator mindset**, not exhaustive coverage. You're practicing the muscles every Cluster-1 topic builds: oracle-based reasoning, functional-vs-experiential thinking, and risk-driven prioritization. The artifact is short on purpose — a field report, not a test plan.
+
+## Suggested approach
+
+1. **Pick a target.** Anything with a published claim ("the fastest way to…", "always saves your work…") is fair game — claims give you oracles to test against.
+2. **Set a timer for 30 minutes.** When it rings, stop investigating and start writing.
+3. **Explore actively.** Don't follow the happy path. Try inputs the product probably doesn't expect; resize the window; toggle dark mode; lose your connection mid-action. Note what surprised you.
+4. **Name your oracles as you go.** *"This violates consistency-with-claims — the landing page says 'instant', the action took 4s."* Naming forces clarity.
+5. **Catalog findings under two headings:** Functional (does it work) and Experiential (is it pleasant/trustworthy). A single observation can sit under both.
+6. **Rank by likelihood × impact.** Likelihood = how many users hit it. Impact = severity if they do. One sentence of rationale per rank.
+7. **Write the executive summary last.** One paragraph. Pretend the reader is a PM who has 45 seconds before their next meeting.
+
+## What "done" looks like
+
+A single markdown document with:
+
+- **Executive summary** — one paragraph, non-engineer-readable.
+- **Method** — what product, what you tried, which oracles you reached for.
+- **Findings** — each with repro steps, expected, actual, proposed next step, and a rank (likelihood × impact + rationale).
+- **What I didn't investigate** — one line on what you deprioritized and why.
+
+No screenshots required. No bug-tracker tickets. The artifact is the writeup.
+
+## Why this matters
+
+Every later cluster — test design, automation, non-functional, AI/LLM QA — is downstream of the skills in Cluster 1: noticing, naming, and prioritizing. A QA engineer who can produce a clean field report on a product they've never seen before is immediately credible on any team, regardless of what stack you end up using.
+
+This is also the cheapest project in the curriculum to repeat. Once you've done one, doing a second on a different product takes half the time and teaches twice as much.
