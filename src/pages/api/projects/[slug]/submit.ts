@@ -1,9 +1,13 @@
 import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
 import { z } from 'zod';
 import { getSession } from '../../../../lib/auth';
 import { setSubmissionPublic, submitProject } from '../../../../db/queries';
+import { rubrics } from '../../../../lib/projects/rubric';
 
 export const prerender = false;
+
+const rubricScoresSchema = z.record(z.string(), z.number().int().min(0));
 
 const bodySchema = z.object({
   repo_url: z
@@ -11,6 +15,8 @@ const bodySchema = z.object({
     .optional(),
   reflection: z.string().min(1).max(4000),
   is_public: z.boolean().optional(),
+  rubric_scores: rubricScoresSchema.optional(),
+  below_threshold: z.boolean().optional(),
 });
 
 export const POST: APIRoute = async ({ request, params }) => {
@@ -37,8 +43,39 @@ export const POST: APIRoute = async ({ request, params }) => {
     });
   }
 
+  // Load project frontmatter server-side to get the rubric id and requiredConcepts snapshot.
+  const all = await getCollection('projects');
+  const project = all.find((p) => p.data.slug === slug);
+  if (!project) {
+    return new Response('Project not found', { status: 404 });
+  }
+
+  const projectRubricId = project.data.rubric ?? null;
+  const requiredConcepts: string[] = project.data.requiredConcepts ?? [];
+
+  // Validate rubric_scores keys match the project's declared rubric.
+  const incomingScores = parsed.data.rubric_scores ?? {};
+  if (projectRubricId) {
+    const rubricDef = rubrics[projectRubricId as keyof typeof rubrics];
+    if (rubricDef) {
+      const expectedIds = new Set(rubricDef.rows.map((r) => r.id));
+      const incomingIds = Object.keys(incomingScores);
+      const unknown = incomingIds.filter((id) => !expectedIds.has(id));
+      if (unknown.length > 0) {
+        return new Response(
+          JSON.stringify({ error: `Unknown rubric row ids: ${unknown.join(', ')}` }),
+          { status: 400, headers: { 'content-type': 'application/json' } },
+        );
+      }
+    }
+  }
+
   const repo = parsed.data.repo_url;
   const repoUrl = repo && repo.length > 0 ? repo : null;
+
+  // below_threshold defaults to false when absent — safe because the gate only
+  // sets it to true on an explicit "Start anyway" click.
+  const belowThreshold = parsed.data.below_threshold ?? false;
 
   const { id } = await submitProject({
     userId: session.user.id,
@@ -46,6 +83,9 @@ export const POST: APIRoute = async ({ request, params }) => {
     repoUrl,
     reflection: parsed.data.reflection,
     isPublic: parsed.data.is_public ?? false,
+    rubricScores: incomingScores,
+    requiredConcepts,
+    belowThreshold,
   });
 
   return new Response(JSON.stringify({ id }), {
@@ -75,7 +115,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   if (!parsed.success) {
     return new Response(JSON.stringify({ error: parsed.error.issues }), {
       status: 400,
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json' } ,
     });
   }
 

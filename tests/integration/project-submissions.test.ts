@@ -12,6 +12,35 @@ import {
 import { auth } from '../../src/lib/auth';
 import { POST, PATCH } from '../../src/pages/api/projects/[slug]/submit';
 
+// Mock astro:content so the endpoint can be imported in Node test environment.
+// Returns a minimal project entry matching the `flaky-test-hunter` slug used in most tests.
+vi.mock('astro:content', () => ({
+  getCollection: async (_name: string) => [
+    {
+      data: {
+        slug: 'starter-bug-bash',
+        title: 'Starter Bug Bash',
+        tier: 'starter',
+        estimate: '1 hr',
+        acceptanceCriteria: ['Find a bug.'],
+        requiredConcepts: [],
+        rubric: undefined,
+      },
+    },
+    {
+      data: {
+        slug: 'flaky-test-hunter',
+        title: 'Flaky Test Hunter',
+        tier: 'starter',
+        estimate: '1–2 hr',
+        acceptanceCriteria: ['Identify a flaky test.'],
+        requiredConcepts: ['test-stability', 'root-cause-analysis'],
+        rubric: 'flaky-test-hunter',
+      },
+    },
+  ],
+}));
+
 const baseUrl = process.env.BETTER_AUTH_URL ?? 'http://localhost:4321';
 
 async function insertUser() {
@@ -111,6 +140,32 @@ describe('submitProject', () => {
     row = await getSubmission(userId, 'a');
     expect(row?.isPublic).toBe(true);
   });
+
+  it('persists rubricScores, requiredConcepts, and belowThreshold', async () => {
+    const userId = await insertUser();
+    const { id } = await submitProject({
+      userId,
+      projectSlug: 'flaky-test-hunter',
+      reflection: 'Found a flake.',
+      rubricScores: { root_cause: 2, fix_proposal: 1, verification: 2, write_up: 3 },
+      requiredConcepts: ['test-stability', 'root-cause-analysis'],
+      belowThreshold: true,
+    });
+    expect(id).toBeTruthy();
+
+    const row = await getSubmission(userId, 'flaky-test-hunter');
+    expect(row?.rubricScores).toEqual({ root_cause: 2, fix_proposal: 1, verification: 2, write_up: 3 });
+    expect(row?.requiredConcepts).toEqual(['test-stability', 'root-cause-analysis']);
+    expect(row?.belowThreshold).toBe(true);
+    expect(row?.isPublic).toBe(false);
+  });
+
+  it('isPublic defaults to false', async () => {
+    const userId = await insertUser();
+    await submitProject({ userId, projectSlug: 'a', reflection: 'A' });
+    const row = await getSubmission(userId, 'a');
+    expect(row?.isPublic).toBe(false);
+  });
 });
 
 describe('POST /api/projects/[slug]/submit', () => {
@@ -185,6 +240,61 @@ describe('POST /api/projects/[slug]/submit', () => {
     const row = await getSubmission(userId, 'starter-bug-bash');
     expect(row?.repoUrl).toBeNull();
   });
+
+  it('round-trip: rubricScores, requiredConcepts snapshot, and belowThreshold persisted via endpoint', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+
+    const scores = { root_cause: 2, fix_proposal: 3, verification: 1, write_up: 2 };
+    const res = await POST(
+      buildRequest('flaky-test-hunter', 'POST', {
+        reflection: 'Full submission with rubric.',
+        rubric_scores: scores,
+        below_threshold: true,
+      }),
+    );
+    expect(res.status).toBe(200);
+
+    const row = await getSubmission(userId, 'flaky-test-hunter');
+    expect(row?.rubricScores).toEqual(scores);
+    // requiredConcepts comes from the server-side project frontmatter, not the POST body.
+    expect(row?.requiredConcepts).toEqual(['test-stability', 'root-cause-analysis']);
+    expect(row?.belowThreshold).toBe(true);
+    expect(row?.isPublic).toBe(false);
+  });
+
+  it('rejects rubric_scores with unknown row ids', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+
+    const res = await POST(
+      buildRequest('flaky-test-hunter', 'POST', {
+        reflection: 'Bad rubric keys.',
+        rubric_scores: { unknown_row: 2 },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('isPublic defaults to false when not supplied', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('starter-bug-bash', 'POST', { reflection: 'test default' }),
+    );
+    expect(res.status).toBe(200);
+    const row = await getSubmission(userId, 'starter-bug-bash');
+    expect(row?.isPublic).toBe(false);
+  });
+
+  it('returns 404 for an unknown project slug', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('nonexistent-project', 'POST', { reflection: 'test' }),
+    );
+    expect(res.status).toBe(404);
+  });
 });
 
 describe('PATCH /api/projects/[slug]/submit', () => {
@@ -215,5 +325,19 @@ describe('PATCH /api/projects/[slug]/submit', () => {
     mockSession(userId);
     const res = await PATCH(buildRequest('a', 'PATCH', { is_public: 'yes' }));
     expect(res.status).toBe(400);
+  });
+
+  it('toggle: isPublic change persists — flip to true then flip back to false', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    await submitProject({ userId, projectSlug: 'a', reflection: 'A' });
+
+    await PATCH(buildRequest('a', 'PATCH', { is_public: true }));
+    let row = await getSubmission(userId, 'a');
+    expect(row?.isPublic).toBe(true);
+
+    await PATCH(buildRequest('a', 'PATCH', { is_public: false }));
+    row = await getSubmission(userId, 'a');
+    expect(row?.isPublic).toBe(false);
   });
 });
