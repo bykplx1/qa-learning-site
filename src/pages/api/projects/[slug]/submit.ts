@@ -58,7 +58,7 @@ export const POST: APIRoute = async ({ request, params }) => {
   if (projectRubricId) {
     const rubricDef = rubrics[projectRubricId as keyof typeof rubrics];
     if (rubricDef) {
-      const expectedIds = new Set(rubricDef.rows.map((r) => r.id));
+      const expectedIds = new Set<string>(rubricDef.rows.map((r) => r.id));
       const incomingIds = Object.keys(incomingScores);
       const unknown = incomingIds.filter((id) => !expectedIds.has(id));
       if (unknown.length > 0) {
