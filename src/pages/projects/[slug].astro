@@ -20,7 +20,7 @@ if (!project) {
 
 const { Content } = await render(project);
 const { title, tier, estimate, acceptanceCriteria, rubric: rubricId } = project.data;
-const rubricDef = rubricId ? rubrics[rubricId] ?? null : null;
+const rubricDef = rubricId ? rubrics[rubricId as keyof typeof rubrics] ?? null : null;
 
 const session = await getSession(Astro.request.headers);
 const userId = session?.user?.id ?? null;
