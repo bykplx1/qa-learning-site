@@ -1,7 +1,10 @@
 import { z } from 'zod';
+import { rubrics } from './rubric';
 
 export const PROJECT_TIERS = ['starter', 'mid', 'capstone'] as const;
 export type ProjectTier = (typeof PROJECT_TIERS)[number];
+
+const knownRubricIds = Object.keys(rubrics);
 
 export const projectFrontmatterSchema = z
   .object({
@@ -11,6 +14,13 @@ export const projectFrontmatterSchema = z
     estimate: z.string().min(1),
     acceptanceCriteria: z.array(z.string().min(1)).min(1),
     cluster: z.string().optional(),
+    requiredConcepts: z.array(z.string().min(1)).optional(),
+    rubric: z
+      .string()
+      .refine((id) => knownRubricIds.includes(id), {
+        message: `Unknown rubric id — must be one of: ${knownRubricIds.join(', ')}. Register new rubrics in src/lib/projects/rubric.ts (#151).`,
+      })
+      .optional(),
   })
   .strict();
 

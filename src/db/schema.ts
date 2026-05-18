@@ -105,6 +105,11 @@ export const projectSubmissions = pgTable(
     reflection: text('reflection').notNull(),
     status: text('status').notNull().default('submitted'),
     isPublic: boolean('is_public').notNull().default(false),
+    // P4.1: artifact (URL or inline body), rubric scores, concept snapshot
+    artifactUrl: text('artifact_url'),
+    artifactBody: text('artifact_body'),
+    rubricScores: jsonb('rubric_scores').notNull().default({}),
+    requiredConcepts: text('required_concepts').array().notNull().default([]),
     submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -197,6 +202,7 @@ export type LessonView = typeof lessonViews.$inferSelect;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type DailyActivity = typeof dailyActivity.$inferSelect;
 export type ProjectSubmission = typeof projectSubmissions.$inferSelect;
+export type InsertProjectSubmission = typeof projectSubmissions.$inferInsert;
 export type ReviewCard = typeof reviewCards.$inferSelect;
 export type InsertReviewCard = typeof reviewCards.$inferInsert;
 export type ReviewLog = typeof reviewLogs.$inferSelect;
