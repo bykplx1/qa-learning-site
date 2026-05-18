@@ -2,9 +2,12 @@
 import { eq, and, lte, asc } from 'drizzle-orm';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ReviewQueue from '../components/quiz/ReviewQueue';
+import SessionCapOverlay from '../components/quiz/SessionCapOverlay';
+import SleepGateNotice from '../components/quiz/SleepGateNotice';
+import FirstTimeDisclaimer from '../components/quiz/FirstTimeDisclaimer';
 import { getSession } from '../lib/auth';
 import { db } from '../db';
-import { reviewCards, prompts } from '../db/schema';
+import { reviewCards, prompts, userSettings } from '../db/schema';
 
 export const prerender = false;
 
@@ -39,6 +42,16 @@ const initialCard = nextCard
       answer: nextCard.answer ?? null,
     }
   : null;
+
+// Fetch nudge state for the authenticated user.
+const [nudgeRow] = await db
+  .select()
+  .from(userSettings)
+  .where(eq(userSettings.userId, userId))
+  .limit(1);
+
+const seenReviewDisclaimer = nudgeRow?.seenReviewDisclaimer ?? false;
+const persistedTimezone = nudgeRow?.timezone ?? null;
 ---
 
 <BaseLayout title="Review — QA Learning" description="Spaced repetition review queue.">
@@ -48,7 +61,10 @@ const initialCard = nextCard
       <h1>Review</h1>
     </header>
 
+    <SleepGateNotice client:load persistedTimezone={persistedTimezone} />
+    <FirstTimeDisclaimer client:load seenOnServer={seenReviewDisclaimer} />
     <ReviewQueue client:load initialCard={initialCard} />
+    <SessionCapOverlay client:load />
   </main>
 </BaseLayout>
 

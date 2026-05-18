@@ -179,6 +179,18 @@ export const reviewLogs = pgTable(
   (t) => [index('review_logs_user_graded_idx').on(t.userId, t.gradedAt)],
 );
 
+// Per-user settings: timezone (IANA string, sniffed client-side on first review visit)
+// and flags for one-time nudges.
+export const userSettings = pgTable('user_settings', {
+  userId: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  timezone: text('timezone'),
+  seenReviewDisclaimer: boolean('seen_review_disclaimer').notNull().default(false),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = typeof userSettings.$inferInsert;
+
 // Private self-explanation submissions (Feynman surface). No public read path.
 export const selfExplanations = pgTable(
   'self_explanations',
