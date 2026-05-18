@@ -1,0 +1,102 @@
+---
+slug: sdlc-delivery-models
+title: SDLC Delivery Models
+cluster: foundations
+layer: patterns
+prerequisites:
+  - qa-mindset
+related:
+  - what-is-qa-quality
+  - verification-vs-validation
+  - test-oracles-and-prioritization
+  - black-white-gray-box-thinking
+tags: [sdlc, delivery-models, agile, waterfall, scrum, kanban, xp, safe, feedback-latency]
+estimatedEncodingMinutes: 22
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+A delivery model is the **shape in time** of a software project — when work is planned, built, tested, and released — and the shape of feedback that creates. For a tester, the most important property of any model is the **feedback latency**: how long after a defect is introduced before the team discovers it. That latency almost entirely determines the cost of fixing the bug. Waterfall can produce months of lag; XP can reduce it to hours. Models are not a progression from bad to good — they are tools for different situations. Waterfall remains correct for fixed-scope, safety-critical work. Agile is correct when requirements are uncertain. Most real teams run a **hybrid** and should name that honestly.
+
+> The delivery model decides feedback latency, and feedback latency decides defect cost.
+
+## Diagram
+
+<Diagram caption="Feedback latency by delivery model — time from defect introduction to discovery">
+```
+Model       | Defect introduced → Discovered       | Typical latency
+------------|--------------------------------------|----------------
+Waterfall   | Coding phase → Separate test phase   | Months
+V-Model     | Coding phase → Integration test      | Weeks–months
+Scrum       | Sprint N → Sprint N or N+1 testing   | Days–weeks
+Kanban+CD   | Card in progress → Canary release    | Hours–days
+XP          | Before code (TDD) → Never enters     | Near-zero
+SAFe        | Team sprint → PI integration test    | Days (team) / weeks (PI seam)
+```
+</Diagram>
+
+## Worked Example
+
+Take a single defect: *the password-reset link expires after 60 seconds instead of 24 hours.*
+
+**Waterfall:** The defect is introduced in the coding phase (month 4). It is discovered in the test phase (month 7). The fix requires re-testing all dependent flows — three months of compound cost.
+
+**V-Model:** The defect is introduced in coding (month 4). Because the V-Model requires a test plan for each design artifact, the *test for the reset flow* already exists from month 2. The defect is found within the integration-test window of month 5 — still late, but the plan existed earlier.
+
+**Scrum:** The defect is introduced in sprint 4. It is caught in sprint-4 testing or sprint-5 regression. Total lag: one to two weeks.
+
+**XP:** A developer writes the test `expect(resetLinkExpiresAfterHours(24)).toBe(true)` *before* implementing. The defect never enters the main branch.
+
+**Kanban + CD:** Card cycle time is 2 days. If the developer's local test pass misses the defect, a canary release catches it within hours of merge.
+
+Same defect, five wildly different costs — driven entirely by the model's feedback latency, not the seriousness of the bug.
+
+## Common Pitfalls
+
+- **Presenting the models as a progression.** Framing Waterfall as "outdated" and Agile as "modern" trains the learner to pick by fashion rather than fit. Fix: present each as a situated choice with named trade-offs. Waterfall is still correct for aerospace firmware under regulatory contracts.
+- **Treating "the team uses Scrum" as a complete answer.** The Scrum Guide does not specify *how* to build or *how* to test. Engineering practices — CI, TDD, refactoring, pair programming — come from XP, not Scrum. A Scrum team without these practices is a meeting schedule. Fix: always ask what engineering practices ride on top of the framework.
+- **Misattributing testing failures to the delivery model.** "We're not testing well *because* Agile" is a permanent excuse. Fix: map the failure to a missing practice (CI, automation, test design technique) before blaming the model.
+- **Pretending the team isn't hybrid.** Management favours a pure label; pure labels lie. Most real teams sprint-shape execution against a phase-shaped contract or compliance regime. Fix: describe the actual hybrid honestly — "agile execution inside a Waterfall envelope" is a valid and common shape.
+- **Treating the V-Model as obsolete.** The V-Model's diagonal shape is less important than the discipline it imposes: name a test approach for every specification artifact. That discipline is portable and universally useful even if the full lifecycle is not followed.
+- **Confusing SAFe vocabulary with SAFe value.** SAFe is the most-deployed scaled-agile framework in large enterprises; it is also frequently criticised for over-prescribing process. Fix: if your organisation runs SAFe, learn the vocabulary (PI Planning, System Team, Solution Train) — it will shape your testing work whether you approve of it or not. Do not apply SAFe practices to a five-person team.
+- **Stopping at the lifecycle diagram.** When each model is rendered as a timeline, only the *when* of testing is visible. The *what* of testing — which types of tests, serving which goals — is invisible. Fix: layer the Agile Testing Quadrants (Crispin & Gregory, after Marick) on top to show that unit tests, exploratory tests, performance tests, and acceptance criteria all have a place regardless of which lifecycle model the team runs.
+
+## Retrieval Prompts
+
+<Prompt id="sdlc-1">
+  For each model — Waterfall, V-Model, Scrum, Kanban, XP, SAFe — name one situation in which it is the correct choice and one in which it would be malpractice.
+</Prompt>
+
+<Prompt id="sdlc-2">
+  The V-Model's diagonal shape is less important than the discipline it imposes. What is that portable discipline, and why is it useful even in teams that don't follow V-Model?
+</Prompt>
+
+<Prompt id="sdlc-3">
+  Distinguish Scrum (a project-management framework) from XP (a set of engineering practices). Why does the distinction matter when diagnosing a "Scrum is failing" complaint?
+</Prompt>
+
+<Prompt id="sdlc-4">
+  Winston Royce's 1970 paper is famously misread as introducing Waterfall as a recommended model. What does the paper actually say about the linear model it describes?
+</Prompt>
+
+<Prompt id="sdlc-5">
+  An organisation runs SAFe. As a tester, name three SAFe-specific concepts you must know the vocabulary of even if you disagree with the framework, and explain why.
+</Prompt>
+
+<Prompt id="sdlc-6" requiresDiagram>
+  Sketch the feedback-latency curves of Waterfall, Scrum, and a Kanban+CD pipeline on the same axes (x: time from defect introduction; y: probability of discovery). Label the cost implication of each curve's shape.
+</Prompt>
+
+<Prompt id="sdlc-7">
+  A team describes itself as "doing Scrum" but has no automated tests, no CI pipeline, and testing happens in a separate phase after each sprint. Which delivery model does the team's actual practice resemble? What single practice change would most reduce their feedback latency?
+</Prompt>
+
+## Feynman Prompt
+
+<Feynman id="sdlc-feynman-1" wordTarget={150}>
+  Explain to a developer joining their first Scrum team why the delivery model they are in determines how expensive their bugs will be to fix. Use the concept of feedback latency. Why is a bug found during the same sprint it was introduced cheaper than one found in a separate test phase? Rubric (revealed after submit): Did you name feedback latency explicitly? Did you give a concrete time comparison (not just "faster")? Did you avoid the trap of saying Waterfall is simply "bad"? Did you note that Scrum's latency advantage only holds if engineering practices like CI and automated testing are in place?
+</Feynman>
