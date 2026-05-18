@@ -1,0 +1,491 @@
+---
+import { eq } from 'drizzle-orm';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getSession } from '../../lib/auth';
+import { db } from '../../db';
+import { reviewCards, reviewLogs } from '../../db/schema';
+import { retentionAtDelay, stabilityGrowth, dueToday } from '../../lib/srs/metrics';
+
+export const prerender = false;
+
+const session = await getSession(Astro.request.headers);
+if (!session?.user?.id) {
+  return Astro.redirect('/api/auth/sign-in/github');
+}
+const userId = session.user.id;
+
+const now = new Date();
+
+const [allCards, allLogs] = await Promise.all([
+  db.select().from(reviewCards).where(eq(reviewCards.userId, userId)),
+  db.select().from(reviewLogs).where(eq(reviewLogs.userId, userId)),
+]);
+
+const retentionPoints = retentionAtDelay(allLogs);
+const stabilityPoints = stabilityGrowth(allLogs);
+const dueTodayCount = dueToday(allCards, now);
+
+// SVG chart dimensions
+const CHART_W = 600;
+const CHART_H = 180;
+const PAD = { top: 12, right: 16, bottom: 32, left: 44 };
+const plotW = CHART_W - PAD.left - PAD.right;
+const plotH = CHART_H - PAD.top - PAD.bottom;
+
+// ── Forgetting-curve SVG (retention rate over time) ────────────────────────
+function buildRetentionPath(points: typeof retentionPoints): string {
+  if (points.length === 0) return '';
+  const n = points.length;
+  const xStep = n > 1 ? plotW / (n - 1) : plotW / 2;
+  const coords = points.map((p, i) => {
+    const x = PAD.left + (n > 1 ? i * xStep : plotW / 2);
+    const y = PAD.top + plotH * (1 - p.rate);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return 'M ' + coords.join(' L ');
+}
+
+// ── Stability-growth SVG (log-linear) ─────────────────────────────────────
+function buildStabilityPath(points: typeof stabilityPoints): string {
+  if (points.length === 0) return '';
+  const maxS = Math.max(...points.map((p) => p.meanStability), 1);
+  // Log scale: log(1) = 0 (floor), log(maxS) = plotH (ceil)
+  const logMax = Math.log(maxS + 1);
+  const n = points.length;
+  const xStep = n > 1 ? plotW / (n - 1) : plotW / 2;
+  const coords = points.map((p, i) => {
+    const x = PAD.left + (n > 1 ? i * xStep : plotW / 2);
+    const logVal = Math.log(p.meanStability + 1) / logMax;
+    const y = PAD.top + plotH * (1 - logVal);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return 'M ' + coords.join(' L ');
+}
+
+const retentionPath = buildRetentionPath(retentionPoints);
+const stabilityPath = buildStabilityPath(stabilityPoints);
+
+// Current-week emphasis: points in the last 7 days
+const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString().slice(0, 10);
+const thisWeekRetention = retentionPoints.filter((p) => p.date >= weekAgo);
+const overallRetentionPct =
+  retentionPoints.length > 0
+    ? Math.round(
+        (retentionPoints.reduce((s, p) => s + p.rate * p.total, 0) /
+          retentionPoints.reduce((s, p) => s + p.total, 0)) *
+          100,
+      )
+    : null;
+
+const thisWeekPct =
+  thisWeekRetention.length > 0
+    ? Math.round(
+        (thisWeekRetention.reduce((s, p) => s + p.rate * p.total, 0) /
+          thisWeekRetention.reduce((s, p) => s + p.total, 0)) *
+          100,
+      )
+    : null;
+
+// X-axis labels — show first and last date if available
+const retFirstDate = retentionPoints.at(0)?.date ?? '';
+const retLastDate = retentionPoints.at(-1)?.date ?? '';
+const stabFirstDate = stabilityPoints.at(0)?.date ?? '';
+const stabLastDate = stabilityPoints.at(-1)?.date ?? '';
+
+// Latest mean stability for summary
+const latestStability = stabilityPoints.at(-1)?.meanStability ?? null;
+---
+
+<BaseLayout title="Retention dashboard — QA Learning" description="Your private forgetting-curve and stability-growth metrics.">
+  <main class="retention-page">
+    <header class="retention-page__head">
+      <span class="eyebrow">spaced repetition · metrics</span>
+      <h1>Retention</h1>
+      <p class="retention-page__lead">Your private memory metrics — forgetting curve, stability growth, and today&apos;s queue.</p>
+    </header>
+
+    <!-- ── Due today ───────────────────────────────────────────────────── -->
+    <section class="retention-card" aria-labelledby="due-heading">
+      <h2 id="due-heading" class="retention-card__title">Due today</h2>
+      <p class="retention-big-num" aria-label={`${dueTodayCount} cards due today`}>{dueTodayCount}</p>
+      <p class="retention-card__sub">cards ready to review right now</p>
+    </section>
+
+    <!-- ── Forgetting curve ───────────────────────────────────────────── -->
+    <section class="retention-card" aria-labelledby="curve-heading">
+      <h2 id="curve-heading" class="retention-card__title">Forgetting curve</h2>
+      <p class="retention-card__desc">Retrieval rate for reviews with ≥7 day delay. Current week highlighted.</p>
+
+      {retentionPoints.length === 0 ? (
+        <p class="retention-empty">No review data yet. Complete some reviews to see your forgetting curve.</p>
+      ) : (
+        <>
+          <figure class="chart-figure" aria-label="Forgetting curve: retrieval rate over time">
+            <svg
+              class="chart-svg"
+              viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+              width={CHART_W}
+              height={CHART_H}
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <!-- Y axis grid lines: 0%, 50%, 100% -->
+              {[0, 0.5, 1].map((frac) => {
+                const y = PAD.top + plotH * (1 - frac);
+                return (
+                  <>
+                    <line x1={PAD.left} y1={y} x2={PAD.left + plotW} y2={y} class="chart-grid" />
+                    <text x={PAD.left - 6} y={y + 4} class="chart-axis-label" text-anchor="end">
+                      {Math.round(frac * 100)}%
+                    </text>
+                  </>
+                );
+              })}
+
+              <!-- X axis date labels -->
+              {retFirstDate && (
+                <text x={PAD.left} y={CHART_H - 8} class="chart-axis-label">{retFirstDate}</text>
+              )}
+              {retLastDate && retLastDate !== retFirstDate && (
+                <text x={PAD.left + plotW} y={CHART_H - 8} class="chart-axis-label" text-anchor="end">{retLastDate}</text>
+              )}
+
+              <!-- Current-week emphasis: vertical band -->
+              {thisWeekRetention.length > 0 && retentionPoints.length > 1 && (() => {
+                const n = retentionPoints.length;
+                const xStep = plotW / (n - 1);
+                const firstWeekIdx = retentionPoints.findIndex((p) => p.date >= weekAgo);
+                const bandX = PAD.left + firstWeekIdx * xStep;
+                const bandW = PAD.left + plotW - bandX;
+                return (
+                  <rect x={bandX} y={PAD.top} width={bandW} height={plotH} class="chart-week-band" />
+                );
+              })()}
+
+              <!-- Retention line -->
+              {retentionPath && (
+                <path d={retentionPath} class="chart-line chart-line--retention" />
+              )}
+            </svg>
+            <figcaption class="sr-only">
+              Line chart showing retrieval rate over time. Each point represents one calendar day of reviews.
+            </figcaption>
+          </figure>
+
+          <!-- Accessible text summary (axe-friendly table fallback) -->
+          <details class="chart-table-toggle">
+            <summary class="chart-table-toggle__btn">Show as table</summary>
+            <div class="chart-table-wrap">
+              <table class="chart-table">
+                <caption>Retrieval rate by date (reviews with ≥7 day delay)</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Rate</th>
+                    <th scope="col">Reviews</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {retentionPoints.map((p) => (
+                    <tr>
+                      <td>{p.date}</td>
+                      <td>{Math.round(p.rate * 100)}%</td>
+                      <td>{p.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <p class="retention-card__summary">
+            {overallRetentionPct !== null && (
+              <>Overall retention: <strong>{overallRetentionPct}%</strong>. </>
+            )}
+            {thisWeekPct !== null ? (
+              <>This week: <strong>{thisWeekPct}%</strong> ({thisWeekRetention.reduce((s, p) => s + p.total, 0)} reviews).</>
+            ) : (
+              'No reviews this week yet.'
+            )}
+          </p>
+        </>
+      )}
+    </section>
+
+    <!-- ── Stability growth ───────────────────────────────────────────── -->
+    <section class="retention-card" aria-labelledby="stab-heading">
+      <h2 id="stab-heading" class="retention-card__title">Stability growth</h2>
+      <p class="retention-card__desc">Mean memory stability (days) over time — log scale.</p>
+
+      {stabilityPoints.length === 0 ? (
+        <p class="retention-empty">No stability data yet.</p>
+      ) : (
+        <>
+          <figure class="chart-figure" aria-label="Stability growth over time on a log scale">
+            <svg
+              class="chart-svg"
+              viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+              width={CHART_W}
+              height={CHART_H}
+              role="img"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <!-- Grid lines at 25%, 50%, 75%, 100% of plot height -->
+              {[0.25, 0.5, 0.75, 1].map((frac) => {
+                const y = PAD.top + plotH * (1 - frac);
+                return (
+                  <line x1={PAD.left} y1={y} x2={PAD.left + plotW} y2={y} class="chart-grid" />
+                );
+              })}
+
+              <!-- X axis labels -->
+              {stabFirstDate && (
+                <text x={PAD.left} y={CHART_H - 8} class="chart-axis-label">{stabFirstDate}</text>
+              )}
+              {stabLastDate && stabLastDate !== stabFirstDate && (
+                <text x={PAD.left + plotW} y={CHART_H - 8} class="chart-axis-label" text-anchor="end">{stabLastDate}</text>
+              )}
+
+              {stabilityPath && (
+                <path d={stabilityPath} class="chart-line chart-line--stability" />
+              )}
+            </svg>
+            <figcaption class="sr-only">
+              Line chart showing mean memory stability (days) on a log scale over time.
+            </figcaption>
+          </figure>
+
+          <details class="chart-table-toggle">
+            <summary class="chart-table-toggle__btn">Show as table</summary>
+            <div class="chart-table-wrap">
+              <table class="chart-table">
+                <caption>Mean stability (days) by date</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Mean stability (days)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stabilityPoints.map((p) => (
+                    <tr>
+                      <td>{p.date}</td>
+                      <td>{p.meanStability.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          {latestStability !== null && (
+            <p class="retention-card__summary">
+              Latest mean stability: <strong>{latestStability.toFixed(1)} days</strong>.
+            </p>
+          )}
+        </>
+      )}
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .retention-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+
+  .retention-page__head {
+    margin-bottom: 32px;
+  }
+
+  .retention-page__head h1 {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 8px 0 0;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+
+  .retention-page__lead {
+    font-size: 15px;
+    color: var(--ink-2);
+    margin: 12px 0 0;
+    line-height: 1.6;
+  }
+
+  .retention-card {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .retention-card__title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+
+  .retention-card__desc {
+    font-size: 13px;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    margin: 0 0 16px;
+  }
+
+  .retention-card__sub {
+    font-size: 13px;
+    color: var(--ink-3);
+    margin: 4px 0 0;
+    font-family: var(--mono);
+  }
+
+  .retention-card__summary {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin: 12px 0 0;
+  }
+
+  .retention-big-num {
+    font-family: var(--serif);
+    font-size: 72px;
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    line-height: 1;
+    margin: 8px 0 0;
+  }
+
+  .retention-empty {
+    font-size: 14px;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    margin: 0;
+    padding: 20px 0;
+  }
+
+  /* ── Charts ── */
+  .chart-figure {
+    margin: 0 0 12px;
+    overflow-x: auto;
+  }
+
+  .chart-svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  :global(.chart-grid) {
+    stroke: var(--rule);
+    stroke-width: 1;
+  }
+
+  :global(.chart-axis-label) {
+    font-family: var(--mono);
+    font-size: 10px;
+    fill: var(--ink-3);
+  }
+
+  :global(.chart-week-band) {
+    fill: var(--accent-soft);
+    opacity: 0.6;
+  }
+
+  :global(.chart-line) {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  :global(.chart-line--retention) {
+    stroke: var(--accent);
+  }
+
+  :global(.chart-line--stability) {
+    stroke: var(--pass);
+  }
+
+  /* ── Table fallback ── */
+  .chart-table-toggle {
+    margin-bottom: 8px;
+  }
+
+  .chart-table-toggle__btn {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    cursor: pointer;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .chart-table-wrap {
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+
+  .chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  .chart-table caption {
+    font-size: 11px;
+    color: var(--ink-3);
+    text-align: left;
+    margin-bottom: 6px;
+    caption-side: top;
+  }
+
+  .chart-table th,
+  .chart-table td {
+    padding: 4px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-2);
+  }
+
+  .chart-table th {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* ── Utility ── */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    display: block;
+  }
+</style>
