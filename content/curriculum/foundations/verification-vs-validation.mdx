@@ -1,0 +1,109 @@
+---
+slug: verification-vs-validation
+title: Verification vs Validation — and Where Each Fails
+cluster: foundations
+layer: patterns
+prerequisites:
+  - qa-mindset
+related:
+  - what-is-qa-quality
+  - sdlc-delivery-models
+  - test-oracles-and-prioritization
+  - black-white-gray-box-thinking
+tags: [verification, validation, quality, testing-fundamentals]
+estimatedEncodingMinutes: 20
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Verification and validation are two different questions a tester must keep separate. **Verification** asks: *Are we building the product right?* — checked against the specification. **Validation** asks: *Are we building the right product?* — checked against the user's actual need. Confusing them is the most common path to "we shipped exactly what was asked for and the customer hates it."
+
+Modern practice adds a third question: *Is the product still right in production, under real load, with real users, today?* This **operational** question converts to observability, SLOs, and error budgets.
+
+A tester who runs only verification produces green test suites for products users hate. A tester who runs only validation produces shipped products with broken internal contracts. As [[qa-mindset]] teaches — name the oracle first, then decide which question you are answering.
+
+> Verification confirms the spec was met; validation confirms the right spec was chosen; operational validation confirms the product is still right now.
+
+## Diagram
+
+<Diagram caption="The V&V triangle: three questions, three oracles">
+```
+       Verification
+       "Built right?"
+       Oracle: Spec
+           /\
+          /  \
+         /    \
+        /      \
+       /________\
+  Validation    Operational
+  "Right product?"  "Still right?"
+  Oracle: User need  Oracle: Production signal
+```
+</Diagram>
+
+## Worked Example
+
+A team builds a search feature against this spec: *"return results matching the query string, ordered by date."*
+
+**Verification pass:** every automated test checks that queries return matching items in date order. All tests green. Coverage complete.
+
+**UAT — run as verification:** the product owner steps through the acceptance criteria. Each criterion passes. Sign-off granted.
+
+**Validation event (first real users):** users repeatedly fail to find what they need. The *useful* ordering for their workflow is **relevance**, not date. They searched for "deployment guide" and got results from three years ago ranked above a post from last week.
+
+Diagnosis: verification was thorough and correct — the spec was implemented perfectly. Validation was never actually run. What the team called "UAT" was a second verification pass (does it match the criteria?) not a validation event (do users find it useful?).
+
+The missing question: a usability prototype with a real task — "find the document you would use to set up a new environment" — would have revealed the ordering problem before a line of code was written.
+
+**A second failure mode (CSV export):** spec says *"export selected rows as CSV."* Engineering ships RFC-4180-conformant UTF-8 CSV. Verification: clean. Real users open the file in Excel in a locale that uses `;` as the list separator and see a single unbroken column. Validation required the user's *real environment*, not the spec's *implied* environment.
+
+## Common Pitfalls
+
+- **Calling acceptance-criteria checks "validation."** Criteria are a spec document; comparing the product against them is verification, even when a product owner wrote them. Fix: validation requires real users in real conditions whose judgement is the oracle. Reason: criteria are written and users are not present, so it *feels* like the closest available thing.
+- **Running UAT as a second verification pass.** If UAT cannot fail — if it only checks that criteria were met — it is not validation. Fix: stage UAT with real users doing real work, and accept that it may invalidate the spec. Reason: "users" in UAT are usually internal stakeholders or proxies, not actual customers.
+- **Treating V or V as a fixed property of an activity.** The same test can be verification or validation depending on what serves as the oracle. Fix: ask "what is being treated as the source of truth in this comparison?" Reason: categorising by activity name rather than by oracle leads to misplaced confidence.
+- **Stopping validation at pre-prod.** V&V vocabulary predates continuous deployment and frequently stops at release. Fix: carry validation into production via observability, support signals, and error budgets. Reason: a 24/7 system has no "end of validation" — production is the highest-fidelity oracle available.
+- **Skipping verification because "we're agile."** Reviews, static analysis, and unit tests are verification and remain valuable in any delivery model. Fix: keep verification activities in the Definition of Done. Reason: some teams over-correct away from spec-based work and lose the internal-contract checks.
+- **Skipping validation because "the PO signed off."** A product owner is one stakeholder. Fix: treat PO sign-off as confirmation that the spec was met, then run a real validation event with actual users. Reason: PO sign-off is procedurally satisfying but not epistemically sufficient.
+- **Importing regulated-industry vocabulary into web-app work unmodified.** In medical devices and aerospace, V&V distinction is legally binding (FDA, ISO 26262). In a web app, right-size the rigour. Fix: adapt the vocabulary to context rather than borrowing its bureaucracy wholesale. Reason: borrowed vocabulary often imports borrowed process weight.
+
+## Retrieval Prompts
+
+<Prompt id="vv-1">
+  State Boehm's two-question compression of V&V. Then give one example where verification succeeds while validation fails, and one where validation succeeds while verification fails.
+</Prompt>
+
+<Prompt id="vv-2">
+  A team's UAT consists of running acceptance criteria with the product owner. Why is this not validation, and what would make it validation?
+</Prompt>
+
+<Prompt id="vv-3">
+  Why does modern practice often add a third question beyond verification and validation? Describe it and give one production activity that operationalizes it.
+</Prompt>
+
+<Prompt id="vv-4">
+  Distinguish "an activity *is* verification" from "an activity *is functioning as* verification in this situation." Which framing is more useful and why?
+</Prompt>
+
+<Prompt id="vv-5">
+  A CSV export passes every verification test and is then reported as broken by real users. Without using the word "spec," describe what went wrong and what oracle was missing.
+</Prompt>
+
+<Prompt id="vv-6">
+  In a regulated industry (medical device, aerospace), why does the V&V distinction have legal force, and what changes about the tester's documentation as a result?
+</Prompt>
+
+<Prompt id="vv-7" requiresDiagram>
+  Sketch the V&V triangle and label one activity, one artifact, and one risk for each vertex.
+</Prompt>
+
+## Feynman Prompt
+
+<Feynman id="vv-feynman-1" wordTarget={150}>
+  Explain verification versus validation to a developer who believes "passing all the tests means the feature is done." What does their green test suite actually confirm? What question does it leave unanswered? Name the specific failure mode that emerges when teams run UAT as a second verification pass rather than a real validation event. Rubric (revealed after submit): Did you name a concrete oracle for each side (spec vs user need)? Did you explain why UAT-as-verification is a category error? Did you describe the operational question as a distinct third concern, not just an extension of validation?
+</Feynman>
