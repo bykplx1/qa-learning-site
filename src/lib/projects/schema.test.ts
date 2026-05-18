@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { projectFrontmatterSchema, type ProjectFrontmatter } from './schema';
+import { rubrics } from './rubric';
 
 const valid = {
   slug: 'flaky-test-hunter',
@@ -53,5 +54,34 @@ describe('projectFrontmatterSchema', () => {
       const paths = result.error.issues.map((i) => i.path.join('.'));
       expect(paths).toContain('acceptanceCriteria');
     }
+  });
+
+  it('accepts optional requiredConcepts array', () => {
+    const withConcepts = { ...valid, requiredConcepts: ['fsrs-basics', 'srs-retention'] };
+    const result = projectFrontmatterSchema.safeParse(withConcepts);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a known rubric id', () => {
+    const knownId = Object.keys(rubrics)[0];
+    const withRubric = { ...valid, rubric: knownId };
+    const result = projectFrontmatterSchema.safeParse(withRubric);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects an unknown rubric id (build-fail seam)', () => {
+    const withBadRubric = { ...valid, rubric: 'totally-unknown-rubric-id' };
+    const result = projectFrontmatterSchema.safeParse(withBadRubric);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((i) => i.path.join('.'));
+      expect(paths).toContain('rubric');
+    }
+  });
+
+  it('parses without rubric or requiredConcepts (fields remain optional)', () => {
+    const parsed: ProjectFrontmatter = projectFrontmatterSchema.parse(valid);
+    expect(parsed.rubric).toBeUndefined();
+    expect(parsed.requiredConcepts).toBeUndefined();
   });
 });
