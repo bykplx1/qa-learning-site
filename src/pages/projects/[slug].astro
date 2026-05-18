@@ -4,10 +4,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SelfAttestChecklist from '../../components/projects/SelfAttestChecklist';
 import SubmitProjectForm from '../../components/projects/SubmitProjectForm';
 import RubricPanel from '../../components/projects/RubricPanel';
+import ConceptGate from '../../components/projects/ConceptGate';
 import { TIER_LABELS } from '../../lib/projects/schema';
 import { rubrics } from '../../lib/projects/rubric';
 import { getSession } from '../../lib/auth';
 import { getSubmission } from '../../db/queries';
+import { getConceptStabilities, buildGateStatus } from '../../lib/projects/concept-gate';
 
 export const prerender = false;
 
@@ -36,6 +38,38 @@ const existingProp = existing
     }
   : null;
 
+// Concept gate: load stability data server-side; pass plain props to React island.
+const requiredConcepts: string[] = project.data.requiredConcepts ?? [];
+
+// Resolve gate status: skip when no requiredConcepts or no user.
+// E2E mock mode: build deterministic gate from env vars to avoid DB hit.
+const gate = await (async () => {
+  if (requiredConcepts.length === 0 || !userId) return null;
+
+  if (process.env.E2E_OAUTH_MOCK === '1') {
+    const forceBelow = process.env.E2E_CONCEPT_GATE_BELOW === '1';
+    const dueCards = forceBelow ? parseInt(process.env.E2E_CONCEPT_GATE_DUE_CARDS ?? '3', 10) : 0;
+    const concepts = requiredConcepts.map((c, i) => ({
+      concept: c,
+      cluster: c,
+      stability: forceBelow && i === 0 ? 0.2 : 1.5,
+      totalCards: 3,
+      dueCards: forceBelow && i === 0 ? dueCards : 0,
+      belowThreshold: forceBelow && i === 0,
+    }));
+    const failing = concepts.filter((c) => c.belowThreshold);
+    return {
+      allMet: failing.length === 0,
+      concepts,
+      primaryCluster: failing[0]?.cluster ?? null,
+      dueCardCount: failing.reduce((s, c) => s + c.dueCards, 0),
+      estimatedMinutes: Math.ceil((failing.reduce((s, c) => s + c.dueCards, 0) * 45) / 60),
+    };
+  }
+
+  return buildGateStatus(await getConceptStabilities(userId, requiredConcepts));
+})();
+
 function splitTitleAccent(t: string): { head: string; tail: string } {
   const idx = t.lastIndexOf(' ');
   if (idx <= 0 || t.split(' ').length < 2) return { head: '', tail: t };
@@ -60,6 +94,14 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
       <span class="sep">/</span>
       <span class="crumb-current">{title}</span>
     </nav>
+
+    {gate && (
+      <ConceptGate
+        client:load
+        projectSlug={project.data.slug}
+        gate={gate}
+      />
+    )}
 
     <header style="margin-bottom: 32px;">
       <h1 class="brief__title">
