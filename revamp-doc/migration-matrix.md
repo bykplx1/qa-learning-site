@@ -23,5 +23,6 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 
 | legacy slug | new slug | cluster | status | redirect landed | notes |
 |---|---|---|---|---|---|
-| — | foundations/qa-mindset | foundations | pending | n/a | Smoke-test canary (PRD-Knowledge P0). New topic — no legacy precursor. Authored per `content-template-and-mechanics-map.md` §5. |
+| — | foundations/qa-mindset | foundations | shipped | n/a | Smoke-test canary (PRD-Knowledge P0). New topic — no legacy precursor. Authored per `content-template-and-mechanics-map.md` §5. |
 | — | foundations/verification-vs-validation | foundations | shipped | n/a | Knowledge P1 (#161). New topic — no legacy precursor. layer: patterns. 7 retrieval prompts, 1 Feynman. |
+| — | foundations/test-oracles-and-prioritization | foundations | shipped | n/a | Knowledge P1 (#163). New topic — no legacy precursor. layer: systems. PR: knowledge-p1/163-test-oracles-and-prioritization. |
