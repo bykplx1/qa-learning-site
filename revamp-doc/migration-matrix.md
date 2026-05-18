@@ -33,3 +33,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | test-design/test-pyramid-and-trophy | test-design | shipped | n/a | Knowledge P2 (#166). New topic. layer: patterns. PR: knowledge-p2/166-test-pyramid-and-trophy. |
 | — | test-design/test-design-techniques | test-design | shipped | n/a | Knowledge P2 (#165). New topic. layer: systems. PR: knowledge-p2/165-test-design-techniques. |
 | — | test-design/risk-based-testing | test-design | shipped | n/a | Knowledge P2 (#167). New topic. layer: systems. PR: knowledge-p2/167-risk-based-testing. |
+| — | test-design/shift-left-and-shift-right | test-design | shipped | n/a | Knowledge P2 (#169). New topic. layer: patterns. PR: knowledge-p2/169-shift-left-and-shift-right. |
