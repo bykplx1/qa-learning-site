@@ -41,3 +41,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | functional-execution/mocking-stubbing-test-doubles | functional-execution | shipped | n/a | Knowledge P3 (#174). New topic — no legacy precursor. layer: patterns. PR: knowledge-p3/174-mocking-stubbing-test-doubles. |
 | — | functional-execution/defect-lifecycle-and-bug-reporting | functional-execution | shipped | n/a | Knowledge P3 (#175). New topic — no legacy precursor. layer: systems. PR: knowledge-p3/175-defect-lifecycle-and-bug-reporting. |
 | — | functional-execution/test-management-tools | functional-execution | shipped | n/a | Knowledge P3 (#176). New topic — no legacy precursor. layer: facts. PR: knowledge-p3/176-test-management-tools. |
+| — | automation-cicd/selenium-vs-cypress-vs-playwright | automation-cicd | shipped | n/a | Knowledge P4 (#179). New topic — no legacy precursor. layer: patterns. PR: knowledge-p4/179-selenium-vs-cypress-vs-playwright. |
