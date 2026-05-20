@@ -1,0 +1,174 @@
+---
+slug: mocking-stubbing-test-doubles
+title: Mocking, Stubbing & Test Doubles
+cluster: functional-execution
+layer: patterns
+prerequisites:
+  - test-pyramid-and-trophy
+  - tdd-bdd-atdd
+  - test-design-techniques
+related:
+  - unit-integration-e2e-boundaries
+  - test-planning-cases-and-scenarios
+  - api-testing
+  - ci-cd-for-testing
+tags: [test-doubles, mocking, stubbing, fakes, spies, isolation]
+estimatedEncodingMinutes: 22
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+A *test double* is any stand-in for a real collaborator in a test. Gerard Meszaros (*xUnit Test Patterns*, 2007) named five distinct kinds — **Dummy**, **Fake**, **Stub**, **Spy**, and **Mock** — and they are not synonyms. Each kind answers a different question: Do I need state? Do I need to observe a call? Do I need to enforce a call? The word "mock" is routinely used as a verb for all five, which is the field's most costly naming failure.
+
+The companion architectural rule — **"don't mock what you don't own"** (Freeman & Pryce, *GOOS*, 2009) — is the load-bearing constraint: doubles belong at interfaces *your code defines*, not at the boundaries of third-party libraries. Mocking `axios` tests your assumption about axios, not your code's behaviour. Introduce a thin adapter you own; mock the adapter.
+
+As [[test-pyramid-and-trophy]] shows, isolation decisions shape the entire test portfolio. Every double is placed at a seam — and the choice of *which kind* is the choice of *which question the test is asking*.
+
+> Pick the double kind by the question you're asking: state? use a stub. observation? use a spy. enforcement? use a mock. And never double a seam you don't own.
+
+## Diagram
+
+<Diagram caption="The five Meszaros test-double kinds: what each does and when to reach for it">
+```
+TEST DOUBLE DECISION TREE
+─────────────────────────────────────────────────────────────────────
+  "What is the test asking about the collaborator?"
+  │
+  ├─► "Nothing — I just need to satisfy the API signature"
+  │     └─► DUMMY  (never called; fills a required parameter slot)
+  │
+  ├─► "I need the collaborator to return realistic state"
+  │     ├─► Simple canned answer?  →  STUB  (returns fixed values;
+  │     │                                    ignores how it's called)
+  │     └─► Full honest impl?      →  FAKE  (in-memory DB, in-proc
+  │                                          queue — real logic, not prod-grade)
+  │
+  ├─► "I need to observe that a side-effect happened"
+  │     └─► SPY   (records calls received; test asserts on the log)
+  │
+  └─► "I need to enforce the exact call contract"
+        └─► MOCK  (pre-programmed expectations; FAILS the test if
+                   calls don't match — change-detector by design)
+
+"Don't mock what you don't own" rule
+─────────────────────────────────────────────────────────────────────
+  ✗  stub(axios.get).resolves(...)  ← you don't own axios
+  ✓  stub(httpClient.fetchUser)     ← you own the adapter
+       + contract-test the real axios call separately (e.g. MSW)
+```
+</Diagram>
+
+## Worked Example
+
+A `sendWelcomeEmail(userId)` function: looks up the user, checks the notification preference, sends the email, logs the send. The same scenario written five ways shows the double discrimination concretely.
+
+**Setup shared across all five:**
+
+```ts
+// Collaborators the function depends on
+interface UserRepo   { findById(id: string): Promise<User | null> }
+interface PrefStore  { allowsEmail(userId: string): Promise<boolean> }
+interface Mailer     { send(to: string, template: string): Promise<void> }
+interface AuditLog   { record(event: string): void }
+```
+
+**Dummy** — the `AuditLog` isn't exercised in the happy path:
+
+```ts
+const dummyLog: AuditLog = { record: () => { throw new Error('should not be called') } };
+// passed to sendWelcomeEmail but never invoked — the function doesn't log on success
+```
+
+**Fake** — an in-memory `UserRepo` that stores real data:
+
+```ts
+const fakeRepo: UserRepo = {
+  _store: { 'u1': { email: 'a@b.com', name: 'Alice' } },
+  findById(id) { return Promise.resolve(this._store[id] ?? null); },
+};
+```
+
+**Stub** — canned answers, no logic:
+
+```ts
+const stubRepo: UserRepo     = { findById: () => Promise.resolve({ email: 'a@b.com', name: 'Alice' }) };
+const stubPrefs: PrefStore   = { allowsEmail: () => Promise.resolve(true) };
+```
+
+**Spy** — wraps the real (or stub) mailer and records calls:
+
+```ts
+const calls: string[] = [];
+const spyMailer: Mailer = {
+  send(to, template) { calls.push(to); return Promise.resolve(); }
+};
+await sendWelcomeEmail('u1', stubRepo, stubPrefs, spyMailer, dummyLog);
+expect(calls).toEqual(['a@b.com']);   // observe the side-effect
+```
+
+**Mock** — pre-programmed expectation; fails the test if not met:
+
+```ts
+const mockMailer = vi.fn().mockResolvedValue(undefined);
+await sendWelcomeEmail('u1', stubRepo, stubPrefs, { send: mockMailer }, dummyLog);
+expect(mockMailer).toHaveBeenCalledExactlyOnceWith('a@b.com', 'welcome');
+// ↑ fails if the call signature changes — intentional; this IS the contract
+```
+
+The payoff: the spy test survives a refactor that splits `send` into `schedule` + `dispatch` (behaviour unchanged). The mock test fails — because the mock *was* the contract for that call signature. Both behaviours are correct for their intent; the difference is whether *interaction itself* is under test.
+
+## Common Pitfalls
+
+- **Using "mock" as the verb for all five kinds.** The team says "let's mock the database" and everyone imagines something different. Fix: adopt the Meszaros vocabulary in code review — reject "mock" without the specific kind. Why it happens: common frameworks expose `.mock()` / `jest.mock()` as the primary API, making the verb the default noun.
+
+- **Mocking what you don't own.** `jest.mock('axios')` tests your assumption about axios's response shape, not your code's logic. When the library updates its error format, the mock keeps passing, and the bug ships. Fix: introduce a `httpClient` adapter interface you own; mock the adapter; test the real library boundary separately with MSW or a real server. Why it happens: the third-party call is the *obvious* place to draw the seam, but it's the *wrong* place.
+
+- **Reaching for mocks when stubs or spies would do.** A mock on `priceService.compute` fails the test if a refactor introduces a helper that batches the call — the behaviour is unchanged but the test breaks. Fix: if the assertion is about *output state* ("does the cart have the right total?"), use a stub. Use a mock only when the *call itself* is the thing under test. Why it happens: mocks are the default in most frameworks, so they become the default in tests.
+
+- **Auto-mocking by default.** `jest.mock('./module')` makes every method return `undefined`. Tests relying on those defaults break silently when the module gains a method, or a return type changes. Fix: prefer explicit doubles; restrict or disable `automock` in config. Why it happens: auto-mock saves initial boilerplate — the cost is paid later in mysterious failures.
+
+- **Stubs that return shapes production never returns.** A stub hardcoded to `{ status: 200, data: {...} }` never exercises error paths, rate-limit responses, or partial payloads. Fix: combine stubs with a contract test (e.g. MSW, Pact) that validates the real boundary. Why it happens: the happy path is what the author was thinking about when writing the stub.
+
+- **Tests that mock 6+ collaborators.** This is an integration test wearing a unit-test costume. The seam count is the actual cost driver. Fix: reconsider the code structure — that many injected dependencies usually signals a god function. Why it happens: heavy mock counts creep up naturally; no single mock push is alarming.
+
+- **Stale doubles.** A stub authored against a 2022 API surface is invisibly wrong in 2025. Tests stay green; production breaks. Fix: run contract tests or periodic drift audits against the real dependency. Why it happens: creating a double is visible effort; auditing it is not.
+
+## Retrieval Prompts
+
+<Prompt id="msd-1">
+  Name the five kinds of test double in Meszaros' taxonomy. For each, write one sentence: "Use a [kind] when the test needs to [...]."
+</Prompt>
+
+<Prompt id="msd-2">
+  A test contains `jest.mock('axios')`. State the rule this violates, name the failure class the test now systematically misses, and describe the fix.
+</Prompt>
+
+<Prompt id="msd-3">
+  Distinguish a stub from a mock using a two-sentence concrete example. In which scenario does swapping one for the other change whether a refactor breaks the test?
+</Prompt>
+
+<Prompt id="msd-4">
+  Why are mocks called "change-detectors"? When is that property a feature (you want the test to break), and when is it a bug (you don't)?
+</Prompt>
+
+<Prompt id="msd-5">
+  A test mocks 8 collaborators. Without seeing the code, name two structural smells you would investigate and one refactor move that often reduces double count.
+</Prompt>
+
+<Prompt id="msd-6">
+  Mock Service Worker intercepts at the network boundary; `jest.mock('axios')` intercepts at the library boundary. Why does the difference matter, and which one survives a migration from axios to the native Fetch API?
+</Prompt>
+
+<Prompt id="msd-7">
+  The "London school" and the "Detroit/Chicago school" of TDD disagree about what, exactly? What does each school's position imply for double count in a typical unit test?
+</Prompt>
+
+## Feynman Prompt
+
+<Feynman id="msd-feynman-1" wordTarget={150}>
+  Explain the "don't mock what you don't own" rule to a developer who thinks mocking `axios` directly is the obvious way to test HTTP calls. Why is the mock passing while the bug ships? What is the structural fix, and what does "owning a seam" actually mean in code? Rubric (revealed after submit): Did you name the specific failure mode (library update silently invalidates the test's assumption)? Did you describe the adapter pattern as the fix, not just "use MSW"? Did you connect "owning the seam" to having an interface in your own codebase that you can change?
+</Feynman>
