@@ -1,0 +1,280 @@
+---
+slug: performance-testing
+title: Performance Testing
+cluster: non-functional
+layer: systems
+prerequisites:
+  - test-oracles-and-prioritization
+  - shift-left-and-shift-right
+  - cicd-for-testing
+  - api-testing
+related:
+  - observability-for-testers
+  - security-testing
+  - chaos-and-resilience-testing
+  - database-testing
+tags: [performance, load-testing, k6, lighthouse, slo, percentiles, workload-modelling]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Performance testing is the practice of asking "how does this system behave under realistic and adversarial workloads?" — *before* production answers the question for you. It is not a single test type; it is a family of **workload shapes** run against an SLO-defined target, with results read as **distributions**, not averages.
+
+The load-bearing claims: a performance number without a **percentile** and a **workload shape** is meaningless. "Our API responds in 80 ms" is not a result. "Our `GET /search` p95 is 240 ms at 500 RPS sustained for 30 minutes, cache warm" is a result. The [[test-oracles-and-prioritization]] principle applies directly — without an SLO defining pass/fail, the perf test has no verdict.
+
+Performance testing also spans two distinct disciplines: **backend perf** (server response distributions under concurrency) and **frontend perf** (user-experienced paint metrics). Both use the word "performance"; they answer different questions.
+
+> A performance number without a percentile and a workload shape is a feeling, not a measurement. The QA contribution is converting "the site feels slow" into "p95 LCP is 3.2 s at p75 of real users — fail by 28%."
+
+## Diagram
+
+<Diagram caption="Four canonical workload shapes for one endpoint, showing what each shape reveals and the bug class each catches">
+```
+ENDPOINT: POST /checkout
+
+LOAD TEST — Steady-state at expected peak
+  VUs: ████████████████████████ (500 VU, 30 min hold)
+  Answers: "Does the system meet SLOs under the load it was sized for?"
+  Catches: SLO breach, connection-pool saturation at planned capacity
+
+STRESS TEST — Ramp beyond peak until something breaks
+  VUs: ▁▂▄▆████▆▄▂▁ (0 → 5000 VU over 30 min, hold 5 min, ramp down)
+  Answers: "Where does the system break, and how does it fail?"
+  Catches: capacity ceiling, graceful-vs-cliff failure mode, cascades
+
+SOAK TEST — Moderate load sustained for hours to days
+  VUs: ████████████████████████████████████ (200 VU, 8 hours)
+  Answers: "Are there leaks, accumulating queues, GC pauses?"
+  Catches: memory leaks, pool exhaustion, log-volume blow-up
+
+SPIKE TEST — Instantaneous step-up from baseline to high load
+  VUs: ░░░░████░░░░████░░░░ (50 VU → 2000 VU at t=5 min, back at t=10 min)
+  Answers: "Does autoscaling react in time? Does cold-start tax matter?"
+  Catches: autoscaling lag, connection-pool pre-warming gaps
+
+─────────────────────────────────────────────────────────────────────
+READING RESULTS: always p50 / p95 / p99 — never averages
+
+  990 requests @ 50 ms  +  10 requests @ 5000 ms
+  Average: ~100 ms  ← hides the pain
+  p50:  50 ms   p95:  50 ms   p99:  5000 ms  ← truth
+─────────────────────────────────────────────────────────────────────
+WORKLOAD MODEL: closed vs open
+
+  Closed (constant-vus): N VUs wait for response → send next
+    → under-reports tail latency under saturation (coordinated omission)
+  Open (constant-arrival-rate): requests arrive at fixed rate
+    → models real traffic; exposes true tail latency
+```
+</Diagram>
+
+## Worked Example
+
+### Backend perf: from vibes to verdict
+
+A team reports "the checkout API is slow." Start by defining the oracle — no oracle, no test:
+
+```
+SLO (agreed with team before writing one line of test code):
+  POST /checkout
+  p95 latency ≤ 400 ms
+  p99 latency ≤ 800 ms
+  Error rate ≤ 0.1%
+  At: 300 RPS sustained for 15 minutes, cache warm, production-shaped data (10M orders)
+```
+
+Next, the k6 load test matching that SLO:
+
+```js
+// k6/checkout-load.js
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  // Open-model executor: requests arrive at a fixed rate regardless of response time
+  // This avoids coordinated omission — slow responses do not throttle the test
+  scenarios: {
+    load: {
+      executor: 'constant-arrival-rate',
+      rate: 300,          // 300 requests per second
+      timeUnit: '1s',
+      duration: '15m',
+      preAllocatedVUs: 50,
+      maxVUs: 200,
+    },
+  },
+  thresholds: {
+    http_req_duration: ['p(95)<400', 'p(99)<800'],  // fail if SLO breached
+    http_req_failed: ['rate<0.001'],                 // fail if error rate > 0.1%
+  },
+};
+
+export default function () {
+  const payload = JSON.stringify({ productId: Math.floor(Math.random() * 1000) + 1 });
+  http.post('https://staging.example.com/checkout', payload, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  sleep(2); // model real user think-time — not a delay, a workload shape decision
+}
+```
+
+**Two decisions in that script that most teams get wrong:**
+
+1. `constant-arrival-rate` instead of `constant-vus`: the closed model (`constant-vus`) waits for a response before sending the next request. If a response takes 5 s, no request is sent for 5 s — the test *under-counts* slow responses. This is **coordinated omission**. The open model (`constant-arrival-rate`) sends requests on schedule regardless, exposing the true tail.
+
+2. `sleep(2)` between iterations: real users read a confirmation page before clicking again. Without think-time, 50 VUs generate 50× the real concurrency. The sleep is not test overhead — it is workload modelling.
+
+### Frontend perf: Lighthouse-CI as a shift-left gate
+
+The [[cicd-for-testing]] topic already shows this site's `lhci` job. Here is the budget it enforces and what each metric means for the user:
+
+```json
+// lighthouserc.json (simplified)
+{
+  "ci": {
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "interaction-to-next-paint": ["error", { "maxNumericValue": 200 }],
+        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300 }]
+      }
+    }
+  }
+}
+```
+
+- **LCP ≤ 2.5 s** — the largest element on screen has painted. Users perceive this as "the page loaded."
+- **INP ≤ 200 ms** — Interaction to Next Paint (replaced FID in March 2024). Samples *all* interactions per user, reports the worst tail. A site passing FID often fails INP because INP is harsher.
+- **CLS ≤ 0.1** — layout stability. A score of 0 means nothing jumped; 0.25+ means elements are shifting after paint.
+
+Budget the *individual metrics*, not the composite Lighthouse score. The score is a weighted blend — a regression in LCP can hide behind an improvement in SEO. The score tells you "something changed"; the metrics tell you what.
+
+### Fan-out tail latency — the math teams ignore
+
+A page calls 5 backend services in parallel. Each has p99 = 200 ms. What is the page's p99?
+
+Not 200 ms. The page completes when the *slowest* of the 5 responses returns. If each independently has a 1% chance of taking 200+ ms, the probability that *at least one* of the five takes 200+ ms is:
+
+```
+P(at least one slow) = 1 - P(all fast)
+                     = 1 - (0.99)^5
+                     ≈ 4.9%
+```
+
+So the page's p99 is actually the individual service's ~p95. With 10 parallel services it approaches the individual p90. This is **fan-out amplification** — "fast services" do not automatically produce fast pages. The lesson: instrument the *page* p99, not just the service p99. A [[playwright]] trace that shows 5 parallel fetches is a signal worth measuring under load.
+
+## Common Pitfalls
+
+- **Reporting average response time.** Averages hide the tail. 990 requests at 50 ms and 10 requests at 5 s average to ~100 ms — which looks fine and is not. Fix: always report p50, p95, p99 (and p99.9 when the SLO demands). Ban the word "average" except for explicitly-named throughput metrics. This happens because most dashboards default to mean; change the default.
+
+- **Testing against a tiny database.** A perf test against a 1,000-row table reveals nothing about a 10-million-row production table. Query plans flip on data volume; indexes that work at small scale stop working at scale. Fix: seed production-shaped data (or a production clone with PII scrubbed) before running perf tests. Treat data setup as part of the test, not optional overhead.
+
+- **Coordinated omission with a closed-model executor.** `constant-vus` (the default in many tools) waits for a response before sending the next request. Under saturation, slow responses throttle the test — which then *under-reports* tail latency. Fix: use `constant-arrival-rate` (k6) or `injectOpen` (Gatling) for tail metrics; reserve closed-model for "how does the system behave with exactly N concurrent users" questions. Name the executor in every result.
+
+- **No SLO before writing the test.** A perf test without a pass/fail oracle is exploratory, not a quality gate. "Looks fine" is not a result. Fix: define the SLO with the team — percentile, threshold, workload shape, cache state, data state — before writing one line of test code. The SLO is the oracle (back-reference: [[test-oracles-and-prioritization]]).
+
+- **Budgeting the Lighthouse composite score instead of individual metrics.** The score is a weighted blend; regressions in LCP can be masked by improvements elsewhere. Fix: assert on individual Core Web Vitals — LCP, INP, CLS — in `lighthouserc.json`. If only the score is budgeted, the team optimises the score, not the user experience.
+
+- **Running perf tests with cold caches and calling the result "production performance."** Most production requests hit warm caches; a cold-cache result is a worst-case, not a typical case. Fix: document the cache state in every perf result. Run separate cold-start and warm-state tests; label them correctly.
+
+- **Forgetting the warm-up period.** JIT compilation (JVM), connection-pool fill, and cache warming produce transient latency spikes in the first 5–10% of a test run. Including that data in steady-state results inflates the reported p99. Fix: add a ramp-up stage and discard results until the system stabilises; or build the warmup into the scenario and exclude warmup results from the threshold evaluation.
+
+- **Reporting a single perf run as "the number."** Perf is a distribution; one run is one sample of that distribution. On shared CI runners, runner noise alone can account for 10–20% variance. Fix: run 3–5 times and report the median; flag outliers. When comparing across PRs on shared runners, use relative thresholds (vs. a same-job baseline) rather than absolute values. The [[cicd-for-testing]] pipeline's Lighthouse job is the right model for how to wire this.
+
+## Retrieval Prompts
+
+<Prompt id="perf-1">
+  Name the four canonical performance workload shapes. For each, state the question it answers and one bug class it catches that the other shapes cannot.
+</Prompt>
+
+<Prompt id="perf-2">
+  A teammate reports "the API responds in 80 ms on average." Name three follow-up questions you must ask before accepting that number as a performance result. Explain what each question reveals.
+</Prompt>
+
+<Prompt id="perf-3">
+  Define coordinated omission. Explain in one paragraph how a constant-vus executor causes a load tool to under-report tail latency under saturation, and name the executor type that avoids it.
+</Prompt>
+
+<Prompt id="perf-4" requiresDiagram>
+  A page calls 5 backend services in parallel. Each has p99 = 200 ms. Explain why the page's p99 is not 200 ms. Sketch the probability calculation and name the principle.
+</Prompt>
+
+<Prompt id="perf-5">
+  Distinguish Lighthouse, WebPageTest, and Real User Monitoring (RUM). State what each measures, on what population, and when you use each. Which one is "ground truth" and why?
+</Prompt>
+
+<Prompt id="perf-6">
+  What is INP? How does it differ from FID? Why did Google replace FID with INP in March 2024, and why does a site that passed FID often fail INP?
+</Prompt>
+
+<Prompt id="perf-7">
+  A backend perf CI job reports that p95 latency went from 200 ms to 215 ms across one PR. Walk through the steps you take before deciding whether to fail the build. What information do you need, and why might 215 ms be inside the noise floor?
+</Prompt>
+
+<Prompt id="perf-8">
+  A soak test runs at 200 VUs for 8 hours. Explain why this is not the same as "a load test that runs longer." Name two bug classes that a 30-minute load test at the same VU count would not catch.
+</Prompt>
+
+<Prompt id="perf-9">
+  Distinguish closed and open workload models. At high load, which model matches real user traffic and why? Under what circumstance is a closed model the correct choice?
+</Prompt>
+
+<Prompt id="perf-10">
+  You are configuring Lighthouse-CI for a PR gate. Should you budget the composite performance score or the individual Core Web Vitals? Explain the failure mode of budgeting the composite score.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="perf-task-1" rubric="perf-rubric-v1">
+  Define and defend a performance budget for one critical user flow on a site you control (or the QA learning site at `https://qa-learning-site.vercel.app`). The flow: **load the homepage → click a lesson → render the lesson page.**
+
+  **Deliverable 1 — SLOs in writing**
+
+  Define the following, with a specific number for each:
+  - Frontend: LCP, INP, CLS threshold for the lesson page.
+  - Backend: p95 latency threshold for any API the flow hits (e.g., progress, auth session check).
+  - State the workload shape (which of the four canonical shapes), the cache state (cold/warm), and the data state (how many users/lessons seeded).
+
+  **Deliverable 2 — Budget rationale (≤ 300 words)**
+
+  For each SLO number, name *why this number* — cite at least one external anchor: CrUX p75 bands ("good" LCP ≤ 2.5 s), Google's INP thresholds (≤ 200 ms good, ≤ 500 ms needs improvement), a competitor benchmark, or historical data. A number without an anchor is a guess.
+
+  **Deliverable 3 — Test plan**
+
+  State which tests run where:
+  - Per-PR gate: what tool, what metric, which stage of [[cicd-for-testing]] pipeline.
+  - Pre-release: what tool, which workload shape, what environment.
+  - Production validation: what RUM signal would you instrument, and with what alert threshold.
+
+  **Deliverable 4 — Failure-mode plan**
+
+  Define:
+  - What triggers a hard build block (vs. a warning).
+  - How you distinguish a real regression from noise-floor variance. Name a specific threshold (e.g., >10% increase over 3-run median).
+  - What escalation path a breached SLO follows if the regression is confirmed.
+
+  **Deliverable 5 — Evidence**
+
+  Run Lighthouse-CI on the target site once (locally or in CI) and report the actual numbers vs. your proposed budget. If the numbers breach your budget, name the specific Lighthouse diagnostic you would read first and what it would tell you.
+
+  Rubric (revealed after submission):
+  - Does each SLO have a percentile AND a workload shape AND a cache state? Missing any one is a partial credit only.
+  - Does the rationale cite an external anchor (CrUX, Google threshold, benchmark) rather than an internally-generated number? Unsupported numbers fail.
+  - Does the test plan name a specific executor type for the backend load test (closed vs. open) and justify the choice?
+  - Does the failure-mode plan define a noise-floor threshold (not just "we'll decide")? A threshold-free plan is a fail.
+  - Does the evidence section report actual Lighthouse numbers, not "I would run Lighthouse"? Hand-waving fails.
+  - Bonus: does the candidate name a failure mode the chosen workload shape will *not* catch, and name which alternative shape would catch it?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="perf-feynman-1" wordTarget={150}>
+  Explain performance testing to a developer who thinks "it's fast on my machine, so performance is fine." Cover: why "fast on my machine" is not a performance result (name the three things missing), what the difference is between average response time and p99, and why a load test with a closed-model executor can report lower tail latency than a test using an open-model executor against the same service. Give one concrete example of a performance bug that would pass a "fast on my machine" check and fail a properly configured p99 SLO gate. Rubric (revealed after submit): Did you name the three things missing from "fast on my machine" (percentile, workload shape, concurrency)? Did you explain p99 versus average in terms of the *user who experiences the tail*, not just the math? Did you explain coordinated omission without using the phrase "the test is wrong" as a substitute for the mechanism? Did your concrete example name a specific bug class (memory leak, slow query, connection-pool exhaustion, cache miss) rather than "something slow"?
+</Feynman>

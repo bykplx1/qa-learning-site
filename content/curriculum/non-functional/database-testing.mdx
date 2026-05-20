@@ -1,0 +1,228 @@
+---
+slug: database-testing
+title: Database Testing
+cluster: non-functional
+layer: patterns
+prerequisites:
+  - unit-integration-e2e-boundaries
+  - mocking-stubbing-test-doubles
+  - test-pyramid-and-trophy
+related:
+  - cicd-for-testing
+  - api-testing
+  - performance-testing
+  - security-testing
+  - observability-for-testers
+  - chaos-and-resilience-testing
+tags: [database, postgres, migrations, sql, testcontainers, data-integrity]
+estimatedEncodingMinutes: 22
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Database testing is **the practice of verifying that your system's persistent state survives everything you put it through**: schema migrations, concurrent writes, partial failures, and data volume growth. It is not "did the SELECT return the right rows" — it is *did the data model survive the operations we ran, and will it survive next week's*.
+
+The test pyramid inverts for data. Application code favours unit tests; data-layer tests favour integration tests against a real database. In-memory substitutes (SQLite, H2) diverge from production dialects in ways that produce false confidence — constraint enforcement, query plans, and isolation behaviour are all dialect-specific. The structural answer is Testcontainers: a real Postgres instance spun up per test suite, destroyed when done.
+
+The asymmetric stakes: most bugs cost a sprint to fix; data-corruption and migration disasters can be irreversible once they reach production.
+
+> The test pyramid inverts for data: most data-layer tests should run against a real database, not an in-memory substitute. Data errors are the one bug class where "fix it in prod" may not be an option.
+
+## Diagram
+
+<Diagram caption="The expand-contract migration pattern for safely renaming a column — five phases, each independently reversible, each deployed separately">
+```
+GOAL: rename users.email_address → users.email
+
+  EXPAND PHASE
+  ┌─────────────────────────────────────────────────────────┐
+  │ Phase 1 — Add new column (nullable)                     │
+  │   ALTER TABLE users ADD COLUMN email TEXT;              │
+  │   Reversible: DROP COLUMN email                         │
+  │   Running app: reads email_address only ✓               │
+  └──────────────────────────┬──────────────────────────────┘
+                             │ deploy
+  ┌──────────────────────────▼──────────────────────────────┐
+  │ Phase 2 — Dual-write in application code                │
+  │   App writes both email_address AND email on every save │
+  │   Reversible: stop writing email column                 │
+  │   Running app: reads email_address, writes both ✓       │
+  └──────────────────────────┬──────────────────────────────┘
+                             │ deploy
+  ┌──────────────────────────▼──────────────────────────────┐
+  │ Phase 3 — Backfill existing rows                        │
+  │   UPDATE users SET email = email_address                │
+  │   WHERE email IS NULL;   (batch; 1k rows at a time)     │
+  │   Reversible: rows still have email_address             │
+  └──────────────────────────┬──────────────────────────────┘
+                             │ deploy
+  CONTRACT PHASE
+  ┌──────────────────────────▼──────────────────────────────┐
+  │ Phase 4 — Read from new column; add NOT NULL constraint │
+  │   App reads email; ALTER TABLE users                    │
+  │   ALTER COLUMN email SET NOT NULL;                      │
+  │   Reversible: revert app + DROP NOT NULL                │
+  └──────────────────────────┬──────────────────────────────┘
+                             │ deploy
+  ┌──────────────────────────▼──────────────────────────────┐
+  │ Phase 5 — Drop old column (contract)                    │
+  │   ALTER TABLE users DROP COLUMN email_address;          │
+  │   ⚠ NOT reversible without a backup                     │
+  └─────────────────────────────────────────────────────────┘
+
+  Single-step rename (the anti-pattern):
+    ALTER TABLE users RENAME COLUMN email_address TO email;
+    → locks table for entire duration (seconds → hours on 100M rows)
+    → breaks running app reading email_address mid-deploy
+    → irreversible mid-deploy
+```
+</Diagram>
+
+## Worked Example
+
+### The lost-update race at READ COMMITTED
+
+Consider an `accounts` table with `balance = 1000`. Two concurrent sessions both try to subtract 100:
+
+```sql
+-- Session A                          -- Session B (concurrent)
+BEGIN;                                 BEGIN;
+SELECT balance FROM accounts
+  WHERE id = 1;
+-- sees 1000                           SELECT balance FROM accounts
+                                         WHERE id = 1;
+                                       -- also sees 1000
+
+UPDATE accounts
+  SET balance = 1000 - 100
+  WHERE id = 1;
+-- writes 900
+
+COMMIT;                                -- Session B hasn't committed yet
+
+                                       UPDATE accounts
+                                         SET balance = 1000 - 100
+                                         WHERE id = 1;
+                                       -- also writes 900, not 800!
+                                       COMMIT;
+-- Final balance: 900, not 800 — one update was silently lost
+```
+
+This is the **lost update** problem. It occurs at Postgres's default `READ COMMITTED` isolation level when two transactions each read *then* write. Three valid fixes:
+
+**Fix 1 — Atomic update (no separate read):**
+```sql
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+-- The database serialises the row-level lock; both subtractions apply
+-- Final balance: 800 ✓
+```
+
+**Fix 2 — Pessimistic lock (SELECT ... FOR UPDATE):**
+```sql
+BEGIN;
+SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;
+-- Session B blocks here until Session A commits
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+COMMIT;
+```
+
+**Fix 3 — SERIALIZABLE isolation:**
+```sql
+BEGIN ISOLATION LEVEL SERIALIZABLE;
+-- One session will abort with serialization_failure; application must retry
+```
+
+**The test for this:** reproduce the race with two parallel transactions; assert final balance equals `1000 - (2 × 100) = 800`. A test that runs the operations sequentially will always pass and will never catch the bug.
+
+### Testcontainers integration test pattern
+
+```typescript
+// vitest integration test — real Postgres via Testcontainers
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { drizzle } from 'drizzle-orm/node-postgres';
+
+let container: StartedPostgreSqlContainer;
+let db: ReturnType<typeof drizzle>;
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer('postgres:16').start();
+  db = drizzle(container.getConnectionString());
+  await migrate(db, { migrationsFolder: './drizzle' });
+}, 60_000); // allow container startup time
+
+afterAll(async () => {
+  await container.stop();
+});
+
+test('createUser enforces unique email constraint', async () => {
+  await db.insert(users).values({ email: 'a@b.com', name: 'Alice' });
+
+  // Second insert with same email must throw — the constraint is what we're testing
+  await expect(
+    db.insert(users).values({ email: 'a@b.com', name: 'Bob' })
+  ).rejects.toThrow(/unique/i);
+  // SQLite in-memory would pass this test trivially; Postgres enforces it correctly
+});
+```
+
+The key property: this test catches a `CHECK` or `UNIQUE` constraint violation that SQLite silently ignores. The ~5-second Testcontainers startup cost pays for production-faithful behaviour in every test that follows.
+
+## Common Pitfalls
+
+- **Using SQLite (or any in-memory substitute) for Postgres-deployed code.** SQL dialects diverge on constraint enforcement, `RETURNING` clauses, `ON CONFLICT` syntax, and JSON operators. A passing SQLite test suite gives false confidence. Fix: use Testcontainers to spin up a real Postgres per test suite. The ~5-second startup cost is worth it; silent dialect divergence is not.
+
+- **Single-step migrations for rename, type-change, or NOT NULL addition.** A single `ALTER TABLE ... RENAME COLUMN` locks the table for the entire operation — seconds on a dev table, hours on a 100M-row production table. Fix: use expand-contract (five phases, each deployed separately). Each phase is independently reversible; the single-step rename is not.
+
+- **`ALTER TABLE ... ADD COLUMN ... NOT NULL` without a default on large tables.** In Postgres before v11, this rewrites the entire table. In v11+ it is metadata-only for constant defaults but still blocks for non-constant. Fix: add the column nullable first (expand), backfill, then add the constraint (contract). Know your Postgres version.
+
+- **Mocking the database in integration tests.** Mocks make assumptions about DB behaviour that diverge silently — constraint enforcement, transaction rollback, `RETURNING` values. The bug surfaces only when the code hits a real database. Fix: use Testcontainers or a dedicated test schema with per-test transaction rollback. Mocks belong at the service boundary, not the data boundary.
+
+- **No test for the migration down path.** Deploy processes need the rollback path. A migration that has never been reversed is a migration that will fail at 2 a.m. Fix: test both `up` and `down` for every migration; verify the down restores the prior schema exactly.
+
+- **Shared development database for integration tests.** Tests that share a database develop ordering dependencies — a test passes in isolation but fails in CI because a prior test left state. Fix: use per-job isolated databases (GHA `services:` block or Testcontainers). No amount of `beforeEach` cleanup is as reliable as starting fresh.
+
+- **Trusting auto-generated migrations without review.** ORM migration generators occasionally produce `DROP COLUMN` when the intent was a rename, or add an unintended default that slows inserts. Fix: read the generated SQL before committing. The diff is small; missing a destructive change is large.
+
+## Retrieval Prompts
+
+<Prompt id="db-1">
+  Explain why the test pyramid inverts for data-layer tests. Name one concrete bug class that an in-memory database substitute (SQLite, H2) will not catch that a real Postgres instance will.
+</Prompt>
+
+<Prompt id="db-2">
+  Name the five phases of an expand-contract migration for renaming a column. For each phase, state whether rollback is safe or involves data-loss risk.
+</Prompt>
+
+<Prompt id="db-3">
+  A two-transaction race at READ COMMITTED produces a lost update. Describe the exact sequence of operations that causes it and give two distinct fixes with the tradeoff of each.
+</Prompt>
+
+<Prompt id="db-4">
+  What is Testcontainers and why is it the recommended default for database integration tests? What does the ~5-second startup cost buy you?
+</Prompt>
+
+<Prompt id="db-5">
+  Why is `ALTER TABLE ... RENAME COLUMN` dangerous on a large production table? What structural property of the expand-contract pattern eliminates this risk?
+</Prompt>
+
+<Prompt id="db-6">
+  Distinguish READ COMMITTED, REPEATABLE READ, and SERIALIZABLE isolation levels. Name one data anomaly (lost update, phantom read, write skew) that each level above READ COMMITTED additionally prevents.
+</Prompt>
+
+<Prompt id="db-7">
+  A test passes against SQLite but fails against Postgres. Name three specific behaviour divergences between the two that could cause this.
+</Prompt>
+
+<Prompt id="db-8">
+  An ORM-generated migration produces `DROP COLUMN users.email_address` but the intent was a rename. Explain how this happens and what the QA review step should catch before the migration is committed.
+</Prompt>
+
+## Feynman Prompt
+
+<Feynman id="db-feynman-1" wordTarget={150}>
+  Explain database testing to a developer who thinks unit-testing the application layer and running the app against SQLite in CI is sufficient. Cover: why the test pyramid inverts for data, what the expand-contract migration pattern is and why single-step renames are dangerous, and why mocking the database in integration tests produces false confidence. Name one specific bug that passes in a mock or SQLite test but surfaces only against a real Postgres instance. Rubric (revealed after submit): Did you explain the pyramid inversion in terms of dialect divergence and constraint enforcement, not just "integration tests are better"? Did you name the specific phases of expand-contract (not just "do it in steps")? Did you give a concrete bug example with a mechanism (e.g., UNIQUE constraint, ON CONFLICT, NOT NULL behaviour) rather than a vague "things break"? Did you avoid the word "testing" as a substitute for explaining what is actually being verified?
+</Feynman>
