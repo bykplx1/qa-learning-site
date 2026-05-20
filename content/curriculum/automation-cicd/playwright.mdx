@@ -1,0 +1,233 @@
+---
+slug: playwright
+title: Playwright — Locators, Fixtures, Traces, Auth State & Parallelism
+cluster: automation-cicd
+layer: systems
+prerequisites:
+  - frontend-prereqs-for-testers
+  - unit-integration-e2e-boundaries
+  - mocking-stubbing-test-doubles
+related:
+  - selenium-vs-cypress-vs-playwright
+  - api-testing
+  - cicd-for-testing
+  - test-types-smoke-sanity-regression-uat
+  - test-planning-cases-and-scenarios
+tags: [playwright, e2e, locators, fixtures, traces, auth-state, parallelism, flakiness]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Playwright becomes reliable only when a tester learns it as a small set of **orthogonal primitives**, not as Selenium-with-different-syntax. The load-bearing primitives are: **Locator** (lazy, retryable DOM handle), **auto-wait** (five conditions checked before every action), **web-first assertion** (retries until match or timeout), **fixture** (composable scoped setup/teardown), **browser context** (isolated storage inside one process), and **trace** (time-travel artefact of an entire run).
+
+The companion claim: flake is almost always a *primitive misuse*, not a Playwright bug. Race conditions, wrong assertion family, shared context state, missing auto-wait semantics — each maps to a primitive the tester hadn't internalised. The trace converts "this flakes sometimes" into "here is the millisecond it broke."
+
+> Flake is a primitive-misuse diagnostic, not an environmental excuse. The trace is the evidence that makes diagnosis possible.
+
+## Diagram
+
+<Diagram caption="Playwright primitive lifecycle — from test authoring to trace-driven flake diagnosis">
+```
+AUTHORING LOOP
+
+  test('...', async ({ page, context }) => {   ← fixture injection (scoped)
+    const btn = page.getByRole('button',         ← Locator created (lazy — no DOM query yet)
+                               { name: 'Save' });
+    await btn.click();                           ← auto-wait: 5 conditions checked before click
+    await expect(btn).toBeDisabled();            ← web-first assertion: retries until timeout
+  });
+
+AUTO-WAIT CONDITIONS (checked on every action)
+  ┌──────────────┬──────────────┬─────────────┬──────────────┬──────────────────┐
+  │  attached    │   visible    │   stable    │   enabled   │  receives events  │
+  │ (in DOM)     │ (not hidden) │ (no anim.)  │ (not disabled)│ (not covered)   │
+  └──────────────┴──────────────┴─────────────┴──────────────┴──────────────────┘
+  A timeout names WHICH condition failed — read it before rerunning.
+
+FIXTURE SCOPES
+  worker scope ──── runs ONCE per worker ───► auth state, expensive DB seed
+  test scope   ──── runs ONCE per test   ───► per-test isolated data, page setup
+
+LOCATOR HIERARCHY (most → least preferred)
+  getByRole ► getByLabel ► getByPlaceholder ► getByText ► getByTestId ► CSS ► XPath
+  Role-based locators query the accessibility tree; they are durability + a11y signal in one.
+
+TRACE TIMELINE (on-first-retry)
+  Action log ──► DOM snapshots ──► Network requests ──► Console ──► Source viewer
+  Unzip trace.zip ──► open in trace viewer ──► identify the exact action + millisecond
+```
+</Diagram>
+
+## Worked Example
+
+This site's `tests/e2e/concept-gate.spec.ts` uses several primitives at once — it is the best anchor for understanding how they compose.
+
+**What the spec does:** It tests the ConceptGate component on the `/projects/flaky-test-hunter` page — a React island that hides project content until prerequisite cards are reviewed. It requires a mocked OAuth sign-in before navigating, uses `getByTestId` locators on dynamic content, and calls `@axe-core/playwright` for a11y verification in the same run.
+
+**The sign-in helper — `page.request` as a fixture-free API client:**
+
+```ts
+// tests/e2e/concept-gate.spec.ts (excerpt)
+async function signInWithMockedGitHub(page: Page): Promise<void> {
+  const startRes = await page.request.post('/api/auth/sign-in/social', {
+    data: { provider: 'github', callbackURL: '/' },
+    headers: { 'content-type': 'application/json' },
+  });
+  expect(startRes.ok(), `sign-in init failed: ${startRes.status()}`).toBeTruthy();
+  const body = (await startRes.json()) as { url?: string };
+  const state = new URL(body.url!).searchParams.get('state');
+
+  const cbRes = await page.request.get(
+    `/api/auth/callback/github?code=fake-e2e-code&state=${state}`,
+    { maxRedirects: 0 },
+  );
+  expect(cbRes.status(), `callback status: ${cbRes.status()}`).toBeLessThan(400);
+}
+```
+
+`page.request` shares the browser's cookie jar — the resulting session cookie is visible to subsequent `page.goto()` calls without any `storageState` file. This is a test-scope auth pattern; for worker-scope auth, the equivalent is `globalSetup` writing a `storageState` file and each test loading it via `use: { storageState: 'auth.json' }`.
+
+**The gate assertion — web-first vs raw:**
+
+```ts
+// Web-first: polls until the element is visible (up to 10 s)
+const gate = page.getByTestId('concept-gate');
+await expect(gate).toBeVisible({ timeout: 10_000 });   // ✓ retries
+
+// Raw (DON'T use for async UI state):
+const text = await gate.textContent();
+expect(text).toBeTruthy();                              // ✗ reads once, no retry
+```
+
+The `concept-gate` is a React island that hydrates asynchronously. The raw form reads `textContent()` before hydration completes and produces a silent flake. The web-first form retries until the element is genuinely visible.
+
+**The `addLocatorHandler` pattern — dismissing overlays:**
+
+```ts
+// nav.spec.ts — registered before every test
+await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
+  await el.locator('button').first().click();
+});
+```
+
+`addLocatorHandler` is a Playwright primitive that intercepts any matching element that blocks an action — without it, a Vite error overlay that appears mid-test causes the next `click()` to time out on the "receives events" auto-wait condition (the overlay is covering the target).
+
+**The `getByRole` vs `getByTestId` decision in this codebase:**
+
+`nav.spec.ts` uses `page.getByRole('button', { name: /Open menu/i })` for the hamburger toggle — a role-based locator that survives button-text refactors and also functions as an a11y assertion (if the button lacks an accessible name, the locator returns nothing and the test fails with a clear message). `concept-gate.spec.ts` uses `page.getByTestId('concept-gate')` for the React island root — correct because the element has no meaningful semantic role; `data-testid` is the right fallback when role is genuinely absent.
+
+**The `auth-quiz-streak.spec.ts` storageState trap:** That spec calls `page.evaluate()` to inject `sessionStorage` directly and then reloads — bypassing the UI flow for quiz state. This is the correct use of storage manipulation: it short-circuits expensive UI steps while leaving the critical code path (the `POST /api/quiz/attempts` network call) fully exercised. Contrast this with `storageState` (cookies/localStorage written at globalSetup): mutating auth-related storage inside a test invalidates the captured state for every subsequent test in the worker.
+
+## Common Pitfalls
+
+- **Reaching for `getByTestId` or CSS before trying `getByRole`.** Role-based locators are more durable (survive text/class refactors) and double as an a11y assertion. Fix: follow the hierarchy — `getByRole` first, then `getByLabel`, `getByPlaceholder`, `getByText`, finally `getByTestId`. CSS and XPath are last resorts. This happens because CSS and XPath are familiar from other toolchains and feel concrete.
+
+- **Using `expect(await locator.textContent()).toBe('Foo')` on async UI.** This reads the DOM once — if the value hasn't updated yet, it fails silently. The form `await expect(locator).toHaveText('Foo')` retries until match or timeout. These two look nearly identical and behave oppositely under any UI that updates after first paint. Fix: use the web-first assertion form for any state that can change after navigation or action.
+
+- **`page.waitForTimeout(ms)` to stabilise a flaky step.** Sleep-based waits silently break when underlying timing changes — they increase wall-clock without improving reliability. Fix: replace with the appropriate `expect(locator).toBeVisible()` or `expect(locator).toHaveAttribute(...)` assertion and let auto-wait do the work.
+
+- **Reusing captured `storageState` across tests that mutate auth state.** `globalSetup` logs in once and writes cookies to a file; subsequent tests re-hydrate from that file. A test that logs out or deletes the account invalidates the file for every remaining test in the worker. Fix: use per-test isolated accounts for flows that mutate session state; use worker-scope fixtures only for immutable shared resources.
+
+- **Registering `page.route()` or `page.waitForResponse()` after the action that triggers them.** Routes registered after a navigation don't intercept the request; `waitForResponse` after a click may miss a response that arrived first. Fix: wrap both in `Promise.all` so the listener is registered before the action: `const [resp] = await Promise.all([page.waitForResponse('**/api/save'), page.click(btn)])`.
+
+- **Leaving `page.pause()` in committed tests.** A stray `pause()` blocks CI workers indefinitely; the symptom is "the suite is hanging" with no timeout error. Fix: add a lint rule or CI grep that fails on committed `pause()` calls.
+
+- **Committing visual baselines from a non-Linux machine.** Font rendering, antialiasing, and GPU rasterisation differ across macOS/Linux/Windows even with Playwright's bundled Chromium. This repo bans non-Linux baselines explicitly; the regeneration workflow is `workflow_dispatch update_visual_baselines=true` on `ci.yml`. Fix: treat the pinned `@playwright/test` version as part of the baseline — bumping the version requires regenerating baselines in the same PR.
+
+## Retrieval Prompts
+
+<Prompt id="pw-1">
+  Name the five conditions Playwright's auto-wait checks before performing a click action. For each condition, name one concrete scenario where it would fail on a real page.
+</Prompt>
+
+<Prompt id="pw-2">
+  Write a two-line example showing the web-first assertion form and the raw assertion form for the same piece of UI text. State which one retries, which one does not, and why the distinction matters for a React island that hydrates asynchronously.
+</Prompt>
+
+<Prompt id="pw-3">
+  Give the locator hierarchy from most-preferred to least-preferred. Justify why `getByRole` ranks first — name the two things it checks that a CSS selector does not.
+</Prompt>
+
+<Prompt id="pw-4">
+  What is the difference between a worker-scope fixture and a test-scope fixture? Give one concrete example of data or state that belongs in each scope, and name the failure mode produced by putting mutable test data in worker scope.
+</Prompt>
+
+<Prompt id="pw-5">
+  `storageState` captured in `globalSetup` is reused across tests. Name two specific failure modes this introduces and one mitigation for each.
+</Prompt>
+
+<Prompt id="pw-6">
+  A flaky test fails 1 in 8 runs in CI. Name the three Playwright primitives you would consult first, in order, to diagnose the flake. For each, state what evidence it would provide.
+</Prompt>
+
+<Prompt id="pw-7">
+  `page.route('**/api/users', handler)` does not intercept a request in your test. Give two structural reasons (ordering, registration timing) and one diagnostic step for each.
+</Prompt>
+
+<Prompt id="pw-8">
+  A `<div onClick>` is not found by `getByRole('button')`. Why is the test failure also an accessibility finding? Name the mechanism.
+</Prompt>
+
+<Prompt id="pw-9">
+  Explain `test.step()` and name one trace-viewer behaviour that changes when you adopt it. Why does this matter for diagnosing failures in long tests?
+</Prompt>
+
+<Prompt id="pw-10" requiresDiagram>
+  Sketch the lifecycle of a Playwright `Locator` from creation to assertion. Mark exactly where the DOM query happens — and explain why the laziness of that query is what makes auto-wait work.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="pw-task-1" rubric="pw-rubric-v1">
+  Open `tests/e2e/concept-gate.spec.ts` in this repository. The spec tests the ConceptGate React island and includes both a behaviour test and an a11y assertion using `@axe-core/playwright`.
+
+  **Part 1 — Locator audit (no code changes required):**
+
+  List every locator used in the spec (`getByTestId`, `getByRole`, `locator(...)`, etc.). For each, classify it according to the Playwright locator hierarchy: is it at the preferred level for this element, or could it be moved up the hierarchy? Justify your classification with one sentence per locator. Where `getByTestId` is used, state whether there is a role-based alternative — and if not, explain why `getByTestId` is the correct choice.
+
+  **Part 2 — Fixture design:**
+
+  The `signInWithMockedGitHub` helper is a plain async function called in `beforeEach`. Redesign it as a Playwright fixture. Decide: should it be test-scope or worker-scope? Write the fixture declaration (TypeScript type + `test.extend({...})` call). Justify the scope choice with reference to what the spec does with auth state after sign-in.
+
+  **Part 3 — Flake injection and diagnosis:**
+
+  Introduce a deliberate flake by replacing this line in the spec:
+
+  ```ts
+  await expect(gate).toBeVisible({ timeout: 10_000 });
+  ```
+
+  with:
+
+  ```ts
+  expect(await gate.textContent()).toBeTruthy();
+  ```
+
+  Run the spec 5 times locally (`npx playwright test concept-gate.spec.ts --repeat-each=5`). Record your pass rate. Then enable trace-on-first-retry in `playwright.config.ts` (`trace: 'on-first-retry'`), reproduce the failure, download the trace, and open it with `npx playwright show-trace`. Produce:
+
+  - A one-paragraph diagnosis naming which of the five auto-wait conditions the raw form bypasses and why this produces a flake rather than a consistent failure.
+  - The minimum-change fix (restore the web-first assertion or an equivalent) and evidence it makes the test consistently pass (re-run 5 times, report pass rate).
+
+  **Part 4 — Auth state reasoning:**
+
+  The spec uses `page.request` to sign in — the session cookie lands in the browser's cookie jar. Describe what would happen if a test later in the same worker called `page.goto('/api/auth/sign-out')` and then navigated to the project page. Name the failure mode by its primitive category (not just "it breaks") and propose a fix using Playwright fixture isolation.
+
+  Rubric (revealed after submission):
+
+  - Part 1: Does each locator classification cite the hierarchy by name, not just a preference? Does the `getByTestId` justification explain why role-based is absent rather than just saying "testid is fine"?
+  - Part 2: Is the scope choice justified by what the test *does* (mutation vs no mutation), not just by performance reasoning?
+  - Part 3: Does the diagnosis name the specific auto-wait condition bypassed, not just "race condition"? Does it explain why the failure is intermittent rather than consistent? Is the fix the minimum change (not a `waitForTimeout`)?
+  - Part 4: Is the failure mode named with its primitive category ("captured storageState staleness" or "worker-scope context mutation")? Does the fix use fixture isolation rather than `try/catch` or retry?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="pw-feynman-1" wordTarget={150}>
+  Explain to a developer who has used Selenium why Playwright's auto-wait and web-first assertions make a qualitative difference — not just a convenience difference. Focus on the specific failure class each eliminates and why Selenium's model (eager element handle + explicit waits) leaves that class open. Name at least one failure mode that looks random in Selenium but has a deterministic cause you can read in a Playwright trace. Rubric (revealed after submit): Did you name the specific failure class (stale element reference, assertion-before-update) rather than just saying "it's smarter"? Did you explain why the trace converts "random" into "deterministic evidence"? Did you avoid generic praise and instead explain the mechanism?
+</Feynman>
