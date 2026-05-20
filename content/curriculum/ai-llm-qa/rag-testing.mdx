@@ -1,0 +1,312 @@
+---
+slug: rag-testing
+title: RAG Testing
+cluster: ai-llm-qa
+layer: systems
+prerequisites:
+  - api-testing
+  - database-testing
+  - test-oracles-and-prioritization
+related:
+  - llm-fundamentals-for-testers
+  - eval-design
+tags: [rag, retrieval, grounding, hallucination, chunking, faithfulness, vector-search]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+RAG (Retrieval-Augmented Generation) gives a model the relevant documents at inference time so it answers from them rather than hallucinating from its weights. Testing RAG means **testing a five-stage pipeline** — ingest, chunk, embed, retrieve, generate — not just the final answer. Each stage has its own failure modes and its own metrics.
+
+The load-bearing insight: **most RAG bugs are retrieval bugs masquerading as generation bugs.** When a user reports "the bot doesn't know about Feature X," the real cause is almost always that the chunk containing Feature X never made the top-k. Teams that debug by tweaking the prompt or swapping the model — when retrieval is the actual problem — waste weeks.
+
+The eval must measure retrieval and generation **separately**, even though the user only sees the combined output. End-to-end accuracy without per-stage metrics is a single aggregate that hides which stage broke.
+
+> Test the pipeline stage by stage. A single end-to-end score hides which of the five stages is responsible for every answer the user sees.
+
+## Diagram
+
+<Diagram caption="The five testable stages of a RAG pipeline — showing each stage's job, the failure modes it owns, and the metric used to test it">
+```
+RAG PIPELINE — FIVE TESTABLE STAGES
+─────────────────────────────────────────────────────────────────────
+
+1. INGESTION
+   Pull source documents into the system.
+   Failure modes: documents missed · corrupted · stale · duplicated · mis-attributed
+   Test signal:  document count before/after · diff against source manifest
+
+2. CHUNKING
+   Split documents into retrievable units.
+   Failure modes: chunks too small (no context) · chunks too large (noise) ·
+                  cut mid-thought · header lost · source attribution dropped
+   Test signal:  chunk boundary review · coverage assertions on known phrases
+
+3. EMBEDDING
+   Convert each chunk into a vector.
+   Failure modes: wrong model for domain · mixed vectors after model upgrade ·
+                  query-vs-document embedding asymmetry
+   Test signal:  embedding version logged · cosine sanity checks
+
+4. RETRIEVAL  (+  optional RERANKER)
+   Find the top-k chunks for a query.
+   ─ Retriever job:  recall@k  — did the right chunk appear anywhere in top-k?
+   ─ Reranker job:   precision@k — is the right chunk at position 1-5?
+   Failure modes: wrong k · relevant chunk not in top-k · metadata filter
+                  silently drops correct chunks · reranker inverts relevance
+   Test signal:  recall@k · precision@k · MRR (mean reciprocal rank)
+
+5. GENERATION
+   Model produces an answer grounded in the retrieved chunks.
+   ─ Faithfulness:    did the answer come FROM the retrieved context?
+   ─ Answer relevance: does the answer address the question?
+   ─ Correctness:     is the answer factually right?
+   ─ Refusal:         does the system say "I don't know" when corpus lacks the answer?
+   Failure modes: hallucination despite grounding · ignoring chunks ·
+                  answering from priors · refusing valid questions
+
+
+FOUR CANONICAL RAG METRICS — AND WHICH STAGE EACH ISOLATES
+────────────────────────────────────────────────────────────
+  context recall      → measures retrieval:   did the right chunk appear in top-k?
+  context precision   → measures retrieval:   what fraction of retrieved chunks are relevant?
+  faithfulness        → measures generation:  is the answer grounded in retrieved chunks?
+  answer relevance    → measures generation:  does the answer address the actual question?
+
+FAITHFULNESS ≠ CORRECTNESS
+───────────────────────────
+  Faithful answer: "According to chunk #3, the price is $49."
+  Correct answer:  The price in the chunk IS actually $49.
+  A faithful answer from a wrong chunk is faithful AND incorrect.
+  RAG quality ≤ corpus quality — you cannot ground your way above a wrong source.
+```
+</Diagram>
+
+## Worked Example
+
+### Auditing a retrieval failure that looked like a generation bug
+
+A support bot's evaluation set includes this question: *"What is the data retention period for Enterprise customers?"*
+
+**First pass — debugging at the wrong layer:**
+
+The team notices the bot answers "30 days" when the correct answer is "90 days." They update the system prompt to emphasise accuracy and re-run. The score does not improve. They try a larger model. No improvement.
+
+**Finding the real problem — inspect the retrieval layer first:**
+
+```python
+# Minimal retrieval audit: does the right chunk appear in top-5?
+results = retriever.query("data retention period Enterprise customers", top_k=5)
+
+for rank, chunk in enumerate(results, start=1):
+    print(f"Rank {rank}: {chunk.metadata['source']}  score={chunk.score:.3f}")
+    print(chunk.text[:120])
+    print()
+```
+
+Output:
+
+```
+Rank 1: faq/pricing.md  score=0.91
+  "Standard plans include 30 days of data retention. See our pricing page for details."
+
+Rank 2: faq/pricing.md  score=0.87
+  "Starter and Growth tiers retain data for 30 days."
+
+Rank 3: faq/billing.md  score=0.84
+  "Invoices are generated on the 1st of each month for Enterprise accounts."
+
+Rank 4: faq/general.md  score=0.79
+  "For questions about data storage, contact support@example.com."
+
+Rank 5: faq/onboarding.md  score=0.72
+  "Enterprise onboarding takes 2–5 business days."
+```
+
+The chunk containing the correct answer (`docs/enterprise-features.md` — "Enterprise customers retain data for 90 days") is at rank 8 — outside the top-5 window passed to the model. The model was never given the right information; no prompt change could fix that.
+
+**The fix — chunking strategy and k:**
+
+```python
+# The enterprise-features.md document was chunked at 256 tokens with no overlap.
+# The phrase "Enterprise customers retain data for 90 days" appears at a chunk boundary,
+# split across two consecutive chunks. Neither chunk alone scores above rank 5.
+
+# Fix 1: increase overlap from 0 to 64 tokens so the sentence stays intact.
+chunker = RecursiveCharacterTextSplitter(chunk_size=256, chunk_overlap=64)
+
+# Fix 2: raise k from 5 to 10 for queries about policies (metadata-filtered).
+# Fix 3: add "retention" and "enterprise" as metadata tags on this document
+#         so metadata-boosted retrieval surfaces it.
+```
+
+After re-chunking and re-embedding with overlap:
+
+```
+Rank 1: docs/enterprise-features.md  score=0.93
+  "Enterprise customers retain data for 90 days. Standard plans retain 30 days."
+```
+
+The model now receives the correct chunk and answers correctly — without any change to the prompt or model.
+
+**Lesson:** the deliberate mistake was assuming a generation failure when the retrieval log immediately reveals the right chunk was never surfaced. Always check "did the right chunk appear in top-k?" before touching the prompt.
+
+### Adding the refusal eval — the most-skipped eval row
+
+The same eval set must include known-uncovered questions. If the corpus has no information about "multi-region replication," the bot should say so:
+
+```python
+# Eval row type: uncovered — must produce a refusal, not a hallucinated answer
+uncovered_questions = [
+    "Does the Enterprise plan support multi-region replication?",
+    "What is the SLA for the free tier?",
+    "Can I export data in Parquet format?",
+]
+
+for q in uncovered_questions:
+    answer = rag_pipeline.query(q)
+    refused = any(phrase in answer.lower() for phrase in [
+        "i don't have information",
+        "i'm not able to find",
+        "not covered in the documentation",
+    ])
+    print(f"{'PASS' if refused else 'FAIL — hallucinated'}: {q[:60]}")
+```
+
+A covered-questions-only eval hides the most safety-critical failure mode: the system confidently inventing answers to questions the corpus cannot answer.
+
+## Common Pitfalls
+
+- **Debugging at the generation layer when the bug is in retrieval.** Before touching the prompt or swapping the model, always check: "did the correct chunk appear in top-k?" Use `retriever.query(question, top_k=k)` to inspect directly. Retrieval failures masquerade as generation failures because the user only sees the final answer.
+
+- **Choosing a chunking strategy on day one and never revisiting.** Chunking is the largest quality lever in most RAG pipelines. Fixed-size chunking at an arbitrary token count is a starting point, not a decision. Benchmark 2–3 strategies (fixed-size, sentence-window, recursive) against your eval set before shipping. Teams that skip this leave 10–20 points of retrieval recall on the table.
+
+- **Upgrading the embedding model without re-embedding the corpus.** Vectors from `text-embedding-3-small` and `text-embedding-3-large` live in incompatible spaces. A one-line model upgrade without re-embedding silently corrupts retrieval — the similarity scores no longer compare correctly. Treat embedding-model upgrades as full corpus re-indexes and gate behind the retrieval eval.
+
+- **No uncovered-question rows in the eval.** An eval with only covered happy-path questions cannot detect the failure mode where the system confidently hallucinate answers to questions the corpus doesn't address. Include 10–20% known-uncovered queries and assert refusal. This is the RAG equivalent of the negative test.
+
+- **Aggregating end-to-end accuracy without per-stage metrics.** A single aggregate score hides which stage broke. Report retrieval metrics (recall@k, precision@k, MRR) separately from generation metrics (faithfulness, answer relevance, correctness, refusal-on-uncovered). When the aggregate drops, per-stage metrics tell you where to look.
+
+- **Using only synthetic Q&A pairs as the eval set.** LLM-generated Q&A pairs from the corpus are systematically biased toward questions the model finds easy to formulate. Real users ask harder, more ambiguous questions. Synthetic pairs are a useful top-up; hand-curate at least 20 queries from real user logs as the ground truth for your eval.
+
+- **Letting the judge model see the retrieved context when scoring faithfulness.** If the judge uses the same context, it rates faithfulness high regardless of whether the answer was actually grounded. Show the judge only the question and the answer; expose context only for the explicit faithfulness check, where grounding must be verified.
+
+## Retrieval Prompts
+
+<Prompt id="rag-1">
+  Name the five testable stages of a RAG pipeline. For each stage, name one failure mode it owns and one metric or test signal used to detect it.
+</Prompt>
+
+<Prompt id="rag-2">
+  A user reports "the bot doesn't know about Feature X." Walk through the exact debugging sequence you would follow, starting with the retrieval layer. What is the first thing you check, and why do you check it before touching the prompt or model?
+</Prompt>
+
+<Prompt id="rag-3">
+  Distinguish faithfulness from correctness in a RAG system. Give a concrete example where a faithful answer is factually wrong. What does this imply about the relationship between RAG quality and corpus quality?
+</Prompt>
+
+<Prompt id="rag-4">
+  Define recall@k, precision@k, and MRR. Explain what each measures in the context of RAG retrieval, and describe a scenario where each would be the most important metric to optimise.
+</Prompt>
+
+<Prompt id="rag-5">
+  What is the "refusal eval" and why is it the most-skipped eval class in RAG systems? Describe what happens when an uncovered question is asked of a system that lacks a refusal mechanism, and how you would structure the eval rows to catch this.
+</Prompt>
+
+<Prompt id="rag-6">
+  Explain the chunk-size precision/recall trade-off. How do smaller and larger chunks differ in their effect on retrieval quality? How would you decide on a chunking strategy for a corpus of long-form legal documents?
+</Prompt>
+
+<Prompt id="rag-7">
+  A teammate proposes upgrading the embedding model for "better quality." What process do you require before shipping that change, and why is the upgrade more than a one-line code change?
+</Prompt>
+
+<Prompt id="rag-8">
+  What is "lost in the middle" and how does it affect the order in which you should place retrieved chunks in the prompt? How does a reranker help mitigate this?
+</Prompt>
+
+<Prompt id="rag-9">
+  How should the [[database-testing]] discipline apply to a RAG system's vector store and corpus? Name two specific test concerns from database testing that port directly to RAG.
+</Prompt>
+
+<Prompt id="rag-10" requiresDiagram>
+  Sketch the five-stage RAG pipeline. For each stage, label where context recall, context precision, faithfulness, and answer relevance each measure — and which stages are left untested by a generation-only eval.
+</Prompt>
+
+<Prompt id="rag-11">
+  What bias does a synthetic eval set introduce, and what is the consequence of relying on it exclusively? How would you design a mixed eval set that counters the bias?
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="rag-task-1" rubric="rag-rubric-v1">
+  Audit a RAG pipeline — either a running system you have access to, or a toy pipeline you build from a small public corpus (e.g., the MDN Web Docs pages for one Web API, or any open documentation site). Produce the following deliverables.
+
+  **Deliverable 1 — Pipeline architecture map**
+
+  Document the five stages with their specific implementations:
+  - Ingestion: how documents enter the system, what pre-processing occurs, what metadata is attached.
+  - Chunking: strategy used, token/character size, overlap, boundary rules.
+  - Embedding: model name and version, dimension, what text is embedded vs. carried as metadata.
+  - Retrieval: vector store used, similarity metric, value of k, whether a reranker is present.
+  - Generation: model, system prompt summary, how retrieved chunks are assembled into the prompt.
+
+  **Deliverable 2 — 30-row eval dataset**
+
+  Compose an eval set with all four row types:
+  - 20 covered queries: for each, identify the expected source chunk by document and approximate location.
+  - 5 known-uncovered queries: questions the corpus provably cannot answer; expected behaviour is refusal.
+  - 5 ambiguous queries: questions that could be interpreted multiple ways; expected behaviour is clarification or the most reasonable interpretation.
+
+  Each row must state the expected behaviour explicitly ("answer correctly from chunk X," "refuse," "ask for clarification").
+
+  **Deliverable 3 — Per-stage metrics report**
+
+  Run the eval and compute:
+  - Retrieval: recall@5, precision@5, and MRR across the 20 covered queries.
+  - Generation: faithfulness and answer relevance scores (use a rubric-based judge or a framework like Ragas). Score refusal-on-uncovered separately.
+  - Present each metric with a sample size and a brief confidence note.
+
+  **Deliverable 4 — Three intervention experiments**
+
+  Run three A/B tests and report the eval delta for each:
+  - (a) Chunking strategy A vs. B — change one chunking parameter and re-embed.
+  - (b) Reranker on vs. off — if a reranker is present, remove it; if absent, add one.
+  - (c) Prompt assembly: with vs. without explicit citation requirements in the system prompt.
+
+  For each experiment: report the metric delta, state whether the change is a net improvement, and justify the verdict with the numbers.
+
+  **Deliverable 5 — One improvement recommendation**
+
+  Based on the eval data, recommend one concrete change to ship. State the projected metric gain, the implementation cost (latency, $, engineering time), and which experiment result supports the recommendation.
+
+  **Deliverable 6 — Drift-watch plan**
+
+  Propose four specific monitors that would catch quality regressions in production:
+  - (a) Corpus rot: documents becoming stale or deleted.
+  - (b) Embedding drift: an alias pointing to a new model version.
+  - (c) Retrieval quality degradation: recall@k dropping without a code change.
+  - (d) Faithfulness regression: generation grounding score declining.
+
+  For each monitor, name the signal, the threshold, and the alert action.
+
+  Rubric (revealed after submission):
+  - Does the pipeline map name a specific chunking strategy with its size and overlap — not "chunks are split"? Vague descriptions fail.
+  - Does the eval include uncovered and ambiguous rows, or only covered happy-path queries? Missing either type fails.
+  - Does the metrics report separate retrieval metrics from generation metrics? A single end-to-end score fails.
+  - Do the experiments report numeric eval deltas, or claim improvements from anecdote? Anecdote-only fails.
+  - Does the improvement recommendation cite specific numbers from the experiments — not "we believe this will help"? Uncited claims fail.
+  - Does the drift-watch plan propose monitors for all four drift axes (corpus, embedding, retrieval, generation)? Missing any axis fails.
+  - Bonus: did the candidate identify a retrieval bug that was initially misdiagnosed as a generation bug? Identifying the masquerade earns the bonus point.
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="rag-feynman-1" wordTarget={150}>
+  Explain RAG testing to a developer who says "if the model gives a wrong answer, I just improve the prompt." Cover: why RAG bugs usually live in retrieval (not generation), what the five pipeline stages are and why each needs its own test, why faithfulness is not the same as correctness, and why a covered-question-only eval is dangerous. Give one concrete example that makes clear why "just improve the prompt" would not have fixed the problem. Rubric (revealed after submit): Did you explain the retrieval-vs-generation distinction with a mechanism — not just "retrieval is different"? Did you name at least three pipeline stages with what they each do? Did you give a faithful-but-wrong example that is actually concrete (a specific wrong chunk, a specific wrong fact)? Did you explain the danger of omitting uncovered-question rows in terms of what the system produces (not just "it will fail")? Did you avoid builder drift — no advice on which vector store to choose or how to set up embeddings?
+</Feynman>
