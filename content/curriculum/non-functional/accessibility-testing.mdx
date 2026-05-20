@@ -1,0 +1,260 @@
+---
+slug: accessibility-testing
+title: Accessibility Testing
+cluster: non-functional
+layer: systems
+prerequisites:
+  - frontend-prereqs-for-testers
+  - playwright
+  - cicd-for-testing
+related:
+  - performance-testing
+  - security-testing
+  - mobile-testing-overview
+  - test-types-smoke-sanity-regression-uat
+  - defect-lifecycle-and-bug-reporting
+  - exploratory-testing
+  - shift-left-and-shift-right
+tags: [accessibility, wcag, axe-core, keyboard-testing, screen-reader, a11y, lighthouse]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Accessibility testing is the practice of verifying that a system works for people with disabilities — and for anyone using it in a non-standard way (keyboard-only, screen reader, voice control, high contrast). It is **not** "run axe and ship." Accessibility testing operates against the **WCAG standard** (four POUR principles: Perceivable, Operable, Understandable, Robust) at conformance levels A, AA, and AAA.
+
+The load-bearing number: automated tools like axe-core catch **~30–40% of WCAG violations** (Deque Systems' own published estimate). The remaining ~60% require human passes — keyboard-only navigation, screen-reader walkthroughs, and real-user testing. A QA process that stops at "axe passes" has tested less than half the accessibility floor.
+
+> Automated accessibility tools catch ~30–40% of WCAG violations. The other ~60% requires keyboard, screen-reader, and real-user passes. "Axe passes" is a floor, not a verdict.
+
+## Diagram
+
+<Diagram caption="Four accessibility testing modalities layered by coverage and cost — automated tools cover the floor; human passes cover the ceiling.">
+```
+WCAG 2.2 AA CONFORMANCE TARGET
+│
+├── LAYER 1: Automated (axe-core / Lighthouse / pa11y)
+│   Coverage: ~30–40% of violations
+│   Catches:  missing alt text · low contrast · missing form labels
+│             ARIA misuse · empty buttons · missing page title
+│   Misses:   keyboard traps · focus order logic · screen-reader narrative
+│             live-region timing · modal focus management
+│   Cost:     near-zero per run once wired into CI
+│   This site: @axe-core/playwright in tests/e2e/a11y.spec.ts (WCAG 2.2 AA tags)
+│              Lighthouse-CI a11y budget ≥ 0.95 in lighthouserc.json
+│
+├── LAYER 2: Keyboard-only manual pass
+│   Coverage: adds ~20–25% (focus, order, traps, skip links)
+│   Catches:  invisible focus · illogical tab order · keyboard trap
+│             missing skip link · custom widget keyboard gaps
+│   Misses:   screen-reader-only semantics · live-region announcements
+│   Cost:     1–4 hrs for a primary user flow
+│   This site: tests/e2e/keyboard.spec.ts — modal Ctrl+K, Esc, quiz nav, theme toggle
+│
+├── LAYER 3: Screen-reader manual pass (NVDA / VoiceOver / TalkBack)
+│   Coverage: adds ~20–25% (name/role/value, reading order, ARIA announcements)
+│   Catches:  broken reading order · silent dynamic updates · bad ARIA names
+│             focus-management regressions after SPA route changes
+│   Misses:   cognitive accessibility · complex workflow fatigue
+│   Cost:     4–8 hrs; steep learning curve; pair with a blind tester when possible
+│
+└── LAYER 4: Real-user testing with disabled users
+    Coverage: ground truth — catches what tools and proxies cannot
+    Catches:  cognitive load · real assistive-tech configurations
+              workflow paths no sighted QA engineer anticipates
+    Cost:     recruiting + facilitation; limited frequency
+```
+</Diagram>
+
+## Worked Example
+
+This repo's existing a11y setup is the anchor. Walk through two concrete files.
+
+### File 1 — `tests/e2e/a11y.spec.ts`
+
+```typescript
+import AxeBuilder from '@axe-core/playwright';
+
+// Tags pin the scan to WCAG 2.x AA criteria — not every axe rule.
+const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+
+async function runAxe(page: Page, name: string) {
+  const results = await new AxeBuilder({ page })
+    .withTags(WCAG_TAGS)
+    .analyze();
+
+  // Two-tier response: block on serious/critical, warn on moderate/minor.
+  const blocking = results.violations.filter(
+    (v) => v.impact === 'serious' || v.impact === 'critical',
+  );
+  const lesser = results.violations.filter(
+    (v) => v.impact === 'moderate' || v.impact === 'minor',
+  );
+
+  for (const v of lesser) {
+    // surfaced in output but does not fail the test
+    console.warn(`[a11y:${name}] ${v.impact}: ${v.id} — ${v.help}`);
+  }
+
+  expect(blocking, `Serious/critical a11y violations on "${name}"`).toEqual([]);
+}
+
+// axe runs at MULTIPLE interactive states — not just the static page.
+test('search modal opened', async ({ page }) => {
+  await page.goto('/');
+  // Wait for React islands to hydrate before dispatching the custom event.
+  await expect(page.getByRole('button', { name: /Search.*Ctrl\+K/i })).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('search:open')));
+  const dialog = page.getByRole('dialog', { name: 'Search' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('searchbox')).toBeFocused();
+  await runAxe(page, 'search-modal');   // ← axe runs with modal OPEN
+});
+```
+
+Three decisions in this setup are load-bearing:
+
+1. **`withTags(WCAG_TAGS)`** — scopes the scan to WCAG 2.2 AA criteria only. Without this, axe runs every rule including best-practice and experimental rules that don't map to any conformance criterion, producing noise.
+
+2. **Two-tier impact filter** — `serious` and `critical` block the build; `moderate` and `minor` surface as warnings. This matches real WCAG prioritisation: minor colour issues on non-text decorative elements don't carry the same weight as a missing button label.
+
+3. **axe runs after interaction** — the `search-modal` test opens the modal before scanning. An axe run on the closed modal would miss every violation inside it. This is the most common failure pattern in automated a11y testing: scanning a static DOM snapshot that hides interactive states.
+
+### File 2 — `lighthouserc.json`
+
+```json
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:4321/",
+        "http://localhost:4321/lessons/foundations/qa-mindset",
+        "http://localhost:4321/exam",
+        "http://localhost:4321/profile"
+      ],
+      "numberOfRuns": 5
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", { "minScore": 0.95 }]
+      }
+    }
+  }
+}
+```
+
+Lighthouse Accessibility scores pages against axe-core rules (a curated subset, not the full rule set). The budget `≥ 0.95` means a single serious violation failing a tested page will drop the score below threshold and block the merge. Lighthouse is Layer 1 automated coverage at the full-page level, running on four representative routes: home, a lesson, the exam, and the profile page.
+
+**The honest ceiling:** Lighthouse Accessibility `100/100` does not mean "accessible." It means no axe-detectable violations existed at those four URLs in their initial, unauthenticated state. Modal states, error states, authenticated flows, and any route not in the `url` array are untested by Lighthouse.
+
+### What the two-file combo covers and doesn't
+
+| What is covered | Gap that remains |
+|---|---|
+| WCAG 2.2 AA automated violations at 4+ page states | Keyboard focus order, logical tab sequence |
+| Modal open state (search) | NVDA/VoiceOver reading-order correctness |
+| Quiz mid-attempt state | SPA route-change focus management |
+| Profile anonymous state | Form error live-region announcements |
+
+The `keyboard.spec.ts` file fills part of the Layer 2 gap: it tests Ctrl+K open/Esc close on the search modal (focus lands in the search input on open, dialog disappears on Esc), quiz navigation by Tab+Enter, and theme-toggle keyboard operability. These are automated keyboard checks, not a full keyboard-only manual pass — they verify specific interactions, not the full tab-order traversal of a user flow.
+
+## Common Pitfalls
+
+- **Treating axe results as the accessibility verdict.** axe catches ~30–40% of violations. Teams that stop at "axe passes" are shipping a partial story. Fix: add keyboard-only and screen-reader passes to the definition of "accessibility tested." Because the remaining ~60% of violations — including focus management, reading order, live-region timing, and real assistive-tech behaviour — are invisible to automated tools.
+
+- **Running axe only on the static page load.** A modal's accessibility violations are invisible to a scan that runs before the modal opens. Fix: run `AxeBuilder.analyze()` after every meaningful interactive state — modal open, dropdown expanded, form validation error, authenticated view. Because axe can only see the current DOM; it cannot predict what states the page will enter.
+
+- **Adding ARIA to "improve" accessibility without the first rule of ARIA.** `<div role="button" tabindex="0" onkeydown={...}>` reproduces about 60% of `<button>` behaviour at best — and fails it in ways that vary across screen readers. Fix: use the native element when one exists. ARIA should extend semantics that native HTML cannot express, not replace elements it can. Because native elements carry focus, keyboard handling, activation patterns, and screen-reader exposure for free; custom ARIA reproduces these piecemeal.
+
+- **Using placeholder text as a form label.** Placeholders disappear on focus, fail contrast requirements at 4.5:1, and are not programmatic labels — they don't satisfy WCAG 1.3.1 (Info and Relationships). Fix: use `<label for="id">` (visible) or `aria-label` (icon-only inputs). Because screen readers use the programmatic label, not the visual placeholder, to announce what a field is for.
+
+- **Removing `:focus` outlines for aesthetic reasons.** WCAG 2.4.7 (Focus Visible) is one of the most-failed AA criteria. Fix: use `:focus-visible` to scope the outline to keyboard users, and replace the outline with a design-intentional equivalent (background shift, underline, box-shadow) rather than removing it. Because keyboard-only users can't see which element is active without a visible focus indicator.
+
+- **Testing no interactive states inside a modal.** The correct modal requires: focus trapped inside, focus moved to first focusable element on open, focus returned to the trigger on close, ESC closes, background `inert`, `role="dialog"`, and `aria-labelledby`. Automated tools won't catch most of these. Fix: add keyboard tests that open the modal, Tab through it, and Esc to close — verifying focus placement at each step. Because modal focus management is the single highest-failure interaction pattern in SPA accessibility.
+
+- **Trusting a Lighthouse Accessibility score of 100.** 100 means no axe-detectable violations at tested pages in their initial state. It does not cover authenticated routes, interactive states, or the full axe rule set. Fix: treat Lighthouse as the CI floor, not the coverage ceiling. Because Lighthouse Accessibility is axe under the hood, inheriting the same ~30–40% coverage ceiling.
+
+## Retrieval Prompts
+
+<Prompt id="a11y-1">
+  WCAG defines four principles abbreviated as POUR. Name each principle and give one WCAG success criterion that falls under it.
+</Prompt>
+
+<Prompt id="a11y-2">
+  Distinguish WCAG conformance levels A, AA, and AAA. Which level do most jurisdictions cite as the legal baseline, and why is AAA rarely a target for whole sites?
+</Prompt>
+
+<Prompt id="a11y-3">
+  Per Deque Systems' published estimates, approximately what percentage of WCAG violations does axe-core catch? What is the QA planning consequence of this number?
+</Prompt>
+
+<Prompt id="a11y-4">
+  This repo's `a11y.spec.ts` calls `AxeBuilder.analyze()` after opening the search modal — not just on page load. Explain why this ordering is essential and what would be missed by scanning before the modal opens.
+</Prompt>
+
+<Prompt id="a11y-5">
+  The `a11y.spec.ts` helper filters axe violations into two tiers: `serious`/`critical` block the test, and `moderate`/`minor` warn only. Justify this two-tier design against the alternative of failing on any violation.
+</Prompt>
+
+<Prompt id="a11y-6">
+  State the "first rule of ARIA." Give a concrete example where adding `role="button"` to a `<div>` produces *worse* accessibility than a native `<button>` element, and name at least two behaviours the ARIA version fails to provide natively.
+</Prompt>
+
+<Prompt id="a11y-7">
+  A form uses placeholder text instead of a `<label>` element. Name three specific ways this fails accessibility, referencing at least one WCAG criterion.
+</Prompt>
+
+<Prompt id="a11y-8" requiresDiagram>
+  Sketch the four accessibility testing modalities — automated, keyboard-only, screen-reader, real-user — and for each layer mark one type of violation it catches and one type it misses.
+</Prompt>
+
+<Prompt id="a11y-9">
+  This repo's `lighthouserc.json` enforces `categories:accessibility` at `minScore: 0.95`. A PR achieves a Lighthouse Accessibility score of 100. What does this guarantee, and what does it NOT guarantee?
+</Prompt>
+
+<Prompt id="a11y-10">
+  Name three keyboard-accessibility failures that automated tools cannot detect. For each, describe the manual test you would run to catch it.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="a11y-task-1" rubric="a11y-rubric-v1">
+  Conduct a layered accessibility audit of one user flow on this site. The suggested flow is: **home page → open search modal (Ctrl+K) → type a query → close modal (Esc)**. This flow exercises three interactive states that automated-only testing cannot fully cover.
+
+  Produce the following four artefacts:
+
+  **1. Automated baseline report**
+
+  Run the existing `tests/e2e/a11y.spec.ts` suite and capture the output. Identify which WCAG tags are in scope (`WCAG_TAGS`). For any warnings emitted by the `lesser` violations filter, look up the WCAG success criterion the violation maps to and classify it as A, AA, or AAA.
+
+  **2. Keyboard-only pass log**
+
+  Navigate the full flow using keyboard only (Tab, Shift+Tab, Enter, Space, Escape, arrow keys — no mouse). Document every observation: focus visibility at each step, tab order correctness, whether Ctrl+K opens the modal and lands focus in the search input, whether Esc closes and returns focus to the trigger. Note any step where you could not complete the action without a mouse.
+
+  **3. Axe-at-state comparison**
+
+  Write (or describe precisely) an additional `runAxe` call that runs after the modal is open. Compare results to the static-page axe scan. Note any violations that appear only with the modal open.
+
+  **4. POUR heuristic audit**
+
+  For each of the four POUR principles, cite one concrete observation from your keyboard pass that is a pass and one that is a potential fail or gap. Use WCAG criterion identifiers where possible (e.g., "2.4.7 Focus Visible — pass: focus ring visible on all interactive elements").
+
+  **Rubric (revealed after submission):**
+  - Does the automated report identify the WCAG tags used and correctly classify at least one warning by conformance level (A/AA/AAA)?
+  - Does the keyboard pass document *each step* of the flow — not just the outcome? A log that says "it works" without step-by-step focus observations fails.
+  - Does the axe-at-state comparison show awareness that modal-closed and modal-open scans can produce different results? Even if no new violations appear, the comparison must be explicitly stated.
+  - Does the POUR audit cite WCAG criterion IDs, not just principle names? Naming "Perceivable — pass" without a criterion reference fails.
+  - Did the candidate notice any failure that automated testing missed? (The keyboard pass should find at least one observation — even a pass with a marginal focus ring — that automated tools could not have caught.)
+  - Bonus: did the candidate observe the `withTags(WCAG_TAGS)` scoping and comment on which criteria are excluded from the automated scan?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="a11y-feynman-1" wordTarget={150}>
+  Explain accessibility testing to a developer who thinks "we added axe-core to our Playwright tests, so we're covered." Name the specific percentage of WCAG violations axe-core catches, explain why the rest requires human passes, and describe one type of violation — with a concrete example — that axe cannot detect but a keyboard-only pass would catch in under five minutes. Rubric (revealed after submit): Did you name the ~30–40% coverage ceiling with its source (Deque/axe-core authors)? Did you give a concrete example of an axe-invisible violation (not a category name — a specific failure on a specific interaction)? Did you explain *why* automated tools cannot detect it (DOM state, interaction dependency, or judgement call)? Did you avoid implying axe is useless — the "high leverage floor" framing must survive your explanation?
+</Feynman>
