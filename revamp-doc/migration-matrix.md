@@ -53,3 +53,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | non-functional/performance-testing | non-functional | shipped | n/a | Knowledge P5 (#183). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/183-performance-testing. |
 | — | non-functional/security-testing | non-functional | shipped | n/a | Knowledge P5 (#184). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/184-security-testing. |
 | — | non-functional/chaos-and-resilience-testing | non-functional | shipped | n/a | Knowledge P5 (#188). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/188-chaos-and-resilience-testing. |
+| — | ai-llm-qa/llm-fundamentals-for-testers | ai-llm-qa | shipped | n/a | Knowledge P6 (#189). New topic — no legacy precursor. layer: patterns. PR: knowledge-p6/189-llm-fundamentals-for-testers. |

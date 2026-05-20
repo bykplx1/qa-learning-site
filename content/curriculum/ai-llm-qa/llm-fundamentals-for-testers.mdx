@@ -1,0 +1,185 @@
+---
+slug: llm-fundamentals-for-testers
+title: LLM Fundamentals for Testers
+cluster: ai-llm-qa
+layer: patterns
+prerequisites:
+  - test-oracles-and-prioritization
+  - exploratory-testing
+  - verification-vs-validation
+related:
+  - eval-design
+  - prompt-engineering-regression
+  - ai-safety-testing
+  - ai-observability-and-drift
+  - observability-for-testers
+  - performance-testing
+  - security-testing
+tags: [llm, tokens, context-window, temperature, non-determinism, stochastic-testing, sampling-parameters]
+estimatedEncodingMinutes: 20
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+An LLM is **a function that takes a sequence of tokens and returns a probability distribution over the next token**, sampled to produce text. Every property a tester must reason about — non-determinism, context limits, cost, latency, hallucination, prompt sensitivity — falls out of that one sentence.
+
+The five substrate facts that every LLM tester must hold: tokens (not words) drive cost and context limits; each output token is sampled from a probability distribution conditioned on all prior tokens; `temperature`, `top_p`, and `top_k` are *test variables*, not knobs; the context window is a hard ceiling with silent-truncation failure modes; and non-determinism is *structural* — `temperature=0` is greedy decoding, not determinism.
+
+The load-bearing claim: **an LLM is a probability machine wrapped in a deterministic API; tests must respect both layers.** Treating it as a deterministic API produces flaky tests. Treating it as pure chaos produces no tests at all. The discipline is *bounded stochasticity*: assert on schemas, invariants, and distributions — never on exact strings. The oracle problem from [[test-oracles-and-prioritization]] is now the central problem of every test you write.
+
+> The prompt is the program. The model is a stochastic runtime. Write tests for the program, not the runtime.
+
+## Diagram
+
+<Diagram caption="The five substrate facts — how tokens, sampling parameters, and context windows interact, and where each failure mode lives for a tester">
+```
+TEXT → TOKENISER → TOKENS → MODEL → PROBABILITY DISTRIBUTION → SAMPLER → OUTPUT TOKEN
+                                                                    ↑
+                              ┌─────────────────────────────────────┘
+                              │  Sampling parameters (test variables):
+                              │  temperature  — scales the distribution:
+                              │    = 0 → greedy (highest-prob token always)
+                              │    > 0 → samples across the distribution
+                              │            (still stochastic even at temp=0
+                              │             due to GPU batch effects)
+                              │  top_k       — caps the candidate pool to top K tokens
+                              │  top_p       — nucleus sampling: keeps tokens until
+                              │                cumulative probability ≥ p
+                              │  seed        — best-effort; same seed + same fingerprint
+                              │                usually (not always) same output
+
+AUTOREGRESSIVE LOOP:
+  output token → appended to context → next P(token | full_context)
+  → error in token N biases all tokens N+1, N+2, ...
+
+CONTEXT WINDOW (prompt_tokens + completion_tokens ≤ window):
+
+  ┌──────────────────────────────────────────────┐  ← nominal limit (e.g. 128k tokens)
+  │  system prompt │ history │ retrieved chunks  │  ← assembled by the application
+  │                          │ user message      │
+  └──────────────────────────────────────────────┘
+  OVERFLOW FAILURE MODES (three distinct cases to test):
+    1. Framework silently truncates (often drops system prompt or early messages)
+    2. Model degrades quality on middle content ("lost in the middle" U-curve)
+    3. API returns 400 / context-limit error — hard failure, easiest to detect
+
+COST FORMULA (tokens, not words):
+  cost = (prompt_tokens + completion_tokens) × $/1M tokens
+  "hello world" = 2 tokens    " strawberry" = 2 tokens    "안녕하세요" = 5–9 tokens
+  ← code and non-English text tokenise 3–10× worse than English prose
+```
+</Diagram>
+
+## Worked Example
+
+### Testing a non-deterministic summary endpoint
+
+A team has an LLM endpoint that summarises a support ticket into a one-line incident title. The first test a developer writes:
+
+```ts
+// BAD — will eventually fail even at temperature=0
+it('summarises the ticket correctly', async () => {
+  const result = await summarise('Login fails with error 500 on Safari 17');
+  expect(result).toBe('Safari login error 500');
+});
+```
+
+The mistake: `expect(result).toBe(...)` is an exact-string assertion against a stochastic system. It passes today. It fails when the model rounds a new deployment, when `temperature` is bumped from 0 to 0.3 for a quality improvement, or simply due to GPU-batch variance at temperature=0.
+
+The fix: assert on invariants and schema, not on the literal string.
+
+```ts
+// GOOD — asserts on invariants that any valid output must satisfy
+it('summarises the ticket into a valid title', async () => {
+  const result = await summarise('Login fails with error 500 on Safari 17');
+
+  // structural: the output is a non-empty string
+  expect(typeof result).toBe('string');
+  expect(result.length).toBeGreaterThan(0);
+
+  // length invariant: a "title" should not be a paragraph
+  expect(result.split(' ').length).toBeLessThanOrEqual(12);
+
+  // content invariant: must reference the core failure concept
+  // use a semantic check, not exact-string matching
+  const lower = result.toLowerCase();
+  expect(
+    lower.includes('login') || lower.includes('auth') || lower.includes('safari')
+  ).toBe(true);
+});
+```
+
+For higher-stakes assertions — "does this summary accurately reflect the ticket?" — the invariant approach runs out and a rubric or LLM-as-judge is needed. But the schema + invariant layer catches the obvious regressions cheaply and deterministically.
+
+**Log the assembled prompt at the API boundary.** The most common LLM debugging gap is the diff between what the developer *thinks* the prompt is and what *actually* hits the model. Without logging, regressions from prompt-template changes are invisible.
+
+```ts
+// Always log what was sent: model ID, sampling params, assembled prompt
+const response = await client.messages.create({
+  model: 'claude-opus-4-7',  // pin a dated ID, not an alias
+  max_tokens: 60,
+  temperature: 0.3,
+  messages: [{ role: 'user', content: assembledPrompt }],
+});
+console.log({ model: response.model, usage: response.usage, prompt: assembledPrompt });
+```
+
+## Common Pitfalls
+
+- **Asserting on exact string output.** → Assert on schema, invariants ("length ≤ 12 words", "contains a date in YYYY-MM-DD format"), or a rubric. → Because LLM output varies even at `temperature=0` due to GPU batch effects; exact-string tests are guaranteed to be flaky.
+
+- **Estimating cost by word count or character count.** → Use the provider's own tokeniser (`tiktoken` for OpenAI; Anthropic's token-counting endpoint). → Because tokens diverge from words by 30–300%; code and non-English text can cost 3–10× more than naive character estimates suggest. A production cost model based on character counts can be off by an order of magnitude.
+
+- **Treating `temperature=0` as deterministic.** → Run N≥5 samples even at temp=0; assert on distribution properties rather than a single run. → Because GPU batch composition changes which floating-point reductions execute; small numerical differences flip the top-probability token on ~0.1–1% of positions. OpenAI and Anthropic both acknowledge this. The fix is not retry-until-pass — that converts a real signal into noise.
+
+- **Not pinning the model version.** → Pin to a dated model ID (e.g. `gpt-4o-2024-08-06`, `claude-opus-4-7`); log `system_fingerprint` or the provider's equivalent build identifier. → Because aliases like `gpt-4o` or `claude-3-5-sonnet` resolve to whichever build the provider currently points at. Same alias, different build = behaviour can change without any code change. Pinning is the only way to make results reproducible.
+
+- **Ignoring context-window overflow silently.** → Token-count the assembled prompt before sending; fail loudly (not silently) on overflow. → Because LangChain et al. silently truncate the prompt — often from the start, deleting the system prompt without warning. This is the single most common "why did the model suddenly stop following instructions?" bug, and it has no stack trace.
+
+- **Mixing `temperature` and `top_p` without controlling for the other.** → Vary one sampling parameter at a time in experiments; document the other's value. → Because `top_p=0.1` already constrains the distribution so tightly that temperature has little remaining effect; reporting "we tested at temperature=0.7" while leaving `top_p=0.1` fixed is not the experiment the team thinks it ran.
+
+- **Testing the model rather than the system.** → Test the assembled prompt + model + post-processing as a unit; the model alone is a vendor artefact. → Because the prompt is *your code* and the model is a *dependency*. Tests bound the system's behaviour; they do not audit the vendor's model. "The model is bad at X" and "our system prompt steers the model away from X" are different diagnoses with different fixes, and only tests on the *assembled system* can tell them apart.
+
+## Retrieval Prompts
+
+<Prompt id="llmfund-1">
+  Why is `temperature=0` not the same as "deterministic"? Name one mechanism that produces output variance even at temp=0 with the same seed.
+</Prompt>
+
+<Prompt id="llmfund-2">
+  A teammate proposes estimating LLM API cost by counting the words in each request. What is wrong with that approach, and what should they do instead?
+</Prompt>
+
+<Prompt id="llmfund-3">
+  Define `top_p` (nucleus sampling) and `top_k`. Why does casually mixing them with `temperature` produce experiments that are hard to reason about?
+</Prompt>
+
+<Prompt id="llmfund-4">
+  A prompt that worked last week is now silently ignoring your system prompt instructions. Name two context-window-related failure modes that could cause this, and how you distinguish between them.
+</Prompt>
+
+<Prompt id="llmfund-5">
+  A model upgrade rolls out — the alias `gpt-4o` now points to a new backend build. What does your current CI tell you about whether your prompts still work? If the answer is "nothing," what should it tell you, and what artefacts would you need to produce that signal?
+</Prompt>
+
+<Prompt id="llmfund-6">
+  Explain the "lost in the middle" effect. What does it imply for how you structure a long retrieval-augmented prompt, and how would you test for position-sensitivity in a model's responses?
+</Prompt>
+
+<Prompt id="llmfund-7">
+  A test asserts `response === "The answer is 42."` against an LLM endpoint at `temperature=0`. Why will this test eventually fail, and what three categories of assertion would you use instead?
+</Prompt>
+
+<Prompt id="llmfund-8">
+  An LLM-integrated feature ships a hallucinated date in production. What information must be present in the production log for you to reproduce the bug exactly? Name at least four fields.
+</Prompt>
+
+## Feynman Prompt
+
+<Feynman id="llmfund-feynman-1" wordTarget={150}>
+  Explain to a developer who has only used deterministic APIs why LLM testing requires a different assertion strategy. Cover: what "stochastic" means in this context and why it is structural (not a bug), why exact-string assertions are wrong even at temperature=0, what "bounded stochasticity" means in practice (concrete example of an assertion that works), and why the oracle problem from [[test-oracles-and-prioritization]] becomes the central problem of every LLM test. Rubric (revealed after submit): Did you give a mechanism for non-determinism — not just "LLMs are random"? Did you name a concrete invariant-based assertion rather than staying abstract? Did you explain why "assert on schema/invariants" is not the same as "assert nothing"? Did you connect back to the oracle problem — i.e., "good output" is itself a judgement that must be defined before testing?
+</Feynman>
