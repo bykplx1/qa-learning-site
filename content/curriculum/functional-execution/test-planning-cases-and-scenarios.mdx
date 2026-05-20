@@ -1,0 +1,170 @@
+---
+slug: test-planning-cases-and-scenarios
+title: Test Planning, Cases & Scenarios
+cluster: functional-execution
+layer: systems
+prerequisites:
+  - qa-mindset
+  - test-oracles-and-prioritization
+  - risk-based-testing
+  - exploratory-testing
+related:
+  - defect-lifecycle-and-bug-reporting
+  - test-management-tools
+  - test-types-smoke-sanity-regression-uat
+  - unit-integration-e2e-boundaries
+tags: [test-planning, test-cases, test-scenarios, artefacts, traceability]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+
+## Core Idea
+
+Test artefacts operate at four altitudes: a **plan** commits the team on what will and will not be tested, by when, and under what risk; a **scenario** expresses a situational outcome in the user's vocabulary; a **case** is a procedural recipe with deterministic preconditions, numbered steps, and a specific observable expected result; and a **charter** is the lightweight, time-boxed mission that replaces cases in exploratory work. Most teams collapse all four into "the test cases" — losing the ability to speak about coverage and risk without descending into step-by-step minutiae.
+
+Every artefact carries a maintenance cost paid forever after it is written. The tester's craft is finding the cheapest form that does the job. A [[qa-mindset]] posture — "what would have to be true for this to be wrong?" — runs through all four altitudes: the plan's out-of-scope section, the scenario's failure conditions, the case's expected result, the charter's mission constraint.
+
+> Test artefacts are records the rest of the organisation reads. Their value is whatever they cause to happen; their cost is the maintenance burden they impose forever.
+
+## Diagram
+
+<Diagram caption="Four artefact altitudes, their primary audience, and the cost signal at each level">
+```
+Altitude         Artefact         Primary audience         Maintenance cost signal
+────────────────────────────────────────────────────────────────────────────────────
+  Project /      Test Plan        Business, regulator,     Grows with scope;
+  Release                         stakeholders             stale plans are worse
+                                                           than no plan
+  ─────────────────────────────────────────────────────────────────────────────────
+  Feature /      Test Scenario    Testers, PO, sprint      Low — survives UI
+  Journey                         review                   redesigns
+  ─────────────────────────────────────────────────────────────────────────────────
+  Operational    Test Case        Next tester to run it,   High — breaks with UI,
+                                  automation pipeline      precondition drift
+  ─────────────────────────────────────────────────────────────────────────────────
+  Session        Test Charter     Tester in the moment     Near-zero — consumed
+                                                           on execution
+────────────────────────────────────────────────────────────────────────────────────
+
+Good-case smell test (apply to every case before committing it):
+  ✓ One objective            ✓ No branching ("if X then...")
+  ✓ Deterministic preconditions  ✓ Specific, observable expected result
+  ✓ Runnable by a new tester without the author in the room
+```
+</Diagram>
+
+## Worked Example
+
+A team is testing a password-reset flow. A colleague hands over a single 20-step case titled "Verify password reset":
+
+```
+Preconditions: user is logged in, has MFA enabled, is in US, feature flag reset_v2 active
+Steps 1–6:  Fill out the profile form and save
+Step 7:     Click the "Forgot password" link on /login
+Steps 8–12: Do the normal MFA thing
+Step 13:    If MFA is enabled, verify the code is sent; if not, skip to step 16
+Steps 14–20: Complete the reset and check there are no errors
+Expected result: No errors observed. Everything looks fine.
+```
+
+This case fails every point of the smell test. Refactored into four atomic cases:
+
+**Case 1 — Happy-path reset (no MFA)**
+- Pre: registered user, MFA disabled, feature flag `reset_v2` on
+- Steps: navigate to `/login` → click "Forgot password" → enter email → open email → click reset link → enter and confirm new password → click "Save"
+- Expected: redirect to `/login`; login with new password succeeds; old password returns 401
+
+**Case 2 — Reset with MFA**
+- Pre: registered user, MFA enabled, feature flag `reset_v2` on
+- Steps: same as Case 1 through email step → TOTP prompt appears → enter valid TOTP → proceed with reset
+- Expected: reset succeeds; MFA remains enabled on the account after reset
+
+**Case 3 — Expired reset link**
+- Pre: valid reset email sent > 60 minutes ago
+- Steps: click the reset link
+- Expected: HTTP 400; page displays "This link has expired. Request a new one."
+
+**Case 4 — Already-used reset link**
+- Pre: reset link used once successfully
+- Steps: click the same link again
+- Expected: HTTP 400; page displays "This link has already been used."
+
+What changed: the two-objective original (profile form + reset) was split; "do the normal MFA thing" became two separate branches (Cases 1 and 2); "no errors observed" became five specific, falsifiable expected results; the long precondition list was stripped to what each individual case actually requires. The [[test-oracles-and-prioritization]] principle is visible: every expected result is now a falsifiable oracle claim.
+
+A traceability check against requirements reveals that a fifth requirement — "reset link must be invalidated after 24 hours even if unused" — has no case covering it. The blank cell found the hole.
+
+## Common Pitfalls
+
+- **The "all features tested" plan.** Fails because the promise is always wrong and the cost of being wrong is paid late. Fix: name what is explicitly *out of scope* in the plan. A plan without an out-of-scope section is a plan that loses the post-release fight.
+
+- **Cases with two objectives.** A failing two-objective case produces an ambiguous bug report — you cannot tell which objective failed or whether one passing masked the other. Fix: split at the first objective boundary. The split is complete when each case has exactly one expected-result claim.
+
+- **Steps that say "do the normal thing."** "The normal thing" varies per tester and the variance hides bugs. Fix: replace with a concrete, observable action ("enter email address `qa+test@example.com`") that leaves no room for interpretation.
+
+- **Expected results phrased as "looks fine" or "no errors."** These convert a test into a vibe check. They are the most common defect-masking pattern in industry. Fix: replace with specific, falsifiable outcomes — HTTP status codes, exact UI strings, database column values.
+
+- **Branching cases ("if MFA is enabled, then…").** Branches in case bodies make pass/fail ambiguous and make automation impossible. Fix: one branch = one case. The branching case is always two cases wearing one name.
+
+- **Plans without stopping criteria.** Without explicit entry and exit conditions, "we stopped testing" becomes a political decision rather than a planned one. Fix: add entry criteria (e.g., "build passes smoke suite") and exit criteria (e.g., "all P1 cases passed, no open S1 bugs") before the first test run.
+
+- **Suite-bloat without a pruning policy.** Suites grow monotonically; maintenance cost is borne forever. A 5,000-case suite nobody updates produces false confidence. Fix: adopt a deletion policy (e.g., any case not executed in six months without written justification is retired) and treat pruning as authoring.
+
+## Retrieval Prompts
+
+<Prompt id="tpcs-1">
+  In one sentence each, define a test plan, a test scenario, and a test case. Give a single concrete example of each for a checkout flow.
+</Prompt>
+
+<Prompt id="tpcs-2">
+  What is the "transfer test" for case quality? Name what it filters out and why it works better than a formal case-review rubric.
+</Prompt>
+
+<Prompt id="tpcs-3">
+  A test case has 20 steps, one expected result that reads "no errors observed", and a step that says "if MFA is enabled, do the MFA thing." Identify every smell and name the fix for each.
+</Prompt>
+
+<Prompt id="tpcs-4">
+  Why are scenarios more durable than cases across UI redesigns? Give an example where the scenario survives two redesigns while every corresponding case is rewritten.
+</Prompt>
+
+<Prompt id="tpcs-5">
+  Traceability is for stopping, not starting. What does this mean, and name one moment in a project's life where you would actually reach for the trace?
+</Prompt>
+
+<Prompt id="tpcs-6">
+  A plan has no out-of-scope section. What is the likely failure mode, and at what moment in the project does it materialise?
+</Prompt>
+
+<Prompt id="tpcs-7" requiresDiagram>
+  Sketch the four artefact altitudes (plan, scenario, case, charter) and label the primary audience at each altitude. Mark which altitude most often collapses into "just the test cases" on teams you have observed.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="tpcs-task-1" rubric="tpcs-rubric-v1">
+  Choose a real, publicly accessible feature you understand well — GitHub's pull-request review flow, Stripe's payment-method update page, or a public-transit app's trip-planner. Without writing any automation code, produce the following artefacts:
+
+  1. **A one-page test plan** containing: in-scope features (named), out-of-scope features (named), top three risk drivers (scored by impact × likelihood using [[risk-based-testing]] vocabulary), entry criterion, exit criterion.
+  2. **Three test scenarios** written in the user's vocabulary — no selectors, no endpoint names, no internal component names.
+  3. **Five test cases** derived from those scenarios. Each case must pass the smell test: one objective, deterministic preconditions, numbered steps with concrete actions, specific and observable expected result, no branching.
+  4. **A 150-word reflection** identifying the case that almost violated the smell test and naming exactly what would have made it fail.
+
+  Rubric (revealed after submission):
+
+  - Does the plan name what is out of scope *in writing*? A plan without this section fails.
+  - Do the scenarios read in the user's vocabulary? A scenario containing a selector, endpoint name, or CSS class fails.
+  - Does each case have exactly one objective? Two-objective cases fail.
+  - Are all expected results specific and observable? "Looks fine" or "no errors" fails.
+  - Could a new tester run each case without you in the room — the transfer test?
+  - Does the reflection identify a case you mis-wrote, not just one you chose to skip?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="tpcs-feynman-1" wordTarget={150}>
+  Explain the difference between a test plan, a test scenario, and a test case to a developer who calls all three "the test cases." Focus on why the altitude difference matters — what goes wrong when a team collapses all three into one level? Give one concrete example of a failure that becomes invisible when you skip the plan's out-of-scope section or when your expected results say "no errors." Rubric (revealed after submit): Did you name a specific failure mode caused by collapsing altitudes, not just a definition? Did you explain why "no errors" is a failed expected result rather than just calling it vague? Did you give a concrete stakeholder consequence, not just a technical one?
+</Feynman>

@@ -35,3 +35,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | test-design/risk-based-testing | test-design | shipped | n/a | Knowledge P2 (#167). New topic. layer: systems. PR: knowledge-p2/167-risk-based-testing. |
 | — | test-design/shift-left-and-shift-right | test-design | shipped | n/a | Knowledge P2 (#169). New topic. layer: patterns. PR: knowledge-p2/169-shift-left-and-shift-right. |
 | — | test-design/tdd-bdd-atdd | test-design | shipped | n/a | Knowledge P2 (#170). New topic. layer: patterns. PR: knowledge-p2/170-tdd-bdd-atdd. |
+| — | functional-execution/test-planning-cases-and-scenarios | functional-execution | shipped | n/a | Knowledge P3 (#171). New topic — no legacy precursor. layer: systems. PR: knowledge-p3/171-test-planning-cases-and-scenarios. |
