@@ -43,4 +43,5 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | functional-execution/test-management-tools | functional-execution | shipped | n/a | Knowledge P3 (#176). New topic — no legacy precursor. layer: facts. PR: knowledge-p3/176-test-management-tools. |
 | — | automation-cicd/frontend-prereqs-for-testers | automation-cicd | shipped | n/a | Knowledge P4 (#177). New topic — no legacy precursor. layer: patterns. PR: knowledge-p4/177-frontend-prereqs-for-testers. |
 | — | automation-cicd/playwright | automation-cicd | shipped | n/a | Knowledge P4 (#178). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/178-playwright. |
+| — | automation-cicd/selenium-vs-cypress-vs-playwright | automation-cicd | shipped | n/a | Knowledge P4 (#179). New topic — no legacy precursor. layer: patterns. PR: knowledge-p4/179-selenium-vs-cypress-vs-playwright. |
 | — | automation-cicd/api-testing | automation-cicd | shipped | n/a | Knowledge P4 (#180). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/180-api-testing. |
