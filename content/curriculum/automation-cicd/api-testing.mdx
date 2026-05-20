@@ -1,0 +1,223 @@
+---
+slug: api-testing
+title: API Testing — Postman, REST Assured & Contract Testing
+cluster: automation-cicd
+layer: systems
+prerequisites:
+  - unit-integration-e2e-boundaries
+  - mocking-stubbing-test-doubles
+  - test-pyramid-and-trophy
+related:
+  - playwright
+  - ci-cd-for-testing
+  - test-design-techniques
+  - defect-lifecycle-and-bug-reporting
+tags: [api, Postman, REST-Assured, contract-testing, Pact, schema-validation]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+API testing is a **layered practice**, not a single tool. The three layers escalate in both commitment and leverage: ad-hoc exploration (Postman, Bruno, Hoppscotch), scripted regression suites in code (Supertest, REST Assured, Vitest + fetch), and consumer-driven contract testing (Pact, Spring Cloud Contract).
+
+The load-bearing claim is arithmetic: **API tests catch roughly 70% of bugs at roughly 10% of E2E cost**. Most bugs that surface in the UI originate as misshapen API responses — catching them at the HTTP layer is faster, more diagnostic, and more stable than waiting for a browser to expose them.
+
+The second load-bearing claim is structural: **contract testing is the fix for "don't mock what you don't own"**. Instead of every consumer team maintaining a silent, drifting assumption about the provider's response shape, the consumer publishes a machine-checkable contract and the provider verifies against it in CI.
+
+> API tests are the highest-leverage move in the automation stack — and contract testing is the structural antidote to silent shape drift between teams.
+
+## Diagram
+
+<Diagram caption="Consumer-driven contract flow: consumer publishes contract to broker; provider verifies against it in CI; breaking changes are caught at commit time, not deploy time">
+```
+CONSUMER SIDE                    PACT BROKER                  PROVIDER SIDE
+─────────────────                ─────────────────            ─────────────────
+
+Consumer test                    Broker (self-hosted           Provider CI job
+defines expectations:            or PactFlow):                 verifies:
+
+  provider.given(                ┌─────────────────┐           ┌──────────────────┐
+    'user 42 exists'             │  Contract v1    │           │ Run consumer     │
+  )                              │  ─────────────  │           │ contract against │
+  .uponReceiving(                │  GET /users/42  │◄─publish─ │ real provider    │
+    'request for user 42'        │  → 200          │           │ implementation   │
+  )                              │  { id: 42,      │ ─verify──►│                  │
+  .withRequest({                 │    name: like() │           │ PASS: provider   │
+    method: 'GET',               │  }              │           │ change is safe   │
+    path: '/users/42'            └─────────────────┘           │                  │
+  })                                                           │ FAIL: provider   │
+  .willRespondWith({                                           │ broke a consumer │
+    status: 200,                                              │ → blocks merge   │
+    body: { id: 42,                                           └──────────────────┘
+            name: like('Alice') }
+  });
+
+KEY INSIGHT: the consumer publishes what it NEEDS (narrower than the full schema).
+The provider verifies what it PROVIDES. Mismatches fail the provider's CI, not the
+consumer's deploy. Catching breaking changes at commit time, not incident time.
+```
+</Diagram>
+
+## Worked Example
+
+A `GET /users/:id` endpoint. The team starts with a status-only test:
+
+```ts
+// Before — the dominant API-test smell
+const res = await request(app).get('/users/42');
+expect(res.status).toBe(200);
+```
+
+This test passes even when: the response body is `{ error: 'not found' }`, the `name` field is `null` instead of a string, the `id` field is missing entirely, or the endpoint silently returns `{ user: { id: 42 } }` instead of `{ id: 42 }`.
+
+The improved test asserts status *and* shape:
+
+```ts
+// After — schema-validated
+import Ajv from 'ajv';
+
+const userSchema = {
+  type: 'object',
+  required: ['id', 'name', 'email'],
+  properties: {
+    id:    { type: 'number' },
+    name:  { type: 'string', minLength: 1 },
+    email: { type: 'string', format: 'email' },
+  },
+  additionalProperties: false,
+};
+
+const ajv = new Ajv();
+const validate = ajv.compile(userSchema);
+
+const res = await request(app).get('/users/42');
+expect(res.status).toBe(200);
+expect(validate(res.body)).toBe(true);
+expect(res.body.id).toBe(42);
+```
+
+Now also test the error path — this is where shape rot most silently accumulates:
+
+```ts
+// Error-path schema matters more than success-path schema
+const errorSchema = {
+  type: 'object',
+  required: ['error', 'code'],
+  properties: {
+    error: { type: 'string' },
+    code:  { type: 'string' },
+  },
+};
+
+const notFound = await request(app).get('/users/9999');
+expect(notFound.status).toBe(404);         // not 200 with { error: 'not found' }
+expect(validate404(notFound.body)).toBe(true);
+```
+
+Finally, the idempotency test — three lines, catches half of all production payment-class bugs:
+
+```ts
+// Idempotency test for POST /payments
+const payload = { amount: 100, currency: 'USD', idempotencyKey: 'key-abc' };
+const first  = await request(app).post('/payments').send(payload);
+const second = await request(app).post('/payments').send(payload);
+
+expect(first.status).toBe(201);
+expect(second.status).toBeOneOf([200, 409]);  // idempotent or conflict — not 201 again
+// Verify only one payment exists in the DB
+const payments = await db.query('SELECT * FROM payments WHERE idempotency_key = ?', ['key-abc']);
+expect(payments.length).toBe(1);
+```
+
+## Common Pitfalls
+
+- **Status-code-only assertions.** Asserting `expect(res.status).toBe(200)` and stopping there tells you the request didn't 500 — it tells you nothing about shape. A `200 OK` with `{ error: 'not found' }` passes. Fix: always assert status *and* validate the response body against a schema. Why it happens: status is the first visible thing and feels like enough.
+
+- **Hand-written schemas that drift from the code.** A schema typed by hand against a REST payload diverges from the implementation within weeks. Fix: generate schemas from the code's type definitions — Zod, Pydantic, Spring annotations — and validate against the generated artefact. Why it happens: the tool is adopted before the generation pipeline is established.
+
+- **Skipping the error-path schema.** Most API test suites validate the happy path and ignore `4xx`/`5xx` responses. Consumers depend on error-shape stability; silent rot here causes upstream breakage. Fix: write schema assertions for error responses as rigorously as for success responses. Why it happens: the happy path is the natural first target.
+
+- **Mocking the third-party API at the library level.** A test that mocks `axios.post('/payments')` to return `201` is testing the consumer's *assumption*, not reality. Fix: use the provider's sandbox environment or recorded fixtures (nock, vcrpy); never mock the library that calls the third party. Why it happens: the mock is faster to write and removes the network dependency.
+
+- **Treating Postman collections as the regression suite.** Collections are powerful for exploration and runbooks; they are hard to version-control, code-review, and refactor at scale. Fix: use code-based tests (Supertest, REST Assured) for the regression suite; use collections for ad-hoc exploration and operator runbooks. Why it happens: the collection is already there and running Newman in CI "counts" as automation.
+
+- **JWT equality assertions.** Asserting on the encoded token string fails on every run — tokens differ by timestamp. Fix: decode the token and assert on *claims* (sub, scope, exp delta). Why it happens: the first instinct is to capture the token and assert equality.
+
+- **Asserting full response literals.** `expect(res.body).toEqual({ id: 42, name: 'Alice' })` breaks on every additive change, including non-breaking ones. Fix: use shape validators that allow unspecified fields — Pact's `like()`, AJV with `additionalProperties: true` where appropriate. Why it happens: the literal assertion is the simplest thing to write when the test is first created.
+
+## Retrieval Prompts
+
+<Prompt id="api-1">
+  Distinguish a schema test from a contract test with a one-line definition for each. Then name one bug class that only the contract test catches — and explain why the schema test misses it.
+</Prompt>
+
+<Prompt id="api-2">
+  An API test asserts only `expect(response.status).toBe(200)`. Name two specific bug classes this test silently passes. Give a concrete example of each.
+</Prompt>
+
+<Prompt id="api-3">
+  Explain the "consumer-driven" inversion in Pact. Who owns the contract, who publishes it, who verifies it, and why does this direction matter? Name the specific failure class it catches that provider-published contracts miss.
+</Prompt>
+
+<Prompt id="api-4">
+  A Pact verification fails on the provider's CI pipeline. Whose merge does this block — the consumer's or the provider's — and why? What does it signal about the provider's change?
+</Prompt>
+
+<Prompt id="api-5">
+  Why are error-path schemas more important to validate than success-path schemas? Name the mechanism by which error-shape rot causes production failures silently.
+</Prompt>
+
+<Prompt id="api-6">
+  Name three high-leverage API-test additions that each take fewer than 5 lines of code. For each, state the bug class it catches that a status-only assertion misses.
+</Prompt>
+
+<Prompt id="api-7">
+  A test mocks `axios.post('/stripe/charges')` to return `{ status: 'succeeded' }`. Name the rule this violates, the bug class it now misses, and a structural alternative that doesn't mock the library.
+</Prompt>
+
+<Prompt id="api-8">
+  An OpenAPI spec exists but the production API has drifted from it. Name two structural reasons this happens and one pipeline change that prevents it.
+</Prompt>
+
+<Prompt id="api-9">
+  Postman collections run via Newman in CI. Is this equivalent to "API tests are code"? State your reasoning and name one specific thing collections cannot do that code-based tests can.
+</Prompt>
+
+<Prompt id="api-10" requiresDiagram>
+  Sketch the consumer-driven contract flow. Mark: who publishes the contract, where the broker sits, who runs verification, and what CI event triggers the verification step.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="api-task-1" rubric="api-rubric-v1">
+  Pick one HTTP endpoint in a real or scaffolded service (suggested: `POST /orders` or `GET /users/:id`). Produce a three-layer test file:
+
+  **Layer 1 — Schema:** validate the response shape with AJV / JSON Schema (or your language's equivalent). Cover both the happy path (200) and at least one error path (400 or 404). Generate or copy the schema from your code's type definitions if possible — do not hand-write a schema that already exists in code.
+
+  **Layer 2 — Behaviour:** functional assertions — given specific inputs, expect specific outputs or side effects. Include at least one idempotency test (send the same write request twice; assert the second call does not create a duplicate).
+
+  **Layer 3 — Contract:** write a Pact-style consumer contract (or equivalent) capturing what one downstream client actually needs from this endpoint — narrower than the full schema. Include the consumer-side test that generates the contract file.
+
+  Also produce:
+
+  - **Baseline diff:** show the original test (status-only or no test) and the full three-layer suite side by side. Annotate which bugs the new suite would catch that the baseline misses.
+  - **Reflection (≤200 words):** name one specific bug class this endpoint is now protected against that it wasn't before. Be specific — "the error response now requires a `code` field, so refactoring the controller can't silently drop it" is specific; "more coverage" is not.
+
+  Rubric (revealed after submission):
+  - Does the schema layer cover both a success path and at least one error path? Error-path coverage is the load-bearing addition — missing it is a fail.
+  - Does the behaviour layer assert on outputs and side effects, not just status codes?
+  - Is the idempotency test present? Three lines; its absence signals the assignment was not taken seriously.
+  - Does the contract narrow the consumer's actual usage, or does it restate the full schema? A contract that is as wide as the schema has not understood the consumer-driven inversion — this is a fail.
+  - Does the reflection name a specific bug class with a mechanism? Generic answers ("I added more assertions") fail the rubric.
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="api-feynman-1" wordTarget={150}>
+  Explain API testing to a developer who already writes unit tests and wonders why they need anything else. Your explanation must cover: why status-code-only assertions leave a large class of bugs undetected, what "consumer-driven" means and why the direction of the contract matters, and why a layered approach (ad-hoc → scripted → contract) beats picking one tool and stopping. Give a concrete example of a bug that passes unit tests and status-only API tests but is caught by a schema or contract assertion. Rubric (revealed after submit): Did you name the status-and-shape distinction without using the word "comprehensive"? Did you explain the consumer-driven inversion in terms of who publishes and who verifies — not just "the consumer writes the contract"? Did your concrete example name a specific failure (wrong field type, missing required field, dropped error field) rather than a vague "contract mismatch"?
+</Feynman>
