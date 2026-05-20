@@ -1,0 +1,195 @@
+---
+slug: observability-for-testers
+title: Observability for Testers
+cluster: non-functional
+layer: patterns
+prerequisites:
+  - shift-left-and-shift-right
+  - cicd-for-testing
+  - defect-lifecycle-and-bug-reporting
+related:
+  - performance-testing
+  - security-testing
+  - accessibility-testing
+  - database-testing
+  - chaos-and-resilience-testing
+tags: [observability, logs, metrics, traces, slo, opentelemetry, grafana, sentry, datadog]
+estimatedEncodingMinutes: 22
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Observability is the property of a system that lets you ask any question about its current and past behaviour **without shipping new code**. It is enabled by three primary signals — *logs, metrics, traces* — and consumed at the moments your test suite cannot help you: after deployment, under real load, with real users.
+
+For the tester, observability is the production-truth feedback loop the test suite cannot provide. A bug report that says "checkout is slow sometimes" is a wild goose chase without telemetry; paired with a Grafana panel it becomes "p99 latency spiked at 14:32, caused by a slow query introduced in the last deploy." The same investigation that took days now takes minutes.
+
+The discipline pairs with testing: tests catch what you can pre-ship; observability reveals what tests cannot exercise — the tail of real traffic, real devices, real concurrency.
+
+> Observability is not a replacement for testing. It is the production oracle that proves whether the thing you tested actually holds at scale.
+
+## Diagram
+
+<Diagram caption="The three observability signals, the question each answers, and the primary tool categories that serve them — with OpenTelemetry as the vendor-neutral instrumentation layer">
+```
+                    ┌─────────────────────────────────────────────────┐
+                    │            PRODUCTION SYSTEM                    │
+                    │  (real users · real load · real failure modes)  │
+                    └────────────┬────────────────────────────────────┘
+                                 │  instrumented by OpenTelemetry (OTel)
+             ┌───────────────────┼───────────────────┐
+             ▼                   ▼                   ▼
+        ┌─────────┐        ┌──────────┐        ┌──────────┐
+        │  LOGS   │        │ METRICS  │        │ TRACES   │
+        │         │        │          │        │          │
+        │ "What   │        │ "How     │        │ "How did │
+        │ happened│        │ much is  │        │ this one │
+        │ and     │        │ happening│        │ request  │
+        │ why?"   │        │ over     │        │ flow     │
+        │         │        │ time?"   │        │ across   │
+        │ Events  │        │ Counters │        │ services?│
+        │ with    │        │ Gauges   │        │ Spans    │
+        │ context │        │ Histogr. │        │ w/ timing│
+        └────┬────┘        └────┬─────┘        └────┬─────┘
+             │                  │                    │
+             ▼                  ▼                    ▼
+    Loki · Splunk       Prometheus · Datadog   Jaeger · Tempo
+    Datadog Logs        Grafana dashboards     Honeycomb · DD APM
+    Sentry (errors)     Alerts / SLOs          Distributed traces
+
+
+WHEN THE TESTER READS EACH:
+  Logs    → investigating a specific failure reported by a user
+  Metrics → detecting aggregate regressions; confirming SLO health post-deploy
+  Traces  → diagnosing latency; following one request across N services
+
+
+ALERT LAYER (built on metrics):
+  Symptom alert: "error rate > 1%"              ← noisy; fires too often
+  SLO burn-rate: "budget exhausts in < 6 hours" ← signal; fires when it matters
+```
+</Diagram>
+
+## Worked Example
+
+### Scenario: a user reports a slow checkout at 14:32 UTC
+
+The tester's instinct without observability: reproduce the bug locally, run the test suite, shrug when it passes.
+
+The tester's instinct with observability:
+
+**Step 1 — pull the structured logs** for `user_id=12345`, timestamp window `[14:30, 14:35]`.
+
+```
+# Good: structured log — queryable in seconds
+{"event":"checkout.failed","user_id":12345,"reason":"timeout","service":"payment","duration_ms":4821,"trace_id":"abc123"}
+
+# Bad: unstructured log — grep archaeology
+[ERROR] Checkout failed for user 12345 after 4821ms
+```
+
+With structured logs, the query `event="checkout.failed" AND user_id=12345` returns the failure in one command. Without structure, you grep through gigabytes and hope.
+
+**Step 2 — open the trace** for `trace_id=abc123` in the APM tool (Jaeger, Datadog APM, Honeycomb).
+
+```
+Request: POST /api/checkout  total: 4821ms
+├── auth-service         32ms   ✓
+├── inventory-service   120ms   ✓
+├── payment-service    4512ms   ← 93% of total time
+│   ├── validate-card   18ms   ✓
+│   └── charge-card    4490ms  ← retried 3 times (rate-limited by Stripe)
+└── order-service        40ms  (never reached — parent timed out)
+```
+
+The trace reveals the exact failure in 30 seconds: the payment service retried three times against a rate-limited third-party API. No amount of local testing would surface this — Stripe's rate limit is a production-only condition.
+
+**Step 3 — check the metric panel** in Grafana for `payment_service_duration_p99` in the 14:30–14:40 window.
+
+```
+14:00  p99: 320ms   ← baseline
+14:30  p99: 4800ms  ← spike begins
+14:35  p99: 4900ms
+14:40  p99: 290ms   ← self-corrected (Stripe rate limit window expired)
+```
+
+The metric gives you the blast radius: how many users were affected and for how long. The alert that should have fired: a burn-rate alert on the `checkout_success_rate` SLO.
+
+**What the tester produces:** a bug report with trace ID, log query, metric screenshot, and a proposed fix (add exponential backoff with jitter on Stripe retries). This is a forensically complete bug report. Compare to "checkout was slow at 2pm."
+
+### The cardinality landmine (metric anti-pattern)
+
+A team proposes: `http_request_duration_seconds{path="/api/checkout", user_id=12345, region="eu-west", status="500"}`.
+
+The problem: `user_id` has millions of distinct values. One metric with four tags becomes `paths × users × regions × statuses` time-series in the metrics backend. At 1M users, 50 paths, 5 regions, 10 status codes that is 2.5 billion time series — enough to crash Prometheus.
+
+The fix: template the path (`/api/:resource`), remove `user_id` entirely (move high-cardinality debugging to traces), keep `region` (5 values) and `status_class` (`2xx`/`4xx`/`5xx` — 3 values). Result: 50 × 3 × 5 = 750 time series. Same question-answering power; 3 million times fewer series.
+
+**Tester's contribution:** ask "what is the cardinality of each label?" before a new metric ships. This is a test-design question, not a metrics question.
+
+## Common Pitfalls
+
+- **Unstructured logs.** Writing `log.error("Payment failed for user " + id)` instead of `log.error({event:"payment.failed", user_id: id, reason: err.code})` makes every log investigation an archaeology exercise. Fix: mandate JSON-structured logging with consistent field names (`event`, `user_id`, `trace_id`, `duration_ms`) as a definition-of-done criterion. This happens because structured logging requires a library change and teams defer it until the first painful debugging session.
+
+- **Tagging metrics by user ID.** High-cardinality labels (user IDs, session IDs, email addresses) blow up the metrics backend — Prometheus scales by time-series count, not by sample count. Fix: use low-cardinality labels only; move high-cardinality debugging to traces or structured log queries. This happens because developers reach for the most specific identifier without understanding the cost model.
+
+- **Alerting on internal thresholds, not user impact.** "CPU > 80%" fires constantly and is ignored; "SLO error budget exhausts in < 6 hours" fires rarely and is acted on. Fix: derive alerts from SLO burn rates, not from arbitrary resource thresholds. Page on symptoms users feel — errors, slow responses — not on internal state that may not correlate with user pain.
+
+- **Head-based trace sampling discards the interesting traces.** 1% random sampling at 10k RPS keeps 100 traces/second — but the errored trace or the 5-second outlier has only a 1% chance of surviving. Fix: use tail-based sampling (keep the trace based on outcome — error, latency threshold — not at ingestion time). This happens because most systems default to head-based sampling for simplicity.
+
+- **No correlation IDs across services.** A request that touches five services produces five log streams with no shared key, making cross-service debugging manual archaeology. Fix: propagate `trace_id` (or `request_id`) through every service call, in both logs and HTTP headers, via OpenTelemetry context propagation. Without it, connecting a frontend error to the backend failure that caused it is guesswork.
+
+- **Forgetting source maps on deploy.** A minified production JS error (`at t.e (main.abc123.js:1:4820)`) is unreadable without the original source. Fix: upload source maps to your error tracker (Sentry, Datadog RUM) as part of every deploy step. This happens because source maps are a build concern and teams don't wire them into the deploy pipeline until the first unreadable production stack trace.
+
+- **PII and secrets in logs.** Full request bodies, auth tokens, or email addresses in log lines are an audit finding and a breach risk. Fix: use field-level redaction at the logging library level (pino's `redact` option; structured loggers all support it). This happens because developers log "the whole object" for debugging convenience and never remove it.
+
+## Retrieval Prompts
+
+<Prompt id="obs-1">
+  Name the three classical observability signals. For each, state in one sentence the question it answers that the other two cannot.
+</Prompt>
+
+<Prompt id="obs-2">
+  What are the four golden signals from the Google SRE book? Give one specific metric for each, applied to a checkout HTTP service.
+</Prompt>
+
+<Prompt id="obs-3">
+  A team proposes a metric tagged by `user_id`. Explain why this is dangerous, name the underlying cost model, and propose a redesign that preserves question-answering ability without the cardinality blow-up.
+</Prompt>
+
+<Prompt id="obs-4">
+  Distinguish head-based and tail-based trace sampling. Which failure mode does each produce, and when should a tester care about the difference?
+</Prompt>
+
+<Prompt id="obs-5" requiresDiagram>
+  Sketch a distributed trace for a single checkout request touching three services (auth, inventory, payment). Mark where time accumulates and identify what question you could not answer from logs or metrics alone.
+</Prompt>
+
+<Prompt id="obs-6">
+  A user reports a slow checkout at 14:32 UTC. Walk through your investigation in order: which observability tool do you open first, what query do you run, what do you look for, and when do you move to the next signal?
+</Prompt>
+
+<Prompt id="obs-7">
+  Distinguish a symptom-based alert ("error rate > 1%") from an SLO burn-rate alert. Why is the burn-rate alert preferred, and what additional information does it require to configure?
+</Prompt>
+
+<Prompt id="obs-8">
+  Why is structured logging mandatory at scale? Give a concrete before/after example showing the difference between an unstructured and a structured log line, and name the query that becomes possible with structure but impossible without it.
+</Prompt>
+
+<Prompt id="obs-9">
+  What is a correlation ID and why does its absence make cross-service debugging impossible? Name the OpenTelemetry mechanism that propagates it across service boundaries.
+</Prompt>
+
+<Prompt id="obs-10">
+  Observability is described as "the production oracle." Explain what this means by contrasting what a passing test suite tells you with what production observability tells you. Where does each fail to provide the answer?
+</Prompt>
+
+## Feynman Prompt
+
+<Feynman id="obs-feynman-1" wordTarget={150}>
+  Explain observability to a tester who believes a green test suite means production is fine. Cover: what the three signals are and the distinct question each answers, why a passing test cannot tell you that production checkout latency spiked at 2pm, and what "structured logging" means and why it matters for bug investigation. Give one concrete failure mode that observability catches that no test ever will. Rubric (revealed after submit): Did you name all three signals and give each a distinct question — not just "they tell you different things"? Did you explain why staging test environments cannot reproduce production observability conditions (real users, real load, real third-party rate limits)? Did you give a before/after structured-log example or equivalent concrete illustration — not just "logs are searchable"? Did you name the failure mode specifically (e.g., Stripe rate-limiting under production traffic) rather than gesturing at "production issues"?
+</Feynman>
