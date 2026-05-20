@@ -1,0 +1,285 @@
+---
+slug: cicd-for-testing
+title: CI/CD for Testing
+cluster: automation-cicd
+layer: systems
+prerequisites:
+  - unit-integration-e2e-boundaries
+  - mocking-stubbing-test-doubles
+  - test-types-smoke-sanity-regression-uat
+related:
+  - playwright
+  - api-testing
+  - defect-lifecycle-and-bug-reporting
+  - test-management-tools
+  - functional-execution/test-planning-cases-and-scenarios
+  - functional-execution/unit-integration-e2e-boundaries
+  - functional-execution/test-types-smoke-sanity-regression-uat
+tags: [ci-cd, github-actions, jenkins, docker, hermeticity, flakiness, test-reporting]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+A test that doesn't run in CI is an aspiration. Treat the CI pipeline as **the production environment for your test suite** — and every discipline that follows is a consequence of that framing.
+
+Four disciplines define a healthy CI testing pipeline. **Hermeticity** ensures the test environment looks the same on every run, eliminating "works on my machine." **Artefact discipline** ensures every failure leaves behind evidence — traces, screenshots, logs — so diagnosis doesn't require a re-run lottery. **Reporting** translates a red job into something a reviewer can act on without cloning the repo. **Flakiness budget** turns "we hate flaky tests" from a feeling into a policy: a retry cap, a quarantine queue, and an escape valve.
+
+The companion truth: retries hide flakes; quarantine surfaces them. A pipeline with unlimited retries is a slow, invisible erosion of the test suite's guarantee.
+
+> CI is the production environment for tests. A test suite without hermeticity, artefacts, reporting, and a flakiness budget is not a safety net — it is a suggestion.
+
+## Diagram
+
+<Diagram caption="CI pipeline gate topology: three stages, five jobs, and the disciplines each job enforces — based on this site's actual ci.yml">
+```
+TRIGGER: push / pull_request → main  (or workflow_dispatch)
+│
+├── STAGE 1 — Fast checks (parallel, no DB, no browser)
+│   ├── lint-typecheck    astro check · type safety
+│   ├── lint-curriculum   depth-gate: ≥5 prompts, diagram, Feynman present
+│   └── unit              vitest unit suite (isolated, no network)
+│
+├── STAGE 2 — Integration (needs Stage 1 green)
+│   └── integration       vitest + real Postgres via services: container
+│                         ↑ HERMETIC ENV: per-job DB, never a shared dev instance
+│
+└── STAGE 3 — Heavy gates (parallel, all need Stage 2 green)
+    ├── e2e-a11y          Playwright + @axe-core/playwright
+    │                     ↑ ARTEFACTS: playwright-report/ uploaded on always()
+    │                     ↑ REPORTING: GHA annotations inline on PR diff
+    │
+    ├── visual            Playwright visual regression
+    │                     ↑ NON-BLOCKING: continue-on-error — UI still churning
+    │                     ↑ GATED BASELINE UPDATE: workflow_dispatch only
+    │                       (cross-OS font rendering → false diffs)
+    │
+    └── lhci              Lighthouse-CI budget gate (mobile + desktop)
+                          ↑ ENFORCED: job fails if perf/a11y/SEO budgets breached
+                          ↑ QUALITY GATE: not advisory — hard check
+
+
+FLAKINESS POLICY (healthy pipeline):
+  retries: 1  ←  absorbs runner provisioning jitter; caps at 1 to surface real bugs
+  quarantine  ←  tests flaking >2% go to quarantine queue (runs, doesn't block merge)
+  escape valve ← quarantine >30 days → delete or fix; no indefinite limbo
+```
+</Diagram>
+
+## Worked Example
+
+The following is drawn from this repository's `.github/workflows/ci.yml`. Walk through each structural decision.
+
+### Stage 1: The fast-feedback loop
+
+```yaml
+unit:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.VAULT_PAT }}
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'          # built-in cache: cold install → minutes; warm → seconds
+    - run: npm ci --legacy-peer-deps
+    - name: Unit tests
+      run: npm test
+```
+
+`setup-node` with `cache: 'npm'` is the highest-leverage single-line change available to most pipelines. Across 30 PRs/day, the difference between cold and warm installs accumulates to hours of developer wait.
+
+### Stage 2: Hermetic integration environment
+
+```yaml
+integration:
+  needs: [lint-typecheck, lint-curriculum, unit]
+  services:
+    postgres:
+      image: postgres:16
+      env:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: qa_learning_test
+      ports: ['5432:5432']
+      options: >-
+        --health-cmd "pg_isready -U postgres"
+        --health-interval 10s
+        --health-retries 5
+  env:
+    DATABASE_URL: postgres://postgres:postgres@localhost:5432/qa_learning_test
+```
+
+The `services:` block is the hermetic-DB pattern. Every integration job gets its own Postgres container — spun up before the steps start, torn down when the job ends. No shared dev database. No ordering-dependent state. The test that passes today because the DB happens to be empty is not a test; it is luck.
+
+### Stage 3a: E2E with mandatory artefact upload
+
+```yaml
+e2e-a11y:
+  needs: integration
+  steps:
+    # ... checkout, setup-node, npm ci, migrate, build, playwright install
+    - name: E2E + a11y tests
+      env:
+        E2E_OAUTH_MOCK: '1'
+      run: npm run test:e2e
+
+    - name: Upload Playwright report
+      if: always()           # <-- the load-bearing clause
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 7
+```
+
+`if: always()` on the artefact upload step is non-negotiable. A Playwright report that only uploads on success is useless — the failure case is the only time you need it. Every trace.zip, every screenshot, every browser console log captured on failure is pre-built evidence. Without it, every failure becomes a re-run lottery.
+
+### Stage 3b: Gated visual baselines
+
+```yaml
+visual:
+  runs-on: ubuntu-latest
+  needs: integration
+  continue-on-error: true         # non-blocking while UI churns
+
+  steps:
+    - name: Visual regression tests
+      if: ${{ inputs.update_visual_baselines != true }}
+      run: npm run test:visual
+
+    - name: Regenerate baselines (deliberate)
+      if: ${{ inputs.update_visual_baselines == true }}
+      run: npm run test:visual:update
+
+    - name: Upload regenerated baselines artifact
+      if: ${{ always() && inputs.update_visual_baselines == true }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: visual-baselines
+        path: tests/visual/**/*-snapshots/**
+        retention-days: 14
+```
+
+This pattern illustrates two CI disciplines at once. `continue-on-error: true` makes the job non-blocking while the design system is in motion — the diffs are still uploaded for manual review, but a pixel diff doesn't block a merge. The `workflow_dispatch` input gate for baseline regeneration is the structural solution to the cross-OS rendering problem: baselines are regenerated only in the same Linux environment that runs them, never from a developer's macOS machine.
+
+### Stage 3c: Lighthouse-CI as an enforced quality gate
+
+```yaml
+lhci:
+  needs: integration
+  steps:
+    # ... build and serve dist/client
+    - name: Lighthouse-CI (mobile)
+      run: npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.json
+    - name: Lighthouse-CI (desktop)
+      if: always()
+      run: npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.desktop.json
+```
+
+The Lighthouse-CI job audits against score budgets (perf ≥ 70 mobile / 85 desktop · a11y ≥ 95 · SEO ≥ 95). If a PR pushes LCP above the budgeted threshold, the job fails and the PR cannot merge. This is the perf-test mechanism most teams claim to want and never actually wire up — configuring the tool without enforcing it produces advisory output that no one acts on.
+
+## Common Pitfalls
+
+- **No artefact upload on failure.** The report that uploads `if: success()` is useless. The failure is the only time you need the traces, screenshots, and logs. Fix: always upload on `if: always()` for every test report. This happens because the default in most pipelines is success-only, and teams don't notice the gap until the first hard-to-reproduce failure.
+
+- **Retries with no quarantine policy.** Setting `retries: 5` in Playwright config and moving on is not a flakiness strategy — it is a slow erosion. A test that passes on the fifth retry is not a reliable test; it is a bug with extra steps. Fix: cap retries at 1–2 for transient runner issues; pair with a quarantine policy (tests flaking >2% of runs do not block merges but do generate an owner issue). Without the quarantine loop, the suite accumulates flaky tests no one fixes.
+
+- **Shared dev database for integration tests.** Tests that share a database develop ordering dependencies. The test that passes when run in isolation fails in CI because a prior test left state. Fix: use GHA `services:` or Testcontainers to spin up a per-job Postgres (or your DB) that is destroyed after the job ends. This is the structural fix; no amount of `beforeEach` cleanup is as reliable as starting fresh.
+
+- **Skipping the dependency cache.** `npm ci` against a cold cache takes minutes. Across dozens of PRs per day this accumulates to hours. Fix: enable `cache: 'npm'` in `actions/setup-node@v4`. It is a single line and the highest-leverage CI optimisation available to most JS/TS pipelines.
+
+- **Visual baselines committed from a non-Linux machine.** Cross-OS font rendering produces pixel diffs that are unrelated to code changes. A macOS developer regenerating baselines locally will cause the Linux CI job to fail on every subsequent PR. Fix: regenerate baselines only via the `workflow_dispatch update_visual_baselines=true` path in the same Ubuntu runner that executes the visual tests.
+
+- **Lighthouse-CI configured but not enforced.** A Lighthouse budget that is "informational only" is worse than no budget — it trains the team to ignore the output. Fix: wire Lighthouse-CI as a required status check on the branch protection rule. An advisory gate that is never acted on is noise, and noise degrades the signal value of the whole CI run.
+
+- **Floating action versions.** `actions/checkout@main` means a supply-chain compromise of that action runs in your repo's context — with access to your secrets. Fix: pin to a major version tag (`@v4`) as a minimum; pin to a commit hash for highest-assurance repositories. Floating is a quiet security risk, not a convenience.
+
+## Retrieval Prompts
+
+<Prompt id="cicd-1">
+  Name the four disciplines that define a healthy CI testing pipeline. For each, state in one sentence the failure mode when it is absent.
+</Prompt>
+
+<Prompt id="cicd-2">
+  A Playwright artefact upload step has `if: success()`. Explain why this is wrong and rewrite the condition. Name the exact scenario the original condition makes impossible.
+</Prompt>
+
+<Prompt id="cicd-3">
+  Distinguish "retries hide flakes" from "quarantine surfaces them." Describe the quarantine policy a healthy pipeline should implement: the trigger threshold, the in-quarantine behaviour, and the escape valve.
+</Prompt>
+
+<Prompt id="cicd-4">
+  The integration job in this repo uses a `services:` block to spin up Postgres. Explain why this produces a hermetic environment that `beforeEach` cleanup alone cannot guarantee.
+</Prompt>
+
+<Prompt id="cicd-5" requiresDiagram>
+  Sketch a three-stage CI pipeline gate topology. Label which jobs run in each stage, what each stage needs before it starts, and mark which Stage 3 jobs are non-blocking and why.
+</Prompt>
+
+<Prompt id="cicd-6">
+  The visual regression job uses `continue-on-error: true` and a `workflow_dispatch` gate for baseline regeneration. Explain the technical reason each of these choices exists and what would go wrong without them.
+</Prompt>
+
+<Prompt id="cicd-7">
+  `setup-node` with `cache: 'npm'` is described as the highest-leverage single-line CI optimisation. Quantify the claim: what does it change, and why does the change compound across a team?
+</Prompt>
+
+<Prompt id="cicd-8">
+  A Lighthouse-CI job is configured with score budgets but the check is marked "informational" in branch protection. Argue that this is worse than having no Lighthouse check at all.
+</Prompt>
+
+<Prompt id="cicd-9">
+  Floating a GitHub Actions version reference to `@main` is a supply-chain risk. Explain the attack vector and name two safer alternatives ordered by strength.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="cicd-task-1" rubric="cicd-rubric-v1">
+  Produce a production-shaped `ci.yml` for a project that has at least one Playwright or API test suite. Your pipeline must implement the following disciplines — justify each block in a companion rationale document.
+
+  **Required pipeline blocks:**
+
+  1. **Dependency cache:** `setup-node` (or equivalent) with cache enabled. Show the before/after cold-vs-warm timing difference for your project.
+
+  2. **Hermetic test environment:** GHA `services:` block for your project's database (or Testcontainers equivalent). No shared dev database. Include the health-check options.
+
+  3. **Staged gating:** at least two stages where Stage 2 has `needs:` pointing at Stage 1 green.
+
+  4. **Artefact upload on failure:** upload a test report, traces, or screenshots with `if: always()`. Justify whether to upload on every run or only on failure and what each choice costs.
+
+  5. **Retry cap:** set `retries: 1` (or equivalent). Explain why a higher number would be wrong.
+
+  6. **One enforced quality gate:** Lighthouse-CI, axe-core, or visual snapshot diff. The gate must be a required check — not advisory. Show the branch-protection or `continue-on-error: false` configuration.
+
+  7. **Pinned action versions:** every `uses:` reference is pinned to a major version tag or commit hash. No floating references.
+
+  **Companion rationale document (plain text or markdown):**
+
+  For each block above, answer in 2–3 sentences: (a) what does this block protect against, (b) what would break without it, (c) what does it cost (time, money, or complexity).
+
+  Also include a **local-vs-CI parity note** (≤150 words): name one place where your local environment deliberately differs from CI, and explain why that difference is correct rather than a gap to close.
+
+  Rubric (revealed after submission):
+  - Does the dependency cache include a measured timing improvement, not just the configuration? Aspirational numbers fail.
+  - Is the hermetic DB per-job (destroyed after the job) or per-session (shared across jobs)? Per-session fails the hermeticity rubric.
+  - Is the artefact upload `if: always()` or `if: failure()`? If `if: success()`, this is an automatic fail.
+  - Is the retry count capped at ≤2? Any number above 2 must be explicitly justified; uncapped retries fail.
+  - Is the quality gate a required check (hard block) or advisory (informational)? Advisory fails.
+  - Are all `uses:` references pinned? Any `@main` or `@latest` reference fails.
+  - Does the rationale document answer all three questions per block (what it protects, what breaks without it, what it costs)? Missing any one question for any block is a fail.
+  - Does the local-vs-CI parity note name a specific mechanism (e.g., `E2E_OAUTH_MOCK`, visual baselines, timezone), not just "environments are different"?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="cicd-feynman-1" wordTarget={150}>
+  Explain CI/CD for testing to a developer who thinks "the tests pass locally so the PR is ready." Cover: why "passes locally" is a necessary but not sufficient condition, what hermeticity means and why a shared dev database violates it, and why uploading test artefacts only on success is the wrong default. Give one concrete example of a failure mode that CI would catch but a local run would not. Rubric (revealed after submit): Did you explain hermeticity in terms of environment differences, not just "it's isolated"? Did you name a concrete artefact (trace, screenshot, HAR) and explain what it reveals? Did you avoid the word "pipeline" as a synonym for "CI" without explaining what it means? Did your local-vs-CI failure example name a specific mechanism (OS case-sensitivity, timezone, shared DB state, runner provisioning jitter) rather than "environments differ"?
+</Feynman>
