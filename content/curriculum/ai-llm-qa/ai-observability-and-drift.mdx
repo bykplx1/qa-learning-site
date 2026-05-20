@@ -1,0 +1,205 @@
+---
+slug: ai-observability-and-drift
+title: AI Observability and Drift
+cluster: ai-llm-qa
+layer: patterns
+prerequisites:
+  - observability-for-testers
+  - eval-design
+  - llm-fundamentals-for-testers
+related:
+  - ai-safety-testing
+  - rag-testing
+  - prompt-engineering-regression
+  - chaos-and-resilience-testing
+  - performance-testing
+  - risk-based-testing
+tags: [ai-observability, drift, eval-in-prod, traces, prompt-logging, otel-genai, refusal-rate, cost-as-signal]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+AI observability is **the discipline of seeing what an LLM-integrated system actually does in production — across inputs, outputs, retrieved context, tool calls, costs, latencies, eval signals, and user feedback — and knowing when its behaviour drifts.** It is the LLM-era extension of the three pillars from [[observability-for-testers]]: traces, metrics, and logs remain, joined by three new signals — *evals-as-signal* (quality checks on live traffic), *prompt/response logs* (the full assembled prompt and full output), and *drift metrics* (input, output, and judge-score distributions each shifting independently over time).
+
+The load-bearing claim names three inseparable roles: **the eval is the contract; the trace is the evidence; the drift metric is the alarm.** A team with evals but no traces (or traces but no drift watch) is missing a leg. And eval-in-prod is simply the [[chaos-and-resilience-testing]] method applied to quality: define steady state, observe, alert on deviation.
+
+> Release evals are a point-in-time snapshot. Observability is the heartbeat that tells you when production has drifted away from the snapshot — before a user does.
+
+## Diagram
+
+<Diagram caption="The four signal layers of AI observability feeding the eval-in-prod loop, and the independent drift axes a tester must watch — showing where the trace, the prompt log, and the drift alarm each do their distinct job">
+```
+FOUR SIGNAL LAYERS (one production LLM call)
+────────────────────────────────────────────
+① TRACE            end-to-end shape: prompt → retrieval → tool calls →
+                   model version → latency components   →  REPRODUCE bugs
+② PROMPT/RESP LOG  full ASSEMBLED prompt (system+template+few-shot+user+
+                   retrieved context) + full output     →  EVIDENCE
+③ EVAL SIGNALS     rubrics on sampled live traffic +
+                   golden replay + feedback-derived      →  CONTRACT
+④ DRIFT METRICS    distributions of in/out/judge-score,
+                   refusal %, cost, latency, fingerprint →  ALARM
+
+           the eval is the contract · the trace is the evidence
+                       · the drift metric is the alarm
+
+
+EVAL-IN-PROD LOOP  (= the chaos method, applied to quality)
+─────────────────────────────────────────────────────────────
+  DEFINE STEADY STATE   "faithfulness ≥ 0.9, refusal ≤ 3%, p95 TTFT < 1.2s"
+        ↓ sample 5–10% of traffic, stratified by feature/language/model
+  OBSERVE               run rubrics with a cross-family judge model
+        ↓
+  ALERT ON DEVIATION    drift > baseline noise → page on-call + open issue
+
+
+DRIFT IS MULTI-AXIS  (conflating axes → alarm fatigue + wrong fixes)
+─────────────────────────────────────────────────────────────────────
+  input drift     users ask different things
+  output drift    same input, different answer  ← often a model upgrade
+  judge drift     the judge model itself changed
+  refusal drift   cheap leading indicator of provider-side model change
+  cost drift      a quality signal in disguise (longer prompt? abuse? upgrade?)
+  fingerprint     `system_fingerprint` changed → provider shipped a new build
+```
+</Diagram>
+
+## Worked Example
+
+### A 4× cost spike — the alarm, the evidence, the fix
+
+A team's spend dashboard jumps 4× at 14:30 UTC. There were no deploys. The first instinct is "the provider raised prices" — wrong, and a wasted afternoon. Here is the observability walk that finds the truth in minutes.
+
+**The mistake that made an earlier incident unsolvable:** the previous quarter, this team logged *only the user message*. When quality regressed they could see *that* outputs got worse but never *why* — the assembled prompt that actually reached the model was never captured. The fix they had since shipped: log the **full assembled prompt** (system + template + few-shot + user + retrieved context) as one field, plus the model output, on every call.
+
+```jsonc
+// One wide-event span per LLM call (OTel GenAI semantic conventions).
+// This single span answers almost any question a tester asks for 6 months.
+{
+  "name": "chat.completion",
+  "gen_ai.system": "openai",
+  "gen_ai.request.model": "gpt-4o-2024-08-06",
+  "gen_ai.response.system_fingerprint": "fp_8b2e1c",   // ← provider build id
+  "gen_ai.usage.input_tokens": 5120,                    // ← spiked from ~1200
+  "gen_ai.usage.output_tokens": 240,
+  "gen_ai.usage.reasoning_tokens": 0,
+  "gen_ai.response.finish_reason": "stop",
+  "app.prompt_hash": "a17f...",                          // bucket traffic by this
+  "app.assembled_prompt": "‹system›…‹few-shot×N›…‹user›…",
+  "app.eval.faithfulness": 0.91,
+  "app.feedback": null,
+  "app.cost_usd": 0.041,
+  "app.latency.ttft_ms": 680,
+  "app.latency.gen_ms": 1120
+}
+```
+
+Drilling into the spiking traffic, the spike concentrates on one feature, and the `input_tokens` field has quadrupled while `output_tokens` is flat. The `app.assembled_prompt` log reveals it: a template change duplicated a few-shot example block **5×**. Cost was the *alarm*; the assembled-prompt log was the *evidence*; the fix is a prompt revert plus a regression test asserting the rendered prompt's token budget. **Cost observability is quality observability** — cost spikes surface many regressions earlier than eval-in-prod does.
+
+### A silent refusal-drift catch
+
+A separate dashboard tracks **refusal rate per feature** (a cheap string-match metric). It jumps 4 points one Tuesday morning — again, no deploys. The `system_fingerprint` field changed the same morning: the provider rolled out a new model build whose refusal training shifted. Without the fingerprint logged, "the bot got more cautious on Tuesday" stays an unfalsifiable anecdote. The team adds a fingerprint-change alert. This is drift detection in one metric: **refusal rate is a leading indicator, and the fingerprint is the explanation.** A production LLM bug report that lacks trace + prompt log + fingerprint is unreproducible — see [[defect-lifecycle-and-bug-reporting]].
+
+### Eval-in-prod with sampling
+
+Running rubrics on 100% of traffic is prohibitively expensive; running on 0.1% is statistically dead. The team samples **5–10% stratified by feature and language**, over-samples known-hard rows, and runs a four-rubric eval (faithfulness, answer relevance, refusal correctness, format compliance) with a cross-family judge — the same rubrics from [[eval-design]] that gate releases, now a live heartbeat. Plotting faithfulness over time shows a quiet −3-point slide over ten days, correlating with a prompt change on day 4 and a fingerprint shift on day 6. The release eval would never have caught it; it had already passed.
+
+## Common Pitfalls
+
+- **Logging only the user message.** Failure: production bugs are unreproducible because the prompt that reached the model was never captured. Fix: log the *full assembled prompt* (system + template + few-shot + user + retrieved context) plus the full output. Why it happens: the template lives in code, so developers assume they already know the prompt — but render-args and retrieved context are where bugs hide.
+
+- **Not logging `system_fingerprint` / model version.** Failure: silent provider-side model drift looks like an unexplained quality wobble. Fix: log every model identifier and version field the provider returns, and alert on changes. Why it happens: the model ID looks stable ("gpt-4o"), masking that the underlying build changed beneath it.
+
+- **Aggregating quality without stratification.** Failure: a per-tenant or per-language quality drop is invisible inside a healthy global average. Fix: stratify dashboards by feature, model, language, tenant, and prompt-hash. Why it happens: aggregate metrics are the easiest to build and the easiest to be fooled by.
+
+- **Eval-in-prod on 100% of traffic.** Failure: the quality heartbeat costs as much as serving, so it gets switched off. Fix: sample 5–10% with stratification; over-sample adversarial/hard cases. Why it happens: "measure everything" feels rigorous but ignores that representative sampling reaches the same signal far cheaper.
+
+- **Treating user feedback as truth.** Failure: product decisions chase a vocal, unsatisfied 1–5% who actually click thumbs-down. Fix: combine explicit feedback with passive signals — regenerate rate, copy rate, conversation length, abandon rate. Why it happens: explicit feedback is easy to read and feels like the user's voice, but it is sparse and biased.
+
+- **No drift alarm on refusal rate or cost.** Failure: two of the cheapest leading indicators of model drift go unwatched until a user complains. Fix: alert on refusal-rate movement > ~2× baseline noise and on cost-per-call/feature anomalies. Why it happens: teams instrument the expensive eval and skip the cheap string-match and arithmetic signals that fire earliest.
+
+- **Logging plain-text prompts containing PII.** Failure: the debug log becomes a compliance liability under GDPR/CCPA and EU AI Act retention rules. Fix: tiered logging — redacted at rest, full only in a short-retention access-controlled debug tier; persist an audit trail for high-risk systems. Why it happens: full plaintext is the most useful for debugging, so privacy gets deferred until an audit forces it.
+
+## Retrieval Prompts
+
+<Prompt id="aiobs-1">
+  Name the four signal layers of AI observability. For each, give one bug class it uniquely surfaces.
+</Prompt>
+
+<Prompt id="aiobs-2">
+  A teammate proposes logging only the user message to save storage. Make the case for logging the full *assembled* prompt instead, and name the specific bug class plain-message logging cannot reproduce.
+</Prompt>
+
+<Prompt id="aiobs-3">
+  Define `system_fingerprint`. What does it tell you that the model ID (e.g. "gpt-4o") alone does not, and which drift axis does it explain?
+</Prompt>
+
+<Prompt id="aiobs-4">
+  A cost graph shows a 4× spike with no deploy. Walk through how observability lets you classify it as regression vs. abuse vs. upgrade-driven, naming the evidence each classification requires.
+</Prompt>
+
+<Prompt id="aiobs-5">
+  Define drift in the LLM-observability sense. Name three orthogonal drift axes a production system must monitor separately, and explain why conflating them causes alarm fatigue.
+</Prompt>
+
+<Prompt id="aiobs-6">
+  Why is refusal rate a high-ROI leading indicator of model drift? What does a sudden jump with no merged code change usually mean?
+</Prompt>
+
+<Prompt id="aiobs-7">
+  A user reports "the bot was wrong." You have their user ID and a timestamp. Walk through the observability steps to reproduce and diagnose the call, naming each artefact you retrieve from the trace.
+</Prompt>
+
+<Prompt id="aiobs-8">
+  Eval-in-prod sampling — why is 100% too expensive and 0.1% statistically dead? Describe a sampling design (rate + stratification) that reaches usable quality signal cheaply.
+</Prompt>
+
+<Prompt id="aiobs-9">
+  Explain why eval-in-prod is "the chaos-engineering analogue for quality." Map the chaos steps (steady state → observe → alert) onto the eval-in-prod loop.
+</Prompt>
+
+<Prompt id="aiobs-10" requiresDiagram>
+  Sketch a single wide-event span for one LLM call. Mark the GenAI semantic-convention attributes and show where eval scores, user feedback, and the model fingerprint attach.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="aiobs-task-1" rubric="aiobs-rubric-v1">
+  Build the observability story for one LLM feature (the QA Learning site's, or a system you have access to). Produce a document a team could implement from.
+
+  **Deliverable 1 — Trace spec.** The OTel span shape per LLM call: span name, attributes using GenAI semantic conventions (`gen_ai.system`, `gen_ai.request.model`, token usage, finish reason, `system_fingerprint`), and child spans for retrieval / tool calls / reranking. Include one worked sample span as JSON.
+
+  **Deliverable 2 — Prompt-log spec.** What is logged at each call (full assembled prompt, model output, fingerprint, eval scores, feedback). A retention policy and explicit PII-redaction rules (what is redacted, in which tier, who can access the full tier).
+
+  **Deliverable 3 — Eval-in-prod design.** Sampling rate and stratification, the rubrics, the judge model (note any cross-family choice), alerting thresholds, and the baseline-comparison method. State why your sample size is statistically usable.
+
+  **Deliverable 4 — Drift dashboard.** The named metrics across *multiple* drift axes (input, output, judge, refusal, cost, latency, fingerprint), each with an alert threshold and a one-line on-call response.
+
+  **Deliverable 5 — Cost-attribution model.** How spend is attributed per user / tenant / feature / model — actionable, not a single aggregate number.
+
+  **Deliverable 6 — Feedback-loop design.** Which UX signals are captured (thumbs, regenerate, copy, abandon), how they roll into the eval, and an explicit note on the bias/sparsity of explicit feedback.
+
+  **Deliverable 7 — Trace-based incident replay.** Given a fabricated user complaint (user ID + timestamp), the step-by-step retrieval of artefacts that reaches an *actual root cause*, not "the model said the wrong thing."
+
+  Rubric (revealed after submission):
+  - Did the trace spec use OTel GenAI conventions, or invent a custom schema?
+  - Did the prompt-log spec address PII / redaction and retention explicitly?
+  - Did the eval-in-prod design name a sampling rate, stratification, and a statistical-validity argument?
+  - Did the drift dashboard cover multiple independent axes, not just one?
+  - Was cost attribution actionable (per-tenant / per-feature), or only aggregate?
+  - Did the feedback-loop design acknowledge the bias and sparsity of explicit signals?
+  - Did the incident replay reach a concrete root cause and name the fix's owning artefact (retrieval config, prompt, alert)?
+  - Bonus: did you identify a real gap in the target system's current observability and propose a specific fix?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="aiobs-feynman-1" wordTarget={150}>
+  Explain to an engineer who says "we ran the eval before release and it passed, so we're done" why AI observability is still required. Cover: why a release eval is a point-in-time snapshot and production drifts away from it (name a concrete mechanism — provider fingerprint change, prompt regression, input-distribution shift); what "the eval is the contract, the trace is the evidence, the drift metric is the alarm" means in practice; and why eval-in-prod is the same method as chaos engineering applied to quality. Give one concrete example of a regression that the release eval passed but production observability would catch. Rubric (revealed after submit): Did you name a specific drift mechanism rather than "things change"? Did you explain all three roles (contract / evidence / alarm) and what breaks if one is missing? Did you connect eval-in-prod to the chaos loop (steady state → observe → alert) rather than just asserting they're similar? Was your example a real failure mode (refusal drift, cost spike from a prompt regression, faithfulness slide after a fingerprint change) and not "the model got worse"?
+</Feynman>
