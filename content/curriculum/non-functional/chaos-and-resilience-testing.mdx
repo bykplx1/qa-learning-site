@@ -1,0 +1,303 @@
+---
+slug: chaos-and-resilience-testing
+title: Chaos and Resilience Testing
+cluster: non-functional
+layer: systems
+prerequisites:
+  - observability-for-testers
+  - performance-testing
+  - risk-based-testing
+related:
+  - security-testing
+  - database-testing
+  - cicd-for-testing
+  - shift-left-and-shift-right
+  - defect-lifecycle-and-bug-reporting
+tags: [chaos-engineering, resilience, fault-injection, gameday, rto-rpo, blast-radius, circuit-breaker]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+Chaos engineering is **the practice of deliberately injecting failure into a running system to learn how it behaves under stress — before production answers that question unprompted.** It is not "randomly break things"; it is hypothesis-driven experimentation with a controlled blast radius, following the same scientific method applied to operational failure.
+
+The discipline borrows five explicit steps: define steady state (what does healthy look like, measurably?), form a hypothesis ("we believe the system will maintain steady state if X fails"), design the minimum viable experiment, constrain the blast radius, then run, observe, and harden. The load-bearing claim: **a system's resilience is whatever you have evidence for, no more.** "We have multi-region failover" is a claim; a chaos experiment is the test that converts the claim into evidence — or into a bug report.
+
+Chaos is also **post-observability**: without [[observability-for-testers]], you cannot define steady state, detect deviation, or diagnose causes. Observability is the prerequisite; chaos is the discipline it unlocks.
+
+> The resilience you have claimed but never tested is hope. The chaos experiment converts hope into evidence — or into a backlog item.
+
+## Diagram
+
+<Diagram caption="Chaos experiment lifecycle and the retry-storm failure pattern that chaos commonly surfaces — showing where amplification occurs and where circuit breakers and jitter break it">
+```
+CHAOS EXPERIMENT LIFECYCLE
+──────────────────────────
+1. DEFINE STEADY STATE
+   "Auth success rate > 99.9%, p95 latency < 500 ms"
+   ↓  (must be observable before you start)
+2. FORM HYPOTHESIS
+   "If the OAuth provider times out, the app shows a graceful error
+    within 5 s and does not crash"
+   ↓  (falsifiable — "let's see what happens" is not a hypothesis)
+3. MINIMUM VIABLE EXPERIMENT
+   Inject 100% packet loss on the OAuth endpoint for 60 s
+   Blast radius: staging only, 0 real users affected
+   Kill switch: toxiproxy `DELETE /proxies/oauth` restores service instantly
+   ↓
+4. RUN · OBSERVE · LEARN
+   Observe steady-state metrics during injection
+   Did hypothesis hold? Yes → expand scope or move to next scenario
+                        No  → harden, re-test
+   ↓
+5. HARDEN
+   Code the lesson: add timeout, fallback, alert, runbook entry
+   (Findings that don't reach the backlog make chaos theatre, not discipline)
+
+
+RETRY STORM — THE MOST COMMON CHAOS FINDING
+────────────────────────────────────────────
+Service A → Service B (no backoff, 3 retries)
+
+  B fails once: A sends 1 × 3 retries = 3 requests during B's failure window
+  If 1000 users hit A: 3,000 requests pile on B while it is already saturated
+  B falls further; A retries faster → amplification spiral
+
+BREAK THE SPIRAL WITH:
+  ① Exponential backoff:  retry after 1 s, 2 s, 4 s, 8 s  (not 1 s, 1 s, 1 s)
+  ② Full jitter:          randomise the wait — spread the herd
+  ③ Retry budget:         max N retries per time window, then fast-fail
+  ④ Circuit breaker:
+       CLOSED  → normal calls pass through
+       OPEN    → threshold failures reached → stop calling B, return fast-fail
+       HALF-OPEN → probe one request; if it succeeds, close circuit
+
+
+RTO / RPO — THE RESILIENCE SLOs
+─────────────────────────────────
+  RTO (Recovery Time Objective):  how long to restore service after failure
+  RPO (Recovery Point Objective): how much data can be lost (time window)
+
+  Chaos experiment measures both:
+    inject failure → time recovery → measure data delta
+    Without measurement: RTO/RPO are aspirations, not SLOs
+```
+</Diagram>
+
+## Worked Example
+
+### First chaos experiment: hypothesis → finding → hardening
+
+A team believes their Astro site degrades gracefully when the Neon Postgres database becomes unavailable. They define the steady state:
+
+```
+Steady state (must be observable before the experiment):
+  - Homepage load: HTTP 200, p95 < 800 ms
+  - Lesson pages: HTTP 200 (or pre-rendered 200 from CDN cache)
+  - API /progress:  HTTP 503 with JSON body {"error":"service_unavailable"}
+                   — NOT an unhandled 500 or a JS crash
+  - No uncaught exceptions in server logs
+```
+
+Hypothesis: "If Neon Postgres returns connection timeouts for 90 seconds, the site serves pre-rendered lesson pages from Vercel's CDN edge cache and API calls return structured 503 responses. The server process does not crash."
+
+Minimum viable experiment using Toxiproxy in a local/staging environment:
+
+```bash
+# Start Toxiproxy and create a proxy in front of the DB
+toxiproxy-server &
+toxiproxy-cli create neon_proxy --listen localhost:5433 --upstream neon-host:5432
+
+# Point the app at the proxy (DATABASE_URL points to localhost:5433)
+
+# Run baseline: confirm steady state
+curl -s https://staging.example.com/api/progress | jq .
+
+# Inject timeout toxic — 100% of connections time out after 100 ms
+toxiproxy-cli toxic add neon_proxy -t timeout -a timeout=100
+
+# Observe for 90 seconds:
+#   - Does the homepage still serve?      (CDN cache)
+#   - Does /api/progress return 503?      (structured error)
+#   - Are there uncaught crashes?         (server logs)
+
+# Remove toxic — restore the proxy
+toxiproxy-cli toxic remove neon_proxy -n timeout_1
+
+# Record: hypothesis held / did not hold
+```
+
+**Actual finding:** the API endpoint threw an unhandled `ECONNREFUSED` that surfaced as HTTP 500 with a raw stack trace — not the expected structured 503. The server process stayed up, but the error response revealed the internal dependency. Two backlog items:
+
+1. Wrap the Neon client call in a try/catch; return `{ error: "service_unavailable" }` with status 503.
+2. Add a Postgres connection-error alert to the observability dashboard (steady-state metric that was missing).
+
+### Chaos in CI: Toxiproxy integration test
+
+The same failure class can be caught at PR time, cheaply, without a GameDay:
+
+```ts
+// tests/integration/progress-resilience.test.ts
+import { createProxy, addToxic, removeToxic } from './helpers/toxiproxy';
+
+describe('progress API resilience', () => {
+  let proxy: ToxiproxyProxy;
+
+  beforeAll(async () => {
+    proxy = await createProxy('db', { listen: 'localhost:5433', upstream: process.env.DB_HOST });
+  });
+
+  afterAll(() => proxy.delete());
+
+  it('returns 503 JSON when DB times out', async () => {
+    await addToxic(proxy, { type: 'timeout', attributes: { timeout: 100 } });
+
+    const res = await fetch('http://localhost:4321/api/progress');
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body).toHaveProperty('error', 'service_unavailable');
+
+    await removeToxic(proxy, 'timeout_1');
+  });
+});
+```
+
+This test catches the same "unhandled DB failure → 500" regression every time a PR touches the progress API, at integration-test cost (~1 s), not GameDay cost (~hours). This is the **chaos-in-CI** pattern: Toxiproxy in an integration test suite is the shift-left form of chaos; the GameDay is the shift-right confirmation at production scale.
+
+### Backup-restore drill: the most skipped chaos experiment
+
+A team claims "RTO for database failure is 2 hours." They have never tested it. The drill:
+
+```
+1. Take a full Neon backup of the staging database (record timestamp → RPO baseline)
+2. Drop all tables in staging: DROP SCHEMA public CASCADE; CREATE SCHEMA public;
+3. Start timer
+4. Restore from backup (follow your documented runbook)
+5. Validate data integrity: row counts, spot-checks on recent records
+6. Stop timer → RTO measurement
+7. Record delta between backup timestamp and first restored record → RPO measurement
+```
+
+Common findings on first drill: the restore runbook references a tool version that was upgraded 6 months ago, the backup download takes 40 minutes (not "a few minutes"), and one table was excluded from backups by a misconfigured filter. **The Schrödinger backup is the one that hasn't been tested for restore.** Run drills quarterly; the skills decay.
+
+## Common Pitfalls
+
+- **No defined steady state before the experiment.** Without a quantified, observable steady state ("auth p95 < 500 ms, error rate < 0.1%"), the question "did the experiment fail?" is unanswerable. Fix: write down the steady state — as observable metrics, not prose — before designing the experiment. The steady state is the oracle (back-reference: [[test-oracles-and-prioritization]]).
+
+- **Skipping blast-radius design.** A chaos experiment that takes down production for all users is worse than the failure it was testing against. Fix: start with the smallest possible scope (one service instance, one region, 1% of traffic in staging) and have an explicit kill switch rehearsed before the experiment starts. Expand scope only after the small version passes.
+
+- **Running chaos without observability.** If you cannot observe the system during the experiment, you cannot detect steady-state deviation, cannot diagnose causes, and cannot tell when recovery completes. Fix: build [[observability-for-testers]] first; chaos is the discipline observability unlocks, not the starting point.
+
+- **Findings that die in Slack.** An experiment that surfaces a retry storm or a missing circuit breaker, then records the finding in a Slack thread that nobody follows up on, makes chaos theatre rather than discipline. Fix: every finding becomes a dated backlog item (code fix, runbook update, new alert, or new test). Track to completion. Findings without backlog items have a half-life of one sprint.
+
+- **Chaos as a one-time event.** A single GameDay is not a chaos programme. Resilience decays as infrastructure and dependencies change. Fix: schedule recurring GameDays (quarterly is a common cadence); treat the schedule as a recurring calendar commitment, not a project milestone.
+
+- **Retries without backoff, jitter, or a budget.** Synchronised retries amplify load on a failing dependency — a 3× retry multiplier turns 1 RPS of failures into 4 RPS, potentially re-saturating a dependency that was recovering. Fix: exponential backoff, full jitter, and a retry budget (max N retries per time window) on every external call. The chaos experiment that tests this is the one that catches the missing implementation.
+
+- **Backup-restore never drilled.** A backup that has never been restored is a hypothesis, not a recovery mechanism. Fix: run a restore drill quarterly against a non-production environment. Time the restore; validate the data; update the runbook. The drill will find issues; finding them in a drill is orders of magnitude cheaper than finding them in an incident.
+
+## Retrieval Prompts
+
+<Prompt id="chaos-1">
+  State the five steps of a chaos experiment. For each step, give a one-sentence concrete example for a Postgres-failover experiment on a web application.
+</Prompt>
+
+<Prompt id="chaos-2">
+  Define blast radius. Why must it be constrained before any chaos experiment begins, and what is the role of a kill switch in that constraint?
+</Prompt>
+
+<Prompt id="chaos-3">
+  Explain a retry storm. Walk through the load-amplification arithmetic when Service A has no backoff and retries Service B three times. Name the three mitigations and explain how each breaks the amplification.
+</Prompt>
+
+<Prompt id="chaos-4">
+  Distinguish RTO and RPO. Give one example of a chaos experiment that measures each. Why are they "aspirations" until a drill produces an actual measurement?
+</Prompt>
+
+<Prompt id="chaos-5">
+  Walk through the three states of a circuit breaker (closed, open, half-open). For each state, describe the trigger condition that causes the transition and what the caller receives.
+</Prompt>
+
+<Prompt id="chaos-6">
+  Why is observability a prerequisite for chaos engineering, not just a complement to it? Name two specific things you cannot do in a chaos experiment if observability is absent.
+</Prompt>
+
+<Prompt id="chaos-7">
+  A GameDay surfaces this finding: the on-call engineer could not locate the rollback button at 3 a.m. Is this a code bug or a process bug? Describe the correct fix and which artefact it updates.
+</Prompt>
+
+<Prompt id="chaos-8">
+  Distinguish chaos engineering from load testing (from [[performance-testing]]). Both inject stress on a system — what is the specific question each one answers that the other does not?
+</Prompt>
+
+<Prompt id="chaos-9" requiresDiagram>
+  Sketch the retry-storm amplification diagram. Mark the point where exponential backoff stops the amplification, and the point where the circuit breaker prevents the load from reaching the downstream at all.
+</Prompt>
+
+<Prompt id="chaos-10">
+  A team claims "we run chaos in CI with Toxiproxy, so we don't need GameDays." Name two failure classes that CI-level chaos will not catch, and explain why the production GameDay is still necessary.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="chaos-task-1" rubric="chaos-rubric-v1">
+  Design and document a half-day GameDay for the QA Learning site (or a non-trivial system you have access to). A GameDay is a scheduled, facilitated event where the team runs chaos experiments together, watches the system, and captures findings. Your deliverable is an executable run-book that a facilitator could pick up and run.
+
+  **Deliverable 1 — Steady-state definition**
+
+  Before designing any experiment, write down the steady state:
+  - At least 3 observable metrics with quantified thresholds (e.g., "homepage HTTP 200, p95 < 800 ms").
+  - For each metric: where it is measured (which dashboard, which query, which tool).
+  - A statement of the observability prerequisites — if any metric is not currently observable, name it as a precondition gap rather than pretending it will "figure itself out."
+
+  **Deliverable 2 — Scenario list (3–5 experiments)**
+
+  For each experiment:
+  - **Dependency targeted** and failure mode injected (be specific: timeout, packet loss, 500 response, disk full — not "make it fail").
+  - **Hypothesis** — a falsifiable prediction ("the system will X when Y fails"), not "let's see what happens."
+  - **Blast-radius plan** — the smallest possible scope (one instance? staging only? 1% traffic?), plus how you expand if the small version passes.
+  - **Abort condition and kill switch** — the exact action that stops the experiment instantly if steady state degrades unexpectedly.
+  - **Expected steady-state behaviour** — what the metrics should show during the injection.
+
+  Order the scenarios: simplest and lowest blast radius first. Multi-region failover as Scenario 1 fails the rubric.
+
+  **Deliverable 3 — Participant roles**
+
+  Name four roles: facilitator (runs the agenda), experimenter (executes the injection), observer (watches dashboards), scribe (records findings). For each role, write one sentence describing their specific responsibility during an active experiment.
+
+  **Deliverable 4 — Run-of-show (time-boxed agenda)**
+
+  A time-boxed agenda for a 3-hour session: pre-brief (15 min), 3 experiments (~30 min each including observation and debrief), and a post-mortem (30 min). Include the clock time for each block.
+
+  **Deliverable 5 — Findings template**
+
+  A reusable template for each experiment's findings, capturing: hypothesis, observed behaviour, delta (what differed from hypothesis), follow-ups (code fixes, runbook updates, new alerts, new tests). The template must have slots for both code findings and operational findings.
+
+  **Deliverable 6 — One executed dry-run**
+
+  Pick the simplest scenario from your list. Run it in a local or staging environment. Capture:
+  - The actual observed behaviour during injection.
+  - Whether the hypothesis held. If it did not, state what actually happened.
+  - At least 1 backlog item produced by the finding (code fix, runbook update, or new test). Write it as a proper issue title and description, not a bullet point.
+  - If you added a Toxiproxy integration test that catches the same class of failure at PR time, describe it.
+
+  Rubric (revealed after submission):
+  - Does the steady state use quantified observable metrics, not prose descriptions? "The site works" fails. "Homepage HTTP 200, p95 < 800 ms" passes.
+  - Does each scenario have an explicit, falsifiable hypothesis — not "let's see what happens"? Unfalsifiable hypotheses fail.
+  - Does each scenario name its blast-radius scope and an abort condition with a kill switch? Missing either fails.
+  - Do the scenarios start small? If multi-region failover or "take down the database" appears as Scenario 1, that's a fail.
+  - Does the findings template have distinct slots for code findings and operational findings (runbook gaps, dashboard gaps)? A single "findings" slot fails.
+  - Does the dry-run produce an actual backlog item — not "we found some issues"? A finding without an actionable item fails.
+  - Bonus: did the candidate propose a Toxiproxy (or equivalent) integration test that catches the same failure class at PR time, naming it as chaos-in-CI?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="chaos-feynman-1" wordTarget={150}>
+  Explain chaos engineering to an engineer who thinks "our monitoring will catch any problem before users notice." Cover: why monitoring catches problems that have already happened (and why chaos is different), what a steady-state hypothesis is and why "let's see what happens" is not one, and why an untested failover mechanism is not a failover mechanism. Give one concrete example of a resilience bug that monitoring alone would not catch until production — but that a chaos experiment would have surfaced in staging. Rubric (revealed after submit): Did you distinguish monitoring (reactive, after the fact) from chaos (proactive, hypothesis-driven) without just saying "one is proactive and one isn't"? Did you define steady state in terms of observable metrics, not prose? Did you explain why "untested failover = no failover" with a mechanism (skills decay, config drift, infrastructure change) rather than a slogan? Did your concrete example name a specific failure mode (retry storm, circuit breaker not wired, backup corrupted, certificate expiry undetected) rather than "something bad"?
+</Feynman>
