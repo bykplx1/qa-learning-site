@@ -1,0 +1,179 @@
+---
+slug: defect-lifecycle-and-bug-reporting
+title: Defect Lifecycle & Bug Reporting
+cluster: functional-execution
+layer: systems
+prerequisites:
+  - qa-mindset
+  - test-oracles-and-prioritization
+  - risk-based-testing
+related:
+  - test-planning-cases-and-scenarios
+  - test-types-smoke-sanity-regression-uat
+  - unit-integration-e2e-boundaries
+  - test-management-tools
+tags: [defects, bug-reporting, triage, severity, lifecycle]
+estimatedEncodingMinutes: 20
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+
+## Core Idea
+
+A bug report is a **sales pitch**. Its job is to convince a developer — who has other things to do — that this specific defect is worth their next 30 minutes. Every section in the report exists to reduce the perceived cost of fixing it.
+
+The defect lifecycle is the state machine the report moves through: New → Triaged → In Progress → Fixed → Verified → Closed. The off-happy-path states — Cannot Reproduce, Duplicate, Won't Fix, By Design — are where team culture becomes visible. A team that closes "Cannot Reproduce" without attaching evidence of what they tried is a team that treats bugs as tickets, not conversations.
+
+Two facts anchor the whole topic. First: **Steps to Reproduce is the most-skipped, highest-value section** — the single most-cited reason for "cannot reproduce" closures is missing context the tester had but didn't write down. Second: **Severity and Priority are deliberately separate** — severity is what the defect does; priority is where it lands in the queue. They are decided by different people on different criteria and must never be collapsed.
+
+> A bug report is QA's most-read output. Investing in report quality has higher leverage than almost any other QA practice.
+
+## Diagram
+
+<Diagram caption="Defect lifecycle state machine, including the four off-happy-path transitions that reveal team culture">
+```
+                         ┌──────────────┐
+                         │   New/Open   │
+                         └──────┬───────┘
+                                │ assigned + scored
+                         ┌──────▼───────┐
+                   ┌────►│   Triaged    │◄──────────────────┐
+                   │     └──────┬───────┘                   │
+                   │            │ developer picks up         │
+                   │     ┌──────▼───────┐                   │
+                   │     │  In Progress │                    │
+                   │     └──────┬───────┘                   │
+                   │            │ code merged                │
+                   │     ┌──────▼───────┐                   │
+                   │     │    Fixed /   │                    │
+                   │     │   Resolved   │                    │
+                   │     └──────┬───────┘                   │
+                   │            │ QA verifies in test env    │
+                   │     ┌──────▼───────┐                   │
+                   │     │   Verified   │                    │
+                   │     └──────┬───────┘                   │
+                   │            │                            │
+                   │     ┌──────▼───────┐                   │
+                   │     │    Closed    │                    │
+                   │     └──────┬───────┘                   │
+                   │            │ regression found           │
+                   │            └───────────────────────────►│ (Reopened)
+                   │
+      Off-happy-path states (each is a conversation, not a termination):
+      ─────────────────────────────────────────────────────────────────
+      Cannot Reproduce  →  missing context; reopen with evidence triple
+      Duplicate         →  link primary; close secondary; track recurrence
+      Won't Fix         →  documented tradeoff; not silence
+      By Design         →  spec-clarity gap; escalate, don't dismiss
+```
+</Diagram>
+
+## Worked Example
+
+The same defect, two reports. The fix probability changes dramatically.
+
+**Bad report**
+
+> **Title:** "Search broken"
+> **Description:** "When I search nothing happens."
+
+Every section fails: the title is not triageable on a phone notification; "nothing happens" gives no expected vs. actual; no environment, no steps, no frequency, no impact. A developer who reads this has three options — close as cannot reproduce, ask for more information, or ignore it. None of these produces a fix today.
+
+**Good report**
+
+> **Title:** "Search returns no results for Cyrillic queries on Firefox 122 (works on Chrome 121)"
+>
+> **Steps to Reproduce:**
+> 1. Open the staging site on Firefox 122.0.1, Windows 11.
+> 2. Click the global search icon (top-right corner).
+> 3. Paste "программа" into the search field.
+> 4. Press Enter.
+>
+> **Expected:** Results listing for "программа" returned, consistent with Chrome behaviour.
+>
+> **Actual:** Empty results page, no error shown. Network panel shows `GET /search?q=программа` returned HTTP 200 with `{"results":[]}`. HAR file attached.
+>
+> **Frequency:** 10/10 attempts on Firefox 122; 0/10 on Chrome 121.
+>
+> **Impact:** Cyrillic-locale users (~12% of traffic per analytics) cannot use search at all.
+>
+> **Root-cause hypothesis:** Server-side query normalises input to ASCII before querying; see attached DB query log lines 14–18.
+>
+> **Severity:** High — feature broken for a named locale segment. **Priority:** High — locale segment is active.
+
+The diff: same defect, same developer, same afternoon. The second report is fixable by lunch. The first is a tracker entry that will age unresolved. The two changes with the highest leverage — the ones that converted "cannot reproduce" to "fixed" — are the numbered steps (environment-specific, no "the normal thing" verbs) and the attached evidence triple (HAR + DB query log).
+
+## Common Pitfalls
+
+- **Title says "X is broken".** Triagers read titles to prioritise; a vague title gets deprioritised. Fix: write the specific failure mode, the environment context, and the scope ("Search returns no results for Cyrillic queries on Firefox 122"). It should be triageable as a phone notification.
+- **Steps say "do the normal thing".** "The normal thing" is environment-dependent and undefined to the developer. Fix: numbered, explicit steps with browser version, OS, user role, and data state. The developer is not you — they don't know your environment.
+- **No frequency field.** Intermittent and consistent bugs have different fix paths and different severity implications. Fix: always state "X/Y attempts" or "100% on this environment" or "intermittent, ~3/10". A single reproduction is not "intermittent"; ten failed reproductions is not "consistent".
+- **No impact section.** Without it, triage is guessing at severity and priority. Fix: state who is affected, how badly, and reference any relevant data (% of users, revenue path, regulatory requirement). Impact drives the Severity score; Severity without an impact statement is an assertion, not evidence.
+- **Severity inflation — every report is "critical".** When every report is Sev-1, the rating system is dead and developers start ignoring the field. Fix: publish severity examples anchored to your product; require each report to cite which tier applies and why. The Boy Who Cried Sev-1 is an organisational failure that compounds.
+- **Closing "Cannot Reproduce" without attached evidence.** CNR without evidence means "I gave up", not "the defect doesn't exist". Fix: require CNR closures to include the environment tried, the steps followed, and the result observed. If the steps weren't followed exactly, the closure is invalid.
+- **Treating "By Design" as a permanent close.** If the user experienced a problem, the design may be wrong even if the code is correct. Fix: close "By Design" only when the spec is unambiguous and the experience is intentional; otherwise escalate as a spec-clarity issue — this is usually a higher-leverage win than a code fix.
+
+## Retrieval Prompts
+
+<Prompt id="dlbr-1">
+  A report's title is "Search broken". Rewrite it to pass the phone-notification triage test — the triager must be able to decide severity in 10 seconds without opening the full report.
+</Prompt>
+
+<Prompt id="dlbr-2">
+  Distinguish severity from priority with a concrete example where they legitimately diverge. Name who decides each, and explain why collapsing them into one field loses information.
+</Prompt>
+
+<Prompt id="dlbr-3">
+  A bug is marked "Cannot Reproduce" by the developer. List the evidence you gather or attach before reopening. Name each piece and explain in one sentence why it matters.
+</Prompt>
+
+<Prompt id="dlbr-4">
+  Name the "evidence triple" every well-formed UI bug report should carry. For each element, explain in one sentence what it reveals that the other two don't.
+</Prompt>
+
+<Prompt id="dlbr-5">
+  A team's reopen rate is 28% over the past quarter. Diagnose at least two process gaps this signal reveals. What would a reopen rate of 0.5% tell you instead?
+</Prompt>
+
+<Prompt id="dlbr-6">
+  A developer closes a defect "By Design" because the spec says the form submits without immediate postal-code validation. The user's order silently fails 24 hours later. Is this a valid close state? Explain your reasoning and name the correct escalation path.
+</Prompt>
+
+<Prompt id="dlbr-7">
+  Your repro steps say "log in as a standard user and do the checkout flow." Identify three specific failure modes this phrasing introduces, and rewrite the steps to eliminate them.
+</Prompt>
+
+<Prompt id="dlbr-8" requiresDiagram>
+  Sketch the defect lifecycle state machine including the four off-happy-path states. For each off-happy-path state, mark it as either a "conversation" (requires further action) or a "termination" (legitimately closes the report) and explain the distinction.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="dlbr-task-1" rubric="dlbr-rubric-v1">
+  Pick a real defect — one you found at work, or a public GitHub issue from an open-source project. Produce three drafts of the bug report.
+
+  **Draft 1 — bad:** Title only and a one-line description. No steps. (If the original is already at this level, use it directly.)
+
+  **Draft 2 — adequate:** Title, numbered steps, expected result, actual result, severity. No evidence triple.
+
+  **Draft 3 — publication-ready:** Title that passes the phone-notification test; full numbered repro steps with environment details (browser, version, OS, user role, data state); expected / actual / frequency / impact; evidence triple (console errors, network HAR or equivalent, DB/log state or equivalent); severity and priority both present with rationale; and one "why?" descent — a root-cause hypothesis, even a tentative one.
+
+  Submit all three drafts plus a 150-word reflection: what changed between Draft 2 and Draft 3, and which single change was the cheapest-but-most-valuable?
+
+  Rubric (revealed after submission):
+  - Does Draft 3's title pass the phone-notification test? A triager who cannot decide severity in 10 seconds is a fail.
+  - Are the repro steps numbered, environment-specific, and free of "the normal thing" verbs? Any step that says "do the typical X" is a fail.
+  - Is the evidence triple present (or its closest equivalent for the system)? Missing all three is a fail; missing one with an explanation is acceptable.
+  - Are severity and priority both present with rationale? Either missing is a fail.
+  - Does the reflection name a specific cheap-but-high-leverage upgrade? Most learners find one in the frequency field or the impact field — vague "I added more detail" is a fail.
+  - Does the root-cause hypothesis in Draft 3 name a mechanism, not just a symptom? "The search is broken" is a symptom; "the server normalises query strings to ASCII before querying the index" is a mechanism.
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="dlbr-feynman-1" wordTarget={150}>
+  Explain to a developer why writing a good bug report matters — specifically, why the report structure exists and what each section is doing. Make sure your explanation covers: what the report is trying to accomplish (hint: it's not a record), why "Steps to Reproduce" is the single most-skipped highest-value section, and why Severity and Priority must be kept separate. Give one concrete example of a report that would get fixed by lunch and explain what specifically makes it different from a report that will age in the tracker. Rubric (revealed after submit): Did you name the persuasion purpose without using the word "document"? Did you explain Steps to Reproduce in terms of the developer's experience, not the tester's effort? Did your concrete example include environment, frequency, and impact — not just steps?
+</Feynman>
