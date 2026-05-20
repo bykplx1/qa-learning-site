@@ -48,3 +48,6 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | automation-cicd/mobile-testing-overview | automation-cicd | shipped | n/a | Knowledge P4 (#181). New topic — no legacy precursor. layer: facts. PR: knowledge-p4/181-mobile-testing-overview. |
 | — | automation-cicd/cicd-for-testing | automation-cicd | shipped | n/a | Knowledge P4 (#182). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/182-cicd-for-testing. |
 | — | non-functional/database-testing | non-functional | shipped | n/a | Knowledge P5 (#186). New topic — no legacy precursor. layer: patterns. PR: knowledge-p5/186-database-testing. |
+| — | non-functional/accessibility-testing | non-functional | shipped | n/a | Knowledge P5 (#185). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/185-accessibility-testing. |
+| — | non-functional/performance-testing | non-functional | shipped | n/a | Knowledge P5 (#183). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/183-performance-testing. |
+| — | non-functional/security-testing | non-functional | shipped | n/a | Knowledge P5 (#184). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/184-security-testing. |
