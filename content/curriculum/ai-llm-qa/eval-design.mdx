@@ -1,0 +1,294 @@
+---
+slug: eval-design
+title: Eval Design
+cluster: ai-llm-qa
+layer: systems
+prerequisites:
+  - test-oracles-and-prioritization
+  - test-design-techniques
+  - risk-based-testing
+related:
+  - llm-fundamentals-for-testers
+  - rag-testing
+  - prompt-engineering-regression
+  - ai-safety-testing
+  - ai-observability-and-drift
+tags: [eval, llm-as-judge, golden-dataset, rubric-design, regression, non-determinism, confidence-intervals]
+estimatedEncodingMinutes: 25
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
+import Feynman from '../../../src/components/mdx/Feynman.astro';
+
+## Core Idea
+
+An **eval** is a test suite plus a graded outcome on a dataset, for a system whose outputs cannot be exactly predicted. It is the LLM-era equivalent of the integration test: it does not inspect model internals, it measures system behaviour over a representative input distribution.
+
+Three modalities exist: **rule-based** (regex, JSON-schema, must-contain/must-not-contain), **reference-based** (exact-match, F1, BERTScore against a known-correct answer), and **model-graded** (an LLM judge applies a written rubric to the candidate output). Each handles a different class of output; none can replace the others.
+
+The load-bearing principle: **an eval without a written rubric is a vibe check.** The team must answer "what makes this output good?" in writing before the eval runs. Without this, the eval grades whatever the grader feels that day. Once the dataset and rubric are fixed, the eval becomes the regression contract: every prompt edit, model upgrade, or retrieval-pipeline change is scored on the same terms. Changing the eval is a separate decision that requires re-baselining everything.
+
+> An eval without a rubric is a vibe check. The rubric is the assertion; the dataset is the fixture; together they make quality *defensible in writing*.
+
+## Diagram
+
+<Diagram caption="The three eval modalities, their grading targets, and the LLM-as-judge pipeline with judge-bias mitigations — showing where position bias, length bias, and self-bias enter and how orchestration neutralises each">
+```
+EVAL MODALITY SELECTION
+───────────────────────
+Output type          → Recommended modality
+─────────────────────────────────────────────────────────────────
+Format compliance    → Rule-based     (regex / JSON-schema / must-not-contain)
+Classification /     → Reference-based (exact-match · F1 · BERTScore vs
+  extraction /          a canonical answer key)
+  translation
+Open-ended           → Model-graded   (LLM judge + written rubric)
+  generation /
+  conversation /
+  faithfulness
+
+
+LLM-AS-JUDGE PIPELINE
+──────────────────────
+
+Candidate output ──────────────────────────────────┐
+                                                    ↓
+                         Judge model reads rubric + candidate output
+                         → "reason then score" (chain-of-thought first)
+                         → Likert / pairwise / binary rating
+                                                    ↓
+                            Score recorded
+                                                    ↓
+                    ┌── JUDGE BIAS MITIGATIONS ──────────────────┐
+                    │                                             │
+                    │  Position bias (10–20% swing in pairwise): │
+                    │    Score both (A vs B) and (B vs A)        │
+                    │    Take consensus; flag disagreements       │
+                    │                                             │
+                    │  Length bias (~5–10% toward longer text):  │
+                    │    Include length as a rubric covariate     │
+                    │    or use length-matched comparison         │
+                    │                                             │
+                    │  Self-bias (~5% toward same model family): │
+                    │    Use a DIFFERENT model family as judge    │
+                    │    or ensemble multiple judge families      │
+                    └─────────────────────────────────────────────┘
+
+
+WILSON SCORE CONFIDENCE INTERVAL vs SAMPLE SIZE
+─────────────────────────────────────────────────
+  N = 50 rows:   95% CI ≈ ±14 pp  (a 4 pp gain is invisible)
+  N = 200 rows:  95% CI ≈ ±7 pp   (a 4 pp gain is marginal)
+  N = 500 rows:  95% CI ≈ ±4 pp   (a 4 pp gain is detectable)
+  N = 2000 rows: 95% CI ≈ ±2 pp   (a 2 pp gain is reliable)
+
+  Rule: do not claim an improvement until CIs do not overlap.
+  At N=50, most LLM prompt-optimization gains are inside the noise floor.
+```
+</Diagram>
+
+## Worked Example
+
+### Building a minimum-viable eval for an incident-title generator
+
+A team ships an LLM feature that generates a one-line incident title from a support ticket. The first attempt ships after a "5-example vibe check." Three weeks later a customer files a complaint: a PII-laden ticket produced a title containing the customer's email address. There was no eval to catch it.
+
+**Step 1 — Write the rubric before building the dataset**
+
+```markdown
+## Incident Title Rubric v1
+
+Each output is graded on four criteria. An output PASSES if it satisfies ALL four.
+
+1. LENGTH        ≤80 characters (rule-based: len(output) ≤ 80)
+2. VERB-LEAD     Title starts with an imperative verb (rule-based: regex ^[A-Z][a-z]+)
+3. SUBJECT-REF   Title references the actual subject of the ticket (LLM judge, see below)
+4. NO-PII        Title contains no email, phone, name, or account number
+                 (rule-based: regex block for emails/phones + LLM judge for names)
+
+### LLM judge prompt for SUBJECT-REF and NO-PII (name detection):
+"You are a QA grader. Given the support ticket [TICKET] and the generated title
+[TITLE], answer:
+- subject_ref: 'pass' if the title references the core problem, 'fail' otherwise.
+- pii_name: 'pass' if no customer name appears, 'fail' otherwise.
+Reason first, then output JSON: {subject_ref: '...', pii_name: '...'}"
+```
+
+**Step 2 — Compose the dataset (30 rows)**
+
+| Row type | Count | Why |
+|---|---|---|
+| Production logs (PII-scrubbed) | 18 | Represents real traffic distribution |
+| Hand-crafted edge cases | 7 | Long tickets, multi-issue tickets, terse one-liners |
+| Adversarial / failure-mode | 5 | Tickets containing email addresses, phone numbers, hostile instructions |
+
+**Deliberate mistake in first eval run:** the team runs the eval on 5 rows only and reports "100% pass." They are testing only the easy rows. The adversarial rows are not yet in the dataset.
+
+**Fix:** add the failure-mode rows. Re-run:
+
+```
+Rule-based PASS (length + verb):    28/30 = 93%
+SUBJECT-REF (LLM judge):            26/30 = 87%
+NO-PII (combined):                  24/30 = 80%  ← 6 failures, all in adversarial rows
+
+Wilson 95% CI for NO-PII at N=30:  63% – 91%  ← wide; N=30 is the floor, not the target
+```
+
+**Step 3 — Calibrate the judge**
+
+The team designates 10 rows (from the adversarial set) as the calibration set: a human grader and the LLM judge both score NO-PII for names on these rows. Agreement: 9/10 → Cohen's kappa ≈ 0.78 (substantial). Judge is fit for purpose; re-run calibration when the judge model upgrades.
+
+**Step 4 — Integrate into CI (tiered)**
+
+```yaml
+# eval-tiers.yml (in the repository, run by CI)
+pr-smoke:
+  rows: 15        # cheapest rows; cost ~$0.15; time ~30s
+  gate: block-on-fail
+  purpose: catch regression before merge
+
+release-regression:
+  rows: 200       # full dataset grown over time; cost ~$2; time ~5 min
+  gate: block-on-fail
+  purpose: release decision gate
+
+weekly-deep:
+  rows: 1000      # full + adversarial expansion; cost ~$10; time ~20 min
+  gate: warn      # informs, does not block
+  purpose: drift detection — catch judge-model upgrades, dataset rot
+```
+
+The PII bug would have been caught by the PR-smoke tier on day one. The vibe check could not catch it. **The eval is the difference between a quality system and a guessing system.**
+
+## Common Pitfalls
+
+- **Running 5 examples and shipping.** A 5-row sample from a stochastic system has zero statistical power. The Wilson CI at N=5 spans almost the entire 0–100% range — any "result" is noise. Fix: minimum 30–50 rows with a written rubric before the eval is valid. Why it happens: 5 examples *feel* representative; teams underestimate how much variance there is in an LLM's output distribution.
+
+- **Picking a metric before picking the dataset.** Teams decide "we'll use BLEU" before examining what kinds of failures actually occur. BLEU measures n-gram overlap — useless for free-form generation, for anything requiring factual accuracy, and for tasks where semantically equivalent outputs differ in wording. Fix: build the dataset first, look at failure modes, then choose the metric that grades those failures. The metric follows the failure taxonomy.
+
+- **Editing the eval to make the prompt look good.** When the eval score dips, the impulse is to soften the rubric rather than improve the prompt. This destroys the regression signal — the eval no longer measures quality, it measures "did we change the bar?" Fix: treat the eval as immutable per release; rubric changes get their own PR with explicit re-baselining and a written justification. Why it happens: eval-as-contract is a discipline; eval-as-scoreboard is instinct.
+
+- **Reporting only the aggregate pass rate.** 80% aggregate on a 100-row eval can mask "95% on easy rows, 30% on adversarial rows." The aggregate hides the failure-mode distribution that decides whether to ship. Fix: stratify by row category (happy-path, edge-case, adversarial, per domain) and report pass rate with sample size per category. If a category has fewer than 10 rows, treat its score as indicative, not decisive.
+
+- **Using the same model family as candidate and judge.** A GPT-4 judge scoring GPT-4 outputs inflates scores by approximately 5% compared to human ratings, due to self-bias. A Claude judge scoring Claude outputs exhibits the same pattern. Fix: use a model from a *different vendor family* as the judge, or ensemble two judges from different families and take consensus.
+
+- **Ignoring judge confidence intervals.** Teams compare "prompt v2 scored 82%, up from 78%" on a 50-row eval and celebrate the improvement. Wilson 95% CI at N=50: v1 = 65%–88%, v2 = 69%–91%. The intervals overlap substantially. The gain is not statistically supported. Fix: compute Wilson score or bootstrap CIs for every comparison; do not call a delta "real" if CIs overlap.
+
+- **Never re-calibrating the judge against humans.** Provider-side model upgrades — often silent alias rolls — shift judge scores on fixed candidate outputs. A score drop may reflect judge drift, not product regression. Fix: maintain a 10–20 row human-graded calibration set; re-run judge vs. human agreement on every judge model upgrade and pin the judge model ID explicitly.
+
+## Retrieval Prompts
+
+<Prompt id="eval-1">
+  Name the three eval modalities. For each, give one task it handles well and one task where it produces misleading results.
+</Prompt>
+
+<Prompt id="eval-2">
+  A teammate proposes shipping a prompt change because "5 examples all looked better." What is the minimum eval discipline you would ask for before agreeing to ship, and why does sample size matter more than the team expects?
+</Prompt>
+
+<Prompt id="eval-3">
+  Define position bias in LLM-as-judge pairwise evaluation. Quantify the typical swing. Name one concrete orchestration mitigation.
+</Prompt>
+
+<Prompt id="eval-4">
+  Explain why reporting aggregate pass rate is not enough. Construct a scenario where an 80% aggregate score hides a critical failure mode, and describe the reporting discipline that would have surfaced it.
+</Prompt>
+
+<Prompt id="eval-5">
+  A judge model is silently upgraded by the provider. The eval score on a fixed, unchanged candidate drops 4 points. Did the product regress? What artefact do you need to answer that question, and how do you maintain it?
+</Prompt>
+
+<Prompt id="eval-6">
+  Why are BLEU and ROUGE considered insufficient for free-form generation evals? What do they actually measure, and what should replace them for open-ended output quality?
+</Prompt>
+
+<Prompt id="eval-7">
+  Define Cohen's kappa. Why is it more informative than raw percentage agreement between two graders? State the Landis & Koch threshold for "substantial agreement."
+</Prompt>
+
+<Prompt id="eval-8">
+  A 500-row eval costs $5 per run. The team wants to run it on every PR in a repo that sees 50 PRs per week. Propose a tiered eval design that keeps PR cost low without losing regression signal at release time.
+</Prompt>
+
+<Prompt id="eval-9" requiresDiagram>
+  Sketch the relationship between sample size and Wilson-score confidence interval width for a binary pass/fail eval. Mark the approximate N below which a 4-percentage-point improvement is statistically invisible.
+</Prompt>
+
+<Prompt id="eval-10">
+  The team proposes using GPT-4 as the judge for GPT-4-generated outputs. Name the bias this introduces, quantify it, and describe the fix.
+</Prompt>
+
+## Practice Task
+
+<PracticeTask id="eval-task-1" rubric="eval-rubric-v1">
+  Design and document a versioned, defensible eval for an LLM feature. Use the incident-title generator from the Worked Example, or substitute an LLM feature from a system you have access to (a summariser, a classification endpoint, a Q&A bot). Your deliverable must be a written artefact a second engineer could pick up and run.
+
+  **Deliverable 1 — The rubric (written before the eval runs)**
+
+  Write the rubric in markdown. For each criterion:
+  - Name the criterion and the grading target (rule-based assertion, or LLM-judge prompt with the exact judge prompt text).
+  - Give a worked example of a PASS output and a FAIL output for that criterion.
+  - Specify what score constitutes a release gate (e.g., "all criteria must pass" or "criterion 3 may fail for ≤10% of rows").
+
+  The rubric must exist before you touch the dataset. If you write it after, note that you wrote it after — the rubric-first discipline is part of the grading.
+
+  **Deliverable 2 — The dataset (≥ 50 rows, typed by composition)**
+
+  Document the dataset composition:
+  - How many rows from production logs (or equivalent representative source), with PII-scrubbing approach noted.
+  - How many hand-crafted edge-case rows, with at least 3 specific edge-case types named.
+  - How many adversarial / failure-mode rows, with at least 3 adversarial scenarios named (e.g., PII injection, prompt injection attempt, hostile tone, off-topic input).
+  - How many calibration rows — rows where human graders have agreed on the correct score.
+
+  You do not have to build all 50 rows; document the composition plan and produce at least 10 representative rows (3 production, 4 edge-case, 3 adversarial) as concrete examples.
+
+  **Deliverable 3 — The judge calibration result**
+
+  Take the calibration rows. Run the LLM judge on them. Compare to human grades. Report:
+  - The raw agreement percentage.
+  - Cohen's kappa with interpretation (use the Landis & Koch bands).
+  - A written verdict: is the judge fit for purpose? If kappa < 0.4 (moderate), what would you change in the rubric or judge prompt before using this eval?
+
+  **Deliverable 4 — Stratified results on your 10+ example rows**
+
+  Run the eval on your example rows. Report:
+  - Per-category pass rate (production / edge-case / adversarial) with sample size for each.
+  - At least one finding from the adversarial rows that the aggregate score would have hidden.
+  - Wilson 95% CI for the overall pass rate. Interpret whether the sample is large enough to be decisive.
+
+  **Deliverable 5 — CI tier design**
+
+  Define three eval tiers: PR-smoke, release-regression, and weekly-deep. For each:
+  - Row count and selection strategy (which rows from the dataset).
+  - Estimated cost and runtime.
+  - Gate action (block, warn, inform) and the condition that triggers it.
+  - One drift signal the tier is responsible for catching that the others are not.
+
+  **Deliverable 6 — Drift watch plan**
+
+  Name four concrete drift signals and for each: what changes, how you detect it, and what action you take.
+  - Judge-model drift (provider upgrades the judge alias silently).
+  - Candidate-model drift (the production model alias rolls to a newer version).
+  - Dataset rot (rows whose expected outputs no longer make sense as the product evolves).
+  - Production-distribution shift (real traffic diverges from the eval dataset).
+
+  Rubric (revealed after submission):
+  - Was the rubric written before the dataset was built, or back-fit to outputs? Back-fitting is noted but not disqualifying — it must be named.
+  - Does the rubric distinguish rule-based and LLM-judge criteria with explicit judge prompts? A rubric that says "judge if the output is good" without a prompt text fails.
+  - Does the dataset composition include adversarial rows, or only happy-path? Happy-path-only fails.
+  - Was Cohen's kappa computed and interpreted, or just raw agreement %? Raw % only fails.
+  - Were confidence intervals reported for the pass rate, or only point estimates? Point-estimate-only fails.
+  - Was the CI tier design genuinely tiered (different row counts, different gates), or just "run everything three times"? Non-tiered fails.
+  - Does the drift watch name *concrete* detection mechanisms for each of the four drift types, or just "monitor it"? Vague detection fails.
+  - Bonus: did the candidate identify a specific anti-pattern in their own design (e.g., "my calibration set is too small" or "I used the same model family for judge and candidate") and propose a fix?
+</PracticeTask>
+
+## Feynman Prompt
+
+<Feynman id="eval-feynman-1" wordTarget={150}>
+  Explain eval design to an engineer who ships LLM features by "checking a few outputs and seeing if they look right." Cover: why a 5-example vibe check has no statistical power for a stochastic system, what a rubric is and why it must exist before the eval runs (not after), and what it means for the eval to be a "regression contract" — why changing the eval and the prompt in the same PR destroys your ability to know whether the product improved. Give one concrete example of a failure mode the vibe check would miss that a 50-row adversarial eval would catch.
+
+  Rubric (revealed after submit): Did you explain why sample size matters for a stochastic system — not just "5 is small" but what variance means for LLM outputs? Did you define the rubric as something written before the eval runs, with a specific consequence if it isn't? Did you explain "regression contract" with a mechanism — what actually happens to your signal when you change eval and prompt together — rather than just "it's bad practice"? Did your concrete example name a specific failure mode (PII leakage, prompt injection, adversarial input, bias toward a specific category) rather than "something could go wrong"?
+</Feynman>
