@@ -45,3 +45,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | automation-cicd/playwright | automation-cicd | shipped | n/a | Knowledge P4 (#178). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/178-playwright. |
 | — | automation-cicd/selenium-vs-cypress-vs-playwright | automation-cicd | shipped | n/a | Knowledge P4 (#179). New topic — no legacy precursor. layer: patterns. PR: knowledge-p4/179-selenium-vs-cypress-vs-playwright. |
 | — | automation-cicd/api-testing | automation-cicd | shipped | n/a | Knowledge P4 (#180). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/180-api-testing. |
+| — | automation-cicd/mobile-testing-overview | automation-cicd | shipped | n/a | Knowledge P4 (#181). New topic — no legacy precursor. layer: facts. PR: knowledge-p4/181-mobile-testing-overview. |

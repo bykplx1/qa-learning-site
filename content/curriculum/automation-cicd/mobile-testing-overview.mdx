@@ -1,0 +1,134 @@
+---
+slug: mobile-testing-overview
+title: Mobile Testing Overview
+cluster: automation-cicd
+layer: facts
+prerequisites:
+  - unit-integration-e2e-boundaries
+  - test-types-smoke-sanity-regression-uat
+related:
+  - selenium-vs-cypress-vs-playwright
+  - playwright
+  - cicd-for-testing
+  - mocking-stubbing-test-doubles
+tags: [mobile, Appium, Espresso, Detox, XCUITest, device-testing, automation]
+estimatedEncodingMinutes: 20
+---
+
+import Diagram from '../../../src/components/mdx/Diagram.astro';
+import Prompt from '../../../src/components/mdx/Prompt.astro';
+
+## Core Idea
+
+Mobile testing is its own discipline. Device fragmentation, OS-version matrices, hardware sensors, app-store deployment gates, and a real-vs-emulator fidelity gap make it structurally different from web automation.
+
+Three tooling families cover the landscape. **Appium** uses the WebDriver protocol over UIAutomator2 (Android) / XCUITest (iOS) — cross-platform, any language, any CI, but an out-of-process façade that leaks on system dialogs and biometrics. **Espresso (Android) and XCUITest (iOS)** are in-process, vendor-supported, fast, and dev-owned — but single-platform each. **Detox** is a gray-box, sync-aware JS framework for React Native specifically; its awareness of the RN bridge and animation queue is its structural advantage.
+
+The load-bearing claim: the "one Appium suite tests both platforms" promise structurally underdelivers for the 30% of flows that are platform-specific. Teams must choose consciously, not by default.
+
+> Pick the tool that matches your app's runtime, not the one with the shortest setup guide.
+
+## Diagram
+
+<Diagram caption="Mobile test tooling landscape — three families × two execution targets × one cloud question">
+```
+TOOLING FAMILIES
+
+  Appium                      Espresso / XCUITest         Detox
+  ──────────────────────────  ──────────────────────────  ──────────────────────────
+  Protocol: WebDriver         In-process, native vendor   Gray-box, JS-driven
+  Under hood: UIAutomator2    Android → Espresso          App: React Native only
+              XCUITest        iOS    → XCUITest
+  Languages: JS · Java ·      Kotlin/Java (Espresso)      JS / TypeScript
+             Python · C# ·    Swift/Obj-C (XCUITest)
+             Ruby
+  Sweet spot: cross-platform  Speed + stability;          RN teams; sync-bridge
+              QA-team-owned   dev-owned; single platform  awareness is the payoff
+  Cross-platform promise:     No — single platform        iOS + Android (RN only)
+  Yes — leaks on system UI
+
+──────────────────────────────────────────────────────────────────────────────────
+
+EXECUTION TARGET AXIS
+
+  Emulator / Simulator                  Real Device
+  ─────────────────────────────────     ─────────────────────────────────────────
+  Fast, cheap                           Slow, expensive
+  No real sensors / hardware            True hardware — sensors, haptics, camera
+  Lossless network, perfect rendering   OEM overlays (One UI, MIUI, EMUI)
+  Misses long-tail Android OEM quirks   Misses nothing — catches what emulator hides
+
+  → Use for fast PR feedback loops      → Use for pre-deploy sanity + weekly sweep
+
+──────────────────────────────────────────────────────────────────────────────────
+
+DEVICE CLOUD (category — not a single vendor recommendation)
+  BrowserStack App Automate · Sauce Labs · AWS Device Farm · Firebase Test Lab · LambdaTest
+  Cost: real but smaller than the alternative ("we ship and find out")
+```
+</Diagram>
+
+## Worked Example
+
+A team building an Android + iOS e-commerce app chooses to write one Appium suite rather than two separate native suites. The suite covers login, product search, and checkout — all straightforward flows. The team is happy.
+
+**Where the promise leaks:**
+
+1. **Permission dialog on first launch.** Android shows a runtime permission dialog for notifications. The Appium capability `autoGrantPermissions: true` dismisses it on launch — but this behaviour differs from what the user sees. iOS requires a separate `WDA` interaction. One flow, two platform-specific branches in "the one suite."
+
+2. **Biometric authentication.** The checkout flow ends with Face ID on iOS. Appium cannot trigger the biometric prompt reliably through the WebDriver protocol. The team hard-codes a passcode fallback in tests only — now the test covers a different code path than production.
+
+3. **OEM theming breaks a coordinate-based tap.** A Samsung Galaxy A14 running One UI moves the checkout button 12px relative to the Pixel emulator. The test taps empty space and fails. No emulator caught this.
+
+**What the team learns:**
+- Plan for platform-specific branches in Appium from day one, not as exceptions.
+- Replace coordinate-based taps with accessibility-id-based locators.
+- Add at least one real OEM device to the test tier; the emulator is a lie about pixel coordinates.
+
+**The alternative for a React Native rewrite:** Detox. The same checkout test written with Detox simply calls `expect(element(by.id('checkout-btn'))).toBeVisible()` after a tap — no manual waits needed because Detox knows the JS bridge is settled. The synchronization is not magic; it is the structural payoff of gray-box access to the RN runtime.
+
+## Common Pitfalls
+
+- **Believing "one Appium suite tests both platforms" at face value.** Plan platform-specific code paths from day one. System dialogs, deep links, biometrics, and OEM customisations all leak the abstraction; the cross-platform surface covers the easy 70%, not the full flow map.
+
+- **Emulator-only test suites.** Add a real-device tier — even one OEM device per OS major catches the bulk of fidelity issues. Emulator UIs are idealised; vendor overlays (Samsung One UI, Xiaomi MIUI), real-world screen densities, and timing differences on lower-end hardware are invisible in emulation.
+
+- **Coordinate-based locators.** Use accessibility ids or labels; never tap by pixel coordinates. OEM theming and device-density variations move pixels in ways no emulator predicts.
+
+- **`Thread.sleep()` in Espresso or Appium tests.** Use Espresso's idling-resources model or Appium's explicit wait predicates instead. Sleeps mask race conditions; they do not fix them. A test that passes via sleep will flake under CI load and obscure the root cause for months.
+
+- **Skipping system-dialog handling.** Permission prompts, share sheets, and biometric dialogs are system UI — they do not respond to in-app waits. Plan each one explicitly: Appium has `autoGrantPermissions`, Espresso requires UI Automator (the separate framework), Detox uses `launchArgs` permissions. None is cross-platform.
+
+- **Ignoring app-state isolation between tests.** Mobile apps persist SQLite, SharedPreferences/UserDefaults, and file-system state across test runs. The "open a fresh browser context" pattern has no direct mobile equivalent; build explicit per-test reset hooks or accept reduced test isolation.
+
+- **Treating Capacitor or Cordova apps as native by default.** A Capacitor app is a WebView shell — Playwright can often test it more cheaply than Appium can. Identify the WebView first; reach for the simpler path before assuming native tooling is required.
+
+## Retrieval Prompts
+
+<Prompt id="mobile-1">
+  Name the three primary mobile-test tool families. For each, state: (a) the execution architecture (in-process vs out-of-process vs gray-box); (b) the platform scope; (c) the one structural strength that justifies choosing it.
+</Prompt>
+
+<Prompt id="mobile-2">
+  Why does the "one Appium suite tests both platforms" promise structurally underdeliver? Name two concrete flow types where platform-specific code paths become unavoidable, regardless of Appium's cross-platform API.
+</Prompt>
+
+<Prompt id="mobile-3">
+  Distinguish emulator/simulator coverage from real-device coverage. Name one bug class that only real-device testing catches, and explain why the emulator misses it by construction.
+</Prompt>
+
+<Prompt id="mobile-4">
+  Espresso's idling-resources model bans `Thread.sleep()` in discipline. What does the model actually wait on, and why is this distinction load-bearing for suite reliability?
+</Prompt>
+
+<Prompt id="mobile-5">
+  Detox's sync mode is React-Native-specific. What does it actually synchronise against — name at least two things it waits on — and why can a vanilla native app not use Detox effectively?
+</Prompt>
+
+<Prompt id="mobile-6">
+  A team is building a React Native app and a separate native Android app. Which mobile test tool family is the better fit for each, and what is the deciding constraint in each case?
+</Prompt>
+
+<Prompt id="mobile-7">
+  Name three flow types that resist mobile test automation regardless of tool choice. For each, state the conventional handling approach teams use in practice.
+</Prompt>
