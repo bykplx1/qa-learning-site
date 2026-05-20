@@ -47,3 +47,4 @@ See `revamp-doc/revamp-plan.md` §9 for the migration strategy, and `revamp-doc/
 | — | automation-cicd/api-testing | automation-cicd | shipped | n/a | Knowledge P4 (#180). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/180-api-testing. |
 | — | automation-cicd/mobile-testing-overview | automation-cicd | shipped | n/a | Knowledge P4 (#181). New topic — no legacy precursor. layer: facts. PR: knowledge-p4/181-mobile-testing-overview. |
 | — | automation-cicd/cicd-for-testing | automation-cicd | shipped | n/a | Knowledge P4 (#182). New topic — no legacy precursor. layer: systems. PR: knowledge-p4/182-cicd-for-testing. |
+| — | non-functional/security-testing | non-functional | shipped | n/a | Knowledge P5 (#184). New topic — no legacy precursor. layer: systems. PR: knowledge-p5/184-security-testing. |
