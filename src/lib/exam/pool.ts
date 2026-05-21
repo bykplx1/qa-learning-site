@@ -1,5 +1,4 @@
 import { parse } from 'yaml';
-import { sortLessons, type LessonEntry } from '../lessons/order.js';
 import { quizFileSchema, type QuizQuestion } from '../quiz/schema.js';
 import { EXAM_QUESTION_COUNT } from './config.js';
 
@@ -9,21 +8,11 @@ const quizFiles = import.meta.glob('../../generated/quiz/*.quiz.yaml', {
   import: 'default',
 }) as Record<string, string>;
 
-function lookupQuizYaml(slug: string): string | null {
-  const suffix = `${slug}.quiz.yaml`;
-  for (const key of Object.keys(quizFiles)) {
-    if (key.endsWith(suffix)) return quizFiles[key];
-  }
-  return null;
-}
-
-export function buildExamPool(lessons: LessonEntry[]): QuizQuestion[] {
-  const sorted = sortLessons(lessons);
+export function buildExamPool(): QuizQuestion[] {
+  const sortedKeys = Object.keys(quizFiles).sort();
   const buckets: QuizQuestion[][] = [];
-  for (const lesson of sorted) {
-    const yaml = lookupQuizYaml(lesson.data.slug);
-    if (!yaml) continue;
-    const parsed = quizFileSchema.safeParse(parse(yaml));
+  for (const key of sortedKeys) {
+    const parsed = quizFileSchema.safeParse(parse(quizFiles[key]));
     if (!parsed.success) continue;
     buckets.push(parsed.data.questions);
   }

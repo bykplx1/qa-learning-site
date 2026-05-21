@@ -3,31 +3,31 @@ import { getCollection } from 'astro:content';
 import { join } from 'node:path';
 import { buildRssXml, type RssItem } from '../lib/rss/buildRss';
 import { gitFirstCommittedAt } from '../lib/rss/publishedAt';
+import { clusterDisplay } from '../lib/curriculum/order';
 
-const VAULT_CWD = join(process.cwd(), 'content', 'qa-vault');
+const REPO_CWD = process.cwd();
 const FEED_LIMIT = 50;
 
 export const GET: APIRoute = async ({ site }) => {
-  const lessons = await getCollection('lessons');
+  const topics = await getCollection('curriculum');
   const fallback = new Date();
 
-  const items: RssItem[] = lessons.map((lesson) => {
-    let publishedAt = lesson.data.published_at;
-    if (!publishedAt) {
-      const filePath = lesson.filePath;
-      if (filePath) {
-        const relPath = filePath.replace(/\\/g, '/').replace(/^.*content\/qa-vault\//, '');
-        const gitDate = gitFirstCommittedAt(relPath, VAULT_CWD);
-        publishedAt = gitDate ?? fallback;
-      } else {
-        publishedAt = fallback;
-      }
+  const items: RssItem[] = topics.map((topic) => {
+    let publishedAt: Date;
+    const filePath = topic.filePath;
+    if (filePath) {
+      // curriculum files live at content/curriculum/<cluster>/<slug>.mdx relative to repo root
+      const relPath = filePath.replace(/\\/g, '/').replace(/^.*content\/curriculum\//, 'content/curriculum/');
+      const gitDate = gitFirstCommittedAt(relPath, REPO_CWD);
+      publishedAt = gitDate ?? fallback;
+    } else {
+      publishedAt = fallback;
     }
     return {
-      title: lesson.data.title,
-      slug: lesson.data.slug,
+      title: topic.data.title,
+      slug: `${topic.data.cluster}/${topic.data.slug}`,
       publishedAt,
-      description: lesson.data.category,
+      description: clusterDisplay(topic.data.cluster),
     };
   });
 
@@ -38,7 +38,7 @@ export const GET: APIRoute = async ({ site }) => {
   const xml = buildRssXml(top, {
     siteUrl,
     feedTitle: 'QA Learning — Lessons',
-    feedDescription: 'New and updated lessons from the QA Learning site.',
+    feedDescription: 'New and updated topics from the QA Learning site.',
     feedPath: '/rss.xml',
   });
 

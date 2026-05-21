@@ -67,26 +67,28 @@ describe('OG / Twitter meta — built HTML', () => {
     });
   });
 
-  it('lesson page (testing-principles) has article type and per-slug OG image', () => {
+  it('curriculum topic page (qa-mindset) has article type and per-slug OG image', () => {
     if (!distExists) return;
-    const slug = 'testing-principles';
-    const html = readHtml(join('lessons', slug, 'index.html'));
+    const cluster = 'foundations';
+    const slug = 'qa-mindset';
+    const html = readHtml(join('lessons', cluster, slug, 'index.html'));
     assertFullMetaSet(html, {
       ogType: 'article',
       imagePattern: new RegExp(`/og/${slug}\\.png`),
-      urlPattern: new RegExp(`/lessons/${slug}`),
+      urlPattern: new RegExp(`/lessons/${cluster}/${slug}`),
     });
     expect(property(html, 'og:image')).toContain(`/og/${slug}.png`);
   });
 
-  it('lesson page (accessibility-testing) has article type and per-slug OG image', () => {
+  it('curriculum topic page (accessibility-testing) has article type and per-slug OG image', () => {
     if (!distExists) return;
+    const cluster = 'non-functional';
     const slug = 'accessibility-testing';
-    const html = readHtml(join('lessons', slug, 'index.html'));
+    const html = readHtml(join('lessons', cluster, slug, 'index.html'));
     assertFullMetaSet(html, {
       ogType: 'article',
       imagePattern: new RegExp(`/og/${slug}\\.png`),
-      urlPattern: new RegExp(`/lessons/${slug}`),
+      urlPattern: new RegExp(`/lessons/${cluster}/${slug}`),
     });
   });
 
@@ -104,7 +106,7 @@ describe('OG / Twitter meta — built HTML', () => {
     if (!distExists) return;
     const pages = [
       'index.html',
-      join('lessons', 'testing-principles', 'index.html'),
+      join('lessons', 'foundations', 'qa-mindset', 'index.html'),
       join('projects', 'index.html'),
     ];
     for (const p of pages) {
