@@ -10,7 +10,7 @@ export const prerender = false;
 
 const session = await getSession(Astro.request.headers);
 if (!session?.user?.id) {
-  return Astro.redirect('/api/auth/sign-in/github');
+  return Astro.redirect(`/login?next=${encodeURIComponent(Astro.url.pathname)}`);
 }
 const userId = session.user.id;
 

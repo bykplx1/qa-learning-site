@@ -11,7 +11,7 @@ const { id } = Astro.params;
 const session = await getSession(Astro.request.headers);
 
 if (!session?.user?.id) {
-  return Astro.redirect('/api/auth/sign-in/github');
+  return Astro.redirect(`/login?next=${encodeURIComponent(Astro.url.pathname)}`);
 }
 
 if (!id) return new Response('Not found', { status: 404 });

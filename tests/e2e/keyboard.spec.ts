@@ -66,18 +66,19 @@ test.describe('keyboard-only operability', () => {
     expect(themeAttr === 'light' || themeAttr === 'dark').toBe(true);
   });
 
-  test('profile (signed-out): sign-in CTAs reachable via Tab', async ({ page }) => {
+  test('profile (signed-out): sign-in CTA reachable via Tab', async ({ page }) => {
     // Profile filters (category/topic toggles) are not yet built — when added,
     // extend this test to cover their keyboard ops. For now, verify the
     // signed-out profile's interactive controls are keyboard-reachable.
+    // Provider selection now lives on the /login chooser (#257/#258), so the
+    // signed-out profile shows a single "Sign in" CTA that routes there.
     await page.goto('/profile');
-    await expect(page.locator('.signed-out')).toBeVisible();
+    const signedOut = page.locator('.signed-out');
+    await expect(signedOut).toBeVisible();
 
-    const githubCta = page.getByRole('link', { name: /Sign in with GitHub/i });
-    const googleCta = page.getByRole('link', { name: /Sign in with Google/i });
-    await githubCta.focus();
-    await expect(githubCta).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(googleCta).toBeFocused();
+    const signInCta = signedOut.getByRole('link', { name: /^Sign in$/i });
+    await expect(signInCta).toHaveAttribute('href', /\/login/);
+    await signInCta.focus();
+    await expect(signInCta).toBeFocused();
   });
 });
