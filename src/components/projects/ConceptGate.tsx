@@ -46,6 +46,9 @@ export interface GateStatusProp {
 interface Props {
   projectSlug: string;
   gate: GateStatusProp;
+  /** Set of valid curriculum topic slugs. "Explain it first" is only shown when
+   *  the concept is in this set; cluster slugs are silently suppressed. */
+  validTopicSlugs: string[];
 }
 
 function StabilityBar({ stability }: { stability: number }) {
@@ -96,7 +99,8 @@ function StabilityBar({ stability }: { stability: number }) {
   );
 }
 
-export default function ConceptGate({ projectSlug, gate }: Props) {
+export default function ConceptGate({ projectSlug, gate, validTopicSlugs }: Props) {
+  const topicSlugSet = new Set(validTopicSlugs);
   const [overridden, setOverridden] = useState(false);
 
   const showGate = !gate.allMet && !overridden;
@@ -166,7 +170,7 @@ export default function ConceptGate({ projectSlug, gate }: Props) {
                 </span>
               </div>
               <StabilityBar stability={c.stability} />
-              {c.belowThreshold && c.cluster && (
+              {c.belowThreshold && c.cluster && topicSlugSet.has(c.concept) && (
                 <div style={{ marginTop: 6, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <a
                     href={`/explain/${encodeURIComponent(c.concept)}`}
