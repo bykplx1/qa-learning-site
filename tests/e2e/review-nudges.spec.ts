@@ -194,8 +194,10 @@ test.describe('first-time disclaimer', () => {
     // The page redirects anonymous users to sign-in, so this test only works
     // when the server treats the user as authenticated (mock mode) OR if the
     // redirect itself shows the disclaimer. In reality the page requires auth,
-    // so skip this test in non-mock mode.
-    const isRedirected = page.url().includes('/api/auth');
+    // so skip this test in non-mock mode. Anonymous redirect now targets the
+    // /login chooser (#257/#258) rather than /api/auth directly.
+    const isRedirected =
+      page.url().includes('/api/auth') || page.url().includes('/login');
     if (isRedirected) {
       test.skip(true, 'Page redirected to auth — disclaimer not testable without mock session');
       return;
