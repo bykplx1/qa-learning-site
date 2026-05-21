@@ -40,6 +40,8 @@ const MOCK_SESSION = {
 };
 
 // ─── In-memory store (survives across requests within one dev-server process) ─
+// Anchored to globalThis so module re-evaluation (Vite HMR, SSR worker isolation)
+// does not produce a second instance that is invisible to the read path.
 
 interface StoredAttempt {
   id: string;
@@ -57,14 +59,25 @@ interface StoredLesson {
   completedAt: Date;
 }
 
-export const mockStore = {
-  attempts: [] as StoredAttempt[],
-  lessons: [] as StoredLesson[],
-  reset() {
-    this.attempts = [];
-    this.lessons = [];
-  },
-};
+interface MockStore {
+  attempts: StoredAttempt[];
+  lessons: StoredLesson[];
+  reset(): void;
+}
+
+const _global = globalThis as typeof globalThis & { __mockStore?: MockStore };
+if (!_global.__mockStore) {
+  _global.__mockStore = {
+    attempts: [],
+    lessons: [],
+    reset() {
+      this.attempts = [];
+      this.lessons = [];
+    },
+  };
+}
+
+export const mockStore: MockStore = _global.__mockStore;
 
 // ─── OAuth fetch interceptor ──────────────────────────────────────────────────
 
