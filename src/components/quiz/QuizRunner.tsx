@@ -27,11 +27,15 @@ interface LoginBannerProps {
 
 function LoginBanner({ signedIn }: LoginBannerProps) {
   if (signedIn === null || signedIn) return null;
+  const loginHref =
+    typeof window !== 'undefined'
+      ? `/login?next=${encodeURIComponent(window.location.pathname)}`
+      : '/login';
   return (
     <div className="banner banner--info" style={{ marginBottom: 20 }}>
       You're playing anonymously.{' '}
-      <a href="/api/auth/sign-in/github" style={{ color: 'var(--ink)', textDecoration: 'underline' }}>
-        Sign in with GitHub
+      <a href={loginHref} style={{ color: 'var(--ink)', textDecoration: 'underline' }}>
+        Sign in
       </a>{' '}
       to save this attempt to your profile.
     </div>

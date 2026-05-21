@@ -170,7 +170,7 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
       <section class="card" style="margin-top: 32px;">
         <div class="eyebrow" style="margin-bottom: 8px;">submit your build</div>
         <p style="font-size: 14px; color: var(--ink-2); margin: 0;">
-          <a href="/api/auth/sign-in/github" style="color: var(--accent); text-decoration: underline;">
+          <a href={`/login?next=${encodeURIComponent(Astro.url.pathname)}`} style="color: var(--accent); text-decoration: underline;">
             Sign in
           </a>{' '}
           to submit your repo URL and a short reflection on what you learned.

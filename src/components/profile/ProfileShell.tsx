@@ -260,8 +260,7 @@ export default function ProfileShell() {
           Lessons completed, quiz accuracy by topic, project submissions, and streaks — all kept against your account.
         </p>
         <div style={{ display: 'flex', gap: 12, marginTop: 22 }}>
-          <a href="/api/auth/sign-in/github" className="btn btn--primary btn--lg">Sign in with GitHub</a>
-          <a href="/api/auth/sign-in/google" className="btn btn--ghost btn--lg">Sign in with Google</a>
+          <a href="/login?next=/profile" className="btn btn--primary btn--lg">Sign in</a>
         </div>
       </section>
     );

@@ -35,6 +35,8 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      // Force the Google account chooser on every sign-in so users can switch accounts.
+      prompt: 'select_account',
     },
   },
   account: {
