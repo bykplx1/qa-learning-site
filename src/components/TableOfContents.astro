@@ -90,7 +90,10 @@ const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
             visibleSet.delete(entry.target.id);
           }
         }
-        const first = headingIds.find((id) => visibleSet.has(id));
+        // Prefer the first heading currently in the active band; when none are
+        // (e.g. on initial load before any scroll, or at the very top), fall
+        // back to the first heading so the TOC always reflects a position.
+        const first = headingIds.find((id) => visibleSet.has(id)) ?? headingIds[0];
         if (first) setActive(first);
       },
       { rootMargin: '-80px 0px -50% 0px', threshold: 0 }

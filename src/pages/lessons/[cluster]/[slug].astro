@@ -1,8 +1,19 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'yaml';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import TableOfContents from '../../../components/TableOfContents.astro';
 import { MarkComplete } from '../../../components/MarkComplete';
+import QuizRunner from '../../../components/quiz/QuizRunner';
+import WikiLink from '../../../components/WikiLink';
+import SegmentedLesson from '../../../components/lessons/SegmentedLesson';
+import { computeSegments, estimateWordCount } from '../../../lib/lessons/segmenter';
+import EndOfLessonCTA from '../../../components/lessons/EndOfLessonCTA.astro';
+import { resolveEndCta } from '../../../lib/lessons/end-cta';
+import { quizFileSchema } from '../../../lib/quiz/schema';
+import type { QuizQuestion } from '../../../lib/quiz/schema';
 import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../../lib/encoding/repair';
 import type { CurriculumCluster } from '../../../lib/curriculum/schema';
@@ -41,6 +52,29 @@ const layerClass =
 
 const ogDescription = topic.body ? repairWin1252(extractExcerpt(topic.body)) : undefined;
 const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.site).href;
+
+const quizYamlPath = join(process.cwd(), 'src', 'generated', 'quiz', `${topic.data.slug}.quiz.yaml`);
+let quizQuestions: QuizQuestion[] = [];
+if (existsSync(quizYamlPath)) {
+  const result = quizFileSchema.safeParse(parse(repairWin1252(readFileSync(quizYamlPath, 'utf-8'))));
+  if (result.success) quizQuestions = result.data.questions;
+}
+
+// Long-lesson segmenting: derived purely from rendered headings + body length.
+const wordCount = estimateWordCount(topic.body);
+const lessonSegments = computeSegments(headings, wordCount);
+
+// End-of-lesson CTA. This route is statically prerendered (getStaticPaths), so
+// there is no per-request session — resolve anonymously (userId: null). That
+// path makes no DB calls and yields the review + project CTAs. Per-user
+// enrichment (due cards / explain-back) needs a client/SSR follow-up.
+const allProjects = await getCollection('projects');
+const projectForCluster = allProjects.find((p) => p.data.cluster === cluster) ?? null;
+const projectSlugForCluster = projectForCluster?.data.slug ?? null;
+const { options: endCtaOptions } = await resolveEndCta(
+  { userId: null, clusterSlug: cluster, conceptSlug: topic.data.slug },
+  projectSlugForCluster,
+);
 ---
 
 <BaseLayout
@@ -92,14 +126,32 @@ const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.sit
           </div>
         </header>
 
-        <div class="prose" data-pagefind-body data-pagefind-meta="type:curriculum">
+        <div class="prose" data-pagefind-body data-pagefind-meta="type:curriculum" data-lesson-body>
+          <WikiLink client:idle />
           <Content />
         </div>
+
+        {lessonSegments.length > 0 && (
+          <SegmentedLesson client:load segments={lessonSegments} />
+        )}
 
         <div style="margin-top: 28px;">
           <MarkComplete client:only="react" slug={topic.data.slug} />
         </div>
       </article>
+
+      {quizQuestions.length > 0 && (
+        <section id="quiz">
+          <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz" data-pagefind-meta="type:quiz">
+            <h2>Practice Quiz</h2>
+            {quizQuestions.map((q) => <p>{q.q}</p>)}
+          </div>
+          {/* client:load — must NOT be client:idle; e2e clicks fire before requestIdleCallback (#106) */}
+          <QuizRunner client:load questions={quizQuestions} quizSlug={topic.data.slug} />
+        </section>
+      )}
+
+      <EndOfLessonCTA options={endCtaOptions} />
     </main>
 
     <aside class="lesson-toc">
@@ -162,4 +214,6 @@ const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.sit
     font-weight: 400;
   }
   @media (max-width: 768px) { .lesson-title { font-size: 38px; } }
+
+  .hidden { display: none !important; }
 </style>

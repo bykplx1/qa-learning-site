@@ -43,7 +43,8 @@ const { id, question, answer, cluster } = Astro.props;
   }
   .mdx-prompt__reveal summary {
     cursor: pointer;
-    color: var(--accent);
+    /* --accent (4.07:1 on --paper-2) fails WCAG 1.4.3 at 14px; --accent-strong clears 4.5:1 */
+    color: var(--accent-strong);
     user-select: none;
   }
   .mdx-prompt__answer {
