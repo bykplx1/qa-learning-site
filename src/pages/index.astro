@@ -1,37 +1,29 @@
 ---
 import { getCollection } from 'astro:content';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { sortLessons, groupByCategory, categoryOrder, categoryDisplay } from '../lib/lessons/order';
-import type { LessonEntry } from '../lib/lessons/order';
+import { sortCurriculum, groupByCluster, clusterDisplay } from '../lib/curriculum/order';
+import type { CurriculumEntry } from '../lib/curriculum/order';
+import type { CurriculumCluster } from '../lib/curriculum/schema';
 
-const allLessons = await getCollection('lessons');
-const sorted = sortLessons(allLessons);
-const groups = groupByCategory(sorted);
+const allTopics = await getCollection('curriculum');
+const sorted = sortCurriculum(allTopics);
+const groups = groupByCluster(allTopics);
 
-function folderPrefix(entry: LessonEntry): string {
-  return entry.id.match(/^(\d{2})-/)?.[1] ?? entry.id.split('/')[0].slice(0, 2);
-}
+const clusterRows = Array.from(groups.entries())
+  .filter(([, topics]) => topics.length > 0)
+  .map(([cluster, topics]) => ({
+    cluster,
+    title: clusterDisplay(cluster),
+    topics,
+    count: topics.length,
+    minutes: topics.reduce((s, t) => s + t.data.estimatedEncodingMinutes, 0),
+  }));
 
-const categoryRows = Array.from(groups.entries())
-  .map(([cat, lessons]) => ({
-    cat,
-    title: categoryDisplay(cat),
-    num: folderPrefix(lessons[0]),
-    lessons,
-    count: lessons.length,
-    minutes: lessons.reduce((s, l) => s + l.data.est_minutes, 0),
-    order: categoryOrder(lessons[0]),
-  }))
-  .sort((a, b) => a.order - b.order);
-
-const totalLessons = sorted.length;
-const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
-const quizCount = sorted.filter((l) =>
-  existsSync(join(process.cwd(), 'src', 'generated', 'quiz', `${l.data.slug}.quiz.yaml`)),
-).length;
+const totalTopics = sorted.length;
+const totalMinutes = sorted.reduce((s, t) => s + t.data.estimatedEncodingMinutes, 0);
 
 const quizDir = join(process.cwd(), 'src', 'generated', 'quiz');
 const totalQuizQuestions = readdirSync(quizDir)
@@ -40,13 +32,18 @@ const totalQuizQuestions = readdirSync(quizDir)
     const parsed = parseYaml(readFileSync(join(quizDir, f), 'utf-8')) as { questions?: unknown[] };
     return sum + (parsed?.questions?.length ?? 0);
   }, 0);
+const quizCount = readdirSync(quizDir).filter((f) => f.endsWith('.quiz.yaml')).length;
 
-const latestLessons = sorted.slice(0, 10);
+const latestTopics = sorted.slice(0, 10);
+
+function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
+  return layer === 'facts' ? 'b' : layer === 'patterns' ? 'i' : 'a';
+}
 ---
 
 <BaseLayout
   title="QA Learning"
-  description={`Interactive study site for QA fundamentals. ${totalLessons} lessons across ${groups.size} tracks.`}
+  description={`Interactive study site for QA fundamentals. ${totalTopics} topics across ${clusterRows.length} tracks.`}
 >
   <section class="hero">
     <div>
@@ -56,13 +53,13 @@ const latestLessons = sorted.slice(0, 10);
         built like <em>production code.</em>
       </h1>
       <p class="hero__lead">
-        {totalLessons} hand-written lessons across {groups.size} tracks, with practice quizzes,
+        {totalTopics} hand-written topics across {clusterRows.length} tracks, with practice quizzes,
         a build pipeline of self-directed projects, and a profile that tracks what you've shipped.
         Open-source and statically generated.
       </p>
       <div class="hero__cta">
-        <a href={`/lessons/${sorted[0]?.data.slug ?? ''}`} class="btn btn--primary btn--lg">
-          Start with {categoryRows[0]?.title ?? 'lesson 1'}
+        <a href={`/lessons/${sorted[0]?.data.cluster ?? ''}/${sorted[0]?.data.slug ?? ''}`} class="btn btn--primary btn--lg">
+          Start with {clusterRows[0]?.title ?? 'track 1'}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
         <a href="/projects" class="btn btn--ghost btn--lg">
@@ -77,8 +74,8 @@ const latestLessons = sorted.slice(0, 10);
     </div>
     <div class="hero__stats">
       <div class="hero__stat">
-        <div class="num">{totalLessons}</div>
-        <div class="lbl">Lessons across {groups.size} tracks</div>
+        <div class="num">{totalTopics}</div>
+        <div class="lbl">Topics across {clusterRows.length} tracks</div>
       </div>
       <div class="hero__stat">
         <div class="num">{totalQuizQuestions}</div>
@@ -89,7 +86,7 @@ const latestLessons = sorted.slice(0, 10);
         <div class="lbl">Total read time</div>
       </div>
       <div class="hero__stat">
-        <div class="num num--accent">{groups.size}</div>
+        <div class="num num--accent">{clusterRows.length}</div>
         <div class="lbl">Curriculum tracks</div>
       </div>
     </div>
@@ -99,24 +96,24 @@ const latestLessons = sorted.slice(0, 10);
     <div class="section__head">
       <div>
         <span class="eyebrow">curriculum</span>
-        <h2>{groups.size} tracks, ordered from the foundation up.</h2>
+        <h2>{clusterRows.length} tracks, ordered from the foundation up.</h2>
       </div>
       <p>
-        Each track maps to a numbered category folder in the vault. Lessons are MDX, quizzes are YAML;
-        every wikilink resolves at build time or fails CI.
+        Each track maps to a cluster in the curriculum. Topics are MDX, quizzes are YAML;
+        every topic builds progressively from facts to patterns to systems.
       </p>
     </div>
     <div class="cat-grid" data-testid="curated-tracks">
-      {categoryRows.map((c) => (
-        <a class="cat" href={`/lessons/${c.lessons[0].data.slug}`}>
-          <div class="cat__num">{c.num} · TRACK</div>
+      {clusterRows.map((c) => (
+        <a class="cat" href={`/lessons/${c.topics[0].data.cluster}/${c.topics[0].data.slug}`}>
+          <div class="cat__num">{c.cluster.toUpperCase()}</div>
           <div class="cat__title">{c.title}</div>
           <div class="cat__blurb">
-            Start with <em style="font-style: italic;">{c.lessons[0].data.title}</em>.
+            Start with <em style="font-style: italic;">{c.topics[0].data.title}</em>.
           </div>
           <div class="cat__bar"><i style="width: 100%"></i></div>
           <div class="cat__meta">
-            <span>{c.count} lesson{c.count === 1 ? '' : 's'}</span>
+            <span>{c.count} topic{c.count === 1 ? '' : 's'}</span>
             <span>{c.minutes}m read</span>
           </div>
         </a>
@@ -128,30 +125,28 @@ const latestLessons = sorted.slice(0, 10);
     <div class="section__head">
       <div>
         <span class="eyebrow">recent · ordered</span>
-        <h2>Latest lessons.</h2>
+        <h2>Latest topics.</h2>
       </div>
       <a href="#all" class="btn btn--ghost">
-        All {totalLessons} lessons
+        All {totalTopics} topics
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
       </a>
     </div>
     <div class="lessons-list">
-      {latestLessons.map((l, i) => {
-        const num = folderPrefix(l);
-        const idx = `${num}.${(i % 9) + 1}`;
-        const diff = l.data.difficulty === 'beginner' ? 'b' : l.data.difficulty === 'intermediate' ? 'i' : 'a';
+      {latestTopics.map((t, i) => {
+        const diff = layerIndicator(t.data.layer);
         return (
-          <a class="lrow" href={`/lessons/${l.data.slug}`}>
-            <span class="lrow__idx">{idx}</span>
+          <a class="lrow" href={`/lessons/${t.data.cluster}/${t.data.slug}`}>
+            <span class="lrow__idx">{i + 1}</span>
             <div class="lrow__title">
-              {l.data.title}
-              <small>{categoryDisplay(l.data.category)}</small>
+              {t.data.title}
+              <small>{clusterDisplay(t.data.cluster as CurriculumCluster)}</small>
             </div>
             <span class="lrow__min">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-              {l.data.est_minutes}m
+              {t.data.estimatedEncodingMinutes}m
             </span>
-            <span class={`lrow__diff diff-${diff}`} title={l.data.difficulty}></span>
+            <span class={`lrow__diff diff-${diff}`} title={t.data.layer}></span>
           </a>
         );
       })}
@@ -159,43 +154,39 @@ const latestLessons = sorted.slice(0, 10);
   </section>
 
   <section class="section" id="all">
-    {[...groups.entries()]
-      .map(([cat, lessons]) => ({ cat, lessons, order: categoryOrder(lessons[0]), num: folderPrefix(lessons[0]) }))
-      .sort((a, b) => a.order - b.order)
-      .map(({ cat, lessons, num }) => (
-        <div style="margin-bottom: 40px;">
-          <div class="section__head" style="margin-bottom: 16px;">
-            <div>
-              <span class="eyebrow">{num} · {lessons.length} lesson{lessons.length === 1 ? '' : 's'}</span>
-              <h2 style="font-size: 26px;">{categoryDisplay(cat)}</h2>
-            </div>
-          </div>
-          <div class="lessons-list">
-            {lessons.map((l, i) => {
-              const idx = `${folderPrefix(l)}.${i + 1}`;
-              const diff = l.data.difficulty === 'beginner' ? 'b' : l.data.difficulty === 'intermediate' ? 'i' : 'a';
-              return (
-                <a class="lrow" href={`/lessons/${l.data.slug}`}>
-                  <span class="lrow__idx">{idx}</span>
-                  <div class="lrow__title">
-                    {l.data.title}
-                    <small>{l.data.tags.slice(0, 3).join(' · ')}</small>
-                  </div>
-                  <span class="lrow__min">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                    {l.data.est_minutes}m
-                  </span>
-                  <span class={`lrow__diff diff-${diff}`} title={l.data.difficulty}></span>
-                </a>
-              );
-            })}
+    {clusterRows.map(({ cluster, topics }) => (
+      <div style="margin-bottom: 40px;">
+        <div class="section__head" style="margin-bottom: 16px;">
+          <div>
+            <span class="eyebrow">{cluster} · {topics.length} topic{topics.length === 1 ? '' : 's'}</span>
+            <h2 style="font-size: 26px;">{clusterDisplay(cluster as CurriculumCluster)}</h2>
           </div>
         </div>
-      ))}
+        <div class="lessons-list">
+          {topics.map((t, i) => {
+            const diff = layerIndicator(t.data.layer);
+            return (
+              <a class="lrow" href={`/lessons/${t.data.cluster}/${t.data.slug}`}>
+                <span class="lrow__idx">{i + 1}</span>
+                <div class="lrow__title">
+                  {t.data.title}
+                  <small>{t.data.tags.slice(0, 3).join(' · ')}</small>
+                </div>
+                <span class="lrow__min">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                  {t.data.estimatedEncodingMinutes}m
+                </span>
+                <span class={`lrow__diff diff-${diff}`} title={t.data.layer}></span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    ))}
   </section>
 
   <footer class="site-footer">
     <span>© 2026 · MIT · QA Learning</span>
-    <span>{totalLessons} lessons · {quizCount} quizzes</span>
+    <span>{totalTopics} topics · {quizCount} quizzes</span>
   </footer>
 </BaseLayout>

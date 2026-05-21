@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const LESSON_WITH_HEADINGS = '/lessons/testing-principles';
+const LESSON_WITH_HEADINGS = '/lessons/test-design/exploratory-testing';
 
 test.describe('table of contents', () => {
   test('renders on wide viewport', async ({ page }) => {

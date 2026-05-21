@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-const SLUG = 'testing-principles';
-const LESSON_URL = `/lessons/${SLUG}`;
+const CLUSTER = 'test-design';
+const SLUG = 'exploratory-testing';
+const LESSON_URL = `/lessons/${CLUSTER}/${SLUG}`;
 const STORAGE_KEY = `quiz_${SLUG}`;
 const TOTAL_QUESTIONS = 20;
 
@@ -20,7 +21,7 @@ test('home → lesson → quiz → refresh restores state → finish → summary
   // so we pick the lesson row regardless of which surface is rendering it.
   await page.locator(`a[href="${LESSON_URL}"]`).first().click();
   await expect(page).toHaveURL(LESSON_URL);
-  await expect(page.locator('h1').first()).toContainText('Testing Principles');
+  await expect(page.locator('h1').first()).toContainText('Exploratory Testing');
 
   // 3. Quiz section loads (React island: client:load)
   await expect(page.locator('#quiz')).toBeVisible();

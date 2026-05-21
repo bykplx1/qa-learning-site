@@ -1,70 +1,65 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { sortLessons, groupByCategory } from '../../lib/lessons/order';
-import type { LessonEntry } from '../../lib/lessons/order';
+import { sortCurriculum, groupByCluster, clusterDisplay } from '../../lib/curriculum/order';
+import type { CurriculumEntry } from '../../lib/curriculum/order';
+import type { CurriculumCluster } from '../../lib/curriculum/schema';
 
-const allLessons = await getCollection('lessons');
-const sorted = sortLessons(allLessons);
-const groups = groupByCategory(sorted);
+const allTopics = await getCollection('curriculum');
+const sorted = sortCurriculum(allTopics);
+const groups = groupByCluster(allTopics);
 
-function formatCategory(cat: string): string {
-  return cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+const clusterRows = Array.from(groups.entries())
+  .filter(([, topics]) => topics.length > 0)
+  .map(([cluster, topics]) => ({
+    cluster,
+    topics,
+  }));
+
+const totalTopics = sorted.length;
+const totalMinutes = sorted.reduce((s, t) => s + t.data.estimatedEncodingMinutes, 0);
+
+function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
+  return layer === 'facts' ? 'b' : layer === 'patterns' ? 'i' : 'a';
 }
-
-function folderPrefix(entry: LessonEntry): string {
-  return entry.id.split('/')[0].slice(0, 2);
-}
-
-const categoryRows = Array.from(groups.entries())
-  .map(([cat, lessons]) => ({
-    cat,
-    lessons,
-    num: folderPrefix(lessons[0]),
-  }))
-  .sort((a, b) => a.num.localeCompare(b.num));
-
-const totalLessons = sorted.length;
-const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
 ---
 
 <BaseLayout
   title="Lessons — QA Learning"
-  description={`All ${totalLessons} QA lessons grouped by track. ${totalMinutes} minutes of reading across ${groups.size} curriculum tracks.`}
+  description={`All ${totalTopics} QA topics grouped by track. ${totalMinutes} minutes of reading across ${clusterRows.length} curriculum tracks.`}
 >
   <section class="section">
     <div class="section__head">
       <div>
-        <span class="eyebrow">curriculum · {groups.size} tracks</span>
+        <span class="eyebrow">curriculum · {clusterRows.length} tracks</span>
         <h1>Lessons</h1>
       </div>
-      <p>{totalLessons} lessons · {totalMinutes}m total read time</p>
+      <p>{totalTopics} topics · {totalMinutes}m total read time</p>
     </div>
 
-    {categoryRows.map(({ cat, lessons, num }) => (
+    {clusterRows.map(({ cluster, topics }) => (
       <div style="margin-bottom: 40px;">
         <div class="section__head" style="margin-bottom: 16px;">
           <div>
-            <span class="eyebrow">{num} · {lessons.length} lesson{lessons.length === 1 ? '' : 's'}</span>
-            <h2 style="font-size: 26px;">{formatCategory(cat)}</h2>
+            <span class="eyebrow">{cluster} · {topics.length} topic{topics.length === 1 ? '' : 's'}</span>
+            <h2 style="font-size: 26px;">{clusterDisplay(cluster as CurriculumCluster)}</h2>
           </div>
         </div>
         <div class="lessons-list">
-          {lessons.map((l, i) => {
-            const idx = `${folderPrefix(l)}.${i + 1}`;
-            const diff = l.data.difficulty === 'beginner' ? 'b' : l.data.difficulty === 'intermediate' ? 'i' : 'a';
+          {topics.map((t, i) => {
+            const diff = layerIndicator(t.data.layer);
             return (
-              <a class="lrow" href={`/lessons/${l.data.slug}`}>
-                <span class="lrow__idx">{idx}</span>
+              <a class="lrow" href={`/lessons/${t.data.cluster}/${t.data.slug}`}>
+                <span class="lrow__idx">{i + 1}</span>
                 <div class="lrow__title">
-                  {l.data.title}
-                  <small>{l.data.tags.slice(0, 3).join(' · ')}</small>
+                  {t.data.title}
+                  <small>{t.data.tags.slice(0, 3).join(' · ')}</small>
                 </div>
                 <span class="lrow__min">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                  {l.data.est_minutes}m
+                  {t.data.estimatedEncodingMinutes}m
                 </span>
-                <span class={`lrow__diff diff-${diff}`} title={l.data.difficulty}></span>
+                <span class={`lrow__diff diff-${diff}`} title={t.data.layer}></span>
               </a>
             );
           })}
@@ -75,6 +70,6 @@ const totalMinutes = sorted.reduce((s, l) => s + l.data.est_minutes, 0);
 
   <footer class="site-footer">
     <span>© 2026 · MIT · QA Learning</span>
-    <span>{totalLessons} lessons across {groups.size} tracks</span>
+    <span>{totalTopics} topics across {clusterRows.length} tracks</span>
   </footer>
 </BaseLayout>

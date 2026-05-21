@@ -30,7 +30,8 @@ function trimSlash(s: string): string {
 }
 
 function lessonUrl(siteUrl: string, slug: string): string {
-  return `${trimSlash(siteUrl)}/lessons/${encodeURIComponent(slug)}/`;
+  const encoded = slug.split('/').map(encodeURIComponent).join('/');
+  return `${trimSlash(siteUrl)}/lessons/${encoded}/`;
 }
 
 export function buildRssXml(items: RssItem[], opts: RssOptions): string {

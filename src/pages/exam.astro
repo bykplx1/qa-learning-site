@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ExamRunner from '../components/exam/ExamRunner';
 import { buildExamPool } from '../lib/exam/pool';
@@ -11,8 +10,7 @@ import {
 
 export const prerender = true;
 
-const allLessons = await getCollection('lessons');
-const examQuestions = buildExamPool(allLessons);
+const examQuestions = buildExamPool();
 ---
 
 <BaseLayout

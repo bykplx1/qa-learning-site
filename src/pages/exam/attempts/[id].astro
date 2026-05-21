@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ExamSummary from '../../../components/exam/ExamSummary';
 import { getSession } from '../../../lib/auth';
@@ -22,8 +21,7 @@ if (!attempt || attempt.mode !== 'exam') {
   return new Response('Not found', { status: 404 });
 }
 
-const allLessons = await getCollection('lessons');
-const pool = buildExamPool(allLessons);
+const pool = buildExamPool();
 const questions = pool.slice(0, attempt.total);
 
 const attemptedAtIso = attempt.attemptedAt.toISOString();

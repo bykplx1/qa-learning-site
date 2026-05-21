@@ -1,8 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const LESSON_SLUG = 'testing-principles';
-const LESSON_URL = `/lessons/${LESSON_SLUG}`;
+const LESSON_CLUSTER = 'test-design';
+const LESSON_SLUG = 'exploratory-testing';
+const LESSON_URL = `/lessons/${LESSON_CLUSTER}/${LESSON_SLUG}`;
 
 async function dismissDevOverlay(page: Page) {
   await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
@@ -55,9 +56,8 @@ test.describe('End-of-lesson CTA', () => {
   });
 
   test('project CTA is rendered when a project maps to the cluster', async ({ page }) => {
-    // The lesson slug 'testing-principles' has category 'fundamentals'.
-    // The project 'flaky-test-hunter' is mapped to 'functional-execution'.
-    // So for this test we verify that whatever CTAs are shown, none say "Next lesson".
+    // The topic 'exploratory-testing' is in the 'test-design' cluster.
+    // Verify that whatever CTAs are shown, none say "Next lesson".
     await page.goto(LESSON_URL);
     await expect(page.locator('h1').first()).toBeVisible();
 
