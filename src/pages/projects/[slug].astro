@@ -41,6 +41,10 @@ const existingProp = existing
 // Concept gate: load stability data server-side; pass plain props to React island.
 const requiredConcepts: string[] = project.data.requiredConcepts ?? [];
 
+// Compute valid topic slugs so ConceptGate can suppress "Explain it first" for cluster slugs.
+const allCurriculumTopics = await getCollection('curriculum');
+const validTopicSlugs = allCurriculumTopics.map((t) => t.data.slug as string);
+
 // Resolve gate status: skip when no requiredConcepts or no user.
 // E2E mock mode: build deterministic gate from env vars to avoid DB hit.
 const gate = await (async () => {
@@ -100,6 +104,7 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
         client:load
         projectSlug={project.data.slug}
         gate={gate}
+        validTopicSlugs={validTopicSlugs}
       />
     )}
 
