@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
@@ -34,6 +34,8 @@ function buildSlugMap(vaultPath: string): Map<string, SlugEntry> {
   // Only index files inside numbered category folders (matching the content collection glob)
   const categoryRe = /[/\\]\d{2}-[^/\\]+[/\\]/;
   const map = new Map<string, SlugEntry>();
+
+  if (!existsSync(vaultPath)) return map;
 
   for (const filePath of walkMd(vaultPath)) {
     if (!categoryRe.test(filePath)) continue;

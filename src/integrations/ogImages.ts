@@ -2,17 +2,14 @@ import { fileURLToPath } from 'node:url';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AstroIntegration } from 'astro';
-import { readLessonsMetaFromVault } from '../lib/lessons/seedMeta.js';
 import { computeContentHash, generateOgPng } from '../lib/og/generate.js';
 
 export function ogImagesIntegration(): AstroIntegration {
-  let vaultPath = '';
   let cacheDir = '';
   return {
     name: 'qa-og-images',
     hooks: {
       'astro:config:setup': ({ config }) => {
-        vaultPath = fileURLToPath(new URL('content/qa-vault/', config.root));
         cacheDir = fileURLToPath(new URL('og-cache/', config.cacheDir));
       },
       'astro:build:done': async ({ dir, logger }) => {
@@ -20,9 +17,7 @@ export function ogImagesIntegration(): AstroIntegration {
         mkdirSync(outDir, { recursive: true });
         mkdirSync(cacheDir, { recursive: true });
 
-        const rows = readLessonsMetaFromVault(vaultPath);
         const targets: Array<{ slug: string; title: string; category: string }> = [
-          ...rows,
           { slug: 'default', title: 'QA Learning', category: 'Curriculum + practice' },
         ];
         let cached = 0;

@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repo. See `README.md` and `CONTRIB
 
 ## Project
 
-Public QA learning portfolio site. Content sourced from sibling `qa-vault` repo via git submodule at `content/qa-vault`. Full spec: `content/qa-vault/PLAN.md`. Production: https://qa-learning-site.vercel.app.
+Public QA learning portfolio site. Content lives in `content/curriculum/<cluster>/<slug>.mdx` (the `curriculum` collection). The legacy `qa-vault` git submodule was retired in PR #294 (knowledge-p7). Production: https://qa-learning-site.vercel.app.
 
 ## Stack
 
@@ -43,7 +43,7 @@ src/
   db/            # drizzle schema + client
   content/       # content collections config
   integrations/  # custom astro integrations
-content/qa-vault/  # git submodule — lesson source markdown
+content/curriculum/  # curriculum content (6 clusters × N topics)
 tests/
   e2e/           # playwright
   integration/   # vitest integration
@@ -70,11 +70,11 @@ Domain code goes under `src/lib/<feature>/`. UI components mirror by feature fol
 - Axe a11y assertions run inside e2e specs (`@axe-core/playwright`).
 - Lighthouse-CI budgets enforced in CI — see `lighthouserc.json` / `lighthouserc.desktop.json`.
 
-## Submodule
+## Content
 
-`content/qa-vault` is a git submodule. Clone with `--recurse-submodules`. Don't commit content changes here — they belong in the `qa-vault` repo.
+All content lives in `content/curriculum/<cluster>/<slug>.mdx`. The `curriculum` collection is the only content source — the legacy `qa-vault` git submodule was retired. The `lessons` Astro content collection no longer exists.
 
-The vault is being migrated to a new `curriculum` collection under `content/curriculum/<cluster>/<slug>.mdx`. Track per-topic state in `revamp-doc/migration-matrix.md` — update the matching row whenever a topic moves `pending → drafted → shipped → retired`. See `revamp-doc/revamp-plan.md` §9 for the full strategy.
+Clusters (in canonical order): `foundations`, `test-design`, `functional-execution`, `automation-cicd`, `non-functional`, `ai-llm-qa`. Migration is complete — all 36 topics are `shipped` in `revamp-doc/migration-matrix.md`.
 
 ## Design
 
