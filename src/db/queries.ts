@@ -344,3 +344,63 @@ export async function setSubmissionPublic(
     .set({ isPublic, updatedAt: new Date() })
     .where(and(eq(projectSubmissions.userId, userId), eq(projectSubmissions.projectSlug, projectSlug)));
 }
+
+// ── Consolidated profile fetch ────────────────────────────────────────────────
+// Issues 5 parallel queries (one per distinct table) rather than the 13 that
+// the individual helper functions would issue.  The pure computation functions
+// (streakOf, heatmapOf, …) are then called in-memory against the shared rows.
+
+export interface ProfileRawData {
+  dailyActivityRows: { day: string; attemptsCount: number; lessonsCount: number }[];
+  lessonViewRows: { lessonSlug: string; completedAt: Date | null }[];
+  quizAttemptRows: {
+    id: string;
+    quizSlug: string;
+    mode: string;
+    score: number;
+    total: number;
+    attemptedAt: Date;
+  }[];
+  lessonMetaRows: { slug: string; title: string; category: string }[];
+  submissionRows: ProjectSubmission[];
+}
+
+export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
+  const [dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows] =
+    await Promise.all([
+      db
+        .select({
+          day: dailyActivity.day,
+          attemptsCount: dailyActivity.attemptsCount,
+          lessonsCount: dailyActivity.lessonsCount,
+        })
+        .from(dailyActivity)
+        .where(eq(dailyActivity.userId, userId)),
+      db
+        .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
+        .from(lessonViews)
+        .where(eq(lessonViews.userId, userId)),
+      db
+        .select({
+          id: quizAttempts.id,
+          quizSlug: quizAttempts.quizSlug,
+          mode: quizAttempts.mode,
+          score: quizAttempts.score,
+          total: quizAttempts.total,
+          attemptedAt: quizAttempts.attemptedAt,
+        })
+        .from(quizAttempts)
+        .where(eq(quizAttempts.userId, userId))
+        .orderBy(desc(quizAttempts.attemptedAt)),
+      db
+        .select({ slug: lessonsMeta.slug, title: lessonsMeta.title, category: lessonsMeta.category })
+        .from(lessonsMeta),
+      db
+        .select()
+        .from(projectSubmissions)
+        .where(eq(projectSubmissions.userId, userId))
+        .orderBy(desc(projectSubmissions.submittedAt)),
+    ]);
+
+  return { dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows };
+}

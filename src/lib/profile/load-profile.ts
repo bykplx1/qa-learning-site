@@ -1,18 +1,14 @@
-import {
-  getCategoryProgress,
-  getCompletedLessonCount,
-  getHeatmap,
-  getQuizAccuracyByTopic,
-  getQuizAttemptCount,
-  getRecentActivity,
-  getStreak,
-  listSubmissions,
-} from '../../db/queries';
+import { loadProfileRaw } from '../../db/queries';
 import type { StreakResult } from '../streak/streak';
 import type { CategoryProgress } from '../progress/progress';
 import type { TopicAccuracy } from '../progress/quiz-accuracy';
 import type { HeatmapCell } from '../heatmap/heatmap';
 import type { ActivityItem } from '../activity/activity';
+import { streakOf } from '../streak/streak';
+import { categoryProgressOf } from '../progress/progress';
+import { quizAccuracyByTopicOf } from '../progress/quiz-accuracy';
+import { heatmapOf } from '../heatmap/heatmap';
+import { recentActivityOf } from '../activity/activity';
 
 export interface ProfileSubmission {
   projectSlug: string;
@@ -46,25 +42,36 @@ export async function loadProfile(
   const projectTitleBySlug = options.projectTitleBySlug ?? new Map<string, string>();
   const heatmapYear = today.getUTCFullYear();
 
-  const [
-    streak,
-    heatmapCells,
-    categoryProgress,
-    accuracyByTopic,
-    recentActivity,
-    submissions,
-    completedCount,
-    attemptCount,
-  ] = await Promise.all([
-    getStreak(userId, today),
-    getHeatmap(userId, heatmapYear),
-    getCategoryProgress(userId),
-    getQuizAccuracyByTopic(userId),
-    getRecentActivity(userId, 10, projectTitleBySlug),
-    listSubmissions(userId),
-    getCompletedLessonCount(userId),
-    getQuizAttemptCount(userId),
-  ]);
+  // Single round-trip: 5 parallel queries instead of the previous 13.
+  const { dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows } =
+    await loadProfileRaw(userId);
+
+  const lessonTitleBySlug = new Map(lessonMetaRows.map((m) => [m.slug, m.title]));
+
+  const streak = streakOf(dailyActivityRows, today);
+
+  // heatmapOf accepts rows with attemptsCount+lessonsCount; filter to year in-memory.
+  const yearStart = `${heatmapYear}-01-01`;
+  const yearEnd = `${heatmapYear}-12-31`;
+  const heatmapRows = dailyActivityRows.filter((r) => r.day >= yearStart && r.day <= yearEnd);
+  const heatmapCells = heatmapOf(heatmapRows, heatmapYear);
+
+  const categoryProgress = categoryProgressOf(lessonViewRows, quizAttemptRows, lessonMetaRows);
+
+  const accuracyByTopic = quizAccuracyByTopicOf(quizAttemptRows, lessonMetaRows);
+
+  const recentActivity = recentActivityOf(
+    lessonViewRows,
+    quizAttemptRows,
+    submissionRows,
+    lessonTitleBySlug,
+    projectTitleBySlug,
+    10,
+  );
+
+  const completedCount = lessonViewRows.filter((v) => v.completedAt != null).length;
+
+  const attemptCount = quizAttemptRows.length;
 
   return {
     streak,
@@ -72,7 +79,7 @@ export async function loadProfile(
     categoryProgress,
     accuracyByTopic,
     recentActivity,
-    submissions: submissions.map((s) => ({
+    submissions: submissionRows.map((s) => ({
       projectSlug: s.projectSlug,
       repoUrl: s.repoUrl,
       reflection: s.reflection,
