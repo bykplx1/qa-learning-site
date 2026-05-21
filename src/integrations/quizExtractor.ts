@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stringify } from 'yaml';
@@ -37,6 +37,12 @@ export function quizExtractorIntegration(): AstroIntegration {
         const categoryRe = /[/\\]\d{2}-[^/\\]+[/\\]/;
 
         mkdirSync(outDir, { recursive: true });
+
+        if (!existsSync(vaultPath)) {
+          logger.info('Quiz extractor: vault not found — skipping (quiz files are pre-generated)');
+          updateConfig({ markdown: { remarkPlugins: [remarkStripQuizSections] } });
+          return;
+        }
 
         let quizCount = 0;
         let tasksCount = 0;

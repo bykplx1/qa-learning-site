@@ -5,9 +5,7 @@
 
 **Production:** https://qa-learning-site.vercel.app
 
-Public QA learning portfolio site. Source content lives in the `qa-vault` repo, included here as a git submodule under `content/qa-vault`.
-
-See [`PLAN.md` in the vault](https://github.com/bykplx1/qa-vault/blob/main/PLAN.md) for the full spec.
+Public QA learning portfolio site. Content lives in `content/curriculum/<cluster>/<slug>.mdx` (the `curriculum` collection). The legacy `qa-vault` git submodule has been retired.
 
 ## Stack
 
@@ -22,7 +20,7 @@ See [`PLAN.md` in the vault](https://github.com/bykplx1/qa-vault/blob/main/PLAN.
 ## Setup
 
 ```bash
-git clone --recurse-submodules https://github.com/bykplx1/qa-learning-site.git
+git clone https://github.com/bykplx1/qa-learning-site.git
 cd qa-learning-site
 npm ci
 npm run dev
