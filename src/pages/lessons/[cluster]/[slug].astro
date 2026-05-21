@@ -1,8 +1,14 @@
 ---
 import { getCollection, render } from 'astro:content';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { parse } from 'yaml';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import TableOfContents from '../../../components/TableOfContents.astro';
 import { MarkComplete } from '../../../components/MarkComplete';
+import QuizRunner from '../../../components/quiz/QuizRunner';
+import { quizFileSchema } from '../../../lib/quiz/schema';
+import type { QuizQuestion } from '../../../lib/quiz/schema';
 import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../../lib/encoding/repair';
 import type { CurriculumCluster } from '../../../lib/curriculum/schema';
@@ -41,6 +47,13 @@ const layerClass =
 
 const ogDescription = topic.body ? repairWin1252(extractExcerpt(topic.body)) : undefined;
 const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.site).href;
+
+const quizYamlPath = join(process.cwd(), 'src', 'generated', 'quiz', `${topic.data.slug}.quiz.yaml`);
+let quizQuestions: QuizQuestion[] = [];
+if (existsSync(quizYamlPath)) {
+  const result = quizFileSchema.safeParse(parse(repairWin1252(readFileSync(quizYamlPath, 'utf-8'))));
+  if (result.success) quizQuestions = result.data.questions;
+}
 ---
 
 <BaseLayout
@@ -100,6 +113,17 @@ const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.sit
           <MarkComplete client:only="react" slug={topic.data.slug} />
         </div>
       </article>
+
+      {quizQuestions.length > 0 && (
+        <section id="quiz">
+          <div class="hidden" aria-hidden="true" data-pagefind-body data-pagefind-filter="section:quiz" data-pagefind-meta="type:quiz">
+            <h2>Practice Quiz</h2>
+            {quizQuestions.map((q) => <p>{q.q}</p>)}
+          </div>
+          {/* client:load — must NOT be client:idle; e2e clicks fire before requestIdleCallback (#106) */}
+          <QuizRunner client:load questions={quizQuestions} quizSlug={topic.data.slug} />
+        </section>
+      )}
     </main>
 
     <aside class="lesson-toc">
@@ -162,4 +186,6 @@ const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.sit
     font-weight: 400;
   }
   @media (max-width: 768px) { .lesson-title { font-size: 38px; } }
+
+  .hidden { display: none !important; }
 </style>
