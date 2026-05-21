@@ -47,7 +47,7 @@ test.describe('full sign-in → quiz → lesson complete → profile', () => {
 
     // 2. Open the lesson.
     await page.goto(LESSON_URL);
-    await expect(page.locator('h1').first()).toContainText('Testing Principles');
+    await expect(page.locator('h1').first()).toContainText('Exploratory Testing');
     await expect(page.locator('#quiz')).toBeVisible();
 
     // 3. Jump to last question via sessionStorage (mirrors smoke spec).
