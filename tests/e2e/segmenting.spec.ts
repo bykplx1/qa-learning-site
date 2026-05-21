@@ -1,7 +1,7 @@
 /**
  * E2E tests for long-lesson segmenting (Issue #149).
  *
- * Uses /lessons/testing-principles which has 9 h2 sections — well above the
+ * Uses /lessons/test-design/exploratory-testing which has 7 h2 sections — well above the
  * LONG_LESSON_H2_THRESHOLD of 3 — so segmenting is guaranteed to activate.
  *
  * Assertions:
@@ -17,7 +17,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const LONG_LESSON = '/lessons/testing-principles';
+const LONG_LESSON = '/lessons/test-design/exploratory-testing';
 
 async function dismissDevOverlay(page: Page) {
   await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {

@@ -43,10 +43,11 @@ test('index page exposes complete OG/Twitter meta with default image', async ({ 
 
 test('lesson page references its per-slug OG image and article type', async ({ page }) => {
   await dismissDevOverlay(page);
-  const slug = 'testing-principles';
-  await page.goto(`/lessons/${slug}`);
+  const cluster = 'test-design';
+  const slug = 'exploratory-testing';
+  await page.goto(`/lessons/${cluster}/${slug}`);
   await expectFullMetaSet(page, {
-    url: `/lessons/${slug}`,
+    url: `/lessons/${cluster}/${slug}`,
     ogType: 'article',
     imageMatches: new RegExp(`/og/${slug}\\.png$`),
   });

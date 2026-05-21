@@ -1,7 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const LESSON_SLUG = 'testing-principles';
+const LESSON_CLUSTER = 'test-design';
+const LESSON_SLUG = 'exploratory-testing';
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -53,14 +54,14 @@ test.describe('a11y — WCAG 2.2 AA', () => {
   });
 
   test('lesson', async ({ page }) => {
-    await page.goto(`/lessons/${LESSON_SLUG}`);
+    await page.goto(`/lessons/${LESSON_CLUSTER}/${LESSON_SLUG}`);
     await expect(page.locator('#quiz')).toBeVisible();
     await expect(page.getByText(/Question 1 \/ \d+/)).toBeVisible();
     await runAxe(page, 'lesson');
   });
 
   test('quiz mid-attempt', async ({ page }) => {
-    await page.goto(`/lessons/${LESSON_SLUG}`);
+    await page.goto(`/lessons/${LESSON_CLUSTER}/${LESSON_SLUG}`);
     const quiz = page.locator('#quiz');
     await expect(quiz).toBeVisible();
     await expect(quiz.getByText(/Question 1 \/ \d+/)).toBeVisible();
@@ -80,7 +81,7 @@ test.describe('a11y — WCAG 2.2 AA', () => {
   // axe-core treats as DOM under test, producing serious violations. Re-enable once #223
   // is resolved upstream and the dev overlay no longer appears mid-run.
   test.skip('lesson blockquote — semantic role and non-color signaling', async ({ page }) => {
-    await page.goto(`/lessons/${LESSON_SLUG}`);
+    await page.goto(`/lessons/${LESSON_CLUSTER}/${LESSON_SLUG}`);
     await expect(page.locator('article')).toBeVisible();
 
     const blockquote = page.locator('.prose blockquote').first();

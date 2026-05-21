@@ -1,7 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const SLUG = 'testing-principles';
-const LESSON_URL = `/lessons/${SLUG}`;
+const CLUSTER = 'test-design';
+const SLUG = 'exploratory-testing';
+const LESSON_URL = `/lessons/${CLUSTER}/${SLUG}`;
 const STORAGE_KEY = `quiz_${SLUG}`;
 const TOTAL_QUESTIONS = 20;
 

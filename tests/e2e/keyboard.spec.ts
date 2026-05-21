@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const LESSON_SLUG = 'testing-principles';
+const LESSON_CLUSTER = 'test-design';
+const LESSON_SLUG = 'exploratory-testing';
 
 async function dismissDevOverlay(page: Page) {
   await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
@@ -31,7 +32,7 @@ test.describe('keyboard-only operability', () => {
   });
 
   test('quiz runner: tab to option, Enter selects, Tab to Next, Enter advances', async ({ page }) => {
-    await page.goto(`/lessons/${LESSON_SLUG}`);
+    await page.goto(`/lessons/${LESSON_CLUSTER}/${LESSON_SLUG}`);
     const quiz = page.locator('#quiz');
     await expect(quiz).toBeVisible();
     await expect(quiz.getByText('Question 1 / 20')).toBeVisible();
