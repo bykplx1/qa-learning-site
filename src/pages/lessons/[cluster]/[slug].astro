@@ -136,7 +136,7 @@ const { options: endCtaOptions } = await resolveEndCta(
         )}
 
         <div style="margin-top: 28px;">
-          <MarkComplete client:only="react" slug={topic.data.slug} />
+          <MarkComplete client:idle slug={topic.data.slug} />
         </div>
       </article>
 
