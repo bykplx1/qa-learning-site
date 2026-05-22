@@ -1,6 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const LESSON_SLUG = 'testing-principles';
+// Visual fixture: a live curriculum topic that has a generated quiz. The flat
+// `/lessons/<slug>` route and the `testing-principles` vault slug were both
+// retired in #294, so the spec targets the canonical `/lessons/<cluster>/<slug>`.
+const LESSON_CLUSTER = 'test-design';
+const LESSON_SLUG = 'test-design-techniques';
+const LESSON_PATH = `/lessons/${LESSON_CLUSTER}/${LESSON_SLUG}`;
 const QUIZ_STORAGE_KEY = `quiz_${LESSON_SLUG}`;
 
 /**
@@ -74,7 +79,7 @@ for (const theme of ['light', 'dark'] as const) {
 
     test('lesson', async ({ page }) => {
       await clearQuizState(page);
-      await page.goto(`/lessons/${LESSON_SLUG}`);
+      await page.goto(LESSON_PATH);
       await expect(page.locator('#quiz')).toBeVisible();
       await settle(page);
       await expect(page).toHaveScreenshot(`lesson-${theme}.png`, { fullPage: true });
@@ -82,7 +87,7 @@ for (const theme of ['light', 'dark'] as const) {
 
     test('quiz mid-attempt', async ({ page }) => {
       await clearQuizState(page);
-      await page.goto(`/lessons/${LESSON_SLUG}`);
+      await page.goto(LESSON_PATH);
       const quiz = page.locator('#quiz');
       await expect(quiz).toBeVisible();
       // React island hydration: the question indicator only paints after
