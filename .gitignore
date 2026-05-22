@@ -18,6 +18,9 @@ pnpm-debug.log*
 .env.local
 .env.*.local
 
+# local secrets / credentials (never commit)
+cred.txt
+
 # OS
 .DS_Store
 Thumbs.db

@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '../db';
 import { ensureMockUser, getMockSession, installOAuthMock } from './test-auth-mock';
+import { getTestSession, testLoginEnabled } from './test-login';
 
 if (process.env.E2E_OAUTH_MOCK === '1') {
   installOAuthMock();
@@ -58,6 +59,12 @@ export async function getSession(headers: Headers) {
     // INSERT (self_explanations, review_cards, quiz_attempts, ...) races and 500s.
     await ensureMockUser();
     return getMockSession(headers);
+  }
+  // Dev/preview test accounts: a valid signed test cookie short-circuits real
+  // auth. Falls through to real OAuth when no test cookie is present.
+  if (testLoginEnabled()) {
+    const testSession = getTestSession(headers);
+    if (testSession) return testSession;
   }
   return auth.api.getSession({ headers });
 }

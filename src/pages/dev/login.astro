@@ -1,0 +1,109 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { personas, testLoginEnabled, getTestSession } from '../../lib/test-login';
+
+export const prerender = false;
+
+// Off in production / without the flag — don't even reveal the route exists.
+if (!testLoginEnabled()) {
+  return new Response('Not found', { status: 404 });
+}
+
+const key = Astro.url.searchParams.get('key') ?? '';
+const current = getTestSession(Astro.request.headers);
+const secretConfigured = Boolean(import.meta.env.TEST_LOGIN_SECRET ?? process.env.TEST_LOGIN_SECRET);
+---
+
+<BaseLayout title="Test login (dev/preview only)">
+  <main class="prose" style="max-width: 720px; margin: 0 auto; padding: 2rem 1rem;">
+    <h1>Test login</h1>
+    <p style="color: var(--ink-3);">
+      Dev / preview only. Pick a persona to start a real session and walk auth-gated UX
+      before it reaches production.
+    </p>
+
+    {current && (
+      <p
+        data-testid="test-login-current"
+        style="padding: 0.75rem 1rem; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper);"
+      >
+        Currently signed in as <strong>{current.user.name}</strong>
+        <span style="font-family: var(--mono); color: var(--ink-3);"> ({current.user.email})</span>
+      </p>
+    )}
+
+    {!secretConfigured && (
+      <p style="color: var(--warn-strong, #b45309); border: 1px solid var(--rule); border-radius: 10px; padding: 0.75rem 1rem;">
+        <strong>TEST_LOGIN_SECRET is not set</strong> — login will be rejected until it is configured.
+      </p>
+    )}
+
+    {!key && secretConfigured && (
+      <p style="color: var(--ink-3);">
+        Append <code>?key=YOUR_SECRET</code> to this URL to enable the buttons below.
+      </p>
+    )}
+
+    <div style="display: grid; gap: 1rem; margin-top: 1.5rem;">
+      {personas.map((p) => (
+        <div style="border: 1px solid var(--rule); border-radius: 12px; padding: 1.25rem; background: var(--paper);">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;">
+            <strong>{p.name}</strong>
+            <span style="font-family: var(--mono); font-size: 0.8rem; color: var(--ink-3);">{p.email}</span>
+          </div>
+          <p style="margin: 0.5rem 0 1rem; color: var(--ink-3); font-size: 0.9rem;">{p.blurb}</p>
+          <button
+            type="button"
+            class="btn btn--primary btn--sm"
+            data-persona={p.key}
+            data-testid={`test-login-${p.key}`}
+            disabled={!key || !secretConfigured}
+          >
+            Sign in as {p.name}
+          </button>
+        </div>
+      ))}
+    </div>
+
+    {current && (
+      <button type="button" id="test-logout" class="btn btn--ghost btn--sm" style="margin-top: 1.5rem;">
+        Sign out
+      </button>
+    )}
+
+    <p id="test-login-status" role="status" aria-live="polite" style="margin-top: 1rem; color: var(--ink-3);"></p>
+  </main>
+</BaseLayout>
+
+<script is:inline define:vars={{ key }}>
+  const status = document.getElementById('test-login-status');
+  const setStatus = (msg) => { if (status) status.textContent = msg; };
+
+  async function post(payload) {
+    const res = await fetch('/api/test-login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return { ok: res.ok, data: await res.json().catch(() => ({})) };
+  }
+
+  for (const btn of document.querySelectorAll('button[data-persona]')) {
+    btn.addEventListener('click', async () => {
+      setStatus('Signing in…');
+      const { ok, data } = await post({ persona: btn.dataset.persona, key });
+      if (ok && data.ok) {
+        setStatus(`Signed in as ${data.user?.name}. Redirecting…`);
+        window.location.href = '/profile';
+      } else {
+        setStatus(`Failed: ${data.error ?? 'unknown error'}`);
+      }
+    });
+  }
+
+  document.getElementById('test-logout')?.addEventListener('click', async () => {
+    setStatus('Signing out…');
+    await post({ action: 'logout' });
+    window.location.reload();
+  });
+</script>
