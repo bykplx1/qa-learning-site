@@ -70,6 +70,11 @@ export default defineConfig({
     resolve: {
       dedupe: ['react', 'react-dom'],
     },
+    ssr: {
+      optimizeDeps: {
+        include: ['react', 'react-dom'],
+      },
+    },
     build: {
       rollupOptions: {
         external: ['/pagefind/pagefind.js'],
