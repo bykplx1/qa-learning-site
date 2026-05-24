@@ -1,0 +1,86 @@
+---
+/**
+ * Maintain — trigger → response runbook entry.
+ * Usage:
+ *   <Maintain trigger="Playwright ships a major version">
+ *     Update @playwright/test in package.json, run the test suite, regenerate visual baselines.
+ *   </Maintain>
+ */
+interface Props {
+  trigger: string;
+}
+
+const { trigger } = Astro.props;
+---
+
+<div class="maintain-entry" role="listitem">
+  <div class="maintain-entry__trigger">
+    <span class="eyebrow maintain-entry__label">when</span>
+    <p class="maintain-entry__trigger-text">{trigger}</p>
+  </div>
+  <div class="maintain-entry__response">
+    <span class="eyebrow maintain-entry__label">do</span>
+    <div class="maintain-entry__body">
+      <slot />
+    </div>
+  </div>
+</div>
+
+<style>
+  .maintain-entry {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0;
+    margin: 12px 0;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 15px;
+  }
+  @media (max-width: 640px) {
+    .maintain-entry {
+      grid-template-columns: 1fr;
+    }
+  }
+  .maintain-entry__trigger {
+    padding: 14px 16px;
+    background: var(--paper-2);
+    border-right: 1px solid var(--rule);
+  }
+  @media (max-width: 640px) {
+    .maintain-entry__trigger {
+      border-right: none;
+      border-bottom: 1px solid var(--rule);
+    }
+  }
+  .maintain-entry__response {
+    padding: 14px 16px;
+    background: var(--paper);
+  }
+  .maintain-entry__label {
+    display: block;
+    margin-bottom: 6px;
+  }
+  .maintain-entry__trigger-text {
+    margin: 0;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .maintain-entry__body {
+    color: var(--ink-2);
+  }
+  .maintain-entry__body :global(p) {
+    margin: 0;
+  }
+  .maintain-entry__body :global(ul) {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+  .maintain-entry__body :global(code) {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--paper-2);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+</style>

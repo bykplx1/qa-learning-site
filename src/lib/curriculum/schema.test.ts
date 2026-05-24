@@ -1,6 +1,6 @@
 /**
  * Unit tests for curriculum schema — verifies cluster grouping contract
- * that ClusterToc.astro depends on.
+ * that ClusterToc.astro depends on, and the kind/verified conditional.
  */
 import { describe, it, expect } from 'vitest';
 import {
@@ -8,6 +8,17 @@ import {
   curriculumFrontmatterSchema,
   type CurriculumCluster,
 } from './schema';
+
+const BASE_VALID = {
+  slug: 'qa-mindset',
+  title: 'The QA Mindset',
+  cluster: 'foundations' as const,
+  layer: 'systems' as const,
+  prerequisites: [],
+  related: [],
+  tags: ['quality'],
+  estimatedEncodingMinutes: 20,
+};
 
 describe('CURRICULUM_CLUSTERS', () => {
   it('contains all 6 expected clusters in canonical order', () => {
@@ -29,17 +40,63 @@ describe('CURRICULUM_CLUSTERS', () => {
 
 describe('curriculumFrontmatterSchema', () => {
   it('accepts a valid curriculum entry', () => {
+    const result = curriculumFrontmatterSchema.safeParse(BASE_VALID);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts a tool lesson with a valid verified block', () => {
     const result = curriculumFrontmatterSchema.safeParse({
-      slug: 'qa-mindset',
-      title: 'The QA Mindset',
-      cluster: 'foundations',
-      layer: 'systems',
-      prerequisites: [],
-      related: [],
-      tags: ['quality'],
-      estimatedEncodingMinutes: 20,
+      ...BASE_VALID,
+      kind: 'tool',
+      verified: {
+        tool: 'playwright',
+        versions: { '@playwright/test': '1.59.1' },
+        date: '2026-05-24',
+      },
     });
     expect(result.success).toBe(true);
+  });
+
+  it('rejects a tool lesson missing the verified block', () => {
+    const result = curriculumFrontmatterSchema.safeParse({
+      ...BASE_VALID,
+      kind: 'tool',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((e) => e.path.join('.'));
+      expect(paths).toContain('verified');
+    }
+  });
+
+  it('accepts a non-tool lesson without a verified block', () => {
+    const result = curriculumFrontmatterSchema.safeParse(BASE_VALID);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a verified block with a non-ISO date', () => {
+    const result = curriculumFrontmatterSchema.safeParse({
+      ...BASE_VALID,
+      kind: 'tool',
+      verified: {
+        tool: 'playwright',
+        versions: { '@playwright/test': '1.59.1' },
+        date: '24-05-2026',
+      },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a verified block with missing versions', () => {
+    const result = curriculumFrontmatterSchema.safeParse({
+      ...BASE_VALID,
+      kind: 'tool',
+      verified: {
+        tool: 'playwright',
+        date: '2026-05-24',
+      },
+    });
+    expect(result.success).toBe(false);
   });
 
   it('rejects an unknown cluster', () => {

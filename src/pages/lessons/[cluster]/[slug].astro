@@ -18,6 +18,7 @@ import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../../lib/encoding/repair';
 import type { CurriculumCluster } from '../../../lib/curriculum/schema';
 import { CURRICULUM_CLUSTERS } from '../../../lib/curriculum/schema';
+import VerifiedStamp from '../../../components/mdx/VerifiedStamp.astro';
 
 export async function getStaticPaths() {
   const allTopics = await getCollection('curriculum');
@@ -29,7 +30,7 @@ export async function getStaticPaths() {
 
 const { topic } = Astro.props;
 const { Content, headings } = await render(topic);
-const { title, cluster, estimatedEncodingMinutes, tags, layer } = topic.data;
+const { title, cluster, estimatedEncodingMinutes, tags, layer, kind, verified } = topic.data;
 
 function formatCluster(c: string): string {
   return c.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
@@ -122,8 +123,16 @@ const { options: endCtaOptions } = await resolveEndCta(
             <span class={layerClass}>
               <span class="dot"></span>{layer}
             </span>
+            {kind === 'tool' && (
+              <span class="pill pill--pass">
+                <span class="dot"></span>runbook
+              </span>
+            )}
             {tags.map((t) => <span class="pill">{t}</span>)}
           </div>
+          {kind === 'tool' && verified && (
+            <VerifiedStamp verified={verified} />
+          )}
         </header>
 
         <div class="prose" data-pagefind-body data-pagefind-meta="type:curriculum" data-lesson-body>

@@ -190,6 +190,56 @@ describe('R8: wikilink resolution', () => {
   });
 });
 
+// ─── R9: Tool-lesson runbook requirements ─────────────────────────────────────
+
+describe('R9: tool-lesson runbook', () => {
+  it('pass — valid tool lesson with all sections, verified block, and tail', () => {
+    const errors = lintDir(PASS).filter(
+      (e) => e.rule === 'R9:tool-lesson' && e.file.includes('r9-tool-lesson-valid')
+    );
+    expect(errors).toHaveLength(0);
+  });
+
+  it('fail — tool lesson missing verified block triggers R9 error', () => {
+    const errors = lintDir(FAIL).filter(
+      (e) => e.rule === 'R9:tool-lesson' && e.file.includes('r9-tool-missing-verified')
+    );
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].message).toMatch(/verified/i);
+  });
+
+  it('fail — tool lesson missing required sections triggers R9 errors', () => {
+    const errors = lintDir(FAIL).filter(
+      (e) => e.rule === 'R9:tool-lesson' && e.file.includes('r9-tool-missing-sections')
+    );
+    expect(errors.length).toBeGreaterThan(0);
+    const messages = errors.map((e) => e.message);
+    expect(messages.some((m) => /set up/i.test(m))).toBe(true);
+    expect(messages.some((m) => /implement/i.test(m))).toBe(true);
+    expect(messages.some((m) => /common pitfalls/i.test(m))).toBe(true);
+    expect(messages.some((m) => /maintain/i.test(m))).toBe(true);
+  });
+
+  it('fail — tool lesson with too few prompts and no Feynman triggers R9 error', () => {
+    const errors = lintDir(FAIL).filter(
+      (e) => e.rule === 'R9:tool-lesson' && e.file.includes('r9-tool-missing-tail')
+    );
+    expect(errors.length).toBeGreaterThan(0);
+    const messages = errors.map((e) => e.message);
+    expect(messages.some((m) => /≥3/i.test(m) || /prompt/i.test(m))).toBe(true);
+    expect(messages.some((m) => /feynman/i.test(m))).toBe(true);
+  });
+
+  it('pass — non-tool lessons are unaffected (no R9 errors on standard fixtures)', () => {
+    const errors = lintDir(PASS).filter(
+      (e) =>
+        e.rule === 'R9:tool-lesson' &&
+        (e.file.includes('r1-valid-frontmatter') || e.file.includes('r5-practice-task-systems'))
+    );
+    expect(errors).toHaveLength(0);
+  });
+});
+
 // ─── Smoke-test topic ─────────────────────────────────────────────────────────
 
 describe('K-P0 smoke-test topic', () => {

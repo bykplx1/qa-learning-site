@@ -3,6 +3,13 @@ slug: playwright
 title: Playwright — Locators, Fixtures, Traces, Auth State & Parallelism
 cluster: automation-cicd
 layer: systems
+kind: tool
+verified:
+  tool: Playwright
+  versions:
+    "@playwright/test": "1.59.1"
+    node: ">=22.12.0"
+  date: "2026-05-24"
 prerequisites:
   - frontend-prereqs-for-testers
   - unit-integration-e2e-boundaries
@@ -21,16 +28,86 @@ import Diagram from '../../../src/components/mdx/Diagram.astro';
 import Prompt from '../../../src/components/mdx/Prompt.astro';
 import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
 import Feynman from '../../../src/components/mdx/Feynman.astro';
+import Maintain from '../../../src/components/mdx/Maintain.astro';
 
 ## Core Idea
 
 Playwright becomes reliable only when a tester learns it as a small set of **orthogonal primitives**, not as Selenium-with-different-syntax. The load-bearing primitives are: **Locator** (lazy, retryable DOM handle), **auto-wait** (five conditions checked before every action), **web-first assertion** (retries until match or timeout), **fixture** (composable scoped setup/teardown), **browser context** (isolated storage inside one process), and **trace** (time-travel artefact of an entire run).
 
-The companion claim: flake is almost always a *primitive misuse*, not a Playwright bug. Race conditions, wrong assertion family, shared context state, missing auto-wait semantics — each maps to a primitive the tester hadn't internalised. The trace converts "this flakes sometimes" into "here is the millisecond it broke."
+Flake is almost always a _primitive misuse_, not a Playwright bug. Race conditions, wrong assertion family, shared context state, missing auto-wait semantics — each maps to a primitive the tester hadn't internalised. The trace converts "this flakes sometimes" into "here is the millisecond it broke."
 
 > Flake is a primitive-misuse diagnostic, not an environmental excuse. The trace is the evidence that makes diagnosis possible.
 
-## Diagram
+## 1. Set up
+
+Everything from an empty folder to a single green Playwright run.
+
+**Prerequisites:** Node ≥ 22.12.0, a terminal.
+
+### Create the project
+
+```bash
+mkdir pw-runbook && cd pw-runbook
+npm init -y
+```
+
+### Install Playwright (pinned)
+
+```bash
+npm install --save-dev @playwright/test@1.59.1
+npx playwright install --with-deps chromium
+```
+
+> Pin the version. Playwright bundles its own Chromium — a bump regenerates visual baselines and can change trace timestamps. Only bump deliberately and regenerate baselines in the same PR.
+
+### Scaffold the config
+
+Create `playwright.config.ts` in the project root:
+
+```ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  fullyParallel: true,
+  retries: process.env.CI ? 2 : 0,
+  reporter: process.env.CI ? 'github' : 'list',
+  use: {
+    baseURL: 'https://example.com',
+    trace: 'on-first-retry',
+  },
+});
+```
+
+### Write a first test
+
+Create `tests/e2e/smoke.spec.ts`:
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test('home page loads', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveTitle(/Example/);
+});
+```
+
+### Run to green
+
+```bash
+npx playwright test
+```
+
+Expected output:
+
+```
+Running 1 test using 1 worker
+  ✓  tests/e2e/smoke.spec.ts:3:5 › home page loads (1.2s)
+
+  1 passed (2.5s)
+```
+
+If the run is green, the setup is complete. Move on.
 
 <Diagram caption="Playwright primitive lifecycle — from test authoring to trace-driven flake diagnosis">
 ```
@@ -64,67 +141,103 @@ TRACE TIMELINE (on-first-retry)
 ```
 </Diagram>
 
-## Worked Example
+## 2. Implement + best practice
 
-This site's `tests/e2e/concept-gate.spec.ts` uses several primitives at once — it is the best anchor for understanding how they compose.
-
-**What the spec does:** It tests the ConceptGate component on the `/projects/flaky-test-hunter` page — a React island that hides project content until prerequisite cards are reviewed. It requires a mocked OAuth sign-in before navigating, uses `getByTestId` locators on dynamic content, and calls `@axe-core/playwright` for a11y verification in the same run.
-
-**The sign-in helper — `page.request` as a fixture-free API client:**
+### Locator hierarchy — use role first
 
 ```ts
-// tests/e2e/concept-gate.spec.ts (excerpt)
-async function signInWithMockedGitHub(page: Page): Promise<void> {
-  const startRes = await page.request.post('/api/auth/sign-in/social', {
-    data: { provider: 'github', callbackURL: '/' },
-    headers: { 'content-type': 'application/json' },
-  });
-  expect(startRes.ok(), `sign-in init failed: ${startRes.status()}`).toBeTruthy();
-  const body = (await startRes.json()) as { url?: string };
-  const state = new URL(body.url!).searchParams.get('state');
+// ✓ role-based: durable + a11y signal in one
+const btn = page.getByRole('button', { name: 'Save' });
 
-  const cbRes = await page.request.get(
-    `/api/auth/callback/github?code=fake-e2e-code&state=${state}`,
-    { maxRedirects: 0 },
-  );
-  expect(cbRes.status(), `callback status: ${cbRes.status()}`).toBeLessThan(400);
-}
+// ✓ label-based for form inputs
+const email = page.getByLabel('Email address');
+
+// ✗ last resort — CSS breaks on refactor and misses a11y
+const btn = page.locator('.save-btn');
 ```
 
-`page.request` shares the browser's cookie jar — the resulting session cookie is visible to subsequent `page.goto()` calls without any `storageState` file. This is a test-scope auth pattern; for worker-scope auth, the equivalent is `globalSetup` writing a `storageState` file and each test loading it via `use: { storageState: 'auth.json' }`.
+Follow this hierarchy: `getByRole` → `getByLabel` → `getByPlaceholder` → `getByText` → `getByTestId` → CSS → XPath. CSS and XPath are last resorts.
 
-**The gate assertion — web-first vs raw:**
+### Web-first assertions — always retry
 
 ```ts
-// Web-first: polls until the element is visible (up to 10 s)
-const gate = page.getByTestId('concept-gate');
-await expect(gate).toBeVisible({ timeout: 10_000 });   // ✓ retries
+// ✓ web-first: polls until the element is visible
+await expect(gate).toBeVisible({ timeout: 10_000 });
 
-// Raw (DON'T use for async UI state):
+// ✗ raw DOM read: reads once, fails silently before hydration
 const text = await gate.textContent();
-expect(text).toBeTruthy();                              // ✗ reads once, no retry
+expect(text).toBeTruthy();
 ```
 
-The `concept-gate` is a React island that hydrates asynchronously. The raw form reads `textContent()` before hydration completes and produces a silent flake. The web-first form retries until the element is genuinely visible.
+Use `expect(locator).toHaveText()` not `expect(await locator.textContent()).toBe()`. They look identical and behave oppositely under async UI.
 
-**The `addLocatorHandler` pattern — dismissing overlays:**
+### Fixtures for auth state
 
 ```ts
-// nav.spec.ts — registered before every test
+// fixtures/auth.ts
+import { test as base } from '@playwright/test';
+
+type AuthFixtures = { authedPage: Page };
+
+export const test = base.extend<AuthFixtures>({
+  authedPage: async ({ page }, use) => {
+    // Hit your auth endpoint directly — no UI
+    const res = await page.request.post('/api/auth/sign-in/social', {
+      data: { provider: 'github', callbackURL: '/' },
+      headers: { 'content-type': 'application/json' },
+    });
+    expect(res.ok()).toBeTruthy();
+    await use(page);
+  },
+});
+```
+
+`page.request` shares the browser's cookie jar. The resulting session cookie is visible to subsequent `page.goto()` calls without a `storageState` file — correct for test-scope auth patterns.
+
+For worker-scope (expensive) auth: write a `globalSetup` that logs in once and writes `storageState` to a file. Each test loads it via `use: { storageState: 'auth.json' }`.
+
+### Intercepting overlays
+
+```ts
+// Register before the test body — fires when the overlay appears
 await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
   await el.locator('button').first().click();
 });
 ```
 
-`addLocatorHandler` is a Playwright primitive that intercepts any matching element that blocks an action — without it, a Vite error overlay that appears mid-test causes the next `click()` to time out on the "receives events" auto-wait condition (the overlay is covering the target).
+Without this, an overlay covering your target element causes the next `click()` to timeout on the "receives events" auto-wait condition.
 
-**The `getByRole` vs `getByTestId` decision in this codebase:**
+### Route interception — order matters
 
-`nav.spec.ts` uses `page.getByRole('button', { name: /Open menu/i })` for the hamburger toggle — a role-based locator that survives button-text refactors and also functions as an a11y assertion (if the button lacks an accessible name, the locator returns nothing and the test fails with a clear message). `concept-gate.spec.ts` uses `page.getByTestId('concept-gate')` for the React island root — correct because the element has no meaningful semantic role; `data-testid` is the right fallback when role is genuinely absent.
+```ts
+// ✓ register the listener BEFORE the action that triggers it
+const [response] = await Promise.all([
+  page.waitForResponse('**/api/save'),
+  page.click(saveBtn),
+]);
+```
 
-**The `auth-quiz-streak.spec.ts` storageState trap:** That spec calls `page.evaluate()` to inject `sessionStorage` directly and then reloads — bypassing the UI flow for quiz state. This is the correct use of storage manipulation: it short-circuits expensive UI steps while leaving the critical code path (the `POST /api/quiz/attempts` network call) fully exercised. Contrast this with `storageState` (cookies/localStorage written at globalSetup): mutating auth-related storage inside a test invalidates the captured state for every subsequent test in the worker.
+`page.route()` and `page.waitForResponse()` registered after the triggering action may miss the request entirely.
 
-## Common Pitfalls
+### Test step for readable traces
+
+```ts
+test('checkout flow', async ({ page }) => {
+  await test.step('add item to cart', async () => {
+    await page.click('[data-testid="add-to-cart"]');
+    await expect(page.getByRole('status')).toHaveText('1 item');
+  });
+
+  await test.step('proceed to checkout', async () => {
+    await page.getByRole('link', { name: 'Checkout' }).click();
+    await expect(page).toHaveURL(/checkout/);
+  });
+});
+```
+
+`test.step()` names the action in the trace viewer timeline. Without it, a 20-action test is a flat list — with it, failures surface the step name immediately.
+
+## 3. Common pitfalls
 
 - **Reaching for `getByTestId` or CSS before trying `getByRole`.** Role-based locators are more durable (survive text/class refactors) and double as an a11y assertion. Fix: follow the hierarchy — `getByRole` first, then `getByLabel`, `getByPlaceholder`, `getByText`, finally `getByTestId`. CSS and XPath are last resorts. This happens because CSS and XPath are familiar from other toolchains and feel concrete.
 
@@ -134,11 +247,55 @@ await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
 
 - **Reusing captured `storageState` across tests that mutate auth state.** `globalSetup` logs in once and writes cookies to a file; subsequent tests re-hydrate from that file. A test that logs out or deletes the account invalidates the file for every remaining test in the worker. Fix: use per-test isolated accounts for flows that mutate session state; use worker-scope fixtures only for immutable shared resources.
 
-- **Registering `page.route()` or `page.waitForResponse()` after the action that triggers them.** Routes registered after a navigation don't intercept the request; `waitForResponse` after a click may miss a response that arrived first. Fix: wrap both in `Promise.all` so the listener is registered before the action: `const [resp] = await Promise.all([page.waitForResponse('**/api/save'), page.click(btn)])`.
+- **Registering `page.route()` or `page.waitForResponse()` after the action that triggers them.** Routes registered after a navigation don't intercept the request; `waitForResponse` after a click may miss a response that arrived first. Fix: wrap both in `Promise.all` so the listener is registered before the action.
 
 - **Leaving `page.pause()` in committed tests.** A stray `pause()` blocks CI workers indefinitely; the symptom is "the suite is hanging" with no timeout error. Fix: add a lint rule or CI grep that fails on committed `pause()` calls.
 
-- **Committing visual baselines from a non-Linux machine.** Font rendering, antialiasing, and GPU rasterisation differ across macOS/Linux/Windows even with Playwright's bundled Chromium. This repo bans non-Linux baselines explicitly; the regeneration workflow is `workflow_dispatch update_visual_baselines=true` on `ci.yml`. Fix: treat the pinned `@playwright/test` version as part of the baseline — bumping the version requires regenerating baselines in the same PR.
+- **Committing visual baselines from a non-Linux machine.** Font rendering, antialiasing, and GPU rasterisation differ across macOS/Linux/Windows even with Playwright's bundled Chromium. Baselines regenerated on one OS will fail on another. Fix: regenerate baselines in CI via `workflow_dispatch` with `update_visual_baselines=true`. Treat the pinned `@playwright/test` version as part of the baseline — bumping the version requires regenerating baselines in the same PR.
+
+## 4. Maintain
+
+<div role="list" aria-label="Maintenance triggers and responses">
+<Maintain trigger="Playwright ships a major version (e.g. 1.x → 2.x)">
+  1. Read the changelog for breaking API changes.
+  2. Bump `@playwright/test` in `package.json` to the new pinned version.
+  3. Run `npx playwright install --with-deps chromium` to update the browser bundle.
+  4. Run the full test suite — most failures will be timeout changes or renamed options.
+  5. Regenerate visual baselines in CI (`workflow_dispatch update_visual_baselines=true`). Do not commit baselines from your local machine.
+  6. Update the `verified.versions` block and `verified.date` in frontmatter.
+</Maintain>
+
+<Maintain trigger="A locator breaks after a UI refactor (element not found)">
+  1. Run the failing spec with `--trace on` to get a trace file.
+  2. Open the trace: `npx playwright show-trace trace.zip`. Check the DOM snapshot at the failing action.
+  3. Find the new accessible name or role using browser DevTools accessibility panel.
+  4. Update the locator — prefer moving *up* the hierarchy (e.g. CSS → `getByRole`) rather than patching the CSS selector.
+  5. If the element genuinely has no role, add `data-testid` to the markup and use `getByTestId`.
+</Maintain>
+
+<Maintain trigger="A test flakes 1-in-N runs in CI">
+  1. Enable trace on retry: set `trace: 'on-first-retry'` in `playwright.config.ts`.
+  2. Reproduce in CI or run locally with `--repeat-each=10`.
+  3. Open the trace of the failed run. Look for: the exact millisecond the action fired, whether the element was attached/visible/enabled at that moment, network requests that were still in-flight.
+  4. Common fixes: replace `waitForTimeout` with a web-first assertion, move `page.route()` registration before the action that triggers it, switch from worker-scope to test-scope fixture if the fixture state is mutated.
+  5. Never add `waitForTimeout` as a "fix" — it masks the root cause and makes the suite slower.
+</Maintain>
+
+<Maintain trigger="Visual baselines are consistently failing in CI (screenshot diff > threshold)">
+  1. Check whether a Playwright version bump occurred — this always invalidates baselines.
+  2. Check whether the diff is content-driven (a genuine UI change) or rendering-driven (font/antialiasing drift).
+  3. For content changes: update the relevant component, then regenerate baselines via `workflow_dispatch`.
+  4. For version bumps: regenerate all baselines in CI in the same PR as the version bump.
+  5. Never regenerate baselines from a local (non-Linux) machine — cross-OS rendering differs.
+</Maintain>
+
+<Maintain trigger="Auth state fixture stops working (401 on previously-authed routes)">
+  1. Check whether the auth provider changed its callback/token shape (common on OAuth provider updates).
+  2. If using `storageState` files: delete `auth.json` and regenerate via `globalSetup`.
+  3. If using `page.request` inline: inspect the response body — the sign-in endpoint may now return a different redirect URL structure.
+  4. For test-scope auth: the issue is usually a test that mutates session state (sign-out, account deletion) — isolate those tests into their own browser context.
+</Maintain>
+</div>
 
 ## Retrieval Prompts
 
