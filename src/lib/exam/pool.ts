@@ -18,14 +18,19 @@ export function buildExamPool(): QuizQuestion[] {
   }
 
   const pool: QuizQuestion[] = [];
+  const seenIds = new Set<string>();
   let cursor = 0;
   while (pool.length < EXAM_QUESTION_COUNT) {
     let added = 0;
     for (const bucket of buckets) {
       if (pool.length >= EXAM_QUESTION_COUNT) break;
       if (cursor < bucket.length) {
-        pool.push(bucket[cursor]);
-        added++;
+        const q = bucket[cursor];
+        if (!seenIds.has(q.id)) {
+          seenIds.add(q.id);
+          pool.push(q);
+          added++;
+        }
       }
     }
     if (added === 0) break;

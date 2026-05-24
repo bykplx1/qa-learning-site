@@ -140,7 +140,7 @@ export default function ExamSummary({
             const userText = answerToText(q, ans);
             const correctText = correctAnswerText(q);
             return (
-              <div key={q.id} className="card" style={{ padding: '14px 18px' }} data-testid={`exam-review-${i}`}>
+              <div key={`${q.id}-${i}`} className="card" style={{ padding: '14px 18px' }} data-testid={`exam-review-${i}`}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <span className={correct ? 'pill pill--pass' : 'pill pill--accent'}>
                     {correct ? '✓ correct' : ans === null ? '— skipped' : '✗ wrong'}
