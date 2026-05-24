@@ -48,3 +48,6 @@ public/pagefind/
 
 # Playwright MCP (local debug console/page dumps)
 .playwright-mcp/
+
+# Local QA/audit working notes & screenshots (never commit)
+revamp/
