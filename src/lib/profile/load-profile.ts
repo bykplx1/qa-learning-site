@@ -32,6 +32,8 @@ export interface ProfilePayload {
 export interface LoadProfileOptions {
   today?: Date;
   projectTitleBySlug?: Map<string, string>;
+  /** Pre-built slug→title map from the curriculum collection; takes precedence over lessons_meta. */
+  lessonTitleBySlug?: Map<string, string>;
 }
 
 export async function loadProfile(
@@ -46,7 +48,10 @@ export async function loadProfile(
   const { dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows } =
     await loadProfileRaw(userId);
 
-  const lessonTitleBySlug = new Map(lessonMetaRows.map((m) => [m.slug, m.title]));
+  // Prefer the curriculum-collection map when provided (resolves real titles incl. acronyms).
+  // Falls back to lessons_meta DB rows for backward compat (table is currently empty — #314).
+  const lessonTitleBySlug =
+    options.lessonTitleBySlug ?? new Map(lessonMetaRows.map((m) => [m.slug, m.title]));
 
   const streak = streakOf(dailyActivityRows, today);
 
