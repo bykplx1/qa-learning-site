@@ -1,17 +1,31 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { PROJECT_TIERS, TIER_LABELS, type ProjectTier } from '../../lib/projects/schema';
+import {
+  PROJECT_TIERS,
+  PROJECT_TRACKS,
+  TIER_LABELS,
+  TRACK_LABELS,
+  type ProjectTier,
+  type ProjectTrack,
+} from '../../lib/projects/schema';
 
 const allProjects = await getCollection('projects');
 
-const grouped = new Map<ProjectTier, typeof allProjects>();
-for (const tier of PROJECT_TIERS) grouped.set(tier, []);
-for (const p of allProjects) {
-  grouped.get(p.data.tier)!.push(p);
+// Group: tier -> track -> projects[]
+const grouped = new Map<ProjectTier, Map<ProjectTrack, typeof allProjects>>();
+for (const tier of PROJECT_TIERS) {
+  const trackMap = new Map<ProjectTrack, typeof allProjects>();
+  for (const track of PROJECT_TRACKS) trackMap.set(track, []);
+  grouped.set(tier, trackMap);
 }
-for (const list of grouped.values()) {
-  list.sort((a, b) => a.data.title.localeCompare(b.data.title));
+for (const p of allProjects) {
+  grouped.get(p.data.tier)!.get(p.data.track)!.push(p);
+}
+for (const trackMap of grouped.values()) {
+  for (const list of trackMap.values()) {
+    list.sort((a, b) => a.data.title.localeCompare(b.data.title));
+  }
 }
 
 const tierEstimate: Record<ProjectTier, string> = {
@@ -24,6 +38,12 @@ const tierBlurb: Record<ProjectTier, string> = {
   starter: 'Pick a tool, ship a tiny suite. One focused diagnostic skill.',
   mid: 'Combine two concepts, harness real CI. Multiple moving parts.',
   capstone: 'Production-grade artifact. A full QA artifact for the resume.',
+};
+
+const tierProofNote: Record<ProjectTier, string> = {
+  starter: 'Self-attest checklist',
+  mid: 'Public repo URL required',
+  capstone: 'Public repo + green CI required',
 };
 ---
 
@@ -39,17 +59,17 @@ const tierBlurb: Record<ProjectTier, string> = {
         Build <em>more.</em>
       </h1>
       <p class="hero__lead">
-        Three tiers of self-directed project briefs. Each ships with a scoped
-        acceptance-criteria list, a self-attest checklist, and an optional
-        GitHub URL + reflection on submission.
+        Three tiers of self-directed project briefs organised into skill tracks.
+        Each brief ships with scoped acceptance criteria, a self-check rubric,
+        and tier-gated proof of done.
       </p>
     </div>
     <div class="card" style="align-self: end; padding: 22px; font-size: 13px; color: var(--ink-2); line-height: 1.6;">
-      <div class="eyebrow" style="margin-bottom: 10px;">tiers</div>
+      <div class="eyebrow" style="margin-bottom: 10px;">tiers &amp; proof of done</div>
       {PROJECT_TIERS.map((tier) => (
         <div style="margin-top: 6px;">
           <strong style="color: var(--ink);">{TIER_LABELS[tier]}</strong> · {tierEstimate[tier]} ·{' '}
-          <span style="color: var(--ink-3);">{tierBlurb[tier]}</span>
+          <span style="color: var(--ink-3);">{tierProofNote[tier]}</span>
         </div>
       ))}
     </div>
@@ -57,38 +77,56 @@ const tierBlurb: Record<ProjectTier, string> = {
 
   <section class="section">
     {PROJECT_TIERS.map((tier) => {
-      const list = grouped.get(tier)!;
-      if (list.length === 0) return null;
+      const trackMap = grouped.get(tier)!;
+      const tierProjects = [...trackMap.values()].flat();
+      if (tierProjects.length === 0) return null;
+
       return (
-        <div style="margin-bottom: 48px;">
-          <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px;">
+        <div style="margin-bottom: 56px;">
+          <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px;">
             <h2
               style="font-family: var(--serif); font-size: 32px; font-weight: 400; letter-spacing: -0.02em; margin: 0; color: var(--ink); line-height: 1.15;"
             >
               {TIER_LABELS[tier]}
             </h2>
             <span class="pill">{tierEstimate[tier]}</span>
-            <span class="pill">{list.length} brief{list.length === 1 ? '' : 's'}</span>
+            <span class="pill">{tierProjects.length} brief{tierProjects.length === 1 ? '' : 's'}</span>
           </div>
-          <div class="brief-grid">
-            {list.map((project, i) => (
-              <a class="brief-card" href={`/projects/${project.data.slug}`}>
-                <div class="eyebrow">brief · {String(i + 1).padStart(2, '0')}</div>
-                <div class="brief-card__title">{project.data.title}</div>
-                <div class="brief-card__desc">
-                  {project.data.acceptanceCriteria.length} acceptance criteria · self-attest checklist included
+          <p style="font-size: 13px; color: var(--ink-2); margin: 0 0 24px; line-height: 1.55;">
+            {tierBlurb[tier]} · <em style="color: var(--ink-3);">{tierProofNote[tier]}</em>
+          </p>
+
+          {PROJECT_TRACKS.map((track) => {
+            const list = trackMap.get(track)!;
+            if (list.length === 0) return null;
+            return (
+              <div style="margin-bottom: 32px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                  <span class="eyebrow" style="font-size: 10px; letter-spacing: 0.1em;">{TRACK_LABELS[track]}</span>
+                  <span style="flex: 1; height: 1px; background: var(--rule);"></span>
                 </div>
-                <div class="brief-card__foot">
-                  <span class="mono" style="font-size: 11px; color: var(--ink-3);">
-                    {project.data.estimate} · {TIER_LABELS[project.data.tier]}
-                  </span>
-                  <span class="mono" style="font-size: 12px; color: var(--ink); text-decoration: underline;">
-                    open brief →
-                  </span>
+                <div class="brief-grid">
+                  {list.map((project, i) => (
+                    <a class="brief-card" href={`/projects/${project.data.slug}`}>
+                      <div class="eyebrow">brief · {String(i + 1).padStart(2, '0')}</div>
+                      <div class="brief-card__title">{project.data.title}</div>
+                      <div class="brief-card__desc">
+                        {project.data.acceptanceCriteria.length} acceptance criteria · {TIER_LABELS[tier]}
+                      </div>
+                      <div class="brief-card__foot">
+                        <span class="mono" style="font-size: 11px; color: var(--ink-3);">
+                          {project.data.estimate}
+                        </span>
+                        <span class="mono" style="font-size: 12px; color: var(--ink); text-decoration: underline;">
+                          open brief →
+                        </span>
+                      </div>
+                    </a>
+                  ))}
                 </div>
-              </a>
-            ))}
-          </div>
+              </div>
+            );
+          })}
         </div>
       );
     })}

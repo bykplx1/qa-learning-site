@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getSession } from '../../../../lib/auth';
 import { setSubmissionPublic, submitProject } from '../../../../db/queries';
 import { rubrics } from '../../../../lib/projects/rubric';
+import { validateSubmission } from '../../../../lib/projects/validate-submission';
 
 export const prerender = false;
 
@@ -17,6 +18,7 @@ const bodySchema = z.object({
   is_public: z.boolean().optional(),
   rubric_scores: rubricScoresSchema.optional(),
   below_threshold: z.boolean().optional(),
+  ci_green: z.boolean().optional(),
 });
 
 export const POST: APIRoute = async ({ request, params }) => {
@@ -48,6 +50,18 @@ export const POST: APIRoute = async ({ request, params }) => {
   const project = all.find((p) => p.data.slug === slug);
   if (!project) {
     return new Response('Project not found', { status: 404 });
+  }
+
+  // Tier-gate validation (pure — no DB).
+  const gateResult = validateSubmission(project.data, {
+    repo_url: parsed.data.repo_url ?? null,
+    ci_green: parsed.data.ci_green,
+  });
+  if (!gateResult.ok) {
+    return new Response(JSON.stringify({ error: gateResult.reason }), {
+      status: 400,
+      headers: { 'content-type': 'application/json' },
+    });
   }
 
   const projectRubricId = project.data.rubric ?? null;

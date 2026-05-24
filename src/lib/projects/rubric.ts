@@ -172,6 +172,164 @@ export const rubrics = {
     ],
   },
 
+  // ---------------------------------------------------------------------------
+  // e2e track rubrics (starter / mid / capstone)
+  // ---------------------------------------------------------------------------
+
+  /** e2e track — Starter: first Playwright suite against the-internet */
+  'e2e-starter': {
+    id: 'e2e-starter',
+    label: 'E2E Starter: First Playwright Suite',
+    rows: [
+      {
+        id: 'selectors',
+        criterion: 'Selector quality',
+        band: [
+          'XPath or positional CSS only — brittle and unreadable.',
+          'Attribute-based CSS selectors but no accessible-role queries.',
+          'Mix of `getByRole` / `getByLabel` and scoped CSS; no positional selectors.',
+          'Exclusively accessibility-first locators (`getByRole`, `getByLabel`, `getByTestId`); a comment explains any exception.',
+        ],
+      },
+      {
+        id: 'assertions',
+        criterion: 'Assertion depth',
+        band: [
+          'Only `page.goto` + no assertions — suite "passes" vacuously.',
+          'Status-only assertions (page title or URL); no behavior checked.',
+          'At least one assertion per test verifying visible state (text, attribute, visibility).',
+          'Each test asserts the meaningful outcome of the interaction, not just a side-effect.',
+        ],
+      },
+      {
+        id: 'runability',
+        criterion: 'Single-command runability',
+        band: [
+          'Cannot run — missing install step or entry-point.',
+          'Runs after undocumented manual setup.',
+          'Runs with `npx playwright test`; README lists prerequisites.',
+          'Runs with one command from a clean clone; README includes expected output.',
+        ],
+      },
+      {
+        id: 'structure',
+        criterion: 'Suite structure',
+        band: [
+          'All tests in one file with duplicated setup.',
+          'Tests separated by file but no shared fixtures.',
+          'Shared fixtures or page-object module extracted; no copy-paste setup.',
+          'Shared fixtures + at least one page-object; test files read as specifications, not scripts.',
+        ],
+      },
+    ],
+  },
+
+  /** e2e track — Mid: page-object suite against restful-booker (UI layer) */
+  'e2e-mid': {
+    id: 'e2e-mid',
+    label: 'E2E Mid: Page-Object Suite with CI',
+    rows: [
+      {
+        id: 'page_objects',
+        criterion: 'Page-object completeness',
+        band: [
+          'No page objects — raw `page.*` calls in every test.',
+          'One page object but tests still call `page.*` directly for some interactions.',
+          'Each distinct page/component has its own object; tests never call `page.*` directly.',
+          'Page objects encapsulate both navigation and assertions; swapping a selector requires touching only the object.',
+        ],
+      },
+      {
+        id: 'coverage',
+        criterion: 'Scenario coverage',
+        band: [
+          'Single happy-path test.',
+          'Happy path plus one negative (e.g. invalid login).',
+          'Happy path + at least two negatives covering different failure modes.',
+          'Happy path + negatives + at least one edge case (empty state, boundary value, or concurrent action).',
+        ],
+      },
+      {
+        id: 'ci_integration',
+        criterion: 'CI integration',
+        band: [
+          'No CI configuration.',
+          'CI runs tests but fails non-deterministically or always green regardless of test outcome.',
+          'CI runs `npx playwright test` and fails the job on test failure.',
+          'CI runs tests + uploads the Playwright HTML report as an artifact; job badge visible in README.',
+        ],
+      },
+      {
+        id: 'repo_url',
+        criterion: 'Public repo as artifact',
+        band: [
+          'No public repo submitted.',
+          'Repo exists but README is missing or empty.',
+          'Repo with README explaining how to run locally and what the tests cover.',
+          'Repo with README + green CI badge + commit history showing iterative development.',
+        ],
+      },
+    ],
+  },
+
+  /** e2e track — Capstone: resilient cross-browser suite with visual + a11y */
+  'e2e-capstone': {
+    id: 'e2e-capstone',
+    label: 'E2E Capstone: Resilient Cross-Browser Suite',
+    rows: [
+      {
+        id: 'cross_browser',
+        criterion: 'Cross-browser coverage',
+        band: [
+          'Chromium only.',
+          'Chromium + one other engine; tests pass on all.',
+          'Chromium + Firefox + WebKit; CI runs all three in parallel.',
+          'Three engines with explicit rationale for any test skipped on a specific engine.',
+        ],
+      },
+      {
+        id: 'resilience',
+        criterion: 'Flake resilience',
+        band: [
+          'No retry config; suite is visibly flaky.',
+          'Global retry set but root cause of flakiness not addressed.',
+          'Root cause of at least one flake identified and fixed; retry kept as safety net only.',
+          'Flake-prevention strategy documented (network interception, explicit waits, stable selectors); retry at most 1.',
+        ],
+      },
+      {
+        id: 'a11y_or_visual',
+        criterion: 'A11y or visual regression layer',
+        band: [
+          'Neither a11y nor visual tests present.',
+          'One a11y assertion (`checkA11y`) or one snapshot present but not both.',
+          'Both an axe a11y scan and at least one visual snapshot included.',
+          'A11y scan + visual snapshots + documented rationale for which pages are covered and why.',
+        ],
+      },
+      {
+        id: 'ci_green',
+        criterion: 'Green CI on submitted repo',
+        band: [
+          'No CI or CI is red.',
+          'CI exists but green status not verifiable (private repo or broken badge).',
+          'Public repo with green CI badge confirmed at submission time.',
+          'Public repo + green CI badge + pipeline runs all three browsers + uploads report artifact.',
+        ],
+      },
+      {
+        id: 'postmortem',
+        criterion: 'Engineering writeup',
+        band: [
+          'No writeup.',
+          'README describes how to run tests but not design decisions.',
+          'README covers setup + one design decision (e.g. why page objects, why this coverage boundary).',
+          'README covers setup + design decisions + at least one bug the suite caught or would catch, and which layer would catch it first.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',

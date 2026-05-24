@@ -163,6 +163,7 @@ const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
       <SubmitProjectForm
         client:load
         projectSlug={project.data.slug}
+        tier={tier}
         existing={existingProp}
         rubric={rubricDef}
       />

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { RubricDefinition } from '../../lib/projects/rubric';
+import type { ProjectTier } from '../../lib/projects/schema';
 
 interface Existing {
   repoUrl: string | null;
@@ -10,16 +11,18 @@ interface Existing {
 
 interface Props {
   projectSlug: string;
+  tier: ProjectTier;
   existing: Existing | null;
   rubric?: RubricDefinition | null;
 }
 
 type Status = 'idle' | 'saving' | 'saved' | 'error';
 
-export default function SubmitProjectForm({ projectSlug, existing, rubric }: Props) {
+export default function SubmitProjectForm({ projectSlug, tier, existing, rubric }: Props) {
   const [repoUrl, setRepoUrl] = useState(existing?.repoUrl ?? '');
   const [reflection, setReflection] = useState(existing?.reflection ?? '');
   const [isPublic, setIsPublic] = useState(existing?.isPublic ?? false);
+  const [ciGreen, setCiGreen] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(existing?.submittedAt ?? null);
@@ -58,6 +61,7 @@ export default function SubmitProjectForm({ projectSlug, existing, rubric }: Pro
           is_public: isPublic,
           rubric_scores: rubric ? rubricScores : undefined,
           below_threshold: belowThreshold,
+          ci_green: tier === 'capstone' ? ciGreen : undefined,
         }),
       });
       if (!res.ok) {
@@ -94,7 +98,12 @@ export default function SubmitProjectForm({ projectSlug, existing, rubric }: Pro
       <form onSubmit={onSubmit} style={{ display: 'grid', gap: 16 }}>
         <div>
           <label htmlFor={`repo-${projectSlug}`} className="label">
-            Repo URL <span className="label__hint">(optional)</span>
+            Repo URL{' '}
+            {tier === 'starter' ? (
+              <span className="label__hint">(optional)</span>
+            ) : (
+              <span className="label__hint" style={{ color: 'var(--accent)' }}>required</span>
+            )}
           </label>
           <input
             id={`repo-${projectSlug}`}
@@ -200,6 +209,34 @@ export default function SubmitProjectForm({ projectSlug, existing, rubric }: Pro
               ))}
             </div>
           </section>
+        )}
+
+        {tier === 'capstone' && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <input
+              id={`ci-green-${projectSlug}`}
+              type="checkbox"
+              checked={ciGreen}
+              onChange={(e) => setCiGreen(e.target.checked)}
+              style={{
+                marginTop: 3,
+                width: 16,
+                height: 16,
+                cursor: 'pointer',
+                accentColor: 'var(--accent)',
+              }}
+            />
+            <label
+              htmlFor={`ci-green-${projectSlug}`}
+              style={{ fontSize: 13, color: 'var(--ink-2)', cursor: 'pointer', lineHeight: 1.5 }}
+            >
+              My CI is green at submission time{' '}
+              <span style={{ color: 'var(--accent)', fontWeight: 600 }}>(required for capstone)</span>
+              <span style={{ display: 'block', fontSize: 11, color: 'var(--ink-3)', marginTop: 2, fontFamily: 'var(--mono)' }}>
+                Attest that the CI pipeline on your submitted repo is passing.
+              </span>
+            </label>
+          </div>
         )}
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>

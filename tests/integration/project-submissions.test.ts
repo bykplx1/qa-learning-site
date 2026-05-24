@@ -21,6 +21,8 @@ vi.mock('astro:content', () => ({
         slug: 'starter-bug-bash',
         title: 'Starter Bug Bash',
         tier: 'starter',
+        track: 'e2e',
+        target: { name: 'any', ref: 'https://example.com' },
         estimate: '1 hr',
         acceptanceCriteria: ['Find a bug.'],
         requiredConcepts: [],
@@ -32,10 +34,38 @@ vi.mock('astro:content', () => ({
         slug: 'flaky-test-hunter',
         title: 'Flaky Test Hunter',
         tier: 'starter',
+        track: 'e2e',
+        target: { name: 'any', ref: 'https://example.com' },
         estimate: '1–2 hr',
         acceptanceCriteria: ['Identify a flaky test.'],
         requiredConcepts: ['test-stability', 'root-cause-analysis'],
         rubric: 'flaky-test-hunter',
+      },
+    },
+    {
+      data: {
+        slug: 'e2e-mid-restful-booker',
+        title: 'E2E Mid: Page-Object Suite on restful-booker',
+        tier: 'mid',
+        track: 'e2e',
+        target: { name: 'restful-booker', ref: 'https://automationintesting.online' },
+        estimate: '1 day',
+        acceptanceCriteria: ['Implement page objects.'],
+        requiredConcepts: ['playwright'],
+        rubric: 'e2e-mid',
+      },
+    },
+    {
+      data: {
+        slug: 'e2e-capstone-saucedemo',
+        title: 'E2E Capstone: Resilient Cross-Browser Suite on SauceDemo',
+        tier: 'capstone',
+        track: 'e2e',
+        target: { name: 'SauceDemo', ref: 'https://www.saucedemo.com' },
+        estimate: '4–5 days',
+        acceptanceCriteria: ['Cross-browser suite.'],
+        requiredConcepts: ['playwright'],
+        rubric: 'e2e-capstone',
       },
     },
   ],
@@ -294,6 +324,71 @@ describe('POST /api/projects/[slug]/submit', () => {
       buildRequest('nonexistent-project', 'POST', { reflection: 'test' }),
     );
     expect(res.status).toBe(404);
+  });
+
+  // Tier-gate tests
+  it('mid: rejects missing repo URL with 400', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('e2e-mid-restful-booker', 'POST', { reflection: 'built it' }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/repo/i);
+  });
+
+  it('mid: accepts submission with repo URL', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('e2e-mid-restful-booker', 'POST', {
+        repo_url: 'https://github.com/me/mid-project',
+        reflection: 'Built a page-object suite.',
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it('capstone: rejects missing repo URL with 400', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('e2e-capstone-saucedemo', 'POST', {
+        reflection: 'cross-browser done',
+        ci_green: true,
+      }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/repo/i);
+  });
+
+  it('capstone: rejects missing ci_green attest with 400', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('e2e-capstone-saucedemo', 'POST', {
+        repo_url: 'https://github.com/me/capstone',
+        reflection: 'cross-browser done',
+      }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json() as { error: string };
+    expect(body.error).toMatch(/ci/i);
+  });
+
+  it('capstone: accepts submission with repo URL and ci_green true', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+    const res = await POST(
+      buildRequest('e2e-capstone-saucedemo', 'POST', {
+        repo_url: 'https://github.com/me/capstone',
+        reflection: 'cross-browser, a11y, visual — all green.',
+        ci_green: true,
+      }),
+    );
+    expect(res.status).toBe(200);
   });
 });
 

@@ -4,13 +4,23 @@ import { rubrics } from './rubric';
 export const PROJECT_TIERS = ['starter', 'mid', 'capstone'] as const;
 export type ProjectTier = (typeof PROJECT_TIERS)[number];
 
+export const PROJECT_TRACKS = ['e2e', 'api', 'cicd', 'perf', 'sec-a11y'] as const;
+export type ProjectTrack = (typeof PROJECT_TRACKS)[number];
+
 const knownRubricIds = Object.keys(rubrics);
+
+const targetSchema = z.object({
+  name: z.string().min(1),
+  ref: z.string().min(1),
+});
 
 export const projectFrontmatterSchema = z
   .object({
     slug: z.string().min(1),
     title: z.string().min(1),
     tier: z.enum(PROJECT_TIERS),
+    track: z.enum(PROJECT_TRACKS),
+    target: targetSchema,
     estimate: z.string().min(1),
     acceptanceCriteria: z.array(z.string().min(1)).min(1),
     cluster: z.string().optional(),
@@ -25,6 +35,14 @@ export const projectFrontmatterSchema = z
   .strict();
 
 export type ProjectFrontmatter = z.infer<typeof projectFrontmatterSchema>;
+
+export const TRACK_LABELS: Record<ProjectTrack, string> = {
+  e2e: 'End-to-End',
+  api: 'API',
+  cicd: 'CI/CD',
+  perf: 'Performance',
+  'sec-a11y': 'Security & A11y',
+};
 
 export const CLUSTER_LABELS: Record<string, string> = {
   foundations: 'Foundations',
