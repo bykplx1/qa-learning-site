@@ -1,0 +1,62 @@
+---
+slug: e2e-starter-the-internet
+title: "E2E Starter: First Playwright Suite on The Internet"
+tier: starter
+track: e2e
+target:
+  name: "the-internet (Heroku)"
+  ref: "https://the-internet.herokuapp.com — pinned behaviour; see drift note below"
+estimate: 2–3 hr
+rubric: e2e-starter
+requiredConcepts:
+  - playwright
+acceptanceCriteria:
+  - You install Playwright from scratch in an empty folder and run `npx playwright test` to get a green result.
+  - You write tests for at least three distinct pages on the-internet (e.g. Login, Checkboxes, Dynamic Loading).
+  - Every test uses at least one accessibility-first locator (`getByRole`, `getByLabel`, `getByText`, or `getByTestId`) — no XPath.
+  - You extract repeated setup (e.g. base URL, navigation helper) into a shared fixture or `beforeEach` block.
+  - Your README explains how to run the suite from a clean clone in one command.
+---
+
+## Brief
+
+Install Playwright from zero and write your first real suite against
+[the-internet](https://the-internet.herokuapp.com) — Dave Haeffner's canonical
+practice site. You'll hit authentication, dynamic content, and form interactions
+without any hand-holding from a tutorial repo.
+
+The lesson teaches you the Playwright API. This project makes you use it on a
+target that doesn't bend to your assumptions.
+
+> **Drift notice.** the-internet is a hosted Heroku app maintained by
+> Sauce Labs. It has been stable for years but is not pinned to a commit. If
+> a page changes between now and when you run this, update your selectors and
+> note the change in your README — that investigation is part of the exercise.
+
+## Suggested approach
+
+1. `mkdir e2e-starter && cd e2e-starter && npm init -y && npx playwright install --with-deps`
+2. Create `playwright.config.ts` with `baseURL: 'https://the-internet.herokuapp.com'` and the `chromium` project only (keep it simple for now).
+3. Pick three pages. Suggested trio:
+   - `/login` — form submission with valid and invalid credentials
+   - `/checkboxes` — state toggling and assertion
+   - `/dynamic_loading/1` — waiting for hidden element to appear
+4. For each page, write one test that exercises the primary happy path and one that covers an error or empty state.
+5. Extract the `baseURL` and any repeated navigation into a shared fixture file (`fixtures.ts`). If you find yourself copy-pasting a `page.goto`, that's the smell.
+6. Run `npx playwright test --reporter=list` and paste the summary into your README.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- contains a `package.json` listing `@playwright/test` as a dev dependency
+- has tests that pass consistently against the live site
+- has a README with a one-command run instruction and the expected output
+
+## Why this matters
+
+Every Playwright suite you'll ever write starts exactly here: an empty folder,
+a config file, and the question "which locator do I use?" Getting this right
+once — choosing `getByRole` over XPath, extracting setup — saves you a week of
+refactoring on your first real project.
+
+The lesson covers the API. This brief covers the judgment.

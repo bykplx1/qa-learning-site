@@ -1,0 +1,72 @@
+---
+slug: e2e-mid-restful-booker
+title: "E2E Mid: Page-Object Suite on restful-booker"
+tier: mid
+track: e2e
+target:
+  name: "restful-booker (Mark Winteringham)"
+  ref: "https://automationintesting.online — pinned at commit f4e1a5c in github.com/mwinteringham/restful-booker-platform"
+estimate: 1 day
+rubric: e2e-mid
+requiredConcepts:
+  - playwright
+acceptanceCriteria:
+  - You implement page objects for at least two distinct pages (e.g. Login, Rooms admin, Booking form).
+  - Tests cover at least one happy path and two distinct failure modes (e.g. invalid login, double-booking attempt).
+  - You configure a GitHub Actions workflow that runs `npx playwright test` and fails the job on test failure.
+  - The Playwright HTML report is uploaded as a CI artifact.
+  - You submit a public repo URL with a green CI badge visible in the README.
+---
+
+## Brief
+
+Build a page-object-based Playwright suite against
+[restful-booker](https://automationintesting.online), a fully-featured hotel
+booking application built by Mark Winteringham for exactly this purpose. It has
+authentication, CRUD rooms, bookings, and a public-facing availability widget.
+
+The lesson shows you how to structure Playwright. This project makes you
+architect a suite that another engineer can navigate without asking you
+questions.
+
+> **Drift notice.** `automationintesting.online` is the live hosted version and
+> may receive updates. The pinned commit reference above (restful-booker-platform
+> `f4e1a5c`) is the stable baseline at the time of writing; you can run a local
+> copy via Docker if the live site diverges:
+> `docker run -d -p 3000:3000 mwinteringham/restfulbooker`. Note any divergence
+> in your README.
+
+## Suggested approach
+
+1. Fork or clone your previous starter work — or start fresh.
+2. Identify two pages you'll fully cover. Recommended: **Admin Login** + **Rooms management** (create/delete a room). These have real interactions and clear state changes.
+3. Create a `pages/` directory. Each page object should:
+   - Accept `page: Page` in its constructor
+   - Expose action methods (`login(user, pass)`, `createRoom(details)`) rather than raw locators
+   - Expose assertion helpers that are readable from the test file
+4. Write tests in `tests/` — each test file corresponds to one user journey, not one page.
+5. Add a `.github/workflows/playwright.yml` that:
+   - Runs on every push to `main`
+   - Installs deps with `npm ci`
+   - Runs `npx playwright install --with-deps chromium`
+   - Runs `npx playwright test`
+   - Uploads the HTML report with `actions/upload-artifact`
+6. Add the CI status badge to your README.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A `pages/` directory containing at least two page-object files
+- Tests that pass reliably (no `waitForTimeout`; explicit waits only)
+- A green CI badge in the README
+- A short paragraph in the README explaining one design decision you made (why you drew the page object boundary where you did, or why you chose a particular fixture strategy)
+
+## Why this matters
+
+Page objects are the first architectural decision every real test suite faces.
+Get them wrong and you spend weeks untangling selectors from assertions. Get
+them right and your suite reads like a specification.
+
+restful-booker is a better target than a toy todo app precisely because it has
+authentication state, pagination, and form validation — the three places where
+naive test structure collapses first.
