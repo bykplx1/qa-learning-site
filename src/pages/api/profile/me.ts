@@ -18,10 +18,13 @@ export const GET: APIRoute = async ({ request }) => {
     });
   }
 
-  const projectTitleBySlug = new Map(
-    (await getCollection('projects')).map((p) => [p.data.slug, p.data.title]),
-  );
-  const payload = await loadProfile(session.user.id, { projectTitleBySlug });
+  const [projectEntries, curriculumEntries] = await Promise.all([
+    getCollection('projects'),
+    getCollection('curriculum'),
+  ]);
+  const projectTitleBySlug = new Map(projectEntries.map((p) => [p.data.slug, p.data.title]));
+  const lessonTitleBySlug = new Map(curriculumEntries.map((e) => [e.data.slug, e.data.title]));
+  const payload = await loadProfile(session.user.id, { projectTitleBySlug, lessonTitleBySlug });
   return new Response(JSON.stringify(payload), {
     status: 200,
     headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' },

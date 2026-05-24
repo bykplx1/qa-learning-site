@@ -1,14 +1,19 @@
 ---
 import { like, eq, and, gte, sql } from 'drizzle-orm';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import FeynmanEditor from '../../components/explain/FeynmanEditor';
 import { getSession } from '../../lib/auth';
 import { db } from '../../db';
 import { reviewCards, reviewLogs } from '../../db/schema';
+import { curriculumTitleBySlug, slugToTitle } from '../../lib/curriculum/title-by-slug';
 
 export const prerender = false;
 
 const { slug } = Astro.params as { slug: string };
+
+const curriculumEntries = await getCollection('curriculum');
+const topicTitle = slugToTitle(slug, curriculumTitleBySlug(curriculumEntries));
 
 const session = await getSession(Astro.request.headers);
 if (!session?.user?.id) {
@@ -50,11 +55,11 @@ const cluster = clusterRows[0]?.cluster ?? null;
 const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : '/review';
 ---
 
-<BaseLayout title={`Explain: ${slug} — QA Learning`} description="Feynman self-explanation exercise.">
+<BaseLayout title={`Explain: ${topicTitle} — QA Learning`} description="Feynman self-explanation exercise.">
   <main class="explain-page">
     <header class="explain-page__head">
       <span class="eyebrow">feynman · self-explanation</span>
-      <h1>{slug.replace(/-/g, ' ')}</h1>
+      <h1>{topicTitle}</h1>
     </header>
 
     {showBlock ? (
@@ -121,7 +126,6 @@ const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : 
     margin: 8px 0 0;
     color: var(--ink);
     line-height: 1.1;
-    text-transform: capitalize;
   }
 
   .explain-card {
