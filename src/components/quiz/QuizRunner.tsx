@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { authClient } from '../../lib/auth-client';
 import type { QuizQuestion } from '../../lib/quiz/schema.js';
+import { stripWikilinks } from '../../lib/wikilinks/resolver.js';
 import {
   createQuizState,
   persistQuizState,
@@ -245,7 +246,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
             )}
             {q.explanation && (
               <div style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.55 }}>
-                <strong style={{ color: 'var(--ink)' }}>Why:</strong> {q.explanation}
+                <strong style={{ color: 'var(--ink)' }}>Why:</strong> {stripWikilinks(q.explanation)}
               </div>
             )}
           </div>
@@ -404,7 +405,7 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, promptDism
                 </div>
                 {q.explanation && (
                   <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55 }}>
-                    <strong style={{ color: 'var(--ink)' }}>Why:</strong> {q.explanation}
+                    <strong style={{ color: 'var(--ink)' }}>Why:</strong> {stripWikilinks(q.explanation)}
                   </div>
                 )}
               </div>

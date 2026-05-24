@@ -135,4 +135,9 @@ describe('stripWikilinks', () => {
     const result = stripWikilinks('[[#WCAG Principles (POUR)]] and [[Defect-Lifecycle]].', slugMap);
     expect(result).toBe('WCAG Principles (POUR) and Defect Lifecycle.');
   });
+
+  it('strips quiz-feedback anchor-only form [[#Heading (abbr)]] to plain label', () => {
+    // Mirrors the [[#Equivalence Partitioning (EP)]] pattern found in quiz YAML explanations
+    expect(stripWikilinks('See [[#Equivalence Partitioning (EP)]].')).toBe('See Equivalence Partitioning (EP).');
+  });
 });
