@@ -1,0 +1,84 @@
+---
+import type { VerifiedBlock } from '../../lib/curriculum/schema';
+import { isFresh } from '../../lib/curriculum/freshness';
+
+interface Props {
+  verified: VerifiedBlock;
+}
+
+const { verified } = Astro.props;
+const { tool, versions, date } = verified;
+
+const versionPairs = Object.entries(versions);
+const versionLabel = versionPairs.map(([k, v]) => `${k} ${v}`).join(', ');
+
+const fresh = isFresh(date);
+---
+
+<aside
+  class:list={['verified-stamp', { 'verified-stamp--stale': !fresh }]}
+  aria-label={fresh ? `Verified against ${versionLabel} on ${date}` : `Verification may be out of date — last checked ${date}`}
+>
+  <span class="verified-stamp__icon" aria-hidden="true">
+    {fresh ? '✓' : '⚠'}
+  </span>
+  <span class="verified-stamp__text">
+    <strong>Verified against {tool}</strong>
+    {versionPairs.map(([k, v]) => (
+      <span class="verified-stamp__version">{k} <code>{v}</code></span>
+    ))}
+    <span class="verified-stamp__date">· {date}</span>
+    {!fresh && (
+      <span class="verified-stamp__stale-warn"> · may be out of date</span>
+    )}
+  </span>
+</aside>
+
+<style>
+  .verified-stamp {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 14px;
+    margin: 20px 0;
+    border: 1px solid var(--pass);
+    border-radius: 8px;
+    background: var(--pass-soft);
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--pass-strong);
+  }
+  .verified-stamp--stale {
+    border-color: var(--warn);
+    background: oklch(96% 0.04 80);
+    color: var(--warn-strong);
+  }
+  [data-theme="dark"] .verified-stamp--stale {
+    background: oklch(22% 0.04 80);
+  }
+  .verified-stamp__icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .verified-stamp__text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 8px;
+  }
+  .verified-stamp__version {
+    color: inherit;
+  }
+  .verified-stamp__version code {
+    font-family: var(--mono);
+    background: transparent;
+    padding: 0;
+  }
+  .verified-stamp__date {
+    color: inherit;
+    opacity: 0.8;
+  }
+  .verified-stamp__stale-warn {
+    font-weight: 600;
+  }
+</style>

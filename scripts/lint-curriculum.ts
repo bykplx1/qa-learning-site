@@ -209,6 +209,65 @@ function rulePracticeTaskRequired(meta: FileMeta): LintError[] {
   ];
 }
 
+// ─── R9: Tool-lesson runbook requirements ─────────────────────────────────────
+
+const TOOL_REQUIRED_SECTIONS = [
+  { pattern: /^##\s+.*set\s+up/i, label: 'Set up' },
+  { pattern: /^##\s+.*implement/i, label: 'Implement' },
+  { pattern: /^##\s+.*common\s+pitfalls?/i, label: 'Common pitfalls' },
+  { pattern: /^##\s+.*maintain/i, label: 'Maintain' },
+];
+
+function ruleToolLesson(meta: FileMeta): LintError[] {
+  if (meta.frontmatter.kind !== 'tool') return [];
+
+  const errors: LintError[] = [];
+
+  // Verified block required
+  if (!meta.frontmatter.verified) {
+    errors.push({
+      rule: 'R9:tool-lesson',
+      file: meta.filePath,
+      message: 'kind:"tool" lesson is missing the required `verified` block in frontmatter',
+    });
+  }
+
+  // Check 4 required H2 sections
+  for (const section of TOOL_REQUIRED_SECTIONS) {
+    const lines = meta.rawBody.split('\n');
+    const found = lines.some((line) => section.pattern.test(line));
+    if (!found) {
+      errors.push({
+        rule: 'R9:tool-lesson',
+        file: meta.filePath,
+        message: `kind:"tool" lesson is missing required section: "${section.label}"`,
+      });
+    }
+  }
+
+  // ≥3 retrieval prompts
+  const prompts = getElementsByName(meta.elements, 'Prompt');
+  if (prompts.length < 3) {
+    errors.push({
+      rule: 'R9:tool-lesson',
+      file: meta.filePath,
+      message: `kind:"tool" lesson requires ≥3 <Prompt> tags (found ${prompts.length})`,
+    });
+  }
+
+  // ≥1 Feynman prompt
+  const feynmans = getElementsByName(meta.elements, 'Feynman');
+  if (feynmans.length < 1) {
+    errors.push({
+      rule: 'R9:tool-lesson',
+      file: meta.filePath,
+      message: `kind:"tool" lesson requires at least 1 <Feynman> tag (found 0)`,
+    });
+  }
+
+  return errors;
+}
+
 function ruleEncodingMinutesCap(meta: FileMeta): LintError[] {
   const minutes = meta.frontmatter.estimatedEncodingMinutes as number;
   if (typeof minutes !== 'number') return []; // R1 will catch missing/invalid value
@@ -311,6 +370,7 @@ export function lintDir(curriculumDir: string): LintError[] {
     errors.push(...ruleExactlyOneFeynman(meta));
     errors.push(...rulePracticeTaskRequired(meta));
     errors.push(...ruleEncodingMinutesCap(meta));
+    errors.push(...ruleToolLesson(meta));
   }
 
   errors.push(...ruleDuplicatePromptIds(allMeta));
