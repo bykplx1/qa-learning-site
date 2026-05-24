@@ -32,6 +32,66 @@ export function filterByPrereqs(
   });
 }
 
+/**
+ * Shared "cards due now" predicate — pure, no DB access.
+ *
+ * Applies the same three-stage filter the /review queue uses:
+ *   1. dueAt <= now
+ *   2. All topic prereqs satisfied (satisfiedTopics)
+ *   3. Daily new-card cap (DAILY_NEW_CARD_CAP - newCardsIntroducedToday)
+ *
+ * Use this in both the review queue and the Retention "Due today" metric so
+ * both surfaces agree on what "due" means.
+ *
+ * @param cards                  All ReviewCards for the user (any dueAt).
+ * @param satisfiedTopics        Topics where the user has ≥1 Good+ review log.
+ * @param prereqsByTopic         Map of topic path → required topic paths.
+ * @param now                    Reference timestamp (typically new Date()).
+ * @param newCardsIntroducedToday Count of new (state=0, never reviewed) cards
+ *                               already introduced in today's session.
+ */
+export function applyDuePredicate(
+  cards: ReviewCard[],
+  satisfiedTopics: Set<string>,
+  prereqsByTopic: Map<string, string[]>,
+  now: Date,
+  newCardsIntroducedToday: number,
+): ReviewCard[] {
+  // Stage 1: dueAt <= now
+  const dueCards = cards.filter((c) => c.dueAt.getTime() <= now.getTime());
+
+  // Stage 2: prereq filter
+  const eligible = filterByPrereqs(dueCards, satisfiedTopics, prereqsByTopic);
+
+  // Stage 3: daily new-card cap
+  let newCardBudget = Math.max(0, DAILY_NEW_CARD_CAP - newCardsIntroducedToday);
+  const capped: ReviewCard[] = [];
+  for (const card of eligible) {
+    const isNew = card.state === 0 && card.lastReviewedAt === null;
+    if (isNew) {
+      if (newCardBudget <= 0) continue;
+      newCardBudget--;
+    }
+    capped.push(card);
+  }
+
+  return capped;
+}
+
+/**
+ * Count of cards the review queue would actually serve right now.
+ * Pure function — no DB access. Use the result for the "Due today" metric.
+ */
+export function countDueNow(
+  cards: ReviewCard[],
+  satisfiedTopics: Set<string>,
+  prereqsByTopic: Map<string, string[]>,
+  now: Date,
+  newCardsIntroducedToday: number,
+): number {
+  return applyDuePredicate(cards, satisfiedTopics, prereqsByTopic, now, newCardsIntroducedToday).length;
+}
+
 export async function composeQueueForUser(
   userId: string,
   now: Date,
@@ -95,20 +155,8 @@ export async function composeQueueForUser(
     satisfiedTopics.add(topic);
   }
 
-  // 4. Filter cards whose topic has unsatisfied prereqs.
-  // dueRows have the same shape as ReviewCard for filtering purposes.
-  const asReviewCards = dueRows.map(({ question: _q, answer: _a, ...card }) => card as ReviewCard);
-  const eligible = filterByPrereqs(asReviewCards, satisfiedTopics, prereqsByTopic);
-  const eligibleIds = new Set(eligible.map((c) => c.id));
-  const eligibleRows = dueRows.filter((r) => eligibleIds.has(r.id));
-
-  // 5. Apply daily new-card cap.
-  // "New" = state == 0 AND lastReviewedAt IS NULL (never reviewed).
-  // Count how many NEW cards were introduced today (created AND first reviewed today,
-  // or simply state=0 + lastReviewedAt null — seed happens at session start so createdAt >= startOfDay).
+  // 4. Count new cards already introduced today (for the daily cap).
   const dayStart = startOfDay(now);
-
-  // Count fresh new cards already introduced in today's session.
   const [capRow] = await db
     .select({ count: sql<number>`cast(count(*) as int)` })
     .from(reviewCards)
@@ -122,18 +170,18 @@ export async function composeQueueForUser(
     );
   const newCardsIntroducedToday = capRow?.count ?? 0;
 
-  let newCardBudget = Math.max(0, DAILY_NEW_CARD_CAP - newCardsIntroducedToday);
-
-  const capped: typeof eligibleRows = [];
-  for (const row of eligibleRows) {
-    const isNew = row.state === 0 && row.lastReviewedAt === null;
-    if (isNew) {
-      if (newCardBudget <= 0) continue;
-      newCardBudget--;
-    }
-    capped.push(row);
-  }
+  // 5. Apply the shared due predicate (prereq filter + daily new-card cap).
+  const asReviewCards = dueRows.map(({ question: _q, answer: _a, ...card }) => card as ReviewCard);
+  const cappedCards = applyDuePredicate(
+    asReviewCards,
+    satisfiedTopics,
+    prereqsByTopic,
+    now,
+    newCardsIntroducedToday,
+  );
+  const cappedIds = new Set(cappedCards.map((c) => c.id));
+  const cappedRows = dueRows.filter((r) => cappedIds.has(r.id));
 
   // 6. Interleave by cluster and return.
-  return interleave(capped);
+  return interleave(cappedRows);
 }

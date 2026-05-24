@@ -1,10 +1,11 @@
 ---
-import { eq } from 'drizzle-orm';
+import { and, eq, gte, isNull } from 'drizzle-orm';
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getSession } from '../../lib/auth';
 import { db } from '../../db';
 import { reviewCards, reviewLogs } from '../../db/schema';
-import { retentionAtDelay, stabilityGrowth, dueToday } from '../../lib/srs/metrics';
+import { retentionAtDelay, stabilityGrowth, countDueNow } from '../../lib/srs/metrics';
 
 export const prerender = false;
 
@@ -15,15 +16,59 @@ if (!session?.user?.id) {
 const userId = session.user.id;
 
 const now = new Date();
+const dayStart = new Date(now);
+dayStart.setUTCHours(0, 0, 0, 0);
 
-const [allCards, allLogs] = await Promise.all([
+// Build prereqsByTopic from curriculum collection (same as the review queue).
+const topics = await getCollection('curriculum');
+const prereqsByTopic = new Map<string, string[]>();
+for (const topic of topics) {
+  const parts = topic.id.split('/');
+  const cluster = parts.length >= 2 ? parts[0] : topic.data.cluster;
+  const slug = topic.data.slug;
+  const topicPath = `${cluster}/${slug}`;
+  const prereqs: string[] = topic.data.prerequisites ?? [];
+  if (prereqs.length > 0) {
+    prereqsByTopic.set(topicPath, prereqs);
+  }
+}
+
+const [allCards, allLogs, newCardsRows] = await Promise.all([
   db.select().from(reviewCards).where(eq(reviewCards.userId, userId)),
   db.select().from(reviewLogs).where(eq(reviewLogs.userId, userId)),
+  // Count new cards already introduced today (for the daily cap), matching queue.ts logic.
+  db
+    .select({ id: reviewCards.id })
+    .from(reviewCards)
+    .where(
+      and(
+        eq(reviewCards.userId, userId),
+        eq(reviewCards.state, 0),
+        isNull(reviewCards.lastReviewedAt),
+        gte(reviewCards.dueAt, dayStart),
+      ),
+    ),
 ]);
+
+// Build satisfiedTopics: topics where user has ≥1 Good+ log (rating >= 3).
+// Join in memory using allCards to resolve cardId → sourceRef.
+const cardById = new Map(allCards.map((c) => [c.id, c]));
+const satisfiedTopics = new Set<string>();
+for (const log of allLogs) {
+  if (log.rating >= 3) {
+    const card = cardById.get(log.cardId);
+    if (card) {
+      const topic = card.sourceRef.split('#')[0];
+      satisfiedTopics.add(topic);
+    }
+  }
+}
+
+const newCardsIntroducedToday = newCardsRows.length;
 
 const retentionPoints = retentionAtDelay(allLogs);
 const stabilityPoints = stabilityGrowth(allLogs);
-const dueTodayCount = dueToday(allCards, now);
+const dueTodayCount = countDueNow(allCards, satisfiedTopics, prereqsByTopic, now, newCardsIntroducedToday);
 
 // SVG chart dimensions
 const CHART_W = 600;

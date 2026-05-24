@@ -1,4 +1,5 @@
 import type { ReviewLog, ReviewCard } from '../../db/schema';
+export { countDueNow } from './queue';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -106,8 +107,9 @@ export function stabilityGrowth(logs: ReviewLog[]): StabilityPoint[] {
 // ── dueToday ───────────────────────────────────────────────────────────────
 
 /**
- * Count of cards with dueAt <= now.
- * Pure function — no DB access.
+ * Count of cards with dueAt <= now, without prereq or new-card-cap filtering.
+ * Kept for existing tests. For the Retention "Due today" tile use `countDueNow`
+ * (re-exported from queue.ts) which applies the same predicate as the /review queue.
  */
 export function dueToday(cards: ReviewCard[], now: Date): number {
   return cards.filter((c) => c.dueAt.getTime() <= now.getTime()).length;
