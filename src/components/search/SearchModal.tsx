@@ -23,6 +23,7 @@ export default function SearchModal() {
   const [results, setResults] = useState<PagefindResultData[]>([]);
   const [selected, setSelected] = useState(0);
   const [ready, setReady] = useState(false);
+  const [loadAttempted, setLoadAttempted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const pagefindRef = useRef<PagefindInstance | null>(null);
@@ -36,7 +37,9 @@ export default function SearchModal() {
         pagefindRef.current = pf;
         setReady(true);
       } catch {
-        // Not available in dev mode
+        // Not available in dev mode — index is generated at build time
+      } finally {
+        setLoadAttempted(true);
       }
     };
     load();
@@ -339,7 +342,7 @@ export default function SearchModal() {
           }}
         >
           <span>Pagefind · static index</span>
-          <span>{ready ? 'ready' : 'loading…'}</span>
+          <span>{ready ? 'ready.' : loadAttempted ? 'Search available after build' : 'loading…'}</span>
         </div>
       </div>
     </div>
