@@ -29,4 +29,11 @@ describe('buildExamPool', () => {
     const questions = new Set(pool.map((q) => q.q));
     expect(questions.size).toBeGreaterThan(1);
   });
+
+  it('all question IDs are unique within one draw (no duplicate keys)', () => {
+    const pool = buildExamPool();
+    const ids = pool.map((q) => q.id);
+    const uniqueIds = new Set(ids);
+    expect(uniqueIds.size).toBe(ids.length);
+  });
 });
