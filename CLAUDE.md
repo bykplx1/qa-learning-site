@@ -74,7 +74,7 @@ Domain code goes under `src/lib/<feature>/`. UI components mirror by feature fol
 
 All content lives in `content/curriculum/<cluster>/<slug>.mdx`. The `curriculum` collection is the only content source — the legacy `qa-vault` git submodule was retired. The `lessons` Astro content collection no longer exists.
 
-Clusters (in canonical order): `foundations`, `test-design`, `functional-execution`, `automation-cicd`, `non-functional`, `ai-llm-qa`. Migration is complete — all 36 topics are `shipped` in `revamp-doc/migration-matrix.md`.
+Clusters (in canonical order): `foundations`, `test-design`, `functional-execution`, `automation-cicd`, `non-functional`, `ai-llm-qa`. Migration from the legacy vault is complete — all 36 topics are shipped. (The `revamp-doc/` planning docs and the `migrationMatrix` coverage guardrail were removed once migration finished.)
 
 ## Design
 

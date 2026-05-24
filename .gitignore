@@ -43,5 +43,8 @@ test-results/
 # Pagefind
 public/pagefind/
 
-.vercel
-.env*.local
+# Claude Code (local only — agent worktrees, logs, local settings)
+.claude/
+
+# Playwright MCP (local debug console/page dumps)
+.playwright-mcp/
