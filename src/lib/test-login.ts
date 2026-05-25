@@ -18,7 +18,7 @@
  * Server-only. Never import this from a client:* island.
  */
 
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 
 // ─── Personas ───────────────────────────────────────────────────────────────
 
@@ -312,6 +312,7 @@ async function seedProgress(userId: string): Promise<void> {
   for (let i = 0; i < quizSlugs.length; i++) {
     await recordQuizAttempt({
       userId,
+      attemptId: randomUUID(),
       quizSlug: quizSlugs[i],
       mode: 'practice',
       score: 6 + (i % 4),

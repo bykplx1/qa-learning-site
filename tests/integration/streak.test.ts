@@ -69,6 +69,7 @@ describe('getStreak', () => {
     await markLessonComplete({ userId, lessonSlug: 'intro' });
     await recordQuizAttempt({
       userId,
+      attemptId: randomUUID(),
       quizSlug: 'intro',
       mode: 'practice',
       score: 1,

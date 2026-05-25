@@ -126,6 +126,7 @@ describe('runSessionMerge', () => {
     for (const a of fixture.attempts) {
       await recordQuizAttempt({
         userId: directUserId,
+        attemptId: randomUUID(),
         quizSlug: a.quizSlug,
         mode: a.mode,
         score: a.score,

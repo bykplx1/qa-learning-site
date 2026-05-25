@@ -448,6 +448,7 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
   const submitBtnRef = useRef<HTMLButtonElement | null>(null);
   // Captures the wall-clock start time for sessionStorage persistence
   const startedAtRef = useRef<number>(0);
+  const attemptIdRef = useRef<string>(crypto.randomUUID());
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
@@ -563,6 +564,7 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
     if (signedIn) setSaveStatus('saving');
     adapter
       .recordAttempt({
+        attemptId: attemptIdRef.current,
         quizSlug: examSlug,
         mode: 'exam',
         score: result.score,
@@ -580,6 +582,8 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
 
   const handleStart = useCallback(() => {
     startedAtRef.current = Date.now();
+    submittedRef.current = false;
+    attemptIdRef.current = crypto.randomUUID();
     // Reset state for a fresh exam
     setState({
       questions,
