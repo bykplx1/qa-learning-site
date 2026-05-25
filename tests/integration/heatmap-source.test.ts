@@ -28,8 +28,8 @@ describe('computeDailyActivityFromSource (#351)', () => {
     const day = '2026-05-25';
 
     // 2 quiz attempts on the same day
-    await recordQuizAttempt({ userId, quizSlug: 'slug-a', mode: 'practice', score: 3, total: 5, answers: [], attemptedAt: new Date(`${day}T10:00:00Z`) });
-    await recordQuizAttempt({ userId, quizSlug: 'slug-b', mode: 'practice', score: 4, total: 5, answers: [], attemptedAt: new Date(`${day}T11:00:00Z`) });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'slug-a', mode: 'practice', score: 3, total: 5, answers: [], attemptedAt: new Date(`${day}T10:00:00Z`) });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'slug-b', mode: 'practice', score: 4, total: 5, answers: [], attemptedAt: new Date(`${day}T11:00:00Z`) });
 
     // 1 lesson completion
     await markLessonComplete({ userId, lessonSlug: 'intro' });
@@ -55,6 +55,7 @@ describe('computeDailyActivityFromSource (#351)', () => {
       await db.insert(quizAttempts).values({
         id: randomUUID(),
         userId,
+        attemptId: randomUUID(),
         quizSlug: 'test-slug',
         mode: 'practice',
         score: i,
@@ -92,7 +93,7 @@ describe('computeDailyActivityFromSource (#351)', () => {
   it('isolates by user', async () => {
     const a = await insertUser();
     const b = await insertUser();
-    await recordQuizAttempt({ userId: a, quizSlug: 'quiz', mode: 'practice', score: 1, total: 2, answers: [] });
+    await recordQuizAttempt({ userId: a, attemptId: randomUUID(), quizSlug: 'quiz', mode: 'practice', score: 1, total: 2, answers: [] });
 
     const rowsA = await computeDailyActivityFromSource(a);
     const rowsB = await computeDailyActivityFromSource(b);
