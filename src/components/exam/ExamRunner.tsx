@@ -25,6 +25,10 @@ interface Props {
 }
 
 const DEFAULT_DURATION_MS = 60 * 60 * 1000;
+// Minimum interval between per-tick server PUTs (sessionStorage still saves
+// every tick). State changes (answer/navigation) bypass this throttle so user
+// intent is persisted promptly.
+const SERVER_SAVE_THROTTLE_MS = 10_000;
 
 type Phase = 'idle' | 'active' | 'summary';
 
@@ -454,6 +458,9 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
   const attemptIdRef = useRef<string>(crypto.randomUUID());
   // Mirror of signedIn for use inside runner callbacks (which close over stale state).
   const signedInRef = useRef<boolean | null>(null);
+  // Throttle the per-tick server PUT — sessionStorage still writes every tick.
+  // A 60-minute exam at 1s ticks would otherwise issue 3,600 DB writes.
+  const lastServerSaveAtRef = useRef<number>(0);
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
@@ -542,7 +549,8 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
       originalStartedAt: startedAtRef.current > 0 ? startedAtRef.current : undefined,
       onTick: (ms) => {
         setRemainingMs(ms);
-        // Persist on every tick
+        // sessionStorage every tick (cheap, local). Server PUT throttled
+        // so a 60-min exam doesn't generate ~3,600 DB writes.
         if (startedAtRef.current > 0) {
           const currentState = runner.getState();
           const toSave = {
@@ -553,12 +561,19 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
             answers: currentState.answers,
           };
           saveExamState(toSave);
-          if (signedInRef.current) void saveServerExamState(toSave);
+          if (
+            signedInRef.current &&
+            Date.now() - lastServerSaveAtRef.current >= SERVER_SAVE_THROTTLE_MS
+          ) {
+            lastServerSaveAtRef.current = Date.now();
+            void saveServerExamState(toSave);
+          }
         }
       },
       onStateChange: (s) => {
         setState(s);
-        // Persist on state changes (navigation, answers)
+        // State changes (navigation, answers) are infrequent and high-value,
+        // so write the server immediately and reset the tick throttle.
         if (startedAtRef.current > 0) {
           const toSave = {
             examSlug,
@@ -568,7 +583,10 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
             answers: s.answers,
           };
           saveExamState(toSave);
-          if (signedInRef.current) void saveServerExamState(toSave);
+          if (signedInRef.current) {
+            lastServerSaveAtRef.current = Date.now();
+            void saveServerExamState(toSave);
+          }
         }
       },
       onFinalize: (r) => {
@@ -631,6 +649,7 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
     startedAtRef.current = Date.now();
     submittedRef.current = false;
     attemptIdRef.current = crypto.randomUUID();
+    lastServerSaveAtRef.current = 0;
     // Reset state for a fresh exam
     setState({
       questions,
