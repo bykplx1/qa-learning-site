@@ -37,3 +37,42 @@ export function clearExamState(): void {
     // ignore
   }
 }
+
+// ── Server-side exam session sync (authenticated users only) ─────────────────
+// These functions call the /api/exam/session endpoint so the browser island
+// never touches the DB directly.
+
+export async function loadServerExamState(): Promise<PersistedExamState | null> {
+  try {
+    const res = await fetch('/api/exam/session', { credentials: 'same-origin' });
+    if (!res.ok) return null;
+    const data = (await res.json()) as PersistedExamState | null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveServerExamState(state: PersistedExamState): Promise<void> {
+  try {
+    await fetch('/api/exam/session', {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(state),
+    });
+  } catch {
+    // network error — sessionStorage still serves as fallback
+  }
+}
+
+export async function clearServerExamState(): Promise<void> {
+  try {
+    await fetch('/api/exam/session', {
+      method: 'DELETE',
+      credentials: 'same-origin',
+    });
+  } catch {
+    // ignore
+  }
+}

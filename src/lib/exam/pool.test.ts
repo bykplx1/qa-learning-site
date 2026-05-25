@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildExamPool } from './pool.js';
+import { buildExamPool, slugFromKey } from './pool.js';
 import { EXAM_QUESTION_COUNT } from './config.js';
 
 describe('buildExamPool', () => {
@@ -30,10 +30,29 @@ describe('buildExamPool', () => {
     expect(questions.size).toBeGreaterThan(1);
   });
 
-  it('all question IDs are unique within one draw (no duplicate keys)', () => {
+  it('all question IDs are unique within one draw (new Set size equals pool length)', () => {
     const pool = buildExamPool();
-    const ids = pool.map((q) => q.id);
-    const uniqueIds = new Set(ids);
-    expect(uniqueIds.size).toBe(ids.length);
+    expect(new Set(pool.map((q) => q.id)).size).toBe(pool.length);
+  });
+
+  it('question IDs are namespaced by source file slug (format: "<slug>:<original-id>")', () => {
+    const pool = buildExamPool();
+    for (const q of pool) {
+      expect(q.id).toMatch(/^[^:]+:[^:]+/);
+    }
+  });
+});
+
+describe('slugFromKey', () => {
+  it('strips path prefix and .quiz.yaml suffix', () => {
+    expect(slugFromKey('../../generated/quiz/api-testing.quiz.yaml')).toBe('api-testing');
+  });
+
+  it('handles bare filename', () => {
+    expect(slugFromKey('accessibility.quiz.yaml')).toBe('accessibility');
+  });
+
+  it('uses full key as fallback when no slash', () => {
+    expect(slugFromKey('noExtension')).toBe('noExtension');
   });
 });

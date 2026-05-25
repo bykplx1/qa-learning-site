@@ -13,6 +13,9 @@ import {
   loadExamState,
   saveExamState,
   clearExamState,
+  loadServerExamState,
+  saveServerExamState,
+  clearServerExamState,
 } from '../../lib/exam/persistence.js';
 
 interface Props {
@@ -22,6 +25,10 @@ interface Props {
 }
 
 const DEFAULT_DURATION_MS = 60 * 60 * 1000;
+// Minimum interval between per-tick server PUTs (sessionStorage still saves
+// every tick). State changes (answer/navigation) bypass this throttle so user
+// intent is persisted promptly.
+const SERVER_SAVE_THROTTLE_MS = 10_000;
 
 type Phase = 'idle' | 'active' | 'summary';
 
@@ -449,44 +456,85 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
   // Captures the wall-clock start time for sessionStorage persistence
   const startedAtRef = useRef<number>(0);
   const attemptIdRef = useRef<string>(crypto.randomUUID());
+  // Mirror of signedIn for use inside runner callbacks (which close over stale state).
+  const signedInRef = useRef<boolean | null>(null);
+  // Throttle the per-tick server PUT — sessionStorage still writes every tick.
+  // A 60-minute exam at 1s ticks would otherwise issue 3,600 DB writes.
+  const lastServerSaveAtRef = useRef<number>(0);
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
     [signedIn],
   );
 
+  // Tracks whether the initial state-load (local + server) has been attempted.
+  const mountLoadedRef = useRef(false);
+
+  const applyRestoredState = useCallback(
+    (saved: { startedAt: number; durationMs: number; currentIndex: number; answers: Array<number | number[] | null> }) => {
+      const elapsed = Date.now() - saved.startedAt;
+      const remaining = saved.durationMs - elapsed;
+      if (remaining <= 0) return false;
+      startedAtRef.current = saved.startedAt;
+      setState({
+        questions,
+        currentIndex: saved.currentIndex,
+        answers: saved.answers,
+        status: 'active',
+      });
+      setRemainingMs(remaining);
+      setPhase('active');
+      return true;
+    },
+    [questions],
+  );
+
   useEffect(() => {
     let cancelled = false;
-    authClient.getSession().then((res) => {
+    authClient.getSession().then(async (res) => {
       if (cancelled) return;
       const data = (res && 'data' in res ? res.data : res) as { user?: { id?: string } } | null;
-      setSignedIn(!!data?.user?.id);
+      const isSignedIn = !!data?.user?.id;
+      signedInRef.current = isSignedIn;
+      setSignedIn(isSignedIn);
+
+      // Only attempt mount-load once.
+      if (mountLoadedRef.current) return;
+      mountLoadedRef.current = true;
+
+      // For signed-in users, prefer server state (supports cross-device resume).
+      if (isSignedIn) {
+        const serverSaved = await loadServerExamState();
+        if (cancelled) return;
+        if (serverSaved && serverSaved.examSlug === examSlug) {
+          const restored = applyRestoredState(serverSaved);
+          if (restored) {
+            // Mirror to sessionStorage so the runner tick path can write locally too.
+            saveExamState(serverSaved);
+            return;
+          }
+          // Expired on server — clean up both.
+          void clearServerExamState();
+          clearExamState();
+          return;
+        }
+      }
+
+      // Fall back to sessionStorage (anonymous or no server session).
+      const local = loadExamState(examSlug);
+      if (!local) return;
+      const elapsed = Date.now() - local.startedAt;
+      if (elapsed >= local.durationMs) {
+        clearExamState();
+        return;
+      }
+      applyRestoredState(local);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  // On mount, check sessionStorage for a saved active exam session
-  useEffect(() => {
-    const saved = loadExamState(examSlug);
-    if (!saved) return;
-    const elapsed = Date.now() - saved.startedAt;
-    const remaining = saved.durationMs - elapsed;
-    if (remaining <= 0) {
-      clearExamState();
-      return;
-    }
-    startedAtRef.current = saved.startedAt;
-    setState({
-      questions,
-      currentIndex: saved.currentIndex,
-      answers: saved.answers,
-      status: 'active',
-    });
-    setRemainingMs(remaining);
-    setPhase('active');
-  }, [examSlug, questions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examSlug]);
 
   // Create and start the runner whenever we enter the active phase
   useEffect(() => {
@@ -498,35 +546,52 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
     const runner = createExamRunner({
       questions,
       durationMs: effectiveDuration,
+      originalStartedAt: startedAtRef.current > 0 ? startedAtRef.current : undefined,
       onTick: (ms) => {
         setRemainingMs(ms);
-        // Persist on every tick
+        // sessionStorage every tick (cheap, local). Server PUT throttled
+        // so a 60-min exam doesn't generate ~3,600 DB writes.
         if (startedAtRef.current > 0) {
           const currentState = runner.getState();
-          saveExamState({
+          const toSave = {
             examSlug,
             startedAt: startedAtRef.current,
             durationMs,
             currentIndex: currentState.currentIndex,
             answers: currentState.answers,
-          });
+          };
+          saveExamState(toSave);
+          if (
+            signedInRef.current &&
+            Date.now() - lastServerSaveAtRef.current >= SERVER_SAVE_THROTTLE_MS
+          ) {
+            lastServerSaveAtRef.current = Date.now();
+            void saveServerExamState(toSave);
+          }
         }
       },
       onStateChange: (s) => {
         setState(s);
-        // Persist on state changes (navigation, answers)
+        // State changes (navigation, answers) are infrequent and high-value,
+        // so write the server immediately and reset the tick throttle.
         if (startedAtRef.current > 0) {
-          saveExamState({
+          const toSave = {
             examSlug,
             startedAt: startedAtRef.current,
             durationMs,
             currentIndex: s.currentIndex,
             answers: s.answers,
-          });
+          };
+          saveExamState(toSave);
+          if (signedInRef.current) {
+            lastServerSaveAtRef.current = Date.now();
+            void saveServerExamState(toSave);
+          }
         }
       },
       onFinalize: (r) => {
         clearExamState();
+        if (signedInRef.current) void clearServerExamState();
         setRemainingMs(0);
         setResult(r);
         setPhase('summary');
@@ -584,6 +649,7 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
     startedAtRef.current = Date.now();
     submittedRef.current = false;
     attemptIdRef.current = crypto.randomUUID();
+    lastServerSaveAtRef.current = 0;
     // Reset state for a fresh exam
     setState({
       questions,

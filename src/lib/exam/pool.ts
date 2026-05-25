@@ -8,13 +8,23 @@ const quizFiles = import.meta.glob('../../generated/quiz/*.quiz.yaml', {
   import: 'default',
 }) as Record<string, string>;
 
+export function slugFromKey(key: string): string {
+  const base = key.split('/').pop() ?? key;
+  return base.replace(/\.quiz\.yaml$/, '');
+}
+
 export function buildExamPool(): QuizQuestion[] {
   const sortedKeys = Object.keys(quizFiles).sort();
   const buckets: QuizQuestion[][] = [];
   for (const key of sortedKeys) {
     const parsed = quizFileSchema.safeParse(parse(quizFiles[key]));
     if (!parsed.success) continue;
-    buckets.push(parsed.data.questions);
+    const sourceSlug = slugFromKey(key);
+    const namespacedQuestions = parsed.data.questions.map((q) => ({
+      ...q,
+      id: `${sourceSlug}:${q.id}`,
+    }));
+    buckets.push(namespacedQuestions);
   }
 
   const pool: QuizQuestion[] = [];
