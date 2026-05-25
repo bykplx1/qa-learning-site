@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { db } from '../../src/db';
 import {
   users,
-  lessonsMeta,
   lessonViews,
   quizAttempts,
   projectSubmissions,
@@ -27,15 +26,12 @@ describe('getRecentActivity', () => {
   it('merges lesson views, quiz attempts, and project submissions into top 10 newest-first', async () => {
     const userId = await insertUser();
 
-    // 6 lesson_views (days 1..6) — unique (user, slug)
-    await db.insert(lessonsMeta).values(
-      Array.from({ length: 6 }, (_, i) => ({
-        slug: `l-${i + 1}`,
-        title: `Lesson ${i + 1}`,
-        category: 'foundations',
-        estMinutes: 5,
-      })),
+    // Build title map from curriculum (replaces lessons_meta join)
+    const lessonTitleBySlug = new Map(
+      Array.from({ length: 6 }, (_, i) => [`l-${i + 1}`, `Lesson ${i + 1}`]),
     );
+
+    // 6 lesson_views (days 1..6) — unique (user, slug)
     for (let i = 1; i <= 6; i++) {
       await db.insert(lessonViews).values({
         id: randomUUID(),
@@ -75,7 +71,7 @@ describe('getRecentActivity', () => {
       });
     }
 
-    const items = await getRecentActivity(userId, 10);
+    const items = await getRecentActivity(userId, 10, lessonTitleBySlug);
     expect(items).toHaveLength(10);
 
     // Strictly descending by timestamp
@@ -92,7 +88,7 @@ describe('getRecentActivity', () => {
     expect(items.slice(3, 8).every((i) => i.kind === 'quiz')).toBe(true);
     expect(items.slice(8, 10).every((i) => i.kind === 'lesson')).toBe(true);
 
-    // Lesson titles are joined from lessons_meta
+    // Lesson titles resolved from the provided title map
     const lessonItem = items.find((i) => i.kind === 'lesson')!;
     expect(lessonItem.title).toMatch(/^Lesson \d$/);
   });
@@ -129,8 +125,8 @@ describe('getRecentActivity', () => {
       submittedAt: day(1),
       updatedAt: day(1),
     });
-    const titles = new Map([['bug-tracker', 'Bug Tracker MVP']]);
-    const items = await getRecentActivity(userId, 10, titles);
+    const projectTitles = new Map([['bug-tracker', 'Bug Tracker MVP']]);
+    const items = await getRecentActivity(userId, 10, new Map(), projectTitles);
     expect(items[0].title).toBe('Bug Tracker MVP');
   });
 });

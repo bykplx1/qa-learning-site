@@ -47,14 +47,6 @@ export const verifications = pgTable('verifications', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const lessonsMeta = pgTable('lessons_meta', {
-  slug: text('slug').primaryKey(),
-  title: text('title').notNull(),
-  category: text('category').notNull(),
-  estMinutes: integer('est_minutes').notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
-
 export const lessonViews = pgTable(
   'lesson_views',
   {
@@ -211,7 +203,6 @@ export const selfExplanations = pgTable(
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;
-export type LessonMeta = typeof lessonsMeta.$inferSelect;
 export type LessonView = typeof lessonViews.$inferSelect;
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type DailyActivity = typeof dailyActivity.$inferSelect;

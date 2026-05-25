@@ -9,6 +9,8 @@ import { categoryProgressOf } from '../progress/progress';
 import { quizAccuracyByTopicOf } from '../progress/quiz-accuracy';
 import { heatmapOf } from '../heatmap/heatmap';
 import { recentActivityOf } from '../activity/activity';
+import { lessonMetaRowsFromMap } from '../curriculum/lesson-meta';
+import type { LessonMetaRecord } from '../curriculum/lesson-meta';
 
 export interface ProfileSubmission {
   projectSlug: string;
@@ -32,7 +34,9 @@ export interface ProfilePayload {
 export interface LoadProfileOptions {
   today?: Date;
   projectTitleBySlug?: Map<string, string>;
-  /** Pre-built slug→title map from the curriculum collection; takes precedence over lessons_meta. */
+  /** Pre-built slug→meta map from the curriculum collection (replaces lessons_meta). */
+  lessonMetaMap?: Map<string, LessonMetaRecord>;
+  /** @deprecated Pass lessonMetaMap instead. Kept for backward compat in callers that only need titles. */
   lessonTitleBySlug?: Map<string, string>;
 }
 
@@ -44,14 +48,20 @@ export async function loadProfile(
   const projectTitleBySlug = options.projectTitleBySlug ?? new Map<string, string>();
   const heatmapYear = today.getUTCFullYear();
 
-  // Single round-trip: 5 parallel queries instead of the previous 13.
-  const { dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows } =
+  // Single round-trip: parallel queries; daily_activity is now derived from sources (#351).
+  const { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows } =
     await loadProfileRaw(userId);
 
-  // Prefer the curriculum-collection map when provided (resolves real titles incl. acronyms).
-  // Falls back to lessons_meta DB rows for backward compat (table is currently empty — #314).
-  const lessonTitleBySlug =
-    options.lessonTitleBySlug ?? new Map(lessonMetaRows.map((m) => [m.slug, m.title]));
+  // Build slug→title map for activity feed from the curriculum meta map when available.
+  const lessonTitleBySlug: Map<string, string> =
+    options.lessonTitleBySlug ??
+    (options.lessonMetaMap
+      ? new Map(Array.from(options.lessonMetaMap.values()).map((r) => [r.slug, r.title]))
+      : new Map<string, string>());
+
+  // Build lessonMetaRows for categoryProgress + accuracyByTopic.
+  const lessonMetaRows =
+    options.lessonMetaMap ? lessonMetaRowsFromMap(options.lessonMetaMap) : [];
 
   const streak = streakOf(dailyActivityRows, today);
 
@@ -63,7 +73,9 @@ export async function loadProfile(
 
   const categoryProgress = categoryProgressOf(lessonViewRows, quizAttemptRows, lessonMetaRows);
 
-  const accuracyByTopic = quizAccuracyByTopicOf(quizAttemptRows, lessonMetaRows);
+  // Filter to practice-mode only to avoid dilution from mock-exam attempts (#388).
+  const practiceAttemptRows = quizAttemptRows.filter((a) => a.mode === 'practice');
+  const accuracyByTopic = quizAccuracyByTopicOf(practiceAttemptRows, lessonMetaRows);
 
   const recentActivity = recentActivityOf(
     lessonViewRows,
@@ -76,7 +88,8 @@ export async function loadProfile(
 
   const completedCount = lessonViewRows.filter((v) => v.completedAt != null).length;
 
-  const attemptCount = quizAttemptRows.length;
+  // Headline attempt count: practice-mode only (#388).
+  const attemptCount = practiceAttemptRows.length;
 
   return {
     streak,

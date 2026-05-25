@@ -11,7 +11,6 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { wikilinksIntegration } from './src/integrations/wikilinks.ts';
 import { quizExtractorIntegration } from './src/integrations/quizExtractor.ts';
-import { seedLessonsMetaIntegration } from './src/integrations/seedLessonsMeta.ts';
 import { ogImagesIntegration } from './src/integrations/ogImages.ts';
 import { sitemapAliasIntegration } from './src/integrations/sitemapAlias.ts';
 import { remarkDemoteH1 } from './src/lib/lessons/remarkDemoteH1.ts';
@@ -86,5 +85,5 @@ export default defineConfig({
     remarkPlugins: [remarkRepairMojibake],
   },
 
-  integrations: [mdx({ extendMarkdownConfig: false, remarkPlugins: [remarkSectionOrder], rehypePlugins: [rehypeTakeawayBlockquote] }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), seedLessonsMetaIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
+  integrations: [mdx({ extendMarkdownConfig: false, remarkPlugins: [remarkSectionOrder], rehypePlugins: [rehypeTakeawayBlockquote] }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
 });

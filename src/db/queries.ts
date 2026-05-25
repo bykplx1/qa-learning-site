@@ -3,7 +3,6 @@ import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from './index';
 import {
   dailyActivity,
-  lessonsMeta,
   lessonViews,
   projectSubmissions,
   quizAttempts,
@@ -262,8 +261,11 @@ export async function getHeatmap(userId: string, year: number): Promise<HeatmapC
   return heatmapOf(rows, year);
 }
 
-export async function getCategoryProgress(userId: string): Promise<CategoryProgress[]> {
-  const [views, attempts, meta] = await Promise.all([
+export async function getCategoryProgress(
+  userId: string,
+  meta: Array<{ slug: string; category: string }>,
+): Promise<CategoryProgress[]> {
+  const [views, attempts] = await Promise.all([
     db
       .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
       .from(lessonViews)
@@ -272,32 +274,32 @@ export async function getCategoryProgress(userId: string): Promise<CategoryProgr
       .select({ quizSlug: quizAttempts.quizSlug })
       .from(quizAttempts)
       .where(eq(quizAttempts.userId, userId)),
-    db.select({ slug: lessonsMeta.slug, category: lessonsMeta.category }).from(lessonsMeta),
   ]);
   return categoryProgressOf(views, attempts, meta);
 }
 
-export async function getQuizAccuracyByTopic(userId: string): Promise<TopicAccuracy[]> {
-  const [attempts, meta] = await Promise.all([
-    db
-      .select({
-        quizSlug: quizAttempts.quizSlug,
-        score: quizAttempts.score,
-        total: quizAttempts.total,
-      })
-      .from(quizAttempts)
-      .where(eq(quizAttempts.userId, userId)),
-    db.select({ slug: lessonsMeta.slug, category: lessonsMeta.category }).from(lessonsMeta),
-  ]);
+export async function getQuizAccuracyByTopic(
+  userId: string,
+  meta: Array<{ slug: string; category: string }>,
+): Promise<TopicAccuracy[]> {
+  const attempts = await db
+    .select({
+      quizSlug: quizAttempts.quizSlug,
+      score: quizAttempts.score,
+      total: quizAttempts.total,
+    })
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.mode, 'practice')));
   return quizAccuracyByTopicOf(attempts, meta);
 }
 
 export async function getRecentActivity(
   userId: string,
   limit = 10,
+  lessonTitleBySlug: Map<string, string> = new Map(),
   projectTitleBySlug: Map<string, string> = new Map(),
 ): Promise<ActivityItem[]> {
-  const [views, attempts, submissions, meta] = await Promise.all([
+  const [views, attempts, submissions] = await Promise.all([
     db
       .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
       .from(lessonViews)
@@ -327,10 +329,8 @@ export async function getRecentActivity(
       .where(eq(projectSubmissions.userId, userId))
       .orderBy(desc(projectSubmissions.updatedAt))
       .limit(limit),
-    db.select({ slug: lessonsMeta.slug, title: lessonsMeta.title }).from(lessonsMeta),
   ]);
 
-  const lessonTitleBySlug = new Map(meta.map((m) => [m.slug, m.title]));
   return recentActivityOf(views, attempts, submissions, lessonTitleBySlug, projectTitleBySlug, limit);
 }
 
@@ -351,6 +351,7 @@ export async function setSubmissionPublic(
 // (streakOf, heatmapOf, …) are then called in-memory against the shared rows.
 
 export interface ProfileRawData {
+  /** Per-day activity counts derived from source tables (lesson_views + quiz_attempts). */
   dailyActivityRows: { day: string; attemptsCount: number; lessonsCount: number }[];
   lessonViewRows: { lessonSlug: string; completedAt: Date | null }[];
   quizAttemptRows: {
@@ -361,21 +362,55 @@ export interface ProfileRawData {
     total: number;
     attemptedAt: Date;
   }[];
-  lessonMetaRows: { slug: string; title: string; category: string }[];
   submissionRows: ProjectSubmission[];
 }
 
+/**
+ * Derive per-day activity counts from the source tables (lesson_views + quiz_attempts)
+ * rather than from the denormalized daily_activity counter.
+ * This is the canonical fix for #351 (counter drift).
+ */
+export async function computeDailyActivityFromSource(
+  userId: string,
+): Promise<{ day: string; attemptsCount: number; lessonsCount: number }[]> {
+  const [attemptDays, lessonDays] = await Promise.all([
+    db
+      .select({
+        day: sql<string>`date(${quizAttempts.attemptedAt} AT TIME ZONE 'UTC')::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(quizAttempts)
+      .where(eq(quizAttempts.userId, userId))
+      .groupBy(sql`date(${quizAttempts.attemptedAt} AT TIME ZONE 'UTC')`),
+    db
+      .select({
+        day: sql<string>`date(${lessonViews.completedAt} AT TIME ZONE 'UTC')::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(lessonViews)
+      .where(and(eq(lessonViews.userId, userId), sql`${lessonViews.completedAt} IS NOT NULL`))
+      .groupBy(sql`date(${lessonViews.completedAt} AT TIME ZONE 'UTC')`),
+  ]);
+
+  const dayMap = new Map<string, { attemptsCount: number; lessonsCount: number }>();
+  for (const r of attemptDays) {
+    const entry = dayMap.get(r.day) ?? { attemptsCount: 0, lessonsCount: 0 };
+    entry.attemptsCount = r.count;
+    dayMap.set(r.day, entry);
+  }
+  for (const r of lessonDays) {
+    const entry = dayMap.get(r.day) ?? { attemptsCount: 0, lessonsCount: 0 };
+    entry.lessonsCount = r.count;
+    dayMap.set(r.day, entry);
+  }
+
+  return Array.from(dayMap.entries()).map(([day, counts]) => ({ day, ...counts }));
+}
+
 export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
-  const [dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows] =
+  const [dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows] =
     await Promise.all([
-      db
-        .select({
-          day: dailyActivity.day,
-          attemptsCount: dailyActivity.attemptsCount,
-          lessonsCount: dailyActivity.lessonsCount,
-        })
-        .from(dailyActivity)
-        .where(eq(dailyActivity.userId, userId)),
+      computeDailyActivityFromSource(userId),
       db
         .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
         .from(lessonViews)
@@ -393,14 +428,11 @@ export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
         .where(eq(quizAttempts.userId, userId))
         .orderBy(desc(quizAttempts.attemptedAt)),
       db
-        .select({ slug: lessonsMeta.slug, title: lessonsMeta.title, category: lessonsMeta.category })
-        .from(lessonsMeta),
-      db
         .select()
         .from(projectSubmissions)
         .where(eq(projectSubmissions.userId, userId))
         .orderBy(desc(projectSubmissions.submittedAt)),
     ]);
 
-  return { dailyActivityRows, lessonViewRows, quizAttemptRows, lessonMetaRows, submissionRows };
+  return { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows };
 }

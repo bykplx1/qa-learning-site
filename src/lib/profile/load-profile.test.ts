@@ -29,10 +29,6 @@ function makeRaw() {
         attemptedAt: new Date('2026-05-21T11:00:00Z'),
       },
     ],
-    lessonMetaRows: [
-      { slug: 'intro', title: 'Intro', category: 'foundations' },
-      { slug: 'advanced', title: 'Advanced', category: 'foundations' },
-    ],
     submissionRows: [
       {
         id: 'sub1',
@@ -72,7 +68,7 @@ describe('loadProfile (consolidated path)', () => {
     expect(payload.completedCount).toBe(1);
   });
 
-  it('computes attemptCount from quizAttempts length', async () => {
+  it('computes attemptCount from practice-mode quizAttempts only (#388)', async () => {
     mockLoadProfileRaw.mockResolvedValue(makeRaw());
     const payload = await loadProfile('u1', { today: new Date('2026-05-21T12:00:00Z') });
     expect(payload.attemptCount).toBe(1);
