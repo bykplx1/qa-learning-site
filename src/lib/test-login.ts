@@ -256,7 +256,38 @@ export async function ensurePersona(persona: Persona): Promise<void> {
     })
     .onConflictDoNothing();
 
-  if (persona.populated) await seedProgress(persona.id);
+  if (persona.populated) {
+    await seedProgress(persona.id);
+  } else {
+    await resetProgress(persona.id);
+  }
+}
+
+/**
+ * Wipes all progress rows for a user so the empty persona is truly clean on
+ * every login. Scoped to the progress tables only — the users row is kept so
+ * FK constraints are satisfied. review_logs cascade-delete via review_cards FK.
+ */
+export async function resetProgress(userId: string): Promise<void> {
+  const { db } = await import('../db');
+  const { eq } = await import('drizzle-orm');
+  const {
+    lessonViews,
+    quizAttempts,
+    dailyActivity,
+    projectSubmissions,
+    reviewCards,
+    selfExplanations,
+    userSettings,
+  } = await import('../db/schema');
+
+  await db.delete(reviewCards).where(eq(reviewCards.userId, userId));
+  await db.delete(selfExplanations).where(eq(selfExplanations.userId, userId));
+  await db.delete(projectSubmissions).where(eq(projectSubmissions.userId, userId));
+  await db.delete(quizAttempts).where(eq(quizAttempts.userId, userId));
+  await db.delete(lessonViews).where(eq(lessonViews.userId, userId));
+  await db.delete(dailyActivity).where(eq(dailyActivity.userId, userId));
+  await db.delete(userSettings).where(eq(userSettings.userId, userId));
 }
 
 async function seedProgress(userId: string): Promise<void> {
