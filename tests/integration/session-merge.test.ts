@@ -83,6 +83,7 @@ describe('runSessionMerge', () => {
     const fixture = {
       attempts: [
         {
+          attemptId: randomUUID(),
           quizSlug: 'intro',
           mode: 'practice' as const,
           score: 3,
@@ -91,6 +92,7 @@ describe('runSessionMerge', () => {
           durationSec: 30,
         },
         {
+          attemptId: randomUUID(),
           quizSlug: 'fundamentals',
           mode: 'practice' as const,
           score: 5,
