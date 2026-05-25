@@ -278,6 +278,7 @@ export function createMockAuth(): MockAuth {
 
 export async function mockRecordQuizAttempt(input: {
   userId: string;
+  attemptId: string;
   quizSlug: string;
   mode: string;
   score: number;

@@ -67,6 +67,7 @@ export type QuizAnswer = number | number[] | null;
 
 export interface RecordQuizAttemptInput {
   userId: string;
+  attemptId: string;
   quizSlug: string;
   mode: string;
   score: number;
@@ -79,6 +80,7 @@ export interface RecordQuizAttemptInput {
 export async function recordQuizAttempt(input: RecordQuizAttemptInput): Promise<{ id: string }> {
   const {
     userId,
+    attemptId,
     quizSlug,
     mode,
     score,
@@ -91,24 +93,32 @@ export async function recordQuizAttempt(input: RecordQuizAttemptInput): Promise<
   const day = attemptedAt.toISOString().slice(0, 10);
 
   await db.transaction(async (tx) => {
-    await tx.insert(quizAttempts).values({
-      id,
-      userId,
-      quizSlug,
-      mode,
-      score,
-      total,
-      answers,
-      durationSec,
-      attemptedAt,
-    });
-    await tx
-      .insert(dailyActivity)
-      .values({ userId, day, attemptsCount: 1, lessonsCount: 0 })
-      .onConflictDoUpdate({
-        target: [dailyActivity.userId, dailyActivity.day],
-        set: { attemptsCount: sql`${dailyActivity.attemptsCount} + 1` },
-      });
+    const result = await tx
+      .insert(quizAttempts)
+      .values({
+        id,
+        userId,
+        attemptId,
+        quizSlug,
+        mode,
+        score,
+        total,
+        answers,
+        durationSec,
+        attemptedAt,
+      })
+      .onConflictDoNothing({ target: [quizAttempts.userId, quizAttempts.attemptId] })
+      .returning({ inserted: sql<boolean>`(xmax = 0)` });
+
+    if (result[0]?.inserted) {
+      await tx
+        .insert(dailyActivity)
+        .values({ userId, day, attemptsCount: 1, lessonsCount: 0 })
+        .onConflictDoUpdate({
+          target: [dailyActivity.userId, dailyActivity.day],
+          set: { attemptsCount: sql`${dailyActivity.attemptsCount} + 1` },
+        });
+    }
   });
 
   return { id };

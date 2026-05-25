@@ -241,7 +241,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
             </div>
             {q.hint && !correct && (
               <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55, marginBottom: 6 }}>
-                <strong style={{ color: 'var(--ink)' }}>Hint:</strong> {q.hint}
+                <strong style={{ color: 'var(--ink)' }}>Hint:</strong> {stripWikilinks(q.hint)}
               </div>
             )}
             {q.explanation && (
@@ -452,6 +452,7 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
 
   const startedAtRef = useRef<number>(Date.now());
   const submittedRef = useRef<boolean>(false);
+  const attemptIdRef = useRef<string>(crypto.randomUUID());
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
@@ -495,11 +496,13 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
     if (submittedRef.current) return;
     if (signedIn === null) return;
     submittedRef.current = true;
+    adapter.clearProgress(quizSlug);
     const { correct, total } = getScore(state);
     const durationSec = Math.floor((Date.now() - startedAtRef.current) / 1000);
     if (signedIn) setSaveStatus('saving');
     adapter
       .recordAttempt({
+        attemptId: attemptIdRef.current,
         quizSlug,
         mode: 'practice',
         score: correct,
@@ -535,6 +538,7 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
     setSaveStatus('idle');
     submittedRef.current = false;
     startedAtRef.current = Date.now();
+    attemptIdRef.current = crypto.randomUUID();
   }, [questions, quizSlug]);
 
   return (

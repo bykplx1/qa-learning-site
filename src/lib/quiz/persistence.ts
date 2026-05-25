@@ -1,6 +1,7 @@
 import type { PersistedQuizState, QuizMode } from './engine.js';
 
 export interface CompletedAttempt {
+  attemptId: string;
   quizSlug: string;
   mode: QuizMode;
   score: number;
@@ -41,6 +42,7 @@ export const sessionStorageAdapter: QuizPersistenceAdapter = {
   async recordAttempt(attempt) {
     try {
       sessionStorage.setItem(PENDING_ATTEMPT_KEY(attempt.quizSlug), JSON.stringify(attempt));
+      sessionStorageAdapter.clearProgress(attempt.quizSlug);
     } catch {}
     return { id: null };
   },
@@ -61,6 +63,7 @@ export const dbAdapter: QuizPersistenceAdapter = {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
+        attempt_id: attempt.attemptId,
         quiz_slug: attempt.quizSlug,
         mode: attempt.mode,
         score: attempt.score,
@@ -71,6 +74,7 @@ export const dbAdapter: QuizPersistenceAdapter = {
     });
     if (!res.ok) return { id: null };
     const data = (await res.json()) as { id?: string };
+    dbAdapter.clearProgress(attempt.quizSlug);
     return { id: data.id ?? null };
   },
 };

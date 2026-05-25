@@ -51,6 +51,7 @@ describe('recordQuizAttempt', () => {
     const userId = await insertUser();
     const { id } = await recordQuizAttempt({
       userId,
+      attemptId: randomUUID(),
       quizSlug: 'intro',
       mode: 'practice',
       score: 3,
@@ -69,11 +70,46 @@ describe('recordQuizAttempt', () => {
     expect(activity[0].attemptsCount).toBe(1);
   });
 
+  it('idempotent: two POSTs with the same attemptId yield one row and counter +1', async () => {
+    const userId = await insertUser();
+    const attemptId = randomUUID();
+
+    const { id: id1 } = await recordQuizAttempt({
+      userId,
+      attemptId,
+      quizSlug: 'idempotent-quiz',
+      mode: 'practice',
+      score: 2,
+      total: 3,
+      answers: [0, 1, null],
+    });
+    expect(id1).toBeTruthy();
+
+    const { id: id2 } = await recordQuizAttempt({
+      userId,
+      attemptId,
+      quizSlug: 'idempotent-quiz',
+      mode: 'practice',
+      score: 2,
+      total: 3,
+      answers: [0, 1, null],
+    });
+    expect(id2).toBeTruthy();
+
+    const rows = await db.select().from(quizAttempts).where(eq(quizAttempts.userId, userId));
+    expect(rows.length).toBe(1);
+
+    const activity = await db.select().from(dailyActivity).where(eq(dailyActivity.userId, userId));
+    expect(activity.length).toBe(1);
+    expect(activity[0].attemptsCount).toBe(1);
+  });
+
   it('rolls back both rows when transaction fails', async () => {
     const userId = await insertUser();
     // First successful insert to seed daily_activity for today (so we can verify counter is unchanged after rollback).
     await recordQuizAttempt({
       userId,
+      attemptId: randomUUID(),
       quizSlug: 'intro',
       mode: 'practice',
       score: 1,
@@ -88,6 +124,7 @@ describe('recordQuizAttempt', () => {
     await expect(
       recordQuizAttempt({
         userId: 'does-not-exist',
+        attemptId: randomUUID(),
         quizSlug: 'intro',
         mode: 'practice',
         score: 1,
@@ -107,6 +144,7 @@ describe('recordQuizAttempt', () => {
     const original: Array<number | number[] | null> = [0, [1, 2, 3], null, 7, [4]];
     await recordQuizAttempt({
       userId,
+      attemptId: randomUUID(),
       quizSlug: 'shapes',
       mode: 'practice',
       score: 2,
@@ -130,6 +168,7 @@ describe('POST /api/quiz/attempts', () => {
 
     const res = await POST(
       buildPostRequest({
+        attempt_id: randomUUID(),
         quiz_slug: 'intro',
         mode: 'practice',
         score: 4,
@@ -146,9 +185,36 @@ describe('POST /api/quiz/attempts', () => {
     expect(count).toBe(1);
   });
 
+  it('idempotent: second POST with same attempt_id yields 200 but no duplicate row', async () => {
+    const userId = await insertUser();
+    mockSession(userId);
+
+    const attemptId = randomUUID();
+    const payload = {
+      attempt_id: attemptId,
+      quiz_slug: 'idem-api',
+      mode: 'practice',
+      score: 1,
+      total: 2,
+      answers: [0, null],
+    };
+
+    const res1 = await POST(buildPostRequest(payload));
+    expect(res1.status).toBe(200);
+
+    const res2 = await POST(buildPostRequest(payload));
+    expect(res2.status).toBe(200);
+
+    const count = await getQuizAttemptCount(userId);
+    expect(count).toBe(1);
+
+    const activity = await db.select().from(dailyActivity).where(eq(dailyActivity.userId, userId));
+    expect(activity[0].attemptsCount).toBe(1);
+  });
+
   it('returns 401 when no session', async () => {
     vi.spyOn(auth.api, 'getSession').mockResolvedValue(null as unknown as Awaited<ReturnType<typeof auth.api.getSession>>);
-    const res = await POST(buildPostRequest({ quiz_slug: 'x', mode: 'practice', score: 0, total: 1, answers: [null] }));
+    const res = await POST(buildPostRequest({ attempt_id: randomUUID(), quiz_slug: 'x', mode: 'practice', score: 0, total: 1, answers: [null] }));
     expect(res.status).toBe(401);
   });
 
