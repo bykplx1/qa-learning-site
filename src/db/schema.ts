@@ -204,6 +204,22 @@ export const selfExplanations = pgTable(
   ],
 );
 
+// In-progress exam state persisted server-side for cross-device/tab-close resume.
+// Keyed by userId — one row per user (last active exam wins).
+// Cleared on finalize (submit or expiry).
+export const examSessions = pgTable('exam_sessions', {
+  userId: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  examSlug: text('exam_slug').notNull(),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+  durationMs: integer('duration_ms').notNull(),
+  currentIndex: integer('current_index').notNull().default(0),
+  answers: jsonb('answers').notNull().default([]),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ExamSession = typeof examSessions.$inferSelect;
+export type InsertExamSession = typeof examSessions.$inferInsert;
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Account = typeof accounts.$inferSelect;

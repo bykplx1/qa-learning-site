@@ -254,3 +254,61 @@ describe('scoreExam', () => {
     expect(scoreExam(state)).toEqual({ correct: 2, total: 4 });
   });
 });
+
+describe('createExamRunner — durationSec from originalStartedAt (#392)', () => {
+  it('uses current startedAtWall when no originalStartedAt provided', () => {
+    const { clock, advance } = makeFakeClock();
+    const onFinalize = vi.fn<(r: ExamResult) => void>();
+    const runner = createExamRunner({
+      questions: makeQuestions(1),
+      durationMs: 10_000,
+      clock,
+      onFinalize,
+    });
+    runner.start();
+    advance(5_000);
+    runner.dispatch({ type: 'submit' });
+    const result = onFinalize.mock.calls[0][0];
+    expect(result.durationSec).toBe(5);
+  });
+
+  it('uses originalStartedAt to compute full elapsed time for resumed attempts', () => {
+    const { clock, advance } = makeFakeClock();
+    const onFinalize = vi.fn<(r: ExamResult) => void>();
+    // Simulate: original exam started 30s ago, runner now has 70s remaining of a 100s exam.
+    // originalStartedAt = clock.now() - 30_000 (but clock starts at 0)
+    // We set originalStartedAt to -30_000 so that when clock is at 0+70s=70s, elapsed=100s.
+    const originalStartedAt = -30_000; // 30s before clock epoch
+    const runner = createExamRunner({
+      questions: makeQuestions(1),
+      durationMs: 70_000, // remaining duration passed to runner
+      originalStartedAt,
+      clock,
+      onFinalize,
+    });
+    runner.start();
+    advance(70_000); // timer expires; clock.now() = 70_000
+    // durationSec should be (70_000 - (-30_000)) / 1000 = 100s
+    const result = onFinalize.mock.calls[0][0];
+    expect(result.durationSec).toBe(100);
+  });
+
+  it('originalStartedAt overrides startedAtWall even when both are set', () => {
+    const { clock, advance } = makeFakeClock();
+    const onFinalize = vi.fn<(r: ExamResult) => void>();
+    // Clock starts at 0; originalStartedAt = -10_000 means original start was 10s before epoch.
+    const runner = createExamRunner({
+      questions: makeQuestions(1),
+      durationMs: 60_000,
+      originalStartedAt: -10_000,
+      clock,
+      onFinalize,
+    });
+    runner.start(); // startedAtWall = 0
+    advance(5_000); // clock.now() = 5_000
+    runner.dispatch({ type: 'submit' });
+    // durationSec = (5_000 - (-10_000)) / 1000 = 15s (not 5s from startedAtWall)
+    const result = onFinalize.mock.calls[0][0];
+    expect(result.durationSec).toBe(15);
+  });
+});

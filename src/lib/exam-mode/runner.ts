@@ -72,6 +72,8 @@ export function scoreExam(state: ExamState): { correct: number; total: number } 
 export interface ExamRunnerOptions {
   questions: QuizQuestion[];
   durationMs: number;
+  /** Wall-clock ms of the original exam start. When provided, durationSec is computed from this value instead of the current start() call, so resumed attempts record full elapsed time. */
+  originalStartedAt?: number;
   clock?: Clock;
   tickIntervalMs?: number;
   onTick?: (remainingMs: number) => void;
@@ -88,7 +90,7 @@ export interface ExamRunnerHandle {
 }
 
 export function createExamRunner(opts: ExamRunnerOptions): ExamRunnerHandle {
-  const { questions, durationMs, clock, tickIntervalMs, onTick, onStateChange, onFinalize } = opts;
+  const { questions, durationMs, originalStartedAt, clock, tickIntervalMs, onTick, onStateChange, onFinalize } = opts;
 
   let state = createExamState(questions);
   let startedAtWall: number | null = null;
@@ -102,7 +104,10 @@ export function createExamRunner(opts: ExamRunnerOptions): ExamRunnerHandle {
     state = examTransition(state, { type: 'submit' });
     const { correct, total } = scoreExam(state);
     const nowMs = clock ? clock.now() : Date.now();
-    const durationSec = startedAtWall === null ? 0 : Math.max(0, Math.floor((nowMs - startedAtWall) / 1000));
+    // If the caller provided the original wall-clock start time (resumed attempt),
+    // use that to capture full elapsed time across sessions.
+    const wallRef = originalStartedAt ?? startedAtWall;
+    const durationSec = wallRef === null ? 0 : Math.max(0, Math.floor((nowMs - wallRef) / 1000));
     onStateChange?.(state);
     onFinalize({ answers: state.answers, score: correct, total, durationSec, reason });
   };
