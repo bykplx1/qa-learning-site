@@ -140,4 +140,11 @@ describe('stripWikilinks', () => {
     // Mirrors the [[#Equivalence Partitioning (EP)]] pattern found in quiz YAML explanations
     expect(stripWikilinks('See [[#Equivalence Partitioning (EP)]].')).toBe('See Equivalence Partitioning (EP).');
   });
+
+  it('regression #393: strips cross-page [[Target]] form in quiz hint/explanation (no slug map)', () => {
+    // Mirrors the [[Appium]] pattern found in resources-communities.quiz.yaml hint field
+    expect(stripWikilinks('[[Appium]] forum.')).toBe('Appium forum.');
+    // Mirrors the explanation pattern: [[Target#Section]] strips to title key
+    expect(stripWikilinks('See [[Selenium#Basic Usage]] for details.')).toBe('See Selenium for details.');
+  });
 });

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mockStore, mockRecordQuizAttempt, mockMarkLessonComplete, mockLoadProfile } from './test-auth-mock';
 
@@ -16,6 +17,7 @@ describe('mockStore singleton', () => {
   it('globalThis anchor holds state across re-import', async () => {
     await mockRecordQuizAttempt({
       userId: 'u1',
+      attemptId: randomUUID(),
       quizSlug: 'test-slug',
       mode: 'standard',
       score: 15,
@@ -39,6 +41,7 @@ describe('mockRecordQuizAttempt + mockLoadProfile round-trip', () => {
   it('attempt written by record is visible in loadProfile', async () => {
     await mockRecordQuizAttempt({
       userId: 'u1',
+      attemptId: randomUUID(),
       quizSlug: 'exploratory-testing',
       mode: 'standard',
       score: 18,
@@ -65,6 +68,7 @@ describe('mockRecordQuizAttempt + mockLoadProfile round-trip', () => {
   it('streak is 1 after recording an attempt today', async () => {
     await mockRecordQuizAttempt({
       userId: 'u1',
+      attemptId: randomUUID(),
       quizSlug: 'some-topic',
       mode: 'standard',
       score: 10,
@@ -84,6 +88,7 @@ describe('mockRecordQuizAttempt + mockLoadProfile round-trip', () => {
   it('reset clears all state', async () => {
     await mockRecordQuizAttempt({
       userId: 'u1',
+      attemptId: randomUUID(),
       quizSlug: 'x',
       mode: 'standard',
       score: 1,

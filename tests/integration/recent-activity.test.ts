@@ -48,6 +48,7 @@ describe('getRecentActivity', () => {
       await db.insert(quizAttempts).values({
         id: randomUUID(),
         userId,
+        attemptId: randomUUID(),
         quizSlug: 'l-1',
         mode: 'practice',
         score: i,

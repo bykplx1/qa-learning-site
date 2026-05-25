@@ -32,11 +32,11 @@ describe('getQuizAccuracyByTopic', () => {
     const userId = await insertUser();
 
     // Fundamentals: 3+4+5 = 12 of 15 → 80%
-    await recordQuizAttempt({ userId, quizSlug: 'fund-1', mode: 'practice', score: 3, total: 5, answers: [0, 0, 0, 0, 0] });
-    await recordQuizAttempt({ userId, quizSlug: 'fund-2', mode: 'practice', score: 4, total: 5, answers: [0, 0, 0, 0, 0] });
-    await recordQuizAttempt({ userId, quizSlug: 'fund-1', mode: 'practice', score: 5, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 3, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-2', mode: 'practice', score: 4, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 5, total: 5, answers: [0, 0, 0, 0, 0] });
     // Strategies: 1 of 4 → 25%
-    await recordQuizAttempt({ userId, quizSlug: 'strat-1', mode: 'practice', score: 1, total: 4, answers: [0, 0, 0, 0] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'strat-1', mode: 'practice', score: 1, total: 4, answers: [0, 0, 0, 0] });
     // Programming: no attempts → must be hidden
 
     const result = await getQuizAccuracyByTopic(userId, META);
@@ -50,9 +50,9 @@ describe('getQuizAccuracyByTopic', () => {
     const userId = await insertUser();
 
     // One practice attempt: 8/10
-    await recordQuizAttempt({ userId, quizSlug: 'fund-1', mode: 'practice', score: 8, total: 10, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 8, total: 10, answers: [] });
     // One mock-exam attempt that should not dilute accuracy
-    await recordQuizAttempt({ userId, quizSlug: 'fund-1', mode: 'mock-exam', score: 2, total: 40, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'mock-exam', score: 2, total: 40, answers: [] });
 
     const result = await getQuizAccuracyByTopic(userId, META);
     expect(result).toEqual([
@@ -62,7 +62,7 @@ describe('getQuizAccuracyByTopic', () => {
 
   it('hides categories with zero attempts (not 0%)', async () => {
     const userId = await insertUser();
-    await recordQuizAttempt({ userId, quizSlug: 'fund-1', mode: 'practice', score: 2, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 2, total: 5, answers: [0, 0, 0, 0, 0] });
 
     const result = await getQuizAccuracyByTopic(userId, META);
     expect(result.map((r) => r.category)).toEqual(['Fundamentals']);
@@ -75,6 +75,7 @@ describe('getQuizAccuracyByTopic', () => {
     await db.insert(quizAttempts).values({
       id: randomUUID(),
       userId,
+      attemptId: randomUUID(),
       quizSlug: 'removed-from-vault',
       mode: 'practice',
       score: 0,
@@ -83,7 +84,7 @@ describe('getQuizAccuracyByTopic', () => {
       durationSec: 0,
       attemptedAt: new Date(),
     });
-    await recordQuizAttempt({ userId, quizSlug: 'fund-1', mode: 'practice', score: 4, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 4, total: 5, answers: [0, 0, 0, 0, 0] });
 
     const result = await getQuizAccuracyByTopic(userId, META);
     expect(result).toEqual([
@@ -94,8 +95,8 @@ describe('getQuizAccuracyByTopic', () => {
   it('isolates rows per user', async () => {
     const userA = await insertUser();
     const userB = await insertUser();
-    await recordQuizAttempt({ userId: userA, quizSlug: 'fund-1', mode: 'practice', score: 5, total: 5, answers: [0, 0, 0, 0, 0] });
-    await recordQuizAttempt({ userId: userB, quizSlug: 'fund-1', mode: 'practice', score: 0, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId: userA, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 5, total: 5, answers: [0, 0, 0, 0, 0] });
+    await recordQuizAttempt({ userId: userB, attemptId: randomUUID(), quizSlug: 'fund-1', mode: 'practice', score: 0, total: 5, answers: [0, 0, 0, 0, 0] });
 
     expect(await getQuizAccuracyByTopic(userA, META)).toEqual([
       { category: 'Fundamentals', attempts: 1, correct: 5, total: 5, accuracy: 100 },

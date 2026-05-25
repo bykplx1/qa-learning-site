@@ -83,6 +83,7 @@ describe('runSessionMerge', () => {
     const fixture = {
       attempts: [
         {
+          attemptId: randomUUID(),
           quizSlug: 'intro',
           mode: 'practice' as const,
           score: 3,
@@ -91,6 +92,7 @@ describe('runSessionMerge', () => {
           durationSec: 30,
         },
         {
+          attemptId: randomUUID(),
           quizSlug: 'fundamentals',
           mode: 'practice' as const,
           score: 5,
@@ -126,6 +128,7 @@ describe('runSessionMerge', () => {
     for (const a of fixture.attempts) {
       await recordQuizAttempt({
         userId: directUserId,
+        attemptId: randomUUID(),
         quizSlug: a.quizSlug,
         mode: a.mode,
         score: a.score,

@@ -13,6 +13,7 @@ const answerSchema = z.union([
 ]);
 
 const bodySchema = z.object({
+  attempt_id: z.string().uuid(),
   quiz_slug: z.string().min(1).max(200),
   mode: z.string().min(1).max(40),
   score: z.number().int().nonnegative(),
@@ -48,6 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const args = {
     userId: session.user.id,
+    attemptId: body.attempt_id,
     quizSlug: body.quiz_slug,
     mode: body.mode,
     score: body.score,

@@ -27,7 +27,7 @@ async function seedProgressRows(userId: string): Promise<void> {
     id: randomUUID(), userId, lessonSlug: 'some-lesson', completedAt: new Date(), timeSpentSec: 60,
   });
   await db.insert(quizAttempts).values({
-    id: randomUUID(), userId, quizSlug: 'some-quiz', mode: 'practice',
+    id: randomUUID(), userId, attemptId: randomUUID(), quizSlug: 'some-quiz', mode: 'practice',
     score: 5, total: 10, answers: [0, 1], durationSec: 30, attemptedAt: new Date(),
   });
   await db.insert(dailyActivity).values({ userId, day, attemptsCount: 1, lessonsCount: 1 });
@@ -143,6 +143,7 @@ describe('ensurePersona — populated persona is unaffected by reset', () => {
     await db.insert(quizAttempts).values({
       id: randomUUID(),
       userId: populatedPersona.id,
+      attemptId: randomUUID(),
       quizSlug: 'sentinel',
       mode: 'practice',
       score: 1,

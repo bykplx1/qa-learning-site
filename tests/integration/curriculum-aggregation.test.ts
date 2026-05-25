@@ -57,7 +57,7 @@ describe('curriculum-based aggregation (#352)', () => {
 
   it('accuracyByTopic is non-empty when lessonMetaMap is provided', async () => {
     const userId = await insertUser();
-    await recordQuizAttempt({ userId, quizSlug: 'testing-principles', mode: 'practice', score: 8, total: 10, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'testing-principles', mode: 'practice', score: 8, total: 10, answers: [] });
 
     const lessonMetaMap = buildLessonMetaMap(ENTRIES);
     const payload = await loadProfile(userId, { lessonMetaMap });
@@ -85,8 +85,8 @@ describe('curriculum-based aggregation (#352)', () => {
 describe('headline attempt count (#388)', () => {
   it('attemptCount counts only practice attempts, not mock-exam', async () => {
     const userId = await insertUser();
-    await recordQuizAttempt({ userId, quizSlug: 'testing-principles', mode: 'practice', score: 8, total: 10, answers: [] });
-    await recordQuizAttempt({ userId, quizSlug: 'testing-principles', mode: 'mock-exam', score: 30, total: 40, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'testing-principles', mode: 'practice', score: 8, total: 10, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'testing-principles', mode: 'mock-exam', score: 30, total: 40, answers: [] });
 
     const payload = await loadProfile(userId);
     expect(payload.attemptCount).toBe(1);
@@ -94,9 +94,9 @@ describe('headline attempt count (#388)', () => {
 
   it('accuracyByTopic excludes mock-exam attempts', async () => {
     const userId = await insertUser();
-    await recordQuizAttempt({ userId, quizSlug: 'testing-principles', mode: 'practice', score: 8, total: 10, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'testing-principles', mode: 'practice', score: 8, total: 10, answers: [] });
     // Mock exam with poor score should not dilute practice accuracy
-    await recordQuizAttempt({ userId, quizSlug: 'testing-principles', mode: 'mock-exam', score: 1, total: 40, answers: [] });
+    await recordQuizAttempt({ userId, attemptId: randomUUID(), quizSlug: 'testing-principles', mode: 'mock-exam', score: 1, total: 40, answers: [] });
 
     const lessonMetaMap = buildLessonMetaMap(ENTRIES);
     const payload = await loadProfile(userId, { lessonMetaMap });

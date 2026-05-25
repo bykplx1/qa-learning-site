@@ -65,6 +65,7 @@ export const quizAttempts = pgTable(
   {
     id: text('id').primaryKey(),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    attemptId: text('attempt_id').notNull(),
     quizSlug: text('quiz_slug').notNull(),
     mode: text('mode').notNull(),
     score: integer('score').notNull(),
@@ -73,7 +74,10 @@ export const quizAttempts = pgTable(
     durationSec: integer('duration_sec').notNull().default(0),
     attemptedAt: timestamp('attempted_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('quiz_attempts_user_idx').on(t.userId, t.attemptedAt)],
+  (t) => [
+    index('quiz_attempts_user_idx').on(t.userId, t.attemptedAt),
+    uniqueIndex('quiz_attempts_user_attempt_uniq').on(t.userId, t.attemptId),
+  ],
 );
 
 export const dailyActivity = pgTable(

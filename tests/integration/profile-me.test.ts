@@ -69,6 +69,7 @@ describe('GET /api/profile/me', () => {
     await markLessonComplete({ userId, lessonSlug: 'intro', timeSpentSec: 30 });
     await recordQuizAttempt({
       userId,
+      attemptId: randomUUID(),
       quizSlug: 'intro',
       mode: 'practice',
       score: 8,

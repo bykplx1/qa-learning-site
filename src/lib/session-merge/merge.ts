@@ -66,6 +66,10 @@ export async function runSessionMerge(opts: {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
+          // Fall back to a fresh UUID for legacy items stored before #437
+          // started attaching attemptId; new sessionStorageAdapter writes
+          // always include it.
+          attempt_id: attempt.attemptId ?? crypto.randomUUID(),
           quiz_slug: attempt.quizSlug,
           mode: attempt.mode,
           score: attempt.score,
