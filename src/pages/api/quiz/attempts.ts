@@ -15,7 +15,7 @@ const answerSchema = z.union([
 const bodySchema = z.object({
   attempt_id: z.string().uuid(),
   quiz_slug: z.string().min(1).max(200),
-  mode: z.string().min(1).max(40),
+  mode: z.enum(['practice', 'exam']),
   score: z.number().int().nonnegative(),
   total: z.number().int().positive(),
   answers: z.array(answerSchema),
