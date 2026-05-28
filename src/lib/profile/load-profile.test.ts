@@ -36,7 +36,7 @@ function makeRaw() {
         projectSlug: 'capstone',
         repoUrl: null,
         reflection: 'done',
-        status: 'submitted',
+        status: 'submitted' as const,
         isPublic: false,
         artifactUrl: null,
         artifactBody: null,

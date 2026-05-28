@@ -30,6 +30,7 @@ function makeLog(
     difficulty: 5,
     dueAt: overrides.gradedAt,
     state: 2,
+    gradeId: null,
     ...overrides,
   };
 }
