@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { getCollection } from 'astro:content';
+import { sql } from 'drizzle-orm';
 import { db } from '../../db';
 import { reviewCards, prompts } from '../../db/schema';
 import { createNewCard } from './fsrs';
@@ -20,64 +21,70 @@ export async function seedForUser(userId: string): Promise<SeedResult> {
   const topics = await getCollection('curriculum');
   const now = new Date();
 
-  let inserted = 0;
-  let skipped = 0;
+  // Collect all rows first — no DB round-trips in the loop.
+  const promptRows: (typeof prompts.$inferInsert)[] = [];
+  const cardRows: (typeof reviewCards.$inferInsert)[] = [];
 
   for (const topic of topics) {
-    // Derive cluster from topic.id which is "<cluster>/<slug>" (relative to the loader base)
     const parts = topic.id.split('/');
     const cluster = parts.length >= 2 ? parts[0] : topic.data.cluster;
     const slug = topic.data.slug;
 
-    // body may be undefined if the MDX has no prose — guard defensively
     const body: string = (topic as unknown as { body?: string }).body ?? '';
     const promptDatas = extractPrompts(body);
 
     for (const promptData of promptDatas) {
       const sourceRef = `${cluster}/${slug}#${promptData.id}`;
-
-      // Upsert the prompts lookup — keeps question/answer current with content edits.
-      await db
-        .insert(prompts)
-        .values({
-          sourceRef,
-          cluster,
-          question: promptData.question,
-          answer: promptData.answer,
-          updatedAt: now,
-        })
-        .onConflictDoUpdate({
-          target: prompts.sourceRef,
-          set: {
-            question: promptData.question,
-            answer: promptData.answer,
-            updatedAt: now,
-          },
-        });
-
       const cardInit = createNewCard(now);
 
-      const result = await db
-        .insert(reviewCards)
-        .values({
-          id: randomUUID(),
-          userId,
-          sourceRef,
-          cluster,
-          ...cardInit,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .onConflictDoNothing()
-        .returning({ id: reviewCards.id });
+      promptRows.push({
+        sourceRef,
+        cluster,
+        question: promptData.question,
+        answer: promptData.answer,
+        updatedAt: now,
+      });
 
-      if (result.length > 0) {
-        inserted++;
-      } else {
-        skipped++;
-      }
+      cardRows.push({
+        id: randomUUID(),
+        userId,
+        sourceRef,
+        cluster,
+        ...cardInit,
+        createdAt: now,
+        updatedAt: now,
+      });
     }
   }
 
-  return { inserted, skipped };
+  if (promptRows.length === 0) {
+    return { inserted: 0, skipped: 0 };
+  }
+
+  // Single transaction: batch-upsert prompts, then batch-insert cards.
+  const inserted = await db.transaction(async (tx) => {
+    // Upsert prompts lookup — keeps question/answer current with content edits.
+    await tx
+      .insert(prompts)
+      .values(promptRows)
+      .onConflictDoUpdate({
+        target: prompts.sourceRef,
+        set: {
+          question: sql`excluded.question`,
+          answer: sql`excluded.answer`,
+          updatedAt: sql`excluded.updated_at`,
+        },
+      });
+
+    // Insert cards; skip conflicts (idempotent re-seed).
+    const result = await tx
+      .insert(reviewCards)
+      .values(cardRows)
+      .onConflictDoNothing()
+      .returning({ id: reviewCards.id });
+
+    return result.length;
+  });
+
+  return { inserted, skipped: cardRows.length - inserted };
 }
