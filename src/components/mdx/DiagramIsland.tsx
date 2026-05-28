@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface Props {
   src: string;
@@ -6,7 +7,7 @@ interface Props {
   'data-theme'?: string;
 }
 
-export default function DiagramIsland({ src, caption, 'data-theme': dataTheme }: Props) {
+function DiagramIslandInner({ src, caption, 'data-theme': dataTheme }: Props) {
   const id = useId().replace(/:/g, '-');
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
@@ -59,4 +60,8 @@ export default function DiagramIsland({ src, caption, 'data-theme': dataTheme }:
       {caption && <figcaption className="mdx-diagram__caption">{caption}</figcaption>}
     </div>
   );
+}
+
+export default function DiagramIsland(props: Props) {
+  return <ErrorBoundary label="DiagramIsland"><DiagramIslandInner {...props} /></ErrorBoundary>;
 }

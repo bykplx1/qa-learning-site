@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { rubrics, type RubricDefinition } from '../../lib/projects/rubric';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface Props {
   id: string;
@@ -7,7 +8,7 @@ interface Props {
   children: ReactNode;
 }
 
-export default function PracticeTaskIsland({ id, rubricId, children }: Props) {
+function PracticeTaskIslandInner({ id, rubricId, children }: Props) {
   const [submitted, setSubmitted] = useState(false);
 
   const rubricDef: RubricDefinition | null =
@@ -141,4 +142,8 @@ export default function PracticeTaskIsland({ id, rubricId, children }: Props) {
       )}
     </div>
   );
+}
+
+export default function PracticeTaskIsland(props: Props) {
+  return <ErrorBoundary label="PracticeTaskIsland"><PracticeTaskIslandInner {...props} /></ErrorBoundary>;
 }

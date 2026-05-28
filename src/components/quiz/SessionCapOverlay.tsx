@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 // 25 minutes in milliseconds default. Overridable via window.__REVIEW_SESSION_CAP_MS__ for tests.
 // Read inside component mount (not at module scope) so addInitScript overrides are visible.
@@ -20,7 +21,7 @@ interface Props {
   onDismiss?: () => void;
 }
 
-export default function SessionCapOverlay({ onDismiss }: Props) {
+function SessionCapOverlayInner({ onDismiss }: Props) {
   const [visible, setVisible] = useState(false);
   const capTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -178,4 +179,8 @@ export default function SessionCapOverlay({ onDismiss }: Props) {
       </div>
     </div>
   );
+}
+
+export default function SessionCapOverlay(props: Props) {
+  return <ErrorBoundary label="SessionCapOverlay"><SessionCapOverlayInner {...props} /></ErrorBoundary>;
 }

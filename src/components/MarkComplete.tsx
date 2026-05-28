@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { authClient } from '../lib/auth-client';
+import { ErrorBoundary } from './ErrorBoundary';
 
 type Status = 'loading' | 'idle' | 'saving' | 'done' | 'done-local' | 'error';
 
@@ -9,7 +10,7 @@ interface Props {
 
 export const LESSON_COMPLETE_KEY = (slug: string) => `lesson_complete_${slug}`;
 
-export function MarkComplete({ slug }: Props) {
+function MarkCompleteInner({ slug }: Props) {
   const [status, setStatus] = useState<Status>('loading');
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const startedAt = useRef<number>(Date.now());
@@ -87,4 +88,8 @@ export function MarkComplete({ slug }: Props) {
       {label}
     </button>
   );
+}
+
+export function MarkComplete({ slug }: Props) {
+  return <ErrorBoundary label="MarkComplete"><MarkCompleteInner slug={slug} /></ErrorBoundary>;
 }

@@ -73,6 +73,10 @@ const navLinks = [
         document.documentElement.setAttribute('data-theme', theme);
       })();
     </script>
+    <script>
+      import { registerGlobalErrorHandlers } from '../lib/observability/client-reporter';
+      registerGlobalErrorHandlers();
+    </script>
   </head>
   <body>
     <header class="nav">

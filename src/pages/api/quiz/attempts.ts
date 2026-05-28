@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getSession } from '../../../lib/auth';
 import { recordQuizAttempt } from '../../../db/queries';
 import { mockRecordQuizAttempt } from '../../../lib/test-auth-mock';
+import { logError } from '../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -57,9 +58,19 @@ export const POST: APIRoute = async ({ request }) => {
     answers: body.answers,
     durationSec: body.duration_sec ?? 0,
   };
-  const { id } = process.env.E2E_OAUTH_MOCK === '1'
-    ? await mockRecordQuizAttempt(args)
-    : await recordQuizAttempt(args);
+
+  let id: string;
+  try {
+    ({ id } = process.env.E2E_OAUTH_MOCK === '1'
+      ? await mockRecordQuizAttempt(args)
+      : await recordQuizAttempt(args));
+  } catch (err) {
+    logError('POST /api/quiz/attempts', err, { route: '/api/quiz/attempts', method: 'POST' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   return new Response(JSON.stringify({ id }), {
     status: 200,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authClient } from '../../lib/auth-client';
+import { ErrorBoundary } from '../ErrorBoundary';
 import type { ProfilePayload } from '../../lib/profile/load-profile';
 import type { HeatmapCell } from '../../lib/heatmap/heatmap';
 
@@ -212,7 +213,7 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
 
 type ProfileData = Omit<ProfilePayload, 'recentActivity'> & { recentActivity: ActivityItem[] };
 
-export default function ProfileShell() {
+function ProfileShellInner() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; name?: string | null; email: string } | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -405,6 +406,10 @@ export default function ProfileShell() {
       </section>
     </>
   );
+}
+
+export default function ProfileShell() {
+  return <ErrorBoundary label="ProfileShell"><ProfileShellInner /></ErrorBoundary>;
 }
 
 // ─── Inline SubmissionsList (avoids double-island nesting) ────────────────────

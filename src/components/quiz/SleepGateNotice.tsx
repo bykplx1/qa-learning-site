@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface Props {
   /**
@@ -32,7 +33,7 @@ function isAfterMidnight(tz: string): boolean {
   }
 }
 
-export default function SleepGateNotice({ persistedTimezone }: Props) {
+function SleepGateNoticeInner({ persistedTimezone }: Props) {
   const [show, setShow] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -101,4 +102,8 @@ export default function SleepGateNotice({ persistedTimezone }: Props) {
       </button>
     </aside>
   );
+}
+
+export default function SleepGateNotice(props: Props) {
+  return <ErrorBoundary label="SleepGateNotice"><SleepGateNoticeInner {...props} /></ErrorBoundary>;
 }

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getSession } from '../../../lib/auth';
 import { requestGapPrompts } from '../../../lib/ai/gap-prompt';
 import type { LLMClient } from '../../../lib/ai/gap-prompt';
+import { logError } from '../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -80,7 +81,16 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const result = await requestGapPrompts(parsed.data.explanation, buildLLMClient());
+  let result: Awaited<ReturnType<typeof requestGapPrompts>>;
+  try {
+    result = await requestGapPrompts(parsed.data.explanation, buildLLMClient());
+  } catch (err) {
+    logError('POST /api/explain/gap-prompt', err, { route: '/api/explain/gap-prompt', method: 'POST' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   return new Response(JSON.stringify(result), {
     status: 200,

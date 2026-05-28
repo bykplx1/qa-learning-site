@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { authClient } from '../lib/auth-client';
 import { runSessionMerge, type MergeStorage } from '../lib/session-merge/merge';
+import { ErrorBoundary } from './ErrorBoundary';
 
 const ATTEMPTED_KEY = 'session_merge_attempted';
 
@@ -28,7 +29,7 @@ function browserStorage(): MergeStorage {
   };
 }
 
-export function SessionMerge() {
+function SessionMergeInner() {
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -88,4 +89,8 @@ export function SessionMerge() {
       </button>
     </div>
   );
+}
+
+export function SessionMerge() {
+  return <ErrorBoundary label="SessionMerge"><SessionMergeInner /></ErrorBoundary>;
 }

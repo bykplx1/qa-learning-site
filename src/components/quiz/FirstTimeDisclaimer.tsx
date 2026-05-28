@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 const LS_KEY = 'review:seen-disclaimer';
 
@@ -11,7 +12,7 @@ interface Props {
   seenOnServer: boolean | null;
 }
 
-export default function FirstTimeDisclaimer({ seenOnServer }: Props) {
+function FirstTimeDisclaimerInner({ seenOnServer }: Props) {
   const [dismissed, setDismissed] = useState(true); // start hidden; flip after hydration
 
   useEffect(() => {
@@ -143,4 +144,8 @@ export default function FirstTimeDisclaimer({ seenOnServer }: Props) {
       </button>
     </aside>
   );
+}
+
+export default function FirstTimeDisclaimer(props: Props) {
+  return <ErrorBoundary label="FirstTimeDisclaimer"><FirstTimeDisclaimerInner {...props} /></ErrorBoundary>;
 }

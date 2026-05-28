@@ -6,6 +6,7 @@ import { reviewCards, reviewLogs } from '../../../db/schema';
 import { getSession } from '../../../lib/auth';
 import { grade, type CardState, Rating } from '../../../lib/srs/fsrs';
 import { composeQueueForUser } from '../../../lib/srs/queue';
+import { logError } from '../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -48,6 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (!preCheck) return new Response('Not Found', { status: 404 });
   if (preCheck.userId !== userId) return new Response('Forbidden', { status: 403 });
 
+  try {
   await db.transaction(async (tx) => {
     const [card] = await tx
       .select()
@@ -108,6 +110,13 @@ export const POST: APIRoute = async ({ request }) => {
       })
       .where(eq(reviewCards.id, cardId));
   });
+  } catch (err) {
+    logError('POST /api/review/grade', err, { route: '/api/review/grade', method: 'POST' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   // Compose the interleaved queue and return the first card.
   const queue = await composeQueueForUser(userId, now);

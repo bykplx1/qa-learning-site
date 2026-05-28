@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import ReviewEmptyState from './ReviewEmptyState';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 export interface InitialCard {
   id: string;
@@ -29,7 +30,7 @@ const RATING_DESCRIPTIONS: Record<number, string> = {
   4: 'Instant recall',
 };
 
-export default function ReviewQueue({ initialCard }: Props) {
+function ReviewQueueInner({ initialCard }: Props) {
   const [card, setCard] = useState<InitialCard | null>(initialCard);
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -195,4 +196,8 @@ export default function ReviewQueue({ initialCard }: Props) {
       )}
     </section>
   );
+}
+
+export default function ReviewQueue(props: Props) {
+  return <ErrorBoundary label="ReviewQueue"><ReviewQueueInner {...props} /></ErrorBoundary>;
 }

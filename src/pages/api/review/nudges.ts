@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../../db';
 import { userSettings } from '../../../db/schema';
 import { getSession } from '../../../lib/auth';
+import { logError } from '../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -16,11 +17,20 @@ export const GET: APIRoute = async ({ request }) => {
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
-  const [row] = await db
-    .select()
-    .from(userSettings)
-    .where(eq(userSettings.userId, session.user.id))
-    .limit(1);
+  let row: typeof userSettings.$inferSelect | undefined;
+  try {
+    [row] = await db
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, session.user.id))
+      .limit(1);
+  } catch (err) {
+    logError('GET /api/review/nudges', err, { route: '/api/review/nudges', method: 'GET' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   return new Response(
     JSON.stringify({
@@ -71,24 +81,32 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('Bad Request: provide at least one field', { status: 400 });
   }
 
-  await db
-    .insert(userSettings)
-    .values({
-      userId: session.user.id,
-      seenReviewDisclaimer: patch.seenReviewDisclaimer ?? false,
-      timezone: patch.timezone ?? null,
-      updatedAt: patch.updatedAt!,
-    })
-    .onConflictDoUpdate({
-      target: userSettings.userId,
-      set: {
-        ...(typeof seenReviewDisclaimer === 'boolean' && {
-          seenReviewDisclaimer: patch.seenReviewDisclaimer!,
-        }),
-        ...(typeof timezone === 'string' && { timezone: patch.timezone! }),
+  try {
+    await db
+      .insert(userSettings)
+      .values({
+        userId: session.user.id,
+        seenReviewDisclaimer: patch.seenReviewDisclaimer ?? false,
+        timezone: patch.timezone ?? null,
         updatedAt: patch.updatedAt!,
-      },
+      })
+      .onConflictDoUpdate({
+        target: userSettings.userId,
+        set: {
+          ...(typeof seenReviewDisclaimer === 'boolean' && {
+            seenReviewDisclaimer: patch.seenReviewDisclaimer!,
+          }),
+          ...(typeof timezone === 'string' && { timezone: patch.timezone! }),
+          updatedAt: patch.updatedAt!,
+        },
+      });
+  } catch (err) {
+    logError('POST /api/review/nudges', err, { route: '/api/review/nudges', method: 'POST' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
     });
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

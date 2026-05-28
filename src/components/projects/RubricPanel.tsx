@@ -1,10 +1,11 @@
 import type { RubricDefinition } from '../../lib/projects/rubric';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface Props {
   rubric: RubricDefinition;
 }
 
-export default function RubricPanel({ rubric }: Props) {
+function RubricPanelInner({ rubric }: Props) {
   return (
     <section
       aria-label={`Grading rubric: ${rubric.label}`}
@@ -105,4 +106,8 @@ export default function RubricPanel({ rubric }: Props) {
       </div>
     </section>
   );
+}
+
+export default function RubricPanel(props: Props) {
+  return <ErrorBoundary label="RubricPanel"><RubricPanelInner {...props} /></ErrorBoundary>;
 }

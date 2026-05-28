@@ -22,6 +22,7 @@
  * receives plain serialisable props only.
  */
 import { useState } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 // Must match STABILITY_THRESHOLD in src/lib/projects/concept-gate.ts
 const STABILITY_THRESHOLD = 1.0;
@@ -99,7 +100,7 @@ function StabilityBar({ stability }: { stability: number }) {
   );
 }
 
-export default function ConceptGate({ projectSlug, gate, validTopicSlugs }: Props) {
+function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
   const topicSlugSet = new Set(validTopicSlugs);
   const [overridden, setOverridden] = useState(false);
 
@@ -264,4 +265,8 @@ export default function ConceptGate({ projectSlug, gate, validTopicSlugs }: Prop
       )}
     </form>
   );
+}
+
+export default function ConceptGate(props: Props) {
+  return <ErrorBoundary label="ConceptGate"><ConceptGateInner {...props} /></ErrorBoundary>;
 }

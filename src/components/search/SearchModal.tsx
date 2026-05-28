@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface PagefindResultData {
   url: string;
@@ -17,7 +18,7 @@ interface PagefindInstance {
   init?: () => Promise<void>;
 }
 
-export default function SearchModal() {
+function SearchModalInner() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PagefindResultData[]>([]);
@@ -347,4 +348,8 @@ export default function SearchModal() {
       </div>
     </div>
   );
+}
+
+export default function SearchModal() {
+  return <ErrorBoundary label="SearchModal"><SearchModalInner /></ErrorBoundary>;
 }
