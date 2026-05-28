@@ -52,12 +52,16 @@ export async function loadProfile(
   const { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows } =
     await loadProfileRaw(userId);
 
-  // Build slug→title map for activity feed from the curriculum meta map when available.
+  // Build slug→title and slug→cluster maps for activity feed from the curriculum meta map.
   const lessonTitleBySlug: Map<string, string> =
     options.lessonTitleBySlug ??
     (options.lessonMetaMap
       ? new Map(Array.from(options.lessonMetaMap.values()).map((r) => [r.slug, r.title]))
       : new Map<string, string>());
+
+  const clusterBySlug: Map<string, string> = options.lessonMetaMap
+    ? new Map(Array.from(options.lessonMetaMap.values()).map((r) => [r.slug, r.cluster]))
+    : new Map<string, string>();
 
   // Build lessonMetaRows for categoryProgress + accuracyByTopic.
   const lessonMetaRows =
@@ -84,6 +88,7 @@ export async function loadProfile(
     lessonTitleBySlug,
     projectTitleBySlug,
     10,
+    clusterBySlug,
   );
 
   const completedCount = lessonViewRows.filter((v) => v.completedAt != null).length;

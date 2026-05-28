@@ -18,16 +18,9 @@ interface Props {
   currentCluster: CurriculumCluster;
   /** The slug of the currently-viewed lesson. */
   currentSlug: string;
-  /**
-   * Route base — where curriculum lessons live.
-   * Defaults to /lessons (pre-cluster-route era). Pass /lessons when the
-   * cluster-prefixed route (#225) hasn't landed yet; once it lands callers
-   * can pass /lessons/<cluster>/<slug> directly.
-   */
-  routeBase?: string;
 }
 
-const { currentCluster, currentSlug, routeBase = '/lessons' } = Astro.props;
+const { currentCluster, currentSlug } = Astro.props;
 
 const allCurriculum = await getCollection('curriculum');
 
@@ -54,10 +47,8 @@ const CLUSTER_LABELS: Record<CurriculumCluster, string> = {
   'ai-llm-qa':            'AI / LLM QA',
 };
 
-function lessonHref(slug: string): string {
-  // Until #225 lands, all curriculum lessons are at /lessons/<slug>.
-  // After #225 they will be at /lessons/<cluster>/<slug>; update routeBase then.
-  return `${routeBase}/${slug}`;
+function lessonHref(cluster: CurriculumCluster, slug: string): string {
+  return `/lessons/${cluster}/${slug}`;
 }
 ---
 
@@ -76,7 +67,7 @@ function lessonHref(slug: string): string {
             return (
               <li>
                 <a
-                  href={lessonHref(entry.data.slug)}
+                  href={lessonHref(entry.data.cluster, entry.data.slug)}
                   class={`cluster-toc__link${isActive ? ' is-active' : ''}`}
                   aria-current={isActive ? 'page' : undefined}
                 >

@@ -47,25 +47,32 @@ export function recentActivityOf(
   lessonTitleBySlug: Map<string, string>,
   projectTitleBySlug: Map<string, string>,
   limit = 10,
+  clusterBySlug: Map<string, string> = new Map(),
 ): ActivityItem[] {
   const items: ActivityItem[] = [];
 
   for (const v of views) {
     if (v.completedAt == null) continue;
+    const cluster = clusterBySlug.get(v.lessonSlug);
+    const href = cluster ? `/lessons/${cluster}/${v.lessonSlug}` : `/lessons/${v.lessonSlug}`;
     items.push({
       kind: 'lesson',
       slug: v.lessonSlug,
       title: lessonTitleBySlug.get(v.lessonSlug) ?? formatSlug(v.lessonSlug),
       timestamp: toDate(v.completedAt),
-      href: `/lessons/${v.lessonSlug}`,
+      href,
     });
   }
 
   for (const a of attempts) {
     const isExam = a.mode === 'exam';
+    const cluster = clusterBySlug.get(a.quizSlug);
+    const lessonHref = cluster
+      ? `/lessons/${cluster}/${a.quizSlug}#quiz`
+      : `/lessons/${a.quizSlug}#quiz`;
     const href = isExam && a.id
       ? `/exam/attempts/${a.id}`
-      : `/lessons/${a.quizSlug}#quiz`;
+      : lessonHref;
     items.push({
       kind: 'quiz',
       slug: a.quizSlug,

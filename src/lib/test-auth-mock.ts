@@ -11,6 +11,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import type { LessonMetaRecord } from './curriculum/lesson-meta';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -307,27 +308,33 @@ export function mockMarkLessonComplete(input: { lessonSlug: string }): void {
   }
 }
 
-export function mockLoadProfile() {
+export function mockLoadProfile(lessonMetaMap?: Map<string, LessonMetaRecord>) {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
   const hasActivityToday =
     mockStore.attempts.some((a) => a.attemptedAt.toISOString().slice(0, 10) === todayStr) ||
     mockStore.lessons.some((l) => l.completedAt.toISOString().slice(0, 10) === todayStr);
 
+  const lessonHref = (slug: string, suffix = ''): string => {
+    const cluster = lessonMetaMap?.get(slug)?.cluster;
+    return cluster ? `/lessons/${cluster}/${slug}${suffix}` : `/lessons/${slug}${suffix}`;
+  };
+  const lessonTitle = (slug: string): string => lessonMetaMap?.get(slug)?.title ?? slug;
+
   const recentActivity = [
     ...mockStore.lessons.map((l) => ({
       kind: 'lesson' as const,
       slug: l.lessonSlug,
-      title: l.lessonSlug,
+      title: lessonTitle(l.lessonSlug),
       timestamp: l.completedAt,
-      href: `/lessons/${l.lessonSlug}`,
+      href: lessonHref(l.lessonSlug),
     })),
     ...mockStore.attempts.map((a) => ({
       kind: 'quiz' as const,
       slug: a.quizSlug,
-      title: a.quizSlug,
+      title: lessonTitle(a.quizSlug),
       timestamp: a.attemptedAt,
-      href: `/lessons/${a.quizSlug}#quiz`,
+      href: lessonHref(a.quizSlug, '#quiz'),
       score: a.score,
       total: a.total,
       mode: a.mode,
