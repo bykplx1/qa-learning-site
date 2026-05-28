@@ -71,21 +71,10 @@ export const POST: APIRoute = async ({ request }) => {
     const fsrsRating = rating as Rating;
     const { card: newState, elapsedDays } = grade(cardState, fsrsRating, now);
 
-    await tx
-      .update(reviewCards)
-      .set({
-        stability: newState.stability,
-        difficulty: newState.difficulty,
-        dueAt: newState.dueAt,
-        lastReviewedAt: now,
-        reps: newState.reps,
-        lapses: newState.lapses,
-        state: newState.state,
-        updatedAt: now,
-      })
-      .where(eq(reviewCards.id, cardId));
-
-    await tx
+    // Insert the log first: the unique (cardId, gradeId) constraint is the idempotency
+    // guard. If this gradeId already graded this card, the insert is a no-op and we skip
+    // advancing the card — a replayed double-submit must not advance it twice.
+    const inserted = await tx
       .insert(reviewLogs)
       .values({
         id: randomUUID(),
@@ -100,7 +89,24 @@ export const POST: APIRoute = async ({ request }) => {
         gradedAt: now,
         gradeId: gradeId ?? null,
       })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ id: reviewLogs.id });
+
+    if (inserted.length === 0) return;
+
+    await tx
+      .update(reviewCards)
+      .set({
+        stability: newState.stability,
+        difficulty: newState.difficulty,
+        dueAt: newState.dueAt,
+        lastReviewedAt: now,
+        reps: newState.reps,
+        lapses: newState.lapses,
+        state: newState.state,
+        updatedAt: now,
+      })
+      .where(eq(reviewCards.id, cardId));
   });
 
   // Compose the interleaved queue and return the first card.

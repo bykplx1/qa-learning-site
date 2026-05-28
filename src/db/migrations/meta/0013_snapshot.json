@@ -1,5 +1,5 @@
 {
-  "id": "ad7c0c5c-e945-499b-8ad5-343c8b092e2f",
+  "id": "6d9e7e41-0dae-4e7a-90b9-11f16e422423",
   "prevId": "4e6b25ab-7288-4a6f-834e-11551ca16049",
   "version": "7",
   "dialect": "postgresql",
@@ -1406,7 +1406,8 @@
       "schema": "public",
       "values": [
         "practice",
-        "exam"
+        "exam",
+        "mock-exam"
       ]
     }
   },

@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index, real, smallint, pgEnum } from 'drizzle-orm/pg-core';
 
-export const quizAttemptModeEnum = pgEnum('quiz_attempt_mode', ['practice', 'exam']);
+export const quizAttemptModeEnum = pgEnum('quiz_attempt_mode', ['practice', 'exam', 'mock-exam']);
 export const projectSubmissionStatusEnum = pgEnum('project_submission_status', ['submitted']);
 
 export const users = pgTable('users', {

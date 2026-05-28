@@ -1,5 +1,5 @@
 CREATE TYPE "public"."project_submission_status" AS ENUM('submitted');--> statement-breakpoint
-CREATE TYPE "public"."quiz_attempt_mode" AS ENUM('practice', 'exam');--> statement-breakpoint
+CREATE TYPE "public"."quiz_attempt_mode" AS ENUM('practice', 'exam', 'mock-exam');--> statement-breakpoint
 ALTER TABLE "project_submissions" ALTER COLUMN "status" SET DEFAULT 'submitted'::"public"."project_submission_status";--> statement-breakpoint
 ALTER TABLE "project_submissions" ALTER COLUMN "status" SET DATA TYPE "public"."project_submission_status" USING "status"::"public"."project_submission_status";--> statement-breakpoint
 ALTER TABLE "quiz_attempts" ALTER COLUMN "mode" SET DATA TYPE "public"."quiz_attempt_mode" USING "mode"::"public"."quiz_attempt_mode";--> statement-breakpoint
