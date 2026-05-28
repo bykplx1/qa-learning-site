@@ -9,7 +9,11 @@ function getClient(): Sql {
   if (_client) return _client;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error('DATABASE_URL is not set');
-  _client = postgres(connectionString, { max: 10, prepare: false });
+  _client = postgres(connectionString, {
+    max: 10,
+    prepare: false,
+    connection: { statement_timeout: 10000 },
+  });
   return _client;
 }
 
