@@ -223,9 +223,19 @@ export async function submitProject(input: SubmitProjectInput): Promise<{ id: st
   return { id: rows[0]?.id ?? id };
 }
 
-export async function listSubmissions(userId: string): Promise<ProjectSubmission[]> {
+export interface SubmissionListRow {
+  id: string;
+  projectSlug: string;
+  submittedAt: Date;
+}
+
+export async function listSubmissions(userId: string): Promise<SubmissionListRow[]> {
   return db
-    .select()
+    .select({
+      id: projectSubmissions.id,
+      projectSlug: projectSubmissions.projectSlug,
+      submittedAt: projectSubmissions.submittedAt,
+    })
     .from(projectSubmissions)
     .where(eq(projectSubmissions.userId, userId))
     .orderBy(desc(projectSubmissions.submittedAt));
@@ -360,6 +370,15 @@ export async function setSubmissionPublic(
 // the individual helper functions would issue.  The pure computation functions
 // (streakOf, heatmapOf, …) are then called in-memory against the shared rows.
 
+export interface ProfileSubmissionRow {
+  projectSlug: string;
+  repoUrl: string | null;
+  reflection: string;
+  isPublic: boolean;
+  submittedAt: Date;
+  updatedAt: Date;
+}
+
 export interface ProfileRawData {
   /** Per-day activity counts derived from source tables (lesson_views + quiz_attempts). */
   dailyActivityRows: { day: string; attemptsCount: number; lessonsCount: number }[];
@@ -372,7 +391,7 @@ export interface ProfileRawData {
     total: number;
     attemptedAt: Date;
   }[];
-  submissionRows: ProjectSubmission[];
+  submissionRows: ProfileSubmissionRow[];
 }
 
 /**
@@ -438,7 +457,14 @@ export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
         .where(eq(quizAttempts.userId, userId))
         .orderBy(desc(quizAttempts.attemptedAt)),
       db
-        .select()
+        .select({
+          projectSlug: projectSubmissions.projectSlug,
+          repoUrl: projectSubmissions.repoUrl,
+          reflection: projectSubmissions.reflection,
+          isPublic: projectSubmissions.isPublic,
+          submittedAt: projectSubmissions.submittedAt,
+          updatedAt: projectSubmissions.updatedAt,
+        })
         .from(projectSubmissions)
         .where(eq(projectSubmissions.userId, userId))
         .orderBy(desc(projectSubmissions.submittedAt)),
