@@ -12,7 +12,8 @@ export const GET: APIRoute = async ({ request }) => {
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
   if (process.env.E2E_OAUTH_MOCK === '1') {
-    const payload = mockLoadProfile();
+    const lessonMetaMap = buildLessonMetaMap(await getCollection('curriculum'));
+    const payload = mockLoadProfile(lessonMetaMap);
     return new Response(JSON.stringify(payload), {
       status: 200,
       headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store' },
