@@ -6,6 +6,9 @@ import {
   lessonViews,
   projectSubmissions,
   quizAttempts,
+  reviewCards,
+  reviewLogs,
+  selfExplanations,
   type ProjectSubmission,
 } from './schema';
 import { streakOf, type StreakResult } from '../lib/streak/streak';
@@ -13,6 +16,16 @@ import { categoryProgressOf, type CategoryProgress } from '../lib/progress/progr
 import { quizAccuracyByTopicOf, type TopicAccuracy } from '../lib/progress/quiz-accuracy';
 import { heatmapOf, type HeatmapCell } from '../lib/heatmap/heatmap';
 import { recentActivityOf, type ActivityItem } from '../lib/activity/activity';
+
+/** Retention summary for the /profile lead block (issue #386). */
+export interface RetentionSummary {
+  /** Overall retention % (reviews with elapsedDays >= 7, rating >= 3). Null = no data. */
+  retentionPct: number | null;
+  /** Mean stability (days) from the most recent reviewed day. Null = no data. */
+  latestStabilityDays: number | null;
+  /** Cards with dueAt <= now (simple count, no prereq filter). */
+  dueCount: number;
+}
 
 export interface MarkLessonCompleteInput {
   userId: string;
@@ -392,6 +405,12 @@ export interface ProfileRawData {
     attemptedAt: Date;
   }[];
   submissionRows: ProfileSubmissionRow[];
+  /** Retention summary for the profile lead block (issue #386). */
+  retentionSummary: RetentionSummary;
+  /** Count of self-explanation submissions (issue #387). */
+  selfExplanationCount: number;
+  /** Mean cards reviewed per active review day (issue #387). Null = no data. */
+  cardsPerSession: number | null;
 }
 
 /**
@@ -437,38 +456,115 @@ export async function computeDailyActivityFromSource(
 }
 
 export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
-  const [dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows] =
-    await Promise.all([
-      computeDailyActivityFromSource(userId),
-      db
-        .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
-        .from(lessonViews)
-        .where(eq(lessonViews.userId, userId)),
-      db
-        .select({
-          id: quizAttempts.id,
-          quizSlug: quizAttempts.quizSlug,
-          mode: quizAttempts.mode,
-          score: quizAttempts.score,
-          total: quizAttempts.total,
-          attemptedAt: quizAttempts.attemptedAt,
-        })
-        .from(quizAttempts)
-        .where(eq(quizAttempts.userId, userId))
-        .orderBy(desc(quizAttempts.attemptedAt)),
-      db
-        .select({
-          projectSlug: projectSubmissions.projectSlug,
-          repoUrl: projectSubmissions.repoUrl,
-          reflection: projectSubmissions.reflection,
-          isPublic: projectSubmissions.isPublic,
-          submittedAt: projectSubmissions.submittedAt,
-          updatedAt: projectSubmissions.updatedAt,
-        })
-        .from(projectSubmissions)
-        .where(eq(projectSubmissions.userId, userId))
-        .orderBy(desc(projectSubmissions.submittedAt)),
-    ]);
+  const [
+    dailyActivityRows,
+    lessonViewRows,
+    quizAttemptRows,
+    submissionRows,
+    retentionRows,
+    selfExplainRows,
+    cardsPerSessionRows,
+    dueCountRows,
+  ] = await Promise.all([
+    computeDailyActivityFromSource(userId),
+    db
+      .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
+      .from(lessonViews)
+      .where(eq(lessonViews.userId, userId)),
+    db
+      .select({
+        id: quizAttempts.id,
+        quizSlug: quizAttempts.quizSlug,
+        mode: quizAttempts.mode,
+        score: quizAttempts.score,
+        total: quizAttempts.total,
+        attemptedAt: quizAttempts.attemptedAt,
+      })
+      .from(quizAttempts)
+      .where(eq(quizAttempts.userId, userId))
+      .orderBy(desc(quizAttempts.attemptedAt)),
+    db
+      .select({
+        projectSlug: projectSubmissions.projectSlug,
+        repoUrl: projectSubmissions.repoUrl,
+        reflection: projectSubmissions.reflection,
+        isPublic: projectSubmissions.isPublic,
+        submittedAt: projectSubmissions.submittedAt,
+        updatedAt: projectSubmissions.updatedAt,
+      })
+      .from(projectSubmissions)
+      .where(eq(projectSubmissions.userId, userId))
+      .orderBy(desc(projectSubmissions.submittedAt)),
+    // Retention % from review_logs with elapsedDays >= 7 (issue #386)
+    db
+      .select({
+        totalReviews: sql<number>`count(*)::int`,
+        correctReviews: sql<number>`count(*) filter (where ${reviewLogs.rating} >= 3)::int`,
+        latestDayStability: sql<number | null>`
+          avg(${reviewLogs.stability}) filter (
+            where date(${reviewLogs.gradedAt} AT TIME ZONE 'UTC') = (
+              select date(max(graded_at) AT TIME ZONE 'UTC')
+              from review_logs
+              where user_id = ${userId}
+            )
+          )
+        `,
+      })
+      .from(reviewLogs)
+      .where(
+        and(
+          eq(reviewLogs.userId, userId),
+          sql`${reviewLogs.elapsedDays} >= 7`,
+        ),
+      ),
+    // Self-explanation count (issue #387)
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(selfExplanations)
+      .where(eq(selfExplanations.userId, userId)),
+    // Cards per session: total logs and distinct review days (issue #387)
+    db
+      .select({
+        totalLogs: sql<number>`count(*)::int`,
+        distinctDays: sql<number>`count(distinct date(${reviewLogs.gradedAt} AT TIME ZONE 'UTC'))::int`,
+      })
+      .from(reviewLogs)
+      .where(eq(reviewLogs.userId, userId)),
+    // Due count: cards with dueAt <= now (issue #386)
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(reviewCards)
+      .where(
+        and(
+          eq(reviewCards.userId, userId),
+          sql`${reviewCards.dueAt} <= now()`,
+        ),
+      ),
+  ]);
 
-  return { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows };
+  const retRow = retentionRows[0];
+  const retentionPct =
+    retRow && retRow.totalReviews > 0
+      ? Math.round((retRow.correctReviews / retRow.totalReviews) * 100)
+      : null;
+  const latestStabilityDays =
+    retRow?.latestDayStability != null
+      ? Math.round(retRow.latestDayStability * 10) / 10
+      : null;
+
+  const retentionSummary: RetentionSummary = {
+    retentionPct,
+    latestStabilityDays,
+    dueCount: dueCountRows[0]?.count ?? 0,
+  };
+
+  const selfExplanationCount = selfExplainRows[0]?.count ?? 0;
+
+  const cpsRow = cardsPerSessionRows[0];
+  const cardsPerSession =
+    cpsRow && cpsRow.distinctDays > 0
+      ? Math.round((cpsRow.totalLogs / cpsRow.distinctDays) * 10) / 10
+      : null;
+
+  return { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows, retentionSummary, selfExplanationCount, cardsPerSession };
 }
