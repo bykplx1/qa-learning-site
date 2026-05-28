@@ -23,6 +23,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Segment } from '../../lib/lessons/segmenter';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface Props {
   /** Ordered segment descriptors from computeSegments(). Empty → no-op. */
@@ -31,7 +32,7 @@ interface Props {
   bodySelector?: string;
 }
 
-export default function SegmentedLesson({
+function SegmentedLessonInner({
   segments,
   bodySelector = '[data-lesson-body]',
 }: Props) {
@@ -149,6 +150,10 @@ export default function SegmentedLesson({
       )}
     </>
   );
+}
+
+export default function SegmentedLesson(props: Props) {
+  return <ErrorBoundary label="SegmentedLesson"><SegmentedLessonInner {...props} /></ErrorBoundary>;
 }
 
 // ---------------------------------------------------------------------------

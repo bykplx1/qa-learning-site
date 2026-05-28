@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface Props {
   projectSlug: string;
@@ -35,7 +36,7 @@ function writeState(slug: string, state: boolean[]): void {
   }
 }
 
-export default function SelfAttestChecklist({ projectSlug, criteria }: Props) {
+function SelfAttestChecklistInner({ projectSlug, criteria }: Props) {
   const [checked, setChecked] = useState<boolean[]>(() => new Array(criteria.length).fill(false));
   const [hydrated, setHydrated] = useState(false);
 
@@ -126,4 +127,8 @@ export default function SelfAttestChecklist({ projectSlug, criteria }: Props) {
       </div>
     </section>
   );
+}
+
+export default function SelfAttestChecklist(props: Props) {
+  return <ErrorBoundary label="SelfAttestChecklist"><SelfAttestChecklistInner {...props} /></ErrorBoundary>;
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { authClient } from '../../lib/auth-client';
+import { ErrorBoundary } from '../ErrorBoundary';
 import type { QuizQuestion } from '../../lib/quiz/schema.js';
 import { stripWikilinks } from '../../lib/wikilinks/resolver.js';
 import {
@@ -443,7 +444,7 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, promptDism
   );
 }
 
-export default function QuizRunner({ questions, quizSlug }: Props) {
+function QuizRunnerInner({ questions, quizSlug }: Props) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [state, setState] = useState<QuizState>(() => createQuizState(questions, 'practice'));
   const [markedComplete, setMarkedComplete] = useState(false);
@@ -558,5 +559,13 @@ export default function QuizRunner({ questions, quizSlug }: Props) {
         <QuestionScreen state={state} dispatch={dispatch} signedIn={signedIn} />
       )}
     </section>
+  );
+}
+
+export default function QuizRunner({ questions, quizSlug }: Props) {
+  return (
+    <ErrorBoundary label="QuizRunner">
+      <QuizRunnerInner questions={questions} quizSlug={quizSlug} />
+    </ErrorBoundary>
   );
 }

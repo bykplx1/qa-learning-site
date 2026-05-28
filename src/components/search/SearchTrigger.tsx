@@ -1,4 +1,6 @@
-export default function SearchTrigger() {
+import { ErrorBoundary } from '../ErrorBoundary';
+
+function SearchTriggerInner() {
   const handleClick = () => {
     window.dispatchEvent(new CustomEvent('search:open'));
   };
@@ -26,4 +28,8 @@ export default function SearchTrigger() {
       <span className="kbd">⌘ K</span>
     </button>
   );
+}
+
+export default function SearchTrigger() {
+  return <ErrorBoundary label="SearchTrigger"><SearchTriggerInner /></ErrorBoundary>;
 }

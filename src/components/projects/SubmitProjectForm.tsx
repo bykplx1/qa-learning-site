@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { RubricDefinition } from '../../lib/projects/rubric';
+import { ErrorBoundary } from '../ErrorBoundary';
 import type { ProjectTier } from '../../lib/projects/schema';
 
 interface Existing {
@@ -18,7 +19,7 @@ interface Props {
 
 type Status = 'idle' | 'saving' | 'saved' | 'error';
 
-export default function SubmitProjectForm({ projectSlug, tier, existing, rubric }: Props) {
+function SubmitProjectFormInner({ projectSlug, tier, existing, rubric }: Props) {
   const [repoUrl, setRepoUrl] = useState(existing?.repoUrl ?? '');
   const [reflection, setReflection] = useState(existing?.reflection ?? '');
   const [isPublic, setIsPublic] = useState(existing?.isPublic ?? false);
@@ -283,4 +284,8 @@ export default function SubmitProjectForm({ projectSlug, tier, existing, rubric 
       </form>
     </section>
   );
+}
+
+export default function SubmitProjectForm(props: Props) {
+  return <ErrorBoundary label="SubmitProjectForm"><SubmitProjectFormInner {...props} /></ErrorBoundary>;
 }

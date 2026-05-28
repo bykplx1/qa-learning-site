@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getSession } from '../../../../lib/auth';
 import { markLessonComplete } from '../../../../db/queries';
 import { mockMarkLessonComplete } from '../../../../lib/test-auth-mock';
+import { logError } from '../../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -24,10 +25,18 @@ export const POST: APIRoute = async ({ request, params }) => {
     }
   }
 
-  if (process.env.E2E_OAUTH_MOCK === '1') {
-    mockMarkLessonComplete({ lessonSlug: slug });
-  } else {
-    await markLessonComplete({ userId: session.user.id, lessonSlug: slug, timeSpentSec });
+  try {
+    if (process.env.E2E_OAUTH_MOCK === '1') {
+      mockMarkLessonComplete({ lessonSlug: slug });
+    } else {
+      await markLessonComplete({ userId: session.user.id, lessonSlug: slug, timeSpentSec });
+    }
+  } catch (err) {
+    logError('POST /api/lessons/[slug]/complete', err, { route: '/api/lessons/[slug]/complete', method: 'POST', slug });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
   }
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

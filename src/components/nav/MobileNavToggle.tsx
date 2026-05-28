@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 interface NavLink {
   href: string;
@@ -13,7 +14,7 @@ interface Props {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-export default function MobileNavToggle({ links }: Props) {
+function MobileNavToggleInner({ links }: Props) {
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -115,4 +116,8 @@ export default function MobileNavToggle({ links }: Props) {
       </nav>
     </>
   );
+}
+
+export default function MobileNavToggle(props: Props) {
+  return <ErrorBoundary label="MobileNavToggle"><MobileNavToggleInner {...props} /></ErrorBoundary>;
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
 
 function getInitialTheme(): 'light' | 'dark' {
   const stored = localStorage.getItem('theme');
@@ -6,7 +7,7 @@ function getInitialTheme(): 'light' | 'dark' {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-export function ThemeToggle() {
+function ThemeToggleInner() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
@@ -39,4 +40,8 @@ export function ThemeToggle() {
       )}
     </button>
   );
+}
+
+export function ThemeToggle() {
+  return <ErrorBoundary label="ThemeToggle"><ThemeToggleInner /></ErrorBoundary>;
 }

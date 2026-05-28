@@ -5,6 +5,7 @@ import { getSession } from '../../../../lib/auth';
 import { setSubmissionPublic, submitProject } from '../../../../db/queries';
 import { rubrics } from '../../../../lib/projects/rubric';
 import { validateSubmission } from '../../../../lib/projects/validate-submission';
+import { logError } from '../../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -91,16 +92,25 @@ export const POST: APIRoute = async ({ request, params }) => {
   // sets it to true on an explicit "Start anyway" click.
   const belowThreshold = parsed.data.below_threshold ?? false;
 
-  const { id } = await submitProject({
-    userId: session.user.id,
-    projectSlug: slug,
-    repoUrl,
-    reflection: parsed.data.reflection,
-    isPublic: parsed.data.is_public ?? false,
-    rubricScores: incomingScores,
-    requiredConcepts,
-    belowThreshold,
-  });
+  let id: string;
+  try {
+    ({ id } = await submitProject({
+      userId: session.user.id,
+      projectSlug: slug,
+      repoUrl,
+      reflection: parsed.data.reflection,
+      isPublic: parsed.data.is_public ?? false,
+      rubricScores: incomingScores,
+      requiredConcepts,
+      belowThreshold,
+    }));
+  } catch (err) {
+    logError('POST /api/projects/[slug]/submit', err, { route: '/api/projects/[slug]/submit', method: 'POST', slug });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   return new Response(JSON.stringify({ id }), {
     status: 200,
@@ -133,6 +143,14 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     });
   }
 
-  await setSubmissionPublic(session.user.id, slug, parsed.data.is_public);
+  try {
+    await setSubmissionPublic(session.user.id, slug, parsed.data.is_public);
+  } catch (err) {
+    logError('PATCH /api/projects/[slug]/submit', err, { route: '/api/projects/[slug]/submit', method: 'PATCH', slug });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
   return new Response(null, { status: 204 });
 };

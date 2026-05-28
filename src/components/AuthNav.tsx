@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { authClient } from '../lib/auth-client';
+import { ErrorBoundary } from './ErrorBoundary';
 
 type SessionUser = { name?: string | null; email?: string | null; image?: string | null } | null;
 
@@ -11,7 +12,7 @@ function initials(name?: string | null, email?: string | null): string {
   return src.slice(0, 2).toUpperCase();
 }
 
-export function AuthNav() {
+function AuthNavInner() {
   const [user, setUser] = useState<SessionUser>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -100,4 +101,8 @@ export function AuthNav() {
       )}
     </div>
   );
+}
+
+export function AuthNav() {
+  return <ErrorBoundary label="AuthNav"><AuthNavInner /></ErrorBoundary>;
 }

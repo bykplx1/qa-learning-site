@@ -4,6 +4,7 @@ import { getSession } from '../../../lib/auth';
 import { db } from '../../../db';
 import { examSessions } from '../../../db/schema';
 import { eq } from 'drizzle-orm';
+import { logError } from '../../../lib/observability/logger';
 
 export const prerender = false;
 
@@ -21,10 +22,19 @@ export const GET: APIRoute = async ({ request }) => {
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
-  const rows = await db
-    .select()
-    .from(examSessions)
-    .where(eq(examSessions.userId, session.user.id));
+  let rows: (typeof examSessions.$inferSelect)[];
+  try {
+    rows = await db
+      .select()
+      .from(examSessions)
+      .where(eq(examSessions.userId, session.user.id));
+  } catch (err) {
+    logError('GET /api/exam/session', err, { route: '/api/exam/session', method: 'GET' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
   const row = rows[0] ?? null;
 
   if (!row) return new Response(JSON.stringify(null), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -62,27 +72,35 @@ export const PUT: APIRoute = async ({ request }) => {
 
   const { examSlug, startedAt, durationMs, currentIndex, answers } = parsed.data;
 
-  await db
-    .insert(examSessions)
-    .values({
-      userId: session.user.id,
-      examSlug,
-      startedAt: new Date(startedAt),
-      durationMs,
-      currentIndex,
-      answers,
-    })
-    .onConflictDoUpdate({
-      target: examSessions.userId,
-      set: {
+  try {
+    await db
+      .insert(examSessions)
+      .values({
+        userId: session.user.id,
         examSlug,
         startedAt: new Date(startedAt),
         durationMs,
         currentIndex,
         answers,
-        updatedAt: new Date(),
-      },
+      })
+      .onConflictDoUpdate({
+        target: examSessions.userId,
+        set: {
+          examSlug,
+          startedAt: new Date(startedAt),
+          durationMs,
+          currentIndex,
+          answers,
+          updatedAt: new Date(),
+        },
+      });
+  } catch (err) {
+    logError('PUT /api/exam/session', err, { route: '/api/exam/session', method: 'PUT' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
     });
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
@@ -94,7 +112,15 @@ export const DELETE: APIRoute = async ({ request }) => {
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
 
-  await db.delete(examSessions).where(eq(examSessions.userId, session.user.id));
+  try {
+    await db.delete(examSessions).where(eq(examSessions.userId, session.user.id));
+  } catch (err) {
+    logError('DELETE /api/exam/session', err, { route: '/api/exam/session', method: 'DELETE' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

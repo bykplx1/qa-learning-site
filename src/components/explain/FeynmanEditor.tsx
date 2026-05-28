@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { ErrorBoundary } from '../ErrorBoundary';
 
 export interface RubricCriterion {
   key: string;
@@ -42,7 +43,7 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function FeynmanEditor({
+function FeynmanEditorInner({
   conceptSlug,
   wordTarget,
   rubric = DEFAULT_RUBRIC,
@@ -364,4 +365,8 @@ export default function FeynmanEditor({
       </button>
     </form>
   );
+}
+
+export default function FeynmanEditor(props: Props) {
+  return <ErrorBoundary label="FeynmanEditor"><FeynmanEditorInner {...props} /></ErrorBoundary>;
 }

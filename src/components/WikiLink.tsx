@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface SlugEntry {
   title: string;
@@ -21,7 +22,7 @@ function fetchSlugs(): Promise<Record<string, SlugEntry>> {
   return slugsPromise;
 }
 
-export default function WikiLink() {
+function WikiLinkInner() {
   const [popover, setPopover] = useState<PopoverState | null>(null);
 
   useEffect(() => {
@@ -99,4 +100,8 @@ export default function WikiLink() {
     </div>,
     document.body
   );
+}
+
+export default function WikiLink() {
+  return <ErrorBoundary label="WikiLink"><WikiLinkInner /></ErrorBoundary>;
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { authClient } from '../../lib/auth-client';
+import { ErrorBoundary } from '../ErrorBoundary';
 import type { QuizQuestion } from '../../lib/quiz/schema.js';
 import {
   createExamRunner,
@@ -436,7 +437,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
 
 // ── Root component ───────────────────────────────────────────────────────────
 
-export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS }: Props) {
+function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS }: Props) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [state, setState] = useState<ExamState>(() => ({
@@ -732,5 +733,13 @@ export default function ExamRunner({ questions, examSlug, durationMs = DEFAULT_D
         />
       )}
     </section>
+  );
+}
+
+export default function ExamRunner({ questions, examSlug, durationMs }: Props) {
+  return (
+    <ErrorBoundary label="ExamRunner">
+      <ExamRunnerInner questions={questions} examSlug={examSlug} durationMs={durationMs} />
+    </ErrorBoundary>
   );
 }
