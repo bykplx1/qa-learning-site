@@ -161,4 +161,80 @@ describe('recentActivityOf', () => {
   it('returns an empty array when there is no activity', () => {
     expect(recentActivityOf([], [], [], NO_LESSON_TITLES, NO_PROJECT_TITLES)).toEqual([]);
   });
+
+  it('emits cluster-qualified lesson href when clusterBySlug is provided (#389)', () => {
+    const clusterBySlug = new Map([['qa-mindset', 'foundations']]);
+    const titles = new Map([['qa-mindset', 'QA Mindset']]);
+    const [item] = recentActivityOf(
+      [{ lessonSlug: 'qa-mindset', completedAt: '2026-01-01T00:00:00Z' }],
+      [],
+      [],
+      titles,
+      NO_PROJECT_TITLES,
+      10,
+      clusterBySlug,
+    );
+    expect(item.href).toBe('/lessons/foundations/qa-mindset');
+    expect(item.title).toBe('QA Mindset');
+  });
+
+  it('emits cluster-qualified quiz href when clusterBySlug is provided (#389)', () => {
+    const clusterBySlug = new Map([['api-testing', 'functional-execution']]);
+    const [item] = recentActivityOf(
+      [],
+      [
+        {
+          quizSlug: 'api-testing',
+          mode: 'practice',
+          score: 7,
+          total: 10,
+          attemptedAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      [],
+      NO_LESSON_TITLES,
+      NO_PROJECT_TITLES,
+      10,
+      clusterBySlug,
+    );
+    expect(item.href).toBe('/lessons/functional-execution/api-testing#quiz');
+  });
+
+  it('falls back to flat lesson href when slug not in clusterBySlug', () => {
+    const [item] = recentActivityOf(
+      [{ lessonSlug: 'unknown-topic', completedAt: '2026-01-01T00:00:00Z' }],
+      [],
+      [],
+      NO_LESSON_TITLES,
+      NO_PROJECT_TITLES,
+      10,
+      new Map(),
+    );
+    expect(item.href).toBe('/lessons/unknown-topic');
+  });
+
+  it('uses resolved title from map over slug-cased fallback (#394)', () => {
+    const titles = new Map([
+      ['api-testing', 'API Testing'],
+      ['qa-mindset', 'QA Mindset'],
+    ]);
+    const clusterBySlug = new Map([
+      ['api-testing', 'functional-execution'],
+      ['qa-mindset', 'foundations'],
+    ]);
+    const items = recentActivityOf(
+      [
+        { lessonSlug: 'api-testing', completedAt: '2026-01-02T00:00:00Z' },
+        { lessonSlug: 'qa-mindset', completedAt: '2026-01-01T00:00:00Z' },
+      ],
+      [],
+      [],
+      titles,
+      NO_PROJECT_TITLES,
+      10,
+      clusterBySlug,
+    );
+    expect(items[0].title).toBe('API Testing');
+    expect(items[1].title).toBe('QA Mindset');
+  });
 });
