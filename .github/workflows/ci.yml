@@ -91,6 +91,31 @@ jobs:
       - name: Unit tests
         run: npm test
 
+  # ── Stage 1d: prod DB migrate (push to main only) ────────────────────────
+  # Runs db:migrate against the production Neon pooler URL.
+  # Gated to push events on main — never runs on PRs.
+  # Requires the PROD_DATABASE_URL GitHub secret to be set in the repo/environment.
+  prod-migrate:
+    runs-on: ubuntu-latest
+    needs: [lint-typecheck, lint-curriculum, unit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Apply migrations to prod DB
+        run: npm run db:migrate
+
   # ── Stage 2: integration tests ────────────────────────────────────────────
   integration:
     runs-on: ubuntu-latest
