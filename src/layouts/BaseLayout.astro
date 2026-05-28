@@ -6,6 +6,8 @@ import SearchTrigger from '../components/search/SearchTrigger';
 import { AuthNav } from '../components/AuthNav';
 import { SessionMerge } from '../components/SessionMerge';
 import MobileNavToggle from '../components/nav/MobileNavToggle';
+import Analytics from '@vercel/analytics/astro';
+import SpeedInsights from '@vercel/speed-insights/astro';
 
 interface Props {
   title: string;
@@ -95,5 +97,7 @@ const navLinks = [
     <SearchModal client:only="react" />
     <SessionMerge client:idle />
     <slot />
+    <Analytics />
+    <SpeedInsights />
   </body>
 </html>
