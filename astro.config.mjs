@@ -85,5 +85,5 @@ export default defineConfig({
     remarkPlugins: [remarkRepairMojibake],
   },
 
-  integrations: [mdx({ extendMarkdownConfig: false, remarkPlugins: [remarkSectionOrder], rehypePlugins: [rehypeTakeawayBlockquote] }), react(), sitemap(), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
+  integrations: [mdx({ extendMarkdownConfig: false, remarkPlugins: [remarkSectionOrder], rehypePlugins: [rehypeTakeawayBlockquote] }), react(), sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/dev/') }), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
 });

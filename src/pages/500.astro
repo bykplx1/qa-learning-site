@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="500 — Server error · QA Learning"
+  description="Something went wrong on our end."
+>
+  <section class="hero">
+    <div>
+      <span class="eyebrow">500 · server error</span>
+      <h1>Something went wrong.</h1>
+      <p class="hero__lead">
+        An unexpected error occurred on our end. Please try again in a moment.
+        If the problem persists, the issue is likely temporary.
+      </p>
+      <div class="hero__cta">
+        <a href="/" class="btn btn--primary btn--lg">Go to home</a>
+        <a href="/lessons" class="btn btn--ghost btn--lg">Browse lessons</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <span>© 2026 · MIT · QA Learning</span>
+  </footer>
+</BaseLayout>
