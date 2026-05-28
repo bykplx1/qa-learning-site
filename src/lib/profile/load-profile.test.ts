@@ -31,18 +31,10 @@ function makeRaw() {
     ],
     submissionRows: [
       {
-        id: 'sub1',
-        userId: 'u1',
         projectSlug: 'capstone',
         repoUrl: null,
         reflection: 'done',
-        status: 'submitted' as const,
         isPublic: false,
-        artifactUrl: null,
-        artifactBody: null,
-        rubricScores: {},
-        requiredConcepts: [],
-        belowThreshold: false,
         submittedAt: new Date('2026-05-21T12:00:00Z'),
         updatedAt: new Date('2026-05-21T12:00:00Z'),
       },
