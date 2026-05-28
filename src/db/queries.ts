@@ -69,7 +69,7 @@ export interface RecordQuizAttemptInput {
   userId: string;
   attemptId: string;
   quizSlug: string;
-  mode: string;
+  mode: 'practice' | 'exam' | 'mock-exam';
   score: number;
   total: number;
   answers: QuizAnswer[];

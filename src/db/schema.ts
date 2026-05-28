@@ -1,4 +1,7 @@
-import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index, real, smallint } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index, real, smallint, pgEnum } from 'drizzle-orm/pg-core';
+
+export const quizAttemptModeEnum = pgEnum('quiz_attempt_mode', ['practice', 'exam', 'mock-exam']);
+export const projectSubmissionStatusEnum = pgEnum('project_submission_status', ['submitted']);
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -11,32 +14,40 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const sessions = pgTable('sessions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  token: text('token').notNull().unique(),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    token: text('token').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('sessions_user_id_idx').on(t.userId)],
+);
 
-export const accounts = pgTable('accounts', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  accountId: text('account_id').notNull(),
-  providerId: text('provider_id').notNull(),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  idToken: text('id_token'),
-  accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
-  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
-  scope: text('scope'),
-  password: text('password'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const accounts = pgTable(
+  'accounts',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    accountId: text('account_id').notNull(),
+    providerId: text('provider_id').notNull(),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('accounts_user_id_idx').on(t.userId)],
+);
 
 export const verifications = pgTable('verifications', {
   id: text('id').primaryKey(),
@@ -67,7 +78,7 @@ export const quizAttempts = pgTable(
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     attemptId: text('attempt_id').notNull(),
     quizSlug: text('quiz_slug').notNull(),
-    mode: text('mode').notNull(),
+    mode: quizAttemptModeEnum('mode').notNull(),
     score: integer('score').notNull(),
     total: integer('total').notNull(),
     answers: jsonb('answers').notNull(),
@@ -99,7 +110,7 @@ export const projectSubmissions = pgTable(
     projectSlug: text('project_slug').notNull(),
     repoUrl: text('repo_url'),
     reflection: text('reflection').notNull(),
-    status: text('status').notNull().default('submitted'),
+    status: projectSubmissionStatusEnum('status').notNull().default('submitted'),
     isPublic: boolean('is_public').notNull().default(false),
     // P4.1: artifact (URL or inline body), rubric scores, concept snapshot
     artifactUrl: text('artifact_url'),
@@ -171,8 +182,14 @@ export const reviewLogs = pgTable(
     state: smallint('state').notNull(),
     elapsedDays: real('elapsed_days').notNull(),
     gradedAt: timestamp('graded_at', { withTimezone: true }).notNull().defaultNow(),
+    // Idempotency token: client-supplied UUID; prevents double-advance on replay.
+    gradeId: text('grade_id'),
   },
-  (t) => [index('review_logs_user_graded_idx').on(t.userId, t.gradedAt)],
+  (t) => [
+    index('review_logs_user_graded_idx').on(t.userId, t.gradedAt),
+    index('review_logs_card_id_idx').on(t.cardId),
+    uniqueIndex('review_logs_card_grade_uniq').on(t.cardId, t.gradeId),
+  ],
 );
 
 // Per-user settings: timezone (IANA string, sniffed client-side on first review visit)

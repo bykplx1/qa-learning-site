@@ -30,37 +30,70 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response('Bad Request', { status: 400 });
   }
 
-  const { cardId, rating } = body as { cardId: string; rating: number };
+  const { cardId, rating, gradeId } = body as { cardId: string; rating: number; gradeId?: string };
 
   if (![1, 2, 3, 4].includes(rating)) {
     return new Response('Bad Request: rating must be 1–4', { status: 400 });
   }
 
-  const [card] = await db
-    .select()
+  const now = new Date();
+
+  // Pre-flight check (no lock) to return correct HTTP status before acquiring the row lock.
+  const [preCheck] = await db
+    .select({ userId: reviewCards.userId })
     .from(reviewCards)
     .where(eq(reviewCards.id, cardId))
     .limit(1);
 
-  if (!card) return new Response('Not Found', { status: 404 });
-  if (card.userId !== userId) return new Response('Forbidden', { status: 403 });
-
-  const now = new Date();
-
-  const cardState: CardState = {
-    stability: card.stability,
-    difficulty: card.difficulty,
-    dueAt: card.dueAt,
-    lastReviewedAt: card.lastReviewedAt,
-    reps: card.reps,
-    lapses: card.lapses,
-    state: card.state,
-  };
-
-  const fsrsRating = rating as Rating;
-  const { card: newState, elapsedDays } = grade(cardState, fsrsRating, now);
+  if (!preCheck) return new Response('Not Found', { status: 404 });
+  if (preCheck.userId !== userId) return new Response('Forbidden', { status: 403 });
 
   await db.transaction(async (tx) => {
+    const [card] = await tx
+      .select()
+      .from(reviewCards)
+      .where(eq(reviewCards.id, cardId))
+      .for('update')
+      .limit(1);
+
+    if (!card) return;
+
+    const cardState: CardState = {
+      stability: card.stability,
+      difficulty: card.difficulty,
+      dueAt: card.dueAt,
+      lastReviewedAt: card.lastReviewedAt,
+      reps: card.reps,
+      lapses: card.lapses,
+      state: card.state,
+    };
+
+    const fsrsRating = rating as Rating;
+    const { card: newState, elapsedDays } = grade(cardState, fsrsRating, now);
+
+    // Insert the log first: the unique (cardId, gradeId) constraint is the idempotency
+    // guard. If this gradeId already graded this card, the insert is a no-op and we skip
+    // advancing the card — a replayed double-submit must not advance it twice.
+    const inserted = await tx
+      .insert(reviewLogs)
+      .values({
+        id: randomUUID(),
+        cardId,
+        userId,
+        rating,
+        stability: newState.stability,
+        difficulty: newState.difficulty,
+        dueAt: newState.dueAt,
+        state: newState.state,
+        elapsedDays,
+        gradedAt: now,
+        gradeId: gradeId ?? null,
+      })
+      .onConflictDoNothing()
+      .returning({ id: reviewLogs.id });
+
+    if (inserted.length === 0) return;
+
     await tx
       .update(reviewCards)
       .set({
@@ -74,19 +107,6 @@ export const POST: APIRoute = async ({ request }) => {
         updatedAt: now,
       })
       .where(eq(reviewCards.id, cardId));
-
-    await tx.insert(reviewLogs).values({
-      id: randomUUID(),
-      cardId,
-      userId,
-      rating,
-      stability: newState.stability,
-      difficulty: newState.difficulty,
-      dueAt: newState.dueAt,
-      state: newState.state,
-      elapsedDays,
-      gradedAt: now,
-    });
   });
 
   // Compose the interleaved queue and return the first card.
