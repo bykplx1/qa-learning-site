@@ -1,4 +1,5 @@
 import { loadProfileRaw } from '../../db/queries';
+import type { RetentionSummary } from '../../db/queries';
 import type { StreakResult } from '../streak/streak';
 import type { CategoryProgress } from '../progress/progress';
 import type { TopicAccuracy } from '../progress/quiz-accuracy';
@@ -11,6 +12,8 @@ import { heatmapOf } from '../heatmap/heatmap';
 import { recentActivityOf } from '../activity/activity';
 import { lessonMetaRowsFromMap } from '../curriculum/lesson-meta';
 import type { LessonMetaRecord } from '../curriculum/lesson-meta';
+
+export type { RetentionSummary } from '../../db/queries';
 
 export interface ProfileSubmission {
   projectSlug: string;
@@ -29,6 +32,12 @@ export interface ProfilePayload {
   submissions: ProfileSubmission[];
   completedCount: number;
   attemptCount: number;
+  /** Retention summary for the profile lead block. Always present; fields null when no SRS data. */
+  retentionSummary: RetentionSummary;
+  /** Number of self-explanation submissions (issue #387). */
+  selfExplanationCount: number;
+  /** Mean cards reviewed per active review day (issue #387). Null = no data. */
+  cardsPerSession: number | null;
 }
 
 export interface LoadProfileOptions {
@@ -49,7 +58,7 @@ export async function loadProfile(
   const heatmapYear = today.getUTCFullYear();
 
   // Single round-trip: parallel queries; daily_activity is now derived from sources (#351).
-  const { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows } =
+  const { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows, retentionSummary, selfExplanationCount, cardsPerSession } =
     await loadProfileRaw(userId);
 
   // Build slug→title and slug→cluster maps for activity feed from the curriculum meta map.
@@ -111,5 +120,8 @@ export async function loadProfile(
     })),
     completedCount,
     attemptCount,
+    retentionSummary,
+    selfExplanationCount,
+    cardsPerSession,
   };
 }

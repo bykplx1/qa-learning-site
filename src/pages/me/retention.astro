@@ -1,10 +1,10 @@
 ---
-import { and, eq, gte, isNull } from 'drizzle-orm';
+import { and, eq, gte, isNull, sql } from 'drizzle-orm';
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getSession } from '../../lib/auth';
 import { db } from '../../db';
-import { reviewCards, reviewLogs } from '../../db/schema';
+import { reviewCards, reviewLogs, selfExplanations } from '../../db/schema';
 import { retentionAtDelay, stabilityGrowth, countDueNow } from '../../lib/srs/metrics';
 
 export const prerender = false;
@@ -33,7 +33,7 @@ for (const topic of topics) {
   }
 }
 
-const [allCards, allLogs, newCardsRows] = await Promise.all([
+const [allCards, allLogs, newCardsRows, selfExplainRows, cardsPerSessionRows] = await Promise.all([
   db.select().from(reviewCards).where(eq(reviewCards.userId, userId)),
   db.select().from(reviewLogs).where(eq(reviewLogs.userId, userId)),
   // Count new cards already introduced today (for the daily cap), matching queue.ts logic.
@@ -48,6 +48,19 @@ const [allCards, allLogs, newCardsRows] = await Promise.all([
         gte(reviewCards.dueAt, dayStart),
       ),
     ),
+  // Self-explanation count (issue #387)
+  db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(selfExplanations)
+    .where(eq(selfExplanations.userId, userId)),
+  // Cards per session: total logs and distinct review days (issue #387)
+  db
+    .select({
+      totalLogs: sql<number>`count(*)::int`,
+      distinctDays: sql<number>`count(distinct date(${reviewLogs.gradedAt} AT TIME ZONE 'UTC'))::int`,
+    })
+    .from(reviewLogs)
+    .where(eq(reviewLogs.userId, userId)),
 ]);
 
 // Build satisfiedTopics: topics where user has ≥1 Good+ log (rating >= 3).
@@ -65,6 +78,14 @@ for (const log of allLogs) {
 }
 
 const newCardsIntroducedToday = newCardsRows.length;
+
+// Supporting signals (issue #387)
+const selfExplanationCount = selfExplainRows[0]?.count ?? 0;
+const cpsRow = cardsPerSessionRows[0];
+const cardsPerSession: number | null =
+  cpsRow && cpsRow.distinctDays > 0
+    ? Math.round((cpsRow.totalLogs / cpsRow.distinctDays) * 10) / 10
+    : null;
 
 const retentionPoints = retentionAtDelay(allLogs);
 const stabilityPoints = stabilityGrowth(allLogs);
@@ -287,6 +308,26 @@ const latestStability = stabilityPoints.at(-1)?.meanStability ?? null;
           <s class="demoted-label" aria-label="Percentile rank — demoted metric">Percentile rank</s>
           <span class="sr-only">(demoted metric)</span>
           <span class="demoted-reason">Comparing learners is not the goal.</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ── Supporting signals ────────────────────────────────────────────
+         Not goals — diagnostic signals that correlate with deep processing.
+    ──────────────────────────────────────────────────────────────────── -->
+    <section class="retention-card" aria-labelledby="signals-heading" data-testid="supporting-signals">
+      <h2 id="signals-heading" class="retention-card__title">Supporting signals</h2>
+      <p class="retention-card__desc">Correlates with deeper processing — not goals to optimise directly.</p>
+      <ul class="signals-list" role="list">
+        <li class="signals-item" data-testid="signal-self-explanations">
+          <span class="signals-num">{selfExplanationCount}</span>
+          <span class="signals-label">self-explanation{selfExplanationCount !== 1 ? 's' : ''} written</span>
+          <span class="signals-reason">Feynman writes — retrieving and rephrasing in your own words strengthens recall.</span>
+        </li>
+        <li class="signals-item" data-testid="signal-cards-per-session">
+          <span class="signals-num">{cardsPerSession !== null ? cardsPerSession : '—'}</span>
+          <span class="signals-label">cards per session day</span>
+          <span class="signals-reason">Mean reviews per active day — lower is fine if spacing is respected.</span>
         </li>
       </ul>
     </section>
@@ -577,6 +618,45 @@ const latestStability = stabilityPoints.at(-1)?.meanStability ?? null;
   }
 
   .demoted-reason {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    padding-left: 2px;
+  }
+
+  /* ── Supporting signals panel ── */
+  .signals-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .signals-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .signals-num {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--ink-2);
+    line-height: 1.1;
+  }
+
+  .signals-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+
+  .signals-reason {
     font-family: var(--mono);
     font-size: 12px;
     color: var(--ink-3);
