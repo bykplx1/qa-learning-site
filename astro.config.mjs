@@ -13,20 +13,7 @@ import { wikilinksIntegration } from './src/integrations/wikilinks.ts';
 import { quizExtractorIntegration } from './src/integrations/quizExtractor.ts';
 import { ogImagesIntegration } from './src/integrations/ogImages.ts';
 import { sitemapAliasIntegration } from './src/integrations/sitemapAlias.ts';
-import { remarkDemoteH1 } from './src/lib/lessons/remarkDemoteH1.ts';
-import { remarkRepairMojibake } from './src/lib/encoding/remarkRepairMojibake.ts';
-import { remarkSectionOrder } from './src/lib/lessons/remarkSectionOrder.ts';
-import { rehypeTakeawayBlockquote } from './src/lib/lessons/rehypeTakeawayBlockquote.ts';
-
-/** @type {import('astro').AstroIntegration} */
-const demoteH1Integration = {
-  name: 'demote-h1',
-  hooks: {
-    'astro:config:setup': ({ updateConfig }) => {
-      updateConfig({ markdown: { remarkPlugins: [remarkDemoteH1] } });
-    },
-  },
-};
+import { REMARK_PLUGINS, REHYPE_PLUGINS } from './src/lib/mdx-pipeline/index.ts';
 
 /** @type {import('astro').AstroIntegration} */
 const pagefindIntegration = {
@@ -81,9 +68,21 @@ export default defineConfig({
     },
   },
 
-  markdown: {
-    remarkPlugins: [remarkRepairMojibake],
-  },
-
-  integrations: [mdx({ extendMarkdownConfig: false, remarkPlugins: [remarkSectionOrder], rehypePlugins: [rehypeTakeawayBlockquote] }), react(), sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/dev/') }), sitemapAliasIntegration(), quizExtractorIntegration(), wikilinksIntegration(), ogImagesIntegration(), pagefindIntegration, demoteH1Integration]
+  integrations: [
+    // MDX pipeline: all curriculum transforms in dependency order.
+    // buildRemarkPlugins / REHYPE_PLUGINS are the single source of truth for plugin
+    // ordering. extendMarkdownConfig:false isolates MDX from the base markdown config.
+    mdx({
+      extendMarkdownConfig: false,
+      remarkPlugins: [...REMARK_PLUGINS],
+      rehypePlugins: [...REHYPE_PLUGINS],
+    }),
+    react(),
+    sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/dev/') }),
+    sitemapAliasIntegration(),
+    quizExtractorIntegration(),
+    wikilinksIntegration(),
+    ogImagesIntegration(),
+    pagefindIntegration,
+  ],
 });

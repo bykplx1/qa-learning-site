@@ -1,11 +1,10 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync } from 'node:fs';
-import { join, extname, basename } from 'node:path';
+import { join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stringify } from 'yaml';
 import type { AstroIntegration } from 'astro';
 import { parseQuiz } from '../lib/quiz/quizParser.js';
 import { parseTasks } from '../lib/quiz/tasksParser.js';
-import { remarkStripQuizSections } from '../lib/quiz/remarkStripQuizSections.js';
 import { repairWin1252 } from '../lib/encoding/repair.js';
 
 function parseFrontmatterSlug(raw: string): string | null {
@@ -31,7 +30,7 @@ export function quizExtractorIntegration(): AstroIntegration {
   return {
     name: 'qa-quiz-extractor',
     hooks: {
-      'astro:config:setup': ({ config, updateConfig, logger }) => {
+      'astro:config:setup': ({ config, logger }) => {
         const vaultPath = fileURLToPath(new URL('content/qa-vault/', config.root));
         const outDir = fileURLToPath(new URL('src/generated/quiz/', config.root));
         const categoryRe = /[/\\]\d{2}-[^/\\]+[/\\]/;
@@ -40,7 +39,6 @@ export function quizExtractorIntegration(): AstroIntegration {
 
         if (!existsSync(vaultPath)) {
           logger.info('Quiz extractor: vault not found — skipping (quiz files are pre-generated)');
-          updateConfig({ markdown: { remarkPlugins: [remarkStripQuizSections] } });
           return;
         }
 
@@ -84,12 +82,6 @@ export function quizExtractorIntegration(): AstroIntegration {
         }
 
         logger.info(`Quiz extractor: ${quizCount} quiz files, ${tasksCount} tasks files written`);
-
-        updateConfig({
-          markdown: {
-            remarkPlugins: [remarkStripQuizSections],
-          },
-        });
       },
     },
   };
