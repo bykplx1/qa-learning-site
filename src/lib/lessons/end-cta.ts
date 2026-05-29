@@ -1,7 +1,3 @@
-import { and, count, eq, lte } from 'drizzle-orm';
-import { db } from '../../db';
-import { reviewCards, selfExplanations } from '../../db/schema';
-
 export type CtaKind = 'review' | 'explain' | 'project';
 
 export interface CtaOption {
@@ -12,55 +8,31 @@ export interface CtaOption {
 }
 
 export interface EndCtaInput {
-  userId: string | null;
+  /** Number of due review cards for this user+cluster. Pass 0 if unauthenticated. */
+  dueCards: number;
+  /** Number of self-explanations the user has submitted for this concept. Pass 0 if unauthenticated. */
+  reviewCount: number;
+  /** Whether a project exists for this cluster. */
+  hasProject: boolean;
+  projectSlug: string | null;
+  /** When false the signed-out fallback review CTA is used and no explain CTA is shown. */
+  signedIn: boolean;
   clusterSlug: string;
   conceptSlug: string;
-  now?: Date;
 }
 
 export interface EndCtaResult {
   options: CtaOption[];
 }
 
-async function hasDueCards(userId: string, clusterSlug: string, now: Date): Promise<boolean> {
-  const rows = await db
-    .select({ n: count() })
-    .from(reviewCards)
-    .where(
-      and(
-        eq(reviewCards.userId, userId),
-        eq(reviewCards.cluster, clusterSlug),
-        lte(reviewCards.dueAt, now),
-      ),
-    );
-  return (rows[0]?.n ?? 0) > 0;
-}
-
-async function reviewCountForConcept(userId: string, conceptSlug: string): Promise<number> {
-  const rows = await db
-    .select({ n: count() })
-    .from(selfExplanations)
-    .where(
-      and(
-        eq(selfExplanations.userId, userId),
-        eq(selfExplanations.conceptSlug, conceptSlug),
-      ),
-    );
-  return rows[0]?.n ?? 0;
-}
-
-export async function resolveEndCta(input: EndCtaInput, projectSlugForCluster: string | null): Promise<EndCtaResult> {
-  const { userId, clusterSlug, conceptSlug, now = new Date() } = input;
+export function resolveEndCta(input: EndCtaInput): EndCtaResult {
+  const { dueCards, reviewCount, hasProject, projectSlug, signedIn, clusterSlug, conceptSlug } =
+    input;
 
   const options: CtaOption[] = [];
 
-  if (userId) {
-    const [dueCards, reviewCount] = await Promise.all([
-      hasDueCards(userId, clusterSlug, now),
-      reviewCountForConcept(userId, conceptSlug),
-    ]);
-
-    if (dueCards) {
+  if (signedIn) {
+    if (dueCards > 0) {
       options.push({
         kind: 'review',
         href: `/review?cluster=${clusterSlug}`,
@@ -78,7 +50,6 @@ export async function resolveEndCta(input: EndCtaInput, projectSlugForCluster: s
       });
     }
   } else {
-    // Unauthenticated: show review CTA pointing to sign-in or generic /review
     options.push({
       kind: 'review',
       href: '/review',
@@ -87,10 +58,10 @@ export async function resolveEndCta(input: EndCtaInput, projectSlugForCluster: s
     });
   }
 
-  if (projectSlugForCluster) {
+  if (hasProject && projectSlug) {
     options.push({
       kind: 'project',
-      href: `/projects/${projectSlugForCluster}`,
+      href: `/projects/${projectSlug}`,
       label: 'Start a project',
       description: 'Apply what you know and build something real.',
     });

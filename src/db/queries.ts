@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from './index';
 import {
   dailyActivity,
@@ -567,4 +567,38 @@ export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
       : null;
 
   return { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows, retentionSummary, selfExplanationCount, cardsPerSession };
+}
+
+export async function getDueCardsCount(
+  userId: string,
+  clusterSlug: string,
+  now: Date,
+): Promise<number> {
+  const rows = await db
+    .select({ n: count() })
+    .from(reviewCards)
+    .where(
+      and(
+        eq(reviewCards.userId, userId),
+        eq(reviewCards.cluster, clusterSlug),
+        lte(reviewCards.dueAt, now),
+      ),
+    );
+  return rows[0]?.n ?? 0;
+}
+
+export async function getReviewCountForConcept(
+  userId: string,
+  conceptSlug: string,
+): Promise<number> {
+  const rows = await db
+    .select({ n: count() })
+    .from(selfExplanations)
+    .where(
+      and(
+        eq(selfExplanations.userId, userId),
+        eq(selfExplanations.conceptSlug, conceptSlug),
+      ),
+    );
+  return rows[0]?.n ?? 0;
 }
