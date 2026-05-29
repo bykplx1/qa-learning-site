@@ -1,9 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { parse as parseYaml } from 'yaml';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { loadAllQuizzes } from '../lib/quiz/loadQuiz';
 import { sortCurriculum, groupByCluster, clusterDisplay } from '../lib/curriculum/order';
 import type { CurriculumEntry } from '../lib/curriculum/order';
 import type { CurriculumCluster } from '../lib/curriculum/schema';
@@ -25,14 +23,9 @@ const clusterRows = Array.from(groups.entries())
 const totalTopics = sorted.length;
 const totalMinutes = sorted.reduce((s, t) => s + t.data.estimatedEncodingMinutes, 0);
 
-const quizDir = join(process.cwd(), 'src', 'generated', 'quiz');
-const totalQuizQuestions = readdirSync(quizDir)
-  .filter((f) => f.endsWith('.quiz.yaml'))
-  .reduce((sum, f) => {
-    const parsed = parseYaml(readFileSync(join(quizDir, f), 'utf-8')) as { questions?: unknown[] };
-    return sum + (parsed?.questions?.length ?? 0);
-  }, 0);
-const quizCount = readdirSync(quizDir).filter((f) => f.endsWith('.quiz.yaml')).length;
+const allQuizzes = loadAllQuizzes();
+const totalQuizQuestions = allQuizzes.reduce((sum, q) => sum + q.questions.length, 0);
+const quizCount = allQuizzes.length;
 
 const latestTopics = sorted.slice(0, 10);
 

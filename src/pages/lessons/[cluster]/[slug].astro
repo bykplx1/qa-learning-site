@@ -1,8 +1,5 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { parse } from 'yaml';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import TableOfContents from '../../../components/TableOfContents.astro';
 import { MarkComplete } from '../../../components/MarkComplete';
@@ -12,8 +9,8 @@ import SegmentedLesson from '../../../components/lessons/SegmentedLesson';
 import { computeSegments, estimateWordCount } from '../../../lib/lessons/segmenter';
 import EndOfLessonCTA from '../../../components/lessons/EndOfLessonCTA.astro';
 import { resolveEndCta } from '../../../lib/lessons/end-cta';
-import { quizFileSchema } from '../../../lib/quiz/schema';
 import type { QuizQuestion } from '../../../lib/quiz/schema';
+import { loadQuizBySlug } from '../../../lib/quiz/loadQuiz';
 import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../../lib/encoding/repair';
 import type { CurriculumCluster } from '../../../lib/curriculum/schema';
@@ -54,12 +51,7 @@ const layerClass =
 const ogDescription = topic.body ? repairWin1252(extractExcerpt(topic.body)) : undefined;
 const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.site).href;
 
-const quizYamlPath = join(process.cwd(), 'src', 'generated', 'quiz', `${topic.data.slug}.quiz.yaml`);
-let quizQuestions: QuizQuestion[] = [];
-if (existsSync(quizYamlPath)) {
-  const result = quizFileSchema.safeParse(parse(repairWin1252(readFileSync(quizYamlPath, 'utf-8'))));
-  if (result.success) quizQuestions = result.data.questions;
-}
+const quizQuestions: QuizQuestion[] = loadQuizBySlug(topic.data.slug)?.questions ?? [];
 
 // Long-lesson segmenting: derived purely from rendered headings + body length.
 const wordCount = estimateWordCount(topic.body);

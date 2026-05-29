@@ -1,31 +1,13 @@
-import { parse } from 'yaml';
-import { quizFileSchema, type QuizQuestion } from '../quiz/schema.js';
+import { type QuizQuestion } from '../quiz/schema.js';
+import { loadExamPool, slugFromGlobKey } from '../quiz/loadQuiz.js';
 import { EXAM_QUESTION_COUNT } from './config.js';
 
-const quizFiles = import.meta.glob('../../generated/quiz/*.quiz.yaml', {
-  eager: true,
-  query: '?raw',
-  import: 'default',
-}) as Record<string, string>;
-
-export function slugFromKey(key: string): string {
-  const base = key.split('/').pop() ?? key;
-  return base.replace(/\.quiz\.yaml$/, '');
-}
+export { slugFromGlobKey as slugFromKey };
 
 export function buildExamPool(): QuizQuestion[] {
-  const sortedKeys = Object.keys(quizFiles).sort();
-  const buckets: QuizQuestion[][] = [];
-  for (const key of sortedKeys) {
-    const parsed = quizFileSchema.safeParse(parse(quizFiles[key]));
-    if (!parsed.success) continue;
-    const sourceSlug = slugFromKey(key);
-    const namespacedQuestions = parsed.data.questions.map((q) => ({
-      ...q,
-      id: `${sourceSlug}:${q.id}`,
-    }));
-    buckets.push(namespacedQuestions);
-  }
+  const poolBuckets = loadExamPool();
+  const sortedBuckets = poolBuckets.slice().sort((a, b) => a.slug.localeCompare(b.slug));
+  const buckets: QuizQuestion[][] = sortedBuckets.map((b) => b.questions);
 
   const pool: QuizQuestion[] = [];
   const seenIds = new Set<string>();
