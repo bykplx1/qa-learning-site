@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { eq } from 'drizzle-orm';
 import { db } from '../../src/db';
-import { users, reviewCards, reviewLogs, selfExplanations } from '../../src/db/schema';
+import { users, reviewCards, selfExplanations } from '../../src/db/schema';
+import { getDueCardsCount, getReviewCountForConcept } from '../../src/db/queries';
 import { resolveEndCta } from '../../src/lib/lessons/end-cta';
-import { grade, Rating } from '../../src/lib/srs/fsrs';
 
 // Mock astro:content so the module can be imported in the node test environment
 vi.mock('astro:content', () => ({
@@ -68,18 +67,26 @@ async function insertSelfExplanation(userId: string, conceptSlug: string): Promi
   });
 }
 
-describe('resolveEndCta — integration', () => {
+describe('end-cta — integration (query layer + pure policy)', () => {
   beforeEach(() => vi.restoreAllMocks());
   afterEach(() => vi.restoreAllMocks());
 
   it('returns review CTA first when cards are due in cluster', async () => {
     const userId = await insertUser();
     await insertDueCard(userId, 'foundations');
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      null,
-    );
+    const dueCards = await getDueCardsCount(userId, 'foundations', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'qa-mindset');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: false,
+      projectSlug: null,
+      signedIn: true,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.length).toBeGreaterThanOrEqual(1);
     expect(result.options[0].kind).toBe('review');
@@ -89,11 +96,19 @@ describe('resolveEndCta — integration', () => {
   it('returns no review CTA when no cards are due (only future cards)', async () => {
     const userId = await insertUser();
     await insertFutureCard(userId, 'foundations');
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      null,
-    );
+    const dueCards = await getDueCardsCount(userId, 'foundations', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'qa-mindset');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: false,
+      projectSlug: null,
+      signedIn: true,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.every((o) => o.kind !== 'review')).toBe(true);
   });
@@ -102,11 +117,19 @@ describe('resolveEndCta — integration', () => {
     const userId = await insertUser();
     await insertSelfExplanation(userId, 'qa-mindset');
     await insertSelfExplanation(userId, 'qa-mindset');
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      null,
-    );
+    const dueCards = await getDueCardsCount(userId, 'foundations', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'qa-mindset');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: false,
+      projectSlug: null,
+      signedIn: true,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.some((o) => o.kind === 'explain')).toBe(true);
     const explainOpt = result.options.find((o) => o.kind === 'explain')!;
@@ -116,22 +139,38 @@ describe('resolveEndCta — integration', () => {
   it('does NOT return explain CTA when user has <2 self-explanations', async () => {
     const userId = await insertUser();
     await insertSelfExplanation(userId, 'qa-mindset');
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      null,
-    );
+    const dueCards = await getDueCardsCount(userId, 'foundations', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'qa-mindset');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: false,
+      projectSlug: null,
+      signedIn: true,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.some((o) => o.kind === 'explain')).toBe(false);
   });
 
   it('returns project CTA when a project slug is provided', async () => {
     const userId = await insertUser();
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      'flaky-test-hunter',
-    );
+    const dueCards = await getDueCardsCount(userId, 'foundations', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'qa-mindset');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: true,
+      projectSlug: 'flaky-test-hunter',
+      signedIn: true,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.some((o) => o.kind === 'project')).toBe(true);
     const projOpt = result.options.find((o) => o.kind === 'project')!;
@@ -143,11 +182,19 @@ describe('resolveEndCta — integration', () => {
     await insertDueCard(userId, 'foundations');
     await insertSelfExplanation(userId, 'qa-mindset');
     await insertSelfExplanation(userId, 'qa-mindset');
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      'flaky-test-hunter',
-    );
+    const dueCards = await getDueCardsCount(userId, 'foundations', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'qa-mindset');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: true,
+      projectSlug: 'flaky-test-hunter',
+      signedIn: true,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.length).toBe(3);
     expect(result.options[0].kind).toBe('review');
@@ -156,26 +203,37 @@ describe('resolveEndCta — integration', () => {
   });
 
   it('returns project CTA even when user is null (unauthenticated)', async () => {
-    const result = await resolveEndCta(
-      { userId: null, clusterSlug: 'foundations', conceptSlug: 'qa-mindset' },
-      'flaky-test-hunter',
-    );
+    const result = resolveEndCta({
+      dueCards: 0,
+      reviewCount: 0,
+      hasProject: true,
+      projectSlug: 'flaky-test-hunter',
+      signedIn: false,
+      clusterSlug: 'foundations',
+      conceptSlug: 'qa-mindset',
+    });
 
     expect(result.options.some((o) => o.kind === 'project')).toBe(true);
-    // Unauthenticated gets generic review CTA (no DB query)
     expect(result.options.some((o) => o.kind === 'review')).toBe(true);
-    // Unauthenticated never gets explain CTA
     expect(result.options.some((o) => o.kind === 'explain')).toBe(false);
   });
 
   it('review CTA href includes cluster query param', async () => {
     const userId = await insertUser();
     await insertDueCard(userId, 'test-design');
+    const now = new Date();
 
-    const result = await resolveEndCta(
-      { userId, clusterSlug: 'test-design', conceptSlug: 'boundary-value' },
-      null,
-    );
+    const dueCards = await getDueCardsCount(userId, 'test-design', now);
+    const reviewCount = await getReviewCountForConcept(userId, 'boundary-value');
+    const result = resolveEndCta({
+      dueCards,
+      reviewCount,
+      hasProject: false,
+      projectSlug: null,
+      signedIn: true,
+      clusterSlug: 'test-design',
+      conceptSlug: 'boundary-value',
+    });
 
     const reviewOpt = result.options.find((o) => o.kind === 'review');
     expect(reviewOpt).toBeDefined();

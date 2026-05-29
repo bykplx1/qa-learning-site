@@ -66,16 +66,21 @@ const wordCount = estimateWordCount(topic.body);
 const lessonSegments = computeSegments(headings, wordCount);
 
 // End-of-lesson CTA. This route is statically prerendered (getStaticPaths), so
-// there is no per-request session — resolve anonymously (userId: null). That
+// there is no per-request session — resolve anonymously (signedIn: false). That
 // path makes no DB calls and yields the review + project CTAs. Per-user
 // enrichment (due cards / explain-back) needs a client/SSR follow-up.
 const allProjects = await getCollection('projects');
 const projectForCluster = allProjects.find((p) => p.data.cluster === cluster) ?? null;
 const projectSlugForCluster = projectForCluster?.data.slug ?? null;
-const { options: endCtaOptions } = await resolveEndCta(
-  { userId: null, clusterSlug: cluster, conceptSlug: topic.data.slug },
-  projectSlugForCluster,
-);
+const { options: endCtaOptions } = resolveEndCta({
+  dueCards: 0,
+  reviewCount: 0,
+  hasProject: projectSlugForCluster !== null,
+  projectSlug: projectSlugForCluster,
+  signedIn: false,
+  clusterSlug: cluster,
+  conceptSlug: topic.data.slug,
+});
 ---
 
 <BaseLayout
