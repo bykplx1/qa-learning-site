@@ -1,4 +1,5 @@
 import type { QuizQuestion } from './schema.js';
+import { isCorrect as coreIsCorrect, score } from '../assessment/core.js';
 
 export type QuizMode = 'practice' | 'exam';
 export type QuizStatus = 'active' | 'summary';
@@ -52,6 +53,11 @@ export function restoreQuizState(
   return { mode, questions, ...persisted };
 }
 
+/**
+ * Practice-quiz adapter over the shared assessment core.
+ * Rules: forward-only navigation; per-question feedback gate (answer locks until
+ * 'next' is dispatched); no goto/prev actions.
+ */
 export function transition(state: QuizState, action: QuizAction): QuizState {
   if (state.status === 'summary') return state;
 
@@ -76,19 +82,10 @@ export function transition(state: QuizState, action: QuizAction): QuizState {
   }
 }
 
-export function isCorrect(question: QuizQuestion, answer: number | number[] | null): boolean {
-  if (answer === null) return false;
-  const expected = question.answer;
-  if (Array.isArray(expected)) {
-    if (!Array.isArray(answer)) return false;
-    if (expected.length !== answer.length) return false;
-    return expected.every((v) => (answer as number[]).includes(v));
-  }
-  if (Array.isArray(answer)) return false;
-  return expected === answer;
-}
+// Re-exported from shared core so existing consumers (exam-mode/runner.ts,
+// ExamSummary.tsx) keep working without touching exam-mode in this slice.
+export const isCorrect = coreIsCorrect;
 
 export function getScore(state: QuizState): { correct: number; total: number } {
-  const correct = state.questions.filter((q, i) => isCorrect(q, state.answers[i])).length;
-  return { correct, total: state.questions.length };
+  return score(state.questions, state.answers);
 }
