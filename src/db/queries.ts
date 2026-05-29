@@ -16,6 +16,7 @@ import { categoryProgressOf, type CategoryProgress } from '../lib/progress/progr
 import { quizAccuracyByTopicOf, type TopicAccuracy } from '../lib/progress/quiz-accuracy';
 import { heatmapOf, type HeatmapCell } from '../lib/heatmap/heatmap';
 import { recentActivityOf, type ActivityItem } from '../lib/activity/activity';
+import type { DailyActivityRow } from '../lib/daily-activity/index';
 
 /** Retention summary for the /profile lead block (issue #386). */
 export interface RetentionSummary {
@@ -266,15 +267,23 @@ export async function getSubmission(
   return rows[0] ?? null;
 }
 
-export async function getStreak(userId: string, today: Date = new Date()): Promise<StreakResult> {
+export async function getStreak(
+  userId: string,
+  today: Date = new Date(),
+  timeZone = 'UTC',
+): Promise<StreakResult> {
   const rows = await db
     .select({ day: dailyActivity.day })
     .from(dailyActivity)
     .where(eq(dailyActivity.userId, userId));
-  return streakOf(rows, today);
+  return streakOf(rows as DailyActivityRow[], today, timeZone);
 }
 
-export async function getHeatmap(userId: string, year: number): Promise<HeatmapCell[]> {
+export async function getHeatmap(
+  userId: string,
+  year: number,
+  timeZone = 'UTC',
+): Promise<HeatmapCell[]> {
   const start = `${year}-01-01`;
   const end = `${year}-12-31`;
   const rows = await db
@@ -291,7 +300,7 @@ export async function getHeatmap(userId: string, year: number): Promise<HeatmapC
         lte(dailyActivity.day, end),
       ),
     );
-  return heatmapOf(rows, year);
+  return heatmapOf(rows, year, timeZone);
 }
 
 export async function getCategoryProgress(
