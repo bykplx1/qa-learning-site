@@ -64,8 +64,9 @@ describe('5-question happy path', () => {
   });
 });
 
-describe('transition guards', () => {
-  it('cannot answer twice on same question', () => {
+// Quiz-adapter delta: feedback gate + forward-only navigation
+describe('transition guards (quiz adapter rules)', () => {
+  it('cannot answer twice on same question (feedback gate)', () => {
     const qs = makeQuestions(2);
     let state = createQuizState(qs, 'practice');
     state = transition(state, { type: 'answer', value: 0 });
@@ -74,7 +75,7 @@ describe('transition guards', () => {
     expect(state.answers[0]).toBe(firstAnswer);
   });
 
-  it('next without answering is no-op', () => {
+  it('next without answering is no-op (feedback gate)', () => {
     const qs = makeQuestions(2);
     let state = createQuizState(qs, 'practice');
     state = transition(state, { type: 'next' });
@@ -96,26 +97,12 @@ describe('transition guards', () => {
   });
 });
 
-describe('isCorrect', () => {
+// isCorrect re-exported from shared core — smoke-test the re-export
+describe('isCorrect (re-export from shared core)', () => {
   it('single answer: correct index', () => {
     const q = makeQuestions(1)[0];
     expect(isCorrect(q, 0)).toBe(true);
     expect(isCorrect(q, 1)).toBe(false);
-    expect(isCorrect(q, null)).toBe(false);
-  });
-
-  it('multi answer: order-independent set equality', () => {
-    const q: QuizQuestion = {
-      id: 'q-001',
-      type: 'multi',
-      q: 'Select all',
-      options: ['A) A', 'B) B', 'C) C'],
-      answer: [0, 2],
-    };
-    expect(isCorrect(q, [0, 2])).toBe(true);
-    expect(isCorrect(q, [2, 0])).toBe(true);
-    expect(isCorrect(q, [0])).toBe(false);
-    expect(isCorrect(q, [0, 1])).toBe(false);
     expect(isCorrect(q, null)).toBe(false);
   });
 });
