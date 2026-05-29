@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from '
 import { join, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
-import { remarkWikilinks } from '../lib/wikilinks/remarkWikilinks.js';
 import { extractExcerpt } from '../lib/wikilinks/excerpt.js';
 import type { SlugEntry } from '../lib/wikilinks/resolver.js';
 import { repairWin1252 } from '../lib/encoding/repair.js';
@@ -71,16 +70,10 @@ export function wikilinksIntegration(): AstroIntegration {
   return {
     name: 'qa-wikilinks',
     hooks: {
-      'astro:config:setup': ({ config, updateConfig, logger }) => {
+      'astro:config:setup': ({ config, logger }) => {
         const vaultPath = fileURLToPath(new URL('content/qa-vault/', config.root));
         slugMap = buildSlugMap(vaultPath);
         logger.info(`WikiLink: indexed ${slugMap.size} lessons`);
-
-        updateConfig({
-          markdown: {
-            remarkPlugins: [remarkWikilinks(slugMap)],
-          },
-        });
       },
 
       'astro:build:done': ({ dir, logger }) => {
