@@ -89,6 +89,7 @@ function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFo
 
   return (
     <div
+      className="px-4"
       style={{
         position: 'fixed',
         inset: 0,
@@ -96,8 +97,6 @@ function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFo
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingLeft: 16,
-        paddingRight: 16,
         background: 'rgba(20, 20, 18, 0.45)',
         backdropFilter: 'blur(2px)',
       }}
@@ -123,12 +122,13 @@ function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFo
       >
         <h2
           id="confirm-modal-title"
+          className="mb-3"
           style={{
             fontFamily: 'var(--serif)',
             fontSize: 22,
             fontWeight: 400,
             letterSpacing: '-0.02em',
-            margin: '0 0 12px',
+            margin: 0,
             color: 'var(--ink)',
           }}
         >
@@ -136,17 +136,18 @@ function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFo
         </h2>
         <p
           id="confirm-modal-body"
+          className="mb-6"
           style={{
             fontFamily: 'var(--sans)',
             fontSize: 15,
             color: 'var(--ink-2)',
             lineHeight: 1.6,
-            margin: '0 0 24px',
+            margin: 0,
           }}
         >
           {answeredCount} of {totalCount} answered, {skipped} skipped — submit anyway?
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+        <div className="flex gap-3 justify-end">
           <button
             ref={cancelBtnRef}
             type="button"
@@ -180,15 +181,16 @@ interface StartGateProps {
 function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
   const durationMin = Math.round(durationMs / 60_000);
   return (
-    <div className="card" style={{ maxWidth: 540, margin: '48px auto', padding: 36 }} data-testid="exam-start-gate">
+    <div className="card my-12 mx-auto p-9" style={{ maxWidth: 540 }} data-testid="exam-start-gate">
       <span className="eyebrow">ISTQB exam mode</span>
       <h2
+        className="mt-3 mb-4"
         style={{
           fontFamily: 'var(--serif)',
           fontSize: 30,
           fontWeight: 400,
           letterSpacing: '-0.02em',
-          margin: '12px 0 16px',
+          margin: 0,
           color: 'var(--ink)',
           lineHeight: 1.15,
         }}
@@ -196,12 +198,13 @@ function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
         Start exam
       </h2>
       <p
+        className="mb-7"
         style={{
           fontFamily: 'var(--sans)',
           fontSize: 15,
           color: 'var(--ink-2)',
           lineHeight: 1.6,
-          margin: '0 0 28px',
+          margin: 0,
         }}
       >
         {questionCount} questions · {durationMin}-minute time limit · navigate freely between questions · no feedback until you submit.
@@ -285,16 +288,17 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 16, flexWrap: 'wrap' }}>
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <span className="eyebrow">exam mode · 60-minute · ISTQB-style</span>
           <h2
+            className="mt-2"
             style={{
               fontFamily: 'var(--serif)',
               fontSize: 30,
               fontWeight: 400,
               letterSpacing: '-0.02em',
-              margin: '8px 0 0',
+              margin: 0,
               color: 'var(--ink)',
               lineHeight: 1.15,
             }}
@@ -306,12 +310,13 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
           data-testid="exam-timer"
           aria-live="polite"
           aria-label={`Time remaining ${formatClock(remainingMs)}`}
+          className="py-2.5 px-4"
           style={{
             fontFamily: 'var(--mono)',
             fontSize: 22,
-            padding: '10px 16px',
             borderRadius: 10,
             border: '1px solid var(--rule)',
+            // dynamic: background and color driven by lowTime state
             background: lowTime ? 'var(--accent-soft)' : 'var(--paper-2)',
             color: lowTime ? 'var(--accent-strong)' : 'var(--ink)',
             fontVariantNumeric: 'tabular-nums',
@@ -322,12 +327,12 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>
+      <div className="flex justify-between items-center mb-3.5" style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>
         <span>Q {state.currentIndex + 1} / {state.questions.length}</span>
         <span data-testid="exam-answered-count">{answeredCount} answered</span>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 28, flexWrap: 'wrap' }}>
+      <div className="flex gap-1 mb-7 flex-wrap">
         {state.questions.map((_, i) => {
           const answered = state.answers[i] !== null;
           const isCurrent = i === state.currentIndex;
@@ -342,6 +347,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
                 width: 28,
                 height: 28,
                 borderRadius: 6,
+                // dynamic: border/background/color driven by isCurrent and answered states
                 border: isCurrent ? '2px solid var(--accent)' : '1px solid var(--rule)',
                 background: answered ? 'var(--ink)' : 'var(--paper)',
                 color: answered ? 'var(--paper)' : 'var(--ink-3)',
@@ -356,8 +362,8 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         })}
       </div>
 
-      <div className="card" style={{ padding: 28 }}>
-        <div className="eyebrow" style={{ marginBottom: 12 }}>
+      <div className="card p-7">
+        <div className="eyebrow mb-3">
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>
         <div
@@ -379,7 +385,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
             ref={radioGroupRef}
             role={isMulti ? 'group' : 'radiogroup'}
             aria-labelledby={questionStemId}
-            style={{ display: 'grid', gap: 10 }}
+            className="grid gap-2.5"
             onKeyDown={isMulti ? undefined : handleRadioGroupKeyDown}
           >
             {q.options.map((opt, i) => {
@@ -412,11 +418,11 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, gap: 12, flexWrap: 'wrap' }}>
+      <div className="flex justify-between mt-5 gap-3 flex-wrap">
         <button type="button" className="btn btn--ghost" onClick={onPrev} disabled={isFirst} data-testid="exam-prev">
           ← Previous
         </button>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="flex gap-3">
           <button
             ref={submitBtnRef}
             type="button"
@@ -688,7 +694,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
   const answeredCount = state.answers.filter((a) => a !== null).length;
 
   return (
-    <section style={{ marginTop: 24 }} data-testid="exam-runner">
+    <section className="mt-6" data-testid="exam-runner">
       {phase === 'idle' && (
         <StartGate
           questionCount={questions.length}

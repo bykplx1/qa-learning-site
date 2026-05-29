@@ -40,7 +40,7 @@ function LoginBanner({ signedIn }: LoginBannerProps) {
       ? `/login?next=${encodeURIComponent(window.location.pathname)}`
       : '/login';
   return (
-    <div className="banner banner--info" style={{ marginBottom: 20 }}>
+    <div className="banner banner--info mb-5">
       You're playing anonymously.{' '}
       <a href={loginHref} style={{ color: 'var(--ink)', textDecoration: 'underline' }}>
         Sign in
@@ -114,7 +114,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
     <div>
       <LoginBanner signedIn={signedIn} />
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="flex items-center justify-between mb-6">
         <div>
           <span className="eyebrow">practice mode · sessionStorage</span>
           <h2
@@ -136,7 +136,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 28 }}>
+      <div className="flex gap-1 mb-7">
         {state.questions.map((_, i) => (
           <div
             key={i}
@@ -144,6 +144,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
               flex: 1,
               height: 4,
               borderRadius: 2,
+              // dynamic: background driven by currentIndex state
               background:
                 i < state.currentIndex
                   ? 'var(--ink)'
@@ -155,8 +156,8 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
         ))}
       </div>
 
-      <div className="card" style={{ padding: 28 }}>
-        <div className="eyebrow" style={{ marginBottom: 12 }}>
+      <div className="card p-7">
+        <div className="eyebrow mb-3">
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>
         <div
@@ -173,7 +174,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
         </div>
 
         {q.options && (
-          <div style={{ display: 'grid', gap: 10 }}>
+          <div className="grid gap-2.5">
             {q.options.map((opt, i) => {
               const isSelected = isMulti
                 ? state.feedback
@@ -220,20 +221,22 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
 
         {state.feedback && (
           <div
+            className="mt-6"
             style={{
-              marginTop: 24,
               padding: 18,
               borderRadius: 10,
+              // dynamic: background driven by correct state
               background: correct ? 'var(--pass-soft)' : 'var(--accent-soft)',
               border: '1px solid transparent',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div className="flex items-center gap-2 mb-2">
               <span
                 style={{
                   width: 22,
                   height: 22,
                   borderRadius: '50%',
+                  // dynamic: background driven by correct state
                   background: correct ? 'var(--pass)' : 'var(--accent)',
                   color: 'white',
                   display: 'grid',
@@ -261,7 +264,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
       </div>
 
       {state.feedback && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+        <div className="flex justify-end mt-5">
           <button type="button" className="btn btn--primary" onClick={() => dispatch({ type: 'next' })}>
             {isLast ? 'See Results' : 'Next Question'} <ArrowIcon />
           </button>
@@ -293,20 +296,15 @@ function SavePrompt({ onDismiss }: { onDismiss: () => void }) {
       role="region"
       aria-label="Save your score"
       data-testid="quiz-save-prompt"
-      className="card"
+      className="card mt-7 flex gap-4 items-start flex-wrap"
       style={{
-        marginTop: 28,
         padding: 22,
         borderColor: 'var(--rule)',
         background: 'var(--paper-2)',
-        display: 'flex',
-        gap: 16,
-        alignItems: 'flex-start',
-        flexWrap: 'wrap',
       }}
     >
       <div style={{ flex: '1 1 260px' }}>
-        <div className="eyebrow" style={{ marginBottom: 6 }}>save progress</div>
+        <div className="eyebrow mb-1.5">save progress</div>
         <div style={{ fontFamily: 'var(--serif)', fontSize: 19, color: 'var(--ink)', letterSpacing: '-0.01em', marginBottom: 4 }}>
           Log in to save your score.
         </div>
@@ -314,7 +312,7 @@ function SavePrompt({ onDismiss }: { onDismiss: () => void }) {
           Sign in and this attempt will be added to your profile automatically.
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="flex gap-2 flex-wrap">
         <button type="button" className="btn btn--primary btn--sm" onClick={() => handleSignIn('github')}>
           Sign in with GitHub
         </button>
@@ -384,6 +382,7 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, promptDism
             width: 18,
             height: 18,
             borderRadius: '50%',
+            // dynamic: background driven by passed state
             background: passed ? 'var(--pass)' : 'var(--accent)',
             color: 'white',
             display: 'grid',
@@ -399,12 +398,12 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, promptDism
       </div>
 
       {missed.length > 0 && (
-        <div style={{ marginTop: 32 }}>
+        <div className="mt-8">
           <span className="eyebrow">review · {missed.length} missed</span>
-          <div style={{ display: 'grid', gap: 12, marginTop: 14 }}>
+          <div className="grid gap-3 mt-3.5">
             {missed.map((q) => (
               <div key={q.id} className="card" style={{ padding: '18px 22px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <div className="flex items-center gap-3 mb-2.5">
                   <span className="pill pill--accent">incorrect</span>
                 </div>
                 <div style={{ fontFamily: 'var(--serif)', fontSize: 18, letterSpacing: '-0.01em', marginBottom: 10, color: 'var(--ink)' }}>
@@ -423,7 +422,7 @@ function SummaryScreen({ state, markedComplete, signedIn, saveStatus, promptDism
 
       {showSavePrompt && <SavePrompt onDismiss={onDismissPrompt} />}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 28 }}>
+      <div className="flex flex-wrap items-center gap-3 mt-7">
         <button type="button" className="btn btn--primary" onClick={onRestart}>
           Retry Quiz
         </button>
@@ -549,7 +548,7 @@ function QuizRunnerInner({ questions, quizSlug }: Props) {
   }, [questions, quizSlug]);
 
   return (
-    <section style={{ marginTop: 56, paddingTop: 40, borderTop: '1px solid var(--rule)' }}>
+    <section className="mt-14 pt-10 border-t border-[var(--rule)]">
       {state.status === 'summary' ? (
         <SummaryScreen
           state={state}
