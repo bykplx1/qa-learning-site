@@ -9,7 +9,7 @@ export interface StreakResult {
 }
 
 export function streakOf(
-  rows: DailyActivityRow[],
+  rows: readonly Pick<DailyActivityRow, 'day'>[],
   today: Date,
   timeZone = 'UTC',
 ): StreakResult {
