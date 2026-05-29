@@ -8,11 +8,11 @@ import {
   persistQuizState,
   restoreQuizState,
   transition,
-  isCorrect,
   getScore,
   type QuizState,
   type QuizAction,
 } from '../../lib/quiz/engine.js';
+import { isCorrect } from '../../lib/assessment/core.js';
 import {
   selectAdapter,
   type QuizPersistenceAdapter,

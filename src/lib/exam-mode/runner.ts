@@ -1,5 +1,5 @@
 import type { QuizQuestion } from '../quiz/schema.js';
-import { isCorrect } from '../quiz/engine.js';
+import { score } from '../assessment/core.js';
 import { createExamTimer, type Clock, type ExamTimer } from '../exam-timer/timer.js';
 
 export type ExamStatus = 'active' | 'summary';
@@ -35,7 +35,7 @@ export function createExamState(questions: QuizQuestion[]): ExamState {
   };
 }
 
-export function examTransition(state: ExamState, action: ExamAction): ExamState {
+function examTransition(state: ExamState, action: ExamAction): ExamState {
   if (state.status === 'summary') return state;
 
   switch (action.type) {
@@ -64,10 +64,6 @@ export function examTransition(state: ExamState, action: ExamAction): ExamState 
   }
 }
 
-export function scoreExam(state: ExamState): { correct: number; total: number } {
-  const correct = state.questions.filter((q, i) => isCorrect(q, state.answers[i])).length;
-  return { correct, total: state.questions.length };
-}
 
 export interface ExamRunnerOptions {
   questions: QuizQuestion[];
@@ -102,7 +98,7 @@ export function createExamRunner(opts: ExamRunnerOptions): ExamRunnerHandle {
     finalized = true;
     timer?.stop();
     state = examTransition(state, { type: 'submit' });
-    const { correct, total } = scoreExam(state);
+    const { correct, total } = score(state.questions, state.answers);
     const nowMs = clock ? clock.now() : Date.now();
     // If the caller provided the original wall-clock start time (resumed attempt),
     // use that to capture full elapsed time across sessions.

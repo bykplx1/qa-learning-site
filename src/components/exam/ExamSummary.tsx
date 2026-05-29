@@ -1,5 +1,5 @@
 import type { QuizQuestion } from '../../lib/quiz/schema.js';
-import { isCorrect } from '../../lib/quiz/engine.js';
+import { isCorrect } from '../../lib/assessment/core.js';
 import { EXAM_PASS_THRESHOLD } from '../../lib/exam/config.js';
 import { stripWikilinks } from '../../lib/wikilinks/resolver.js';
 

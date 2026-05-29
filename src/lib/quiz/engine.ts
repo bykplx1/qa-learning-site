@@ -1,5 +1,5 @@
 import type { QuizQuestion } from './schema.js';
-import { isCorrect as coreIsCorrect, score } from '../assessment/core.js';
+import { score } from '../assessment/core.js';
 
 export type QuizMode = 'practice' | 'exam';
 export type QuizStatus = 'active' | 'summary';
@@ -81,10 +81,6 @@ export function transition(state: QuizState, action: QuizAction): QuizState {
     }
   }
 }
-
-// Re-exported from shared core so existing consumers (exam-mode/runner.ts,
-// ExamSummary.tsx) keep working without touching exam-mode in this slice.
-export const isCorrect = coreIsCorrect;
 
 export function getScore(state: QuizState): { correct: number; total: number } {
   return score(state.questions, state.answers);
