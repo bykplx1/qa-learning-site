@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createExamState,
-  examTransition,
-  scoreExam,
   createExamRunner,
   type ExamState,
   type ExamResult,
@@ -56,57 +54,65 @@ function makeFakeClock(): FakeClock {
   return { clock, advance };
 }
 
-describe('examTransition — state machine', () => {
+describe('exam navigation — state machine (via runner.dispatch)', () => {
+  function makeRunner(n: number) {
+    const { clock } = makeFakeClock();
+    const onFinalize = vi.fn();
+    const runner = createExamRunner({ questions: makeQuestions(n), durationMs: 60_000, clock, onFinalize });
+    runner.start();
+    return runner;
+  }
+
   it('answer stores value at currentIndex; status stays active', () => {
-    const qs = makeQuestions(3);
-    let state = createExamState(qs);
-    state = examTransition(state, { type: 'answer', value: 2 });
+    const runner = makeRunner(3);
+    runner.dispatch({ type: 'answer', value: 2 });
+    const state = runner.getState();
     expect(state.answers[0]).toBe(2);
     expect(state.status).toBe('active');
   });
 
   it('answer can be overwritten before submit', () => {
-    const qs = makeQuestions(3);
-    let state = createExamState(qs);
-    state = examTransition(state, { type: 'answer', value: 1 });
-    state = examTransition(state, { type: 'answer', value: 3 });
-    expect(state.answers[0]).toBe(3);
+    const runner = makeRunner(3);
+    runner.dispatch({ type: 'answer', value: 1 });
+    runner.dispatch({ type: 'answer', value: 3 });
+    expect(runner.getState().answers[0]).toBe(3);
   });
 
   it('next/prev navigate between questions', () => {
-    const qs = makeQuestions(3);
-    let state = createExamState(qs);
-    state = examTransition(state, { type: 'next' });
-    expect(state.currentIndex).toBe(1);
-    state = examTransition(state, { type: 'next' });
-    expect(state.currentIndex).toBe(2);
-    state = examTransition(state, { type: 'next' });
-    expect(state.currentIndex).toBe(2); // clamped
-    state = examTransition(state, { type: 'prev' });
-    expect(state.currentIndex).toBe(1);
+    const runner = makeRunner(3);
+    runner.dispatch({ type: 'next' });
+    expect(runner.getState().currentIndex).toBe(1);
+    runner.dispatch({ type: 'next' });
+    expect(runner.getState().currentIndex).toBe(2);
+    runner.dispatch({ type: 'next' });
+    expect(runner.getState().currentIndex).toBe(2); // clamped
+    runner.dispatch({ type: 'prev' });
+    expect(runner.getState().currentIndex).toBe(1);
   });
 
   it('goto out-of-range is no-op', () => {
-    const qs = makeQuestions(3);
-    let state = createExamState(qs);
-    state = examTransition(state, { type: 'goto', index: 99 });
-    expect(state.currentIndex).toBe(0);
-    state = examTransition(state, { type: 'goto', index: -1 });
-    expect(state.currentIndex).toBe(0);
-    state = examTransition(state, { type: 'goto', index: 2 });
-    expect(state.currentIndex).toBe(2);
+    const runner = makeRunner(3);
+    runner.dispatch({ type: 'goto', index: 99 });
+    expect(runner.getState().currentIndex).toBe(0);
+    runner.dispatch({ type: 'goto', index: -1 });
+    expect(runner.getState().currentIndex).toBe(0);
+    runner.dispatch({ type: 'goto', index: 2 });
+    expect(runner.getState().currentIndex).toBe(2);
   });
 
-  it('submit moves to summary; further actions are no-ops', () => {
-    const qs = makeQuestions(2);
-    let state = createExamState(qs);
-    state = examTransition(state, { type: 'answer', value: 0 });
-    state = examTransition(state, { type: 'submit' });
-    expect(state.status).toBe('summary');
-    const frozen = state;
-    state = examTransition(state, { type: 'answer', value: 1 });
-    state = examTransition(state, { type: 'next' });
-    expect(state).toEqual(frozen);
+  it('submit moves to summary; further dispatches are no-ops', () => {
+    const { clock } = makeFakeClock();
+    const onFinalize = vi.fn();
+    const runner = createExamRunner({ questions: makeQuestions(2), durationMs: 60_000, clock, onFinalize });
+    runner.start();
+    runner.dispatch({ type: 'answer', value: 0 });
+    runner.dispatch({ type: 'submit' });
+    expect(runner.getState().status).toBe('summary');
+    const frozen = runner.getState();
+    // post-finalize dispatches are ignored
+    runner.dispatch({ type: 'answer', value: 1 });
+    runner.dispatch({ type: 'next' });
+    expect(runner.getState()).toEqual(frozen);
   });
 });
 
@@ -120,11 +126,14 @@ describe('exam state — never reveals correctness mid-exam', () => {
   });
 
   it('answering does not set any correctness flag on state', () => {
-    const qs = makeQuestions(3);
-    let state: ExamState = createExamState(qs);
-    state = examTransition(state, { type: 'answer', value: 0 }); // correct
-    state = examTransition(state, { type: 'next' });
-    state = examTransition(state, { type: 'answer', value: 3 }); // wrong
+    const { clock } = makeFakeClock();
+    const onFinalize = vi.fn();
+    const runner = createExamRunner({ questions: makeQuestions(3), durationMs: 60_000, clock, onFinalize });
+    runner.start();
+    runner.dispatch({ type: 'answer', value: 0 }); // correct
+    runner.dispatch({ type: 'next' });
+    runner.dispatch({ type: 'answer', value: 3 }); // wrong
+    const state: ExamState = runner.getState();
     expect('feedback' in state).toBe(false);
     expect(state.status).toBe('active');
     // No "isCorrect"-shaped key leaked into state
@@ -242,18 +251,6 @@ describe('createExamRunner — onExpire path', () => {
   });
 });
 
-describe('scoreExam', () => {
-  it('counts correct vs total, ignoring null answers', () => {
-    const qs = makeQuestions(4);
-    const state: ExamState = {
-      questions: qs,
-      currentIndex: 0,
-      answers: [0, 1, null, 0],
-      status: 'summary',
-    };
-    expect(scoreExam(state)).toEqual({ correct: 2, total: 4 });
-  });
-});
 
 describe('createExamRunner — durationSec from originalStartedAt (#392)', () => {
   it('uses current startedAtWall when no originalStartedAt provided', () => {

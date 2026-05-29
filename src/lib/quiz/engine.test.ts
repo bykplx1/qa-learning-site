@@ -4,7 +4,6 @@ import {
   persistQuizState,
   restoreQuizState,
   transition,
-  isCorrect,
   getScore,
 } from './engine.js';
 import type { QuizQuestion } from './schema.js';
@@ -97,15 +96,6 @@ describe('transition guards (quiz adapter rules)', () => {
   });
 });
 
-// isCorrect re-exported from shared core — smoke-test the re-export
-describe('isCorrect (re-export from shared core)', () => {
-  it('single answer: correct index', () => {
-    const q = makeQuestions(1)[0];
-    expect(isCorrect(q, 0)).toBe(true);
-    expect(isCorrect(q, 1)).toBe(false);
-    expect(isCorrect(q, null)).toBe(false);
-  });
-});
 
 describe('sessionStorage resume', () => {
   it('restores identical state after serialize / deserialize', () => {
