@@ -1,24 +1,23 @@
-export interface DailyActivityRow {
-  day: string | Date;
-}
+import { toEpochDay } from '../daily-activity/index';
+import type { DailyActivityRow } from '../daily-activity/index';
+
+export type { DailyActivityRow };
 
 export interface StreakResult {
   current: number;
   longest: number;
 }
 
-function toEpochDay(d: string | Date): number {
-  if (typeof d === 'string') {
-    const [y, m, day] = d.split('-').map(Number);
-    return Math.floor(Date.UTC(y, m - 1, day) / 86400000);
-  }
-  return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
-}
-
-export function streakOf(rows: DailyActivityRow[], today: Date): StreakResult {
+export function streakOf(
+  rows: DailyActivityRow[],
+  today: Date,
+  timeZone = 'UTC',
+): StreakResult {
   if (rows.length === 0) return { current: 0, longest: 0 };
 
-  const days = Array.from(new Set(rows.map((r) => toEpochDay(r.day)))).sort((a, b) => a - b);
+  const days = Array.from(
+    new Set(rows.map((r) => toEpochDay(r.day, timeZone))),
+  ).sort((a, b) => a - b);
 
   let longest = 1;
   let run = 1;
@@ -27,7 +26,7 @@ export function streakOf(rows: DailyActivityRow[], today: Date): StreakResult {
     if (run > longest) longest = run;
   }
 
-  const todayEpoch = toEpochDay(today);
+  const todayEpoch = toEpochDay(today, timeZone);
   const last = days[days.length - 1];
   let current = 0;
   if (last === todayEpoch || last === todayEpoch - 1) {

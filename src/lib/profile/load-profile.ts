@@ -9,6 +9,7 @@ import { streakOf } from '../streak/streak';
 import { categoryProgressOf } from '../progress/progress';
 import { quizAccuracyByTopicOf } from '../progress/quiz-accuracy';
 import { heatmapOf } from '../heatmap/heatmap';
+import type { DailyActivityRow } from '../daily-activity/index';
 import { recentActivityOf } from '../activity/activity';
 import { lessonMetaRowsFromMap } from '../curriculum/lesson-meta';
 import type { LessonMetaRecord } from '../curriculum/lesson-meta';
@@ -47,6 +48,11 @@ export interface LoadProfileOptions {
   lessonMetaMap?: Map<string, LessonMetaRecord>;
   /** @deprecated Pass lessonMetaMap instead. Kept for backward compat in callers that only need titles. */
   lessonTitleBySlug?: Map<string, string>;
+  /**
+   * IANA timezone string for day-bucketing streak and heatmap.
+   * Defaults to 'UTC' until a per-user tz preference is plumbed through.
+   */
+  timeZone?: string;
 }
 
 export async function loadProfile(
@@ -54,6 +60,7 @@ export async function loadProfile(
   options: LoadProfileOptions = {},
 ): Promise<ProfilePayload> {
   const today = options.today ?? new Date();
+  const timeZone = options.timeZone ?? 'UTC';
   const projectTitleBySlug = options.projectTitleBySlug ?? new Map<string, string>();
   const heatmapYear = today.getUTCFullYear();
 
@@ -76,13 +83,13 @@ export async function loadProfile(
   const lessonMetaRows =
     options.lessonMetaMap ? lessonMetaRowsFromMap(options.lessonMetaMap) : [];
 
-  const streak = streakOf(dailyActivityRows, today);
+  const streak = streakOf(dailyActivityRows as DailyActivityRow[], today, timeZone);
 
   // heatmapOf accepts rows with attemptsCount+lessonsCount; filter to year in-memory.
   const yearStart = `${heatmapYear}-01-01`;
   const yearEnd = `${heatmapYear}-12-31`;
   const heatmapRows = dailyActivityRows.filter((r) => r.day >= yearStart && r.day <= yearEnd);
-  const heatmapCells = heatmapOf(heatmapRows, heatmapYear);
+  const heatmapCells = heatmapOf(heatmapRows as DailyActivityRow[], heatmapYear, timeZone);
 
   const categoryProgress = categoryProgressOf(lessonViewRows, quizAttemptRows, lessonMetaRows);
 
