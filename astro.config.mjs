@@ -10,7 +10,6 @@ import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { wikilinksIntegration } from './src/integrations/wikilinks.ts';
-import { quizExtractorIntegration } from './src/integrations/quizExtractor.ts';
 import { ogImagesIntegration } from './src/integrations/ogImages.ts';
 import { sitemapAliasIntegration } from './src/integrations/sitemapAlias.ts';
 import { REMARK_PLUGINS, REHYPE_PLUGINS } from './src/lib/mdx-pipeline/index.ts';
@@ -80,7 +79,6 @@ export default defineConfig({
     react(),
     sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/dev/') }),
     sitemapAliasIntegration(),
-    quizExtractorIntegration(),
     wikilinksIntegration(),
     ogImagesIntegration(),
     pagefindIntegration,
