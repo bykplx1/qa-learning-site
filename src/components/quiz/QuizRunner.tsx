@@ -13,7 +13,13 @@ import {
   type QuizState,
   type QuizAction,
 } from '../../lib/quiz/engine.js';
-import { selectAdapter, type QuizPersistenceAdapter } from '../../lib/quiz/persistence.js';
+import {
+  selectAdapter,
+  type QuizPersistenceAdapter,
+  loadQuizProgress,
+  saveQuizProgress,
+  clearQuizProgress,
+} from '../../lib/quiz/persistence.js';
 import { SAVE_PROMPT_DISMISSED_KEY, shouldShowSavePrompt } from '../../lib/quiz/save-prompt.js';
 
 const COMPLETE_KEY = (slug: string) => `quiz_${slug}_complete`;
@@ -473,13 +479,13 @@ function QuizRunnerInner({ questions, quizSlug }: Props) {
   }, []);
 
   useEffect(() => {
-    const restored = adapter.loadProgress(quizSlug);
+    const restored = loadQuizProgress(quizSlug);
     if (restored) setState(restoreQuizState(questions, 'practice', restored));
     try {
       setMarkedComplete(sessionStorage.getItem(COMPLETE_KEY(quizSlug)) === 'true');
       setPromptDismissed(sessionStorage.getItem(SAVE_PROMPT_DISMISSED_KEY) === 'true');
     } catch {}
-  }, [adapter, quizSlug, questions]);
+  }, [quizSlug, questions]);
 
   const handleDismissPrompt = useCallback(() => {
     try {
@@ -489,15 +495,15 @@ function QuizRunnerInner({ questions, quizSlug }: Props) {
   }, []);
 
   useEffect(() => {
-    adapter.saveProgress(quizSlug, persistQuizState(state));
-  }, [adapter, quizSlug, state]);
+    saveQuizProgress(quizSlug, persistQuizState(state));
+  }, [quizSlug, state]);
 
   useEffect(() => {
     if (state.status !== 'summary') return;
     if (submittedRef.current) return;
     if (signedIn === null) return;
     submittedRef.current = true;
-    adapter.clearProgress(quizSlug);
+    clearQuizProgress(quizSlug);
     const { correct, total } = getScore(state);
     const durationSec = Math.floor((Date.now() - startedAtRef.current) / 1000);
     if (signedIn) setSaveStatus('saving');

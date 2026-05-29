@@ -1,63 +1,62 @@
-import type { PersistedQuizState, QuizMode } from './engine.js';
+import type { PersistedQuizState } from './engine.js';
 
 export interface CompletedAttempt {
   attemptId: string;
   quizSlug: string;
-  mode: QuizMode;
+  mode: import('./engine.js').QuizMode;
   score: number;
   total: number;
   answers: Array<number | number[] | null>;
   durationSec: number;
 }
 
+// ── Pluggable seam: only the variation that is real ──────────────────────────
+// Progress (resume) is always sessionStorage — see the functions below.
+// Only where a completed attempt goes (local vs. server POST) varies by auth state.
+
 export interface QuizPersistenceAdapter {
-  loadProgress(quizSlug: string): PersistedQuizState | null;
-  saveProgress(quizSlug: string, state: PersistedQuizState): void;
-  clearProgress(quizSlug: string): void;
   recordAttempt(attempt: CompletedAttempt): Promise<{ id: string | null }>;
 }
 
-const STORAGE_KEY = (slug: string) => `quiz_${slug}`;
+// ── In-flight quiz progress — sessionStorage, always ─────────────────────────
+
+const PROGRESS_KEY = (slug: string) => `quiz_${slug}`;
 export const PENDING_ATTEMPT_KEY = (slug: string) => `quiz_attempt_${slug}`;
 
+export function loadQuizProgress(quizSlug: string): PersistedQuizState | null {
+  try {
+    const raw = sessionStorage.getItem(PROGRESS_KEY(quizSlug));
+    return raw ? (JSON.parse(raw) as PersistedQuizState) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveQuizProgress(quizSlug: string, state: PersistedQuizState): void {
+  try {
+    sessionStorage.setItem(PROGRESS_KEY(quizSlug), JSON.stringify(state));
+  } catch {}
+}
+
+export function clearQuizProgress(quizSlug: string): void {
+  try {
+    sessionStorage.removeItem(PROGRESS_KEY(quizSlug));
+  } catch {}
+}
+
+// ── Adapters: differ only in where a completed attempt is recorded ────────────
+
 export const sessionStorageAdapter: QuizPersistenceAdapter = {
-  loadProgress(quizSlug) {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY(quizSlug));
-      return raw ? (JSON.parse(raw) as PersistedQuizState) : null;
-    } catch {
-      return null;
-    }
-  },
-  saveProgress(quizSlug, state) {
-    try {
-      sessionStorage.setItem(STORAGE_KEY(quizSlug), JSON.stringify(state));
-    } catch {}
-  },
-  clearProgress(quizSlug) {
-    try {
-      sessionStorage.removeItem(STORAGE_KEY(quizSlug));
-    } catch {}
-  },
   async recordAttempt(attempt) {
     try {
       sessionStorage.setItem(PENDING_ATTEMPT_KEY(attempt.quizSlug), JSON.stringify(attempt));
-      sessionStorageAdapter.clearProgress(attempt.quizSlug);
+      clearQuizProgress(attempt.quizSlug);
     } catch {}
     return { id: null };
   },
 };
 
 export const dbAdapter: QuizPersistenceAdapter = {
-  loadProgress(quizSlug) {
-    return sessionStorageAdapter.loadProgress(quizSlug);
-  },
-  saveProgress(quizSlug, state) {
-    sessionStorageAdapter.saveProgress(quizSlug, state);
-  },
-  clearProgress(quizSlug) {
-    sessionStorageAdapter.clearProgress(quizSlug);
-  },
   async recordAttempt(attempt) {
     const res = await fetch('/api/quiz/attempts', {
       method: 'POST',
@@ -74,7 +73,7 @@ export const dbAdapter: QuizPersistenceAdapter = {
     });
     if (!res.ok) return { id: null };
     const data = (await res.json()) as { id?: string };
-    dbAdapter.clearProgress(attempt.quizSlug);
+    clearQuizProgress(attempt.quizSlug);
     return { id: data.id ?? null };
   },
 };
