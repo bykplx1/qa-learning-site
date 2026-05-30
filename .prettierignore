@@ -1,0 +1,9 @@
+dist/
+.astro/
+node_modules/
+public/pagefind/
+.lighthouseci/
+src/generated/
+tests/visual/**/*.png
+# Lock files
+package-lock.json

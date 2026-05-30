@@ -174,6 +174,7 @@ describe('createExamTimer — onExpire fires exactly once', () => {
   it('calling stop inside onExpire callback does not refire', () => {
     const { clock, advance } = makeFakeClock();
     const onExpire = vi.fn();
+    // eslint-disable-next-line prefer-const -- forward reference: onExpire closes over timer before assignment
     let timer: ReturnType<typeof createExamTimer>;
     onExpire.mockImplementation(() => timer.stop());
     timer = createExamTimer({ durationMs: 1_000, onExpire, clock });

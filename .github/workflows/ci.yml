@@ -15,7 +15,7 @@ on:
 # ─── STAGE OVERVIEW ──────────────────────────────────────────────────────────
 #
 #  Stage 1 — fast checks (parallel, no DB, no browser)
-#    lint-typecheck   npx astro check
+#    lint-typecheck   npx astro check + npm run lint (ESLint)
 #    lint-curriculum  scripts/lint-curriculum.ts depth-gate enforcement
 #    unit             vitest unit suite
 #
@@ -47,6 +47,9 @@ jobs:
 
       - name: Type check (astro check)
         run: npx astro check
+
+      - name: ESLint
+        run: npm run lint
 
   # ── Stage 1b: curriculum depth-gate lint ─────────────────────────────────
   lint-curriculum:

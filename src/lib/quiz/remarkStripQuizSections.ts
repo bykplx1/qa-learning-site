@@ -1,7 +1,7 @@
 import type { Root, Heading, RootContent } from 'mdast';
 
 const QUIZ_HEADING_RE = /^Quiz[\s:]/i;
-const TASKS_HEADING_RE = /^Fill-in\s*[/\/]\s*Tasks/i;
+const TASKS_HEADING_RE = /^Fill-in\s*[/]\s*Tasks/i;
 
 function headingText(node: Heading): string {
   return node.children

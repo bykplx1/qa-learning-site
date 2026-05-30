@@ -23,7 +23,7 @@ function slugToPrefix(slug: string): string {
 
 export function parseTasks(markdown: string, lessonSlug: string): TasksFile {
   const text = normalize(markdown);
-  const section = extractSection(text, /^## Fill-in\s*[/\/]\s*Tasks[^\n]*/m);
+  const section = extractSection(text, /^## Fill-in\s*[/]\s*Tasks[^\n]*/m);
   if (!section) return tasksFileSchema.parse({ lesson: lessonSlug, tasks: [] });
 
   const prefix = slugToPrefix(lessonSlug);

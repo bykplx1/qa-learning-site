@@ -21,7 +21,7 @@
  *   - aria-live="polite" region announces newly-revealed segment title.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Segment } from '../../lib/lessons/segmenter';
 import { ErrorBoundary } from '../ErrorBoundary';
 
@@ -209,7 +209,6 @@ function applyVisibility(
 
   // Mark the last visible h2's section end with the preview overlay class.
   // We do it on the body element itself so the CSS gradient covers the tail.
-  const lastVisible = h2s[visibleCount - 1];
   if (previewH2) {
     body.classList.add('has-segment-preview');
   } else {

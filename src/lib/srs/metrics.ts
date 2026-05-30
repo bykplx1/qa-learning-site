@@ -24,8 +24,6 @@ export interface StabilityPoint {
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-const MS_PER_DAY = 86_400_000;
-
 function toDateStr(d: Date): string {
   return d.toISOString().slice(0, 10);
 }

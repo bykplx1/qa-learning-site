@@ -6,7 +6,7 @@ import { extractExcerpt } from '../lib/wikilinks/excerpt.js';
 import type { SlugEntry } from '../lib/wikilinks/resolver.js';
 
 function parseFrontmatter(raw: string): { slug: string; title: string; cluster: string } | null {
-  const normalized = raw.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const m = normalized.match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   const fm = m[1];
@@ -72,7 +72,7 @@ export function wikilinksIntegration(): AstroIntegration {
         const out: Record<string, SlugEntry> = {};
         // Deduplicate: prefer slug-keyed entries (slug → href), skip filename dupes
         const seen = new Set<string>();
-        for (const [key, entry] of slugMap.entries()) {
+        for (const [_key, entry] of slugMap.entries()) {
           const jsonKey = entry.href.replace('/lessons/', '');
           if (!seen.has(jsonKey)) {
             seen.add(jsonKey);

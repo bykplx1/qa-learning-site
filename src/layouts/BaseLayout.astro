@@ -66,8 +66,8 @@ const navLinks = [
 
     <script is:inline>
       (function () {
-        var stored = localStorage.getItem('theme');
-        var theme =
+        const stored = localStorage.getItem('theme');
+        const theme =
           stored ||
           (window.matchMedia('(prefers-color-scheme: dark)').matches
             ? 'dark'
