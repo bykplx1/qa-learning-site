@@ -1,13 +1,55 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProfileShell from '../components/profile/ProfileShell';
+import { getSession } from '../lib/auth';
+import { loadProfile } from '../lib/profile/load-profile';
+import { buildLessonMetaMap } from '../lib/curriculum/lesson-meta';
+import { mockLoadProfile } from '../lib/test-auth-mock';
+import { logError } from '../lib/observability/logger';
 
-export const prerender = true;
+export const prerender = false;
+
+let session: Awaited<ReturnType<typeof getSession>> = null;
+try {
+  session = await getSession(Astro.request.headers);
+} catch (err) {
+  logError('profile.astro SSR getSession', err, { route: '/profile', method: 'GET' });
+}
+
+let initialUser: { id: string; name?: string | null; email: string } | null = null;
+let initialData: Awaited<ReturnType<typeof loadProfile>> | null = null;
+
+if (session?.user?.id) {
+  initialUser = {
+    id: session.user.id,
+    name: session.user.name ?? null,
+    email: session.user.email,
+  };
+
+  try {
+    if (process.env.E2E_OAUTH_MOCK === '1') {
+      const lessonMetaMap = buildLessonMetaMap(await getCollection('curriculum'));
+      initialData = mockLoadProfile(lessonMetaMap) as Awaited<ReturnType<typeof loadProfile>>;
+    } else {
+      const [projectEntries, curriculumEntries] = await Promise.all([
+        getCollection('projects'),
+        getCollection('curriculum'),
+      ]);
+      const projectTitleBySlug = new Map(projectEntries.map((p) => [p.data.slug, p.data.title]));
+      const lessonMetaMap = buildLessonMetaMap(curriculumEntries);
+      initialData = await loadProfile(session.user.id, { projectTitleBySlug, lessonMetaMap });
+    }
+  } catch (err) {
+    logError('profile.astro SSR loadProfile', err, { route: '/profile', method: 'GET' });
+    // Leave initialData null — ProfileShell will fall back to client fetch.
+  }
+}
 ---
 
 <BaseLayout title="Profile — QA Learning">
   <main class="profile">
-    <ProfileShell client:only="react" />
+    <ProfileShell client:load initialUser={initialUser} initialData={initialData} />
   </main>
 </BaseLayout>
 
