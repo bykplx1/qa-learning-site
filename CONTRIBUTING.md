@@ -43,3 +43,16 @@ When a visual change is intentional (redesign, copy edit, token change):
    visual diff and the baseline update together.
 4. Never use `--update-snapshots` in CI on `main` automatically. Baselines
    are evidence; auto-updating them defeats the gate.
+
+### Visual job is a hard gate
+
+The `visual` CI job blocks merge on unexpected pixel diffs. Before merging any
+PR whose changes affect the rendered output (layout, colours, fonts, content
+width), you **must** regenerate baselines first:
+
+1. Push the branch.
+2. Trigger the **CI** workflow manually via `workflow_dispatch` on that branch
+   with `update_visual_baselines = true`.
+3. Download the `visual-baselines` artifact and copy the PNGs into
+   `tests/visual/visual.spec.ts-snapshots/`.
+4. Commit the updated baselines in the same PR.
