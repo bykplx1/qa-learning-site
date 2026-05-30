@@ -212,6 +212,65 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # ── Stage 3a-ii: WebKit smoke + a11y ─────────────────────────────────────
+  e2e-webkit:
+    runs-on: ubuntu-latest
+    needs: integration
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: qa_learning_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/qa_learning_test
+      BETTER_AUTH_SECRET: test-secret-at-least-32-bytes-long-aaaaaaaaa
+      BETTER_AUTH_URL: http://localhost:4321
+      GITHUB_CLIENT_ID: test-client-id
+      GITHUB_CLIENT_SECRET: test-client-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --legacy-peer-deps
+
+      - name: Apply DB migrations
+        run: npx drizzle-kit migrate
+
+      - name: Build
+        run: npm run build
+
+      - name: Install WebKit browser + system deps
+        run: npx playwright install --with-deps webkit
+
+      - name: WebKit smoke + a11y tests
+        env:
+          E2E_OAUTH_MOCK: '1'
+        run: npx playwright test --project=webkit
+
+      - name: Upload WebKit Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-webkit
+          path: playwright-report/
+          retention-days: 7
+
   # ── Stage 3b: visual regression ───────────────────────────────────────────
   visual:
     # Linux only — cross-OS font rendering produces diffs that are impossible

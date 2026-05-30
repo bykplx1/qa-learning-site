@@ -19,6 +19,14 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      // WebKit (Safari engine) — most divergent rendering behaviour.
+      // Scoped to smoke + a11y specs only; visual snapshots are chromium/Linux-only
+      // and are managed via the separate playwright.visual.config.ts config.
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: ['**/smoke.spec.ts', '**/a11y.spec.ts'],
+    },
   ],
   webServer: {
     // Dev server runs SSR endpoints (profile, /api/*) needed by the v2 auth E2E.
