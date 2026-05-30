@@ -28,39 +28,46 @@ function SearchModalInner() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const pagefindRef = useRef<PagefindInstance | null>(null);
+  const loadStartedRef = useRef(false);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const path = '/pagefind/' + 'pagefind.js';
-        const pf = (await import(/* @vite-ignore */ path)) as PagefindInstance;
-        if (pf.init) await pf.init();
-        pagefindRef.current = pf;
-        setReady(true);
-      } catch {
-        // Not available in dev mode — index is generated at build time
-      } finally {
-        setLoadAttempted(true);
-      }
-    };
-    load();
+  const initPagefind = useCallback(async () => {
+    if (loadStartedRef.current) return;
+    loadStartedRef.current = true;
+    try {
+      const path = '/pagefind/' + 'pagefind.js';
+      const pf = (await import(/* @vite-ignore */ path)) as PagefindInstance;
+      if (pf.init) await pf.init();
+      pagefindRef.current = pf;
+      setReady(true);
+    } catch {
+      // Not available in dev mode — index is generated at build time
+    } finally {
+      setLoadAttempted(true);
+    }
   }, []);
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
+        void initPagefind();
         setOpen((prev) => !prev);
       }
     };
-    const handleOpen = () => setOpen(true);
+    const handleOpen = () => {
+      void initPagefind();
+      setOpen(true);
+    };
+    const handlePrefetch = () => void initPagefind();
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('search:open', handleOpen);
+    window.addEventListener('search:prefetch', handlePrefetch);
     return () => {
       window.removeEventListener('keydown', handleKeydown);
       window.removeEventListener('search:open', handleOpen);
+      window.removeEventListener('search:prefetch', handlePrefetch);
     };
-  }, []);
+  }, [initPagefind]);
 
   useEffect(() => {
     if (open) {

@@ -61,10 +61,10 @@ const persistedTimezone = nudgeRow?.timezone ?? null;
       <h1>Review</h1>
     </header>
 
-    <SleepGateNotice client:load persistedTimezone={persistedTimezone} />
-    <FirstTimeDisclaimer client:load seenOnServer={seenReviewDisclaimer} />
+    <SleepGateNotice client:idle persistedTimezone={persistedTimezone} />
+    <FirstTimeDisclaimer client:idle seenOnServer={seenReviewDisclaimer} />
     <ReviewQueue client:load initialCard={initialCard} />
-    <SessionCapOverlay client:load />
+    <SessionCapOverlay client:visible />
   </main>
 </BaseLayout>
 
