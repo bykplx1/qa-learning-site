@@ -202,7 +202,10 @@ jobs:
       - name: E2E + a11y tests
         env:
           E2E_OAUTH_MOCK: '1'
-        run: npm run test:e2e
+        # chromium only — the webkit project (smoke + a11y) runs in the
+        # dedicated e2e-webkit job, which installs the WebKit browser. This job
+        # only installs chromium, so an unscoped run would fail to launch webkit.
+        run: npm run test:e2e -- --project=chromium
 
       - name: Upload Playwright report
         if: always()
