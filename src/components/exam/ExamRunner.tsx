@@ -181,7 +181,7 @@ interface StartGateProps {
 function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
   const durationMin = Math.round(durationMs / 60_000);
   return (
-    <div className="card my-12 mx-auto p-9" style={{ maxWidth: 540 }} data-testid="exam-start-gate">
+    <div className="card my-12 mx-auto" style={{ maxWidth: 540, padding: 36 }} data-testid="exam-start-gate">
       <span className="eyebrow">ISTQB exam mode</span>
       <h2
         className="mt-3 mb-4"
@@ -362,7 +362,7 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         })}
       </div>
 
-      <div className="card p-7">
+      <div className="card" style={{ padding: 28 }}>
         <div className="eyebrow mb-3">
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>

@@ -156,7 +156,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
         ))}
       </div>
 
-      <div className="card p-7">
+      <div className="card" style={{ padding: 28 }}>
         <div className="eyebrow mb-3">
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>
