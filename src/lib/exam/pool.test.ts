@@ -30,9 +30,17 @@ describe('buildExamPool', () => {
     expect(questions.size).toBeGreaterThan(1);
   });
 
-  it('all question IDs are unique within one draw (new Set size equals pool length)', () => {
+  it('all question IDs are unique within one draw (regression guard for #316/#353)', () => {
     const pool = buildExamPool();
-    expect(new Set(pool.map((q) => q.id)).size).toBe(pool.length);
+    const ids = pool.map((q) => q.id);
+    const seen = new Set<string>();
+    const duplicates: string[] = [];
+    for (const id of ids) {
+      if (seen.has(id)) duplicates.push(id);
+      seen.add(id);
+    }
+    expect(duplicates, `Duplicate question IDs found: ${duplicates.join(', ')}`).toHaveLength(0);
+    expect(seen.size).toBe(pool.length);
   });
 
   it('question IDs are namespaced by source file slug (format: "<slug>:<original-id>")', () => {
