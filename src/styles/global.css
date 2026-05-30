@@ -1,11 +1,25 @@
 @import "@fontsource-variable/newsreader/opsz.css";
-@import "@fontsource-variable/newsreader/opsz-italic.css";
 @import "@fontsource-variable/inter-tight/wght.css";
-@import "@fontsource-variable/inter-tight/wght-italic.css";
 @import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/500.css";
-@import "@fontsource/jetbrains-mono/600.css";
 @import "tailwindcss";
+
+/* Metric-aligned fallbacks — reduce CLS from font-swap reflow */
+@font-face {
+  font-family: 'Newsreader Variable Fallback';
+  src: local('Georgia'), local('Times New Roman');
+  size-adjust: 103%;
+  ascent-override: 85%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Inter Tight Variable Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Helvetica');
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
 
 /* Redefine dark variant to use data-theme attribute set by inline script */
 @variant dark ([data-theme=dark] &);
@@ -34,8 +48,8 @@
   --warn: oklch(72% 0.13 80);
   --warn-strong: oklch(45% 0.13 60);
   --error: oklch(55% 0.18 25);
-  --serif: "Newsreader Variable", "Newsreader", "Charter", "Iowan Old Style", Georgia, serif;
-  --sans: "Inter Tight Variable", "Inter Tight", "Inter", system-ui, sans-serif;
+  --serif: "Newsreader Variable", "Newsreader Variable Fallback", "Charter", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter Tight Variable", "Inter Tight Variable Fallback", "Inter", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
