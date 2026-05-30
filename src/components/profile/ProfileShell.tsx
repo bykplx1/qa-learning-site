@@ -170,7 +170,7 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
     <div className="card" data-testid="recent-activity-section" aria-label="Recent activity">
       <span className="eyebrow">recent activity</span>
       {items.length === 0 ? (
-        <p data-testid="recent-activity-empty" style={{ color: 'var(--ink-3)', fontSize: 14, marginTop: 12 }}>
+        <p data-testid="recent-activity-empty" className="mt-3" style={{ color: 'var(--ink-3)', fontSize: 14 }}>
           Nothing here yet — finish a lesson, take a quiz, or ship a project to see it land in the feed.
         </p>
       ) : (
@@ -293,7 +293,7 @@ function ProfileShellInner() {
 
   if (loading) {
     return (
-      <div style={{ padding: '64px 0', color: 'var(--ink-3)', fontSize: 14 }} aria-busy="true">
+      <div className="py-16" style={{ color: 'var(--ink-3)', fontSize: 14 }} aria-busy="true">
         Loading…
       </div>
     );
@@ -309,7 +309,7 @@ function ProfileShellInner() {
         <p style={{ fontSize: 16, color: 'var(--ink-2)', maxWidth: '52ch', lineHeight: 1.55 }}>
           Lessons completed, quiz accuracy by topic, project submissions, and streaks — all kept against your account.
         </p>
-        <div style={{ display: 'flex', gap: 12, marginTop: 22 }}>
+        <div className="flex gap-3" style={{ marginTop: 22 }}>
           <a href="/login?next=/profile" className="btn btn--primary btn--lg">Sign in</a>
         </div>
       </section>
@@ -357,7 +357,7 @@ function ProfileShellInner() {
           <div className="istat">
             <div className="istat__num">
               {streak.current}
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--accent)', marginLeft: 6 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="ml-1.5" style={{ color: 'var(--accent)' }}>
                 <path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3s-3 2-3 6a6 6 0 0 0 12 0c0-6-6-11-6-11z" />
               </svg>
             </div>
@@ -392,13 +392,14 @@ function ProfileShellInner() {
         <div className="card profile-grid__wide" data-testid="category-progress-section" aria-label="Category progress">
           <span className="eyebrow">progress by track</span>
           {categoryProgress.length === 0 ? (
-            <p style={{ color: 'var(--ink-3)', fontSize: 14, marginTop: 12 }}>No lessons yet. Pick one from the home page.</p>
+            <p className="mt-3" style={{ color: 'var(--ink-3)', fontSize: 14 }}>No lessons yet. Pick one from the home page.</p>
           ) : (
-            <div style={{ display: 'grid', gap: 14, marginTop: 16 }}>
+            <div className="grid mt-4" style={{ gap: 14 }}>
               {categoryProgress.map((cp) => (
                 <div
                   key={cp.category}
-                  style={{ display: 'grid', gridTemplateColumns: '180px 1fr 60px', alignItems: 'center', gap: 16 }}
+                  className="grid items-center gap-4"
+                  style={{ gridTemplateColumns: '180px 1fr 60px' }}
                   data-testid={`category-progress-${cp.category}`}
                 >
                   <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}>
@@ -412,6 +413,7 @@ function ProfileShellInner() {
                     aria-valuemax={100}
                     aria-label={`${cp.category} ${cp.percent}% complete`}
                   >
+                    {/* dynamic: width and color driven by cp.percent */}
                     <div style={{ width: `${cp.percent}%`, height: '100%', background: cp.percent > 50 ? 'var(--accent)' : cp.percent > 0 ? 'oklch(75% 0.13 35)' : 'transparent' }} />
                   </div>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', textAlign: 'right' }}>
@@ -425,7 +427,7 @@ function ProfileShellInner() {
 
         <div className="card" data-testid="submissions-section" aria-label="Project submissions">
           <span className="eyebrow">portfolio · projects shipped</span>
-          <div style={{ marginTop: 14 }}>
+          <div className="mt-3.5">
             <SubmissionsListInline submissions={submissionsProp} />
           </div>
         </div>
@@ -433,14 +435,15 @@ function ProfileShellInner() {
         <div className="card profile-grid__wide" data-testid="quiz-accuracy-section" aria-label="Quiz accuracy by topic">
           <span className="eyebrow">quiz accuracy · weakest first</span>
           {quizAccuracy.length === 0 ? (
-            <p style={{ color: 'var(--ink-3)', fontSize: 14, marginTop: 12 }}>No quiz attempts yet.</p>
+            <p className="mt-3" style={{ color: 'var(--ink-3)', fontSize: 14 }}>No quiz attempts yet.</p>
           ) : (
             <>
-              <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+              <div className="grid gap-3 mt-4">
                 {quizAccuracy.map((t) => (
                   <div
                     key={t.category}
-                    style={{ display: 'grid', gridTemplateColumns: '200px 50px 1fr 80px', alignItems: 'center', gap: 14, fontSize: 13 }}
+                    className="grid items-center gap-3.5"
+                    style={{ gridTemplateColumns: '200px 50px 1fr 80px', fontSize: 13 }}
                     data-testid={`quiz-accuracy-${t.category}`}
                   >
                     <span style={{ fontWeight: 500, color: 'var(--ink)' }}>{formatCategory(t.category)}</span>
@@ -448,6 +451,7 @@ function ProfileShellInner() {
                       {t.accuracy}%
                     </span>
                     <div style={{ height: 6, background: 'var(--paper-3)', borderRadius: 3, position: 'relative' }}>
+                      {/* dynamic: width and color driven by t.accuracy */}
                       <div style={{ width: `${t.accuracy}%`, height: '100%', background: t.accuracy < 70 ? 'var(--accent)' : 'var(--pass)', borderRadius: 3 }} />
                       <div style={{ position: 'absolute', left: '65%', top: -3, height: 12, width: 1, background: 'var(--ink-3)' }} />
                     </div>
@@ -457,7 +461,7 @@ function ProfileShellInner() {
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: 14, fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>
+              <div className="mt-3.5" style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--ink-3)' }}>
                 ↳ vertical line: ISTQB pass threshold · 65%
               </div>
             </>
@@ -520,10 +524,10 @@ function SubmissionsListInline({ submissions: initial }: { submissions: Submissi
   }
 
   return (
-    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 12 }}>
+    <ul className="grid gap-3" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
       {items.map((s) => (
-        <li key={s.projectSlug} style={{ padding: 14, border: '1px solid var(--rule)', borderRadius: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <li key={s.projectSlug} className="p-3.5" style={{ border: '1px solid var(--rule)', borderRadius: 8 }}>
+          <div className="flex items-baseline justify-between gap-3 flex-wrap">
             <a href={`/projects/${s.projectSlug}`} style={{ fontWeight: 500, fontSize: 13, color: 'var(--ink)', textDecoration: 'underline' }}>
               {s.projectSlug}
             </a>
@@ -532,14 +536,14 @@ function SubmissionsListInline({ submissions: initial }: { submissions: Submissi
             </span>
           </div>
           {s.repoUrl && (
-            <a href={s.repoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontSize: 12, color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all', marginTop: 4, fontFamily: 'var(--mono)' }}>
+            <a href={s.repoUrl} target="_blank" rel="noopener noreferrer" className="mt-1" style={{ display: 'inline-block', fontSize: 12, color: 'var(--accent)', textDecoration: 'underline', wordBreak: 'break-all', fontFamily: 'var(--mono)' }}>
               {s.repoUrl}
             </a>
           )}
-          <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, marginBottom: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+          <p className="mt-2 mb-3" style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
             {s.reflection}
           </p>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--ink-2)', cursor: 'pointer' }}>
+          <label className="flex items-center gap-2" style={{ fontSize: 12, color: 'var(--ink-2)', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={s.isPublic}

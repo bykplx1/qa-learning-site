@@ -151,6 +151,7 @@ function SearchModalInner() {
 
   return (
     <div
+      className="pl-4 pr-4"
       style={{
         position: 'fixed',
         inset: 0,
@@ -159,8 +160,6 @@ function SearchModalInner() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         paddingTop: '12vh',
-        paddingLeft: 16,
-        paddingRight: 16,
         background: 'rgba(20, 20, 18, 0.45)',
         backdropFilter: 'blur(2px)',
       }}
@@ -183,12 +182,10 @@ function SearchModalInner() {
         onClick={(e) => e.stopPropagation()}
       >
         <div
+          className="flex items-center gap-3.5"
           style={{
             padding: '18px 22px',
             borderBottom: '1px solid var(--rule)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 14,
           }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true" style={{ color: 'var(--ink-3)' }}>
@@ -226,7 +223,8 @@ function SearchModalInner() {
               ref={listRef}
               id="search-results"
               role="listbox"
-              style={{ listStyle: 'none', padding: '8px', margin: 0, borderRight: '1px solid var(--rule)', overflowY: 'auto' }}
+              className="p-2"
+              style={{ listStyle: 'none', margin: 0, borderRight: '1px solid var(--rule)', overflowY: 'auto' }}
             >
               {lessonResults.length > 0 && (
                 <li className="eyebrow" style={{ padding: '10px 14px 6px', listStyle: 'none' }}>
@@ -252,6 +250,7 @@ function SearchModalInner() {
                         padding: '10px 14px',
                         borderRadius: 8,
                         marginBottom: 2,
+                        // dynamic: background and border driven by isSelected state
                         background: isSelected ? 'var(--paper-2)' : 'transparent',
                         borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
                         textDecoration: 'none',
@@ -314,7 +313,7 @@ function SearchModalInner() {
                     }}
                     dangerouslySetInnerHTML={{ __html: selectedResult.excerpt }}
                   />
-                  <div style={{ height: 1, background: 'var(--rule)', margin: '16px 0' }} />
+                  <div className="my-4" style={{ height: 1, background: 'var(--rule)' }} />
                   <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', lineHeight: 1.7 }}>
                     ↑↓ navigate · ↵ open · esc close
                   </div>
@@ -325,21 +324,19 @@ function SearchModalInner() {
         )}
 
         {query && results.length === 0 && ready && (
-          <p style={{ padding: '24px 16px', fontSize: 13, color: 'var(--ink-3)', textAlign: 'center', margin: 0 }}>
+          <p className="py-6 px-4" style={{ fontSize: 13, color: 'var(--ink-3)', textAlign: 'center', margin: 0 }}>
             No results for "{query}"
           </p>
         )}
 
         <div
+          className="flex justify-between py-2.5 px-4"
           style={{
-            padding: '10px 16px',
             borderTop: '1px solid var(--rule)',
             background: 'var(--paper-2)',
             fontFamily: 'var(--mono)',
             fontSize: 11,
             color: 'var(--ink-3)',
-            display: 'flex',
-            justifyContent: 'space-between',
           }}
         >
           <span>Pagefind · static index</span>

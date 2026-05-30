@@ -75,8 +75,7 @@ function SessionMergeInner() {
     <div
       role="alert"
       data-testid="session-merge-error"
-      className="banner banner--accent"
-      style={{ margin: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}
+      className="banner banner--accent my-3 mx-4 flex items-center gap-3"
     >
       <span>Could not upload your offline progress. Your work is still saved locally.</span>
       <button

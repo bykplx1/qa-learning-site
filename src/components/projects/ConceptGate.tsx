@@ -119,11 +119,10 @@ function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
       {/* Per-concept stability section */}
       <section
         aria-label="Required concept readiness"
-        className="card"
-        style={{ marginBottom: 24 }}
+        className="card mb-6"
         data-testid="concept-gate"
       >
-        <header style={{ marginBottom: 14 }}>
+        <header className="mb-3.5">
           <span className="eyebrow">concept readiness</span>
           {gate.allMet ? (
             <p style={{ fontSize: 13, color: 'var(--pass-strong)', margin: '6px 0 0', fontFamily: 'var(--mono)' }}>
@@ -136,21 +135,14 @@ function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
           )}
         </header>
 
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 14 }}>
+        <ul className="grid gap-3.5" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {gate.concepts.map((c) => (
             <li key={c.concept}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'space-between',
-                  gap: 8,
-                  marginBottom: 6,
-                }}
-              >
+              <div className="flex items-baseline justify-between gap-2 mb-1.5">
                 <span
                   style={{
                     fontSize: 13,
+                    // dynamic: color driven by belowThreshold
                     color: c.belowThreshold ? 'var(--ink-2)' : 'var(--ink)',
                     fontFamily: 'var(--mono)',
                   }}
@@ -172,7 +164,7 @@ function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
               </div>
               <StabilityBar stability={c.stability} />
               {c.belowThreshold && c.cluster && topicSlugSet.has(c.concept) && (
-                <div style={{ marginTop: 6, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div className="flex gap-2.5 flex-wrap mt-1.5">
                   <a
                     href={`/explain/${encodeURIComponent(c.concept)}`}
                     style={{
@@ -194,21 +186,20 @@ function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
       {/* Below-threshold warning + deep-link */}
       {showGate && gate.primaryCluster && (
         <div
-          className="card"
+          className="card mb-6"
           data-testid="gate-below-threshold"
           role="alert"
           style={{
-            marginBottom: 24,
             borderColor: 'var(--warn)',
             background: 'var(--accent-soft)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
+          <div className="flex items-start gap-3.5 flex-wrap">
             <div style={{ flex: 1, minWidth: 200 }}>
               <span className="eyebrow" style={{ color: 'var(--accent-strong)' }}>
                 retention gap detected
               </span>
-              <p style={{ fontSize: 14, color: 'var(--ink-2)', margin: '8px 0 0', lineHeight: 1.55 }}>
+              <p className="mt-2" style={{ fontSize: 14, color: 'var(--ink-2)', margin: 0, lineHeight: 1.55 }}>
                 {gate.dueCardCount > 0 ? (
                   <>
                     You have{' '}
@@ -224,7 +215,7 @@ function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
                 )}
               </p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
+            <div className="flex flex-col gap-2 flex-shrink-0">
               <a
                 href={`/review?cluster=${encodeURIComponent(gate.primaryCluster)}`}
                 className="btn btn--primary"

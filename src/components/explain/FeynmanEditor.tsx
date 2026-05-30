@@ -161,9 +161,8 @@ function FeynmanEditorInner({
             type="button"
             onClick={handleGapPrompt}
             disabled={gapLoading}
-            className="btn btn--secondary"
+            className="btn btn--secondary mt-4"
             data-testid="gap-prompt-btn"
-            style={{ marginTop: 16 }}
           >
             {gapLoading ? 'Loading…' : 'Get follow-up questions'}
           </button>
@@ -172,7 +171,8 @@ function FeynmanEditorInner({
         {gapRefused && (
           <p
             data-testid="gap-prompt-refused"
-            style={{ marginTop: 14, fontSize: 13, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}
+            className="mt-3.5"
+            style={{ fontSize: 13, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}
           >
             Couldn't generate questions right now.
           </p>
@@ -183,10 +183,10 @@ function FeynmanEditorInner({
             data-testid="gap-prompt-questions"
             style={{ marginTop: 18, textAlign: 'left' }}
           >
-            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>
+            <p className="mb-2" style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>
               Follow-up questions:
             </p>
-            <ol style={{ paddingLeft: 20, margin: 0, display: 'grid', gap: 6 }}>
+            <ol className="pl-5 grid gap-1.5" style={{ margin: 0 }}>
               {gapQuestions.map((q, i) => (
                 <li key={i} style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.5 }}>
                   {q}
@@ -203,12 +203,12 @@ function FeynmanEditorInner({
     return (
       <form onSubmit={handleSave} data-testid="feynman-rubric">
         <div
+          className="mb-5"
           style={{
             padding: '16px 18px',
             background: 'var(--paper-2)',
             borderRadius: 8,
             border: '1px solid var(--rule)',
-            marginBottom: 20,
           }}
         >
           <span className="eyebrow">your explanation · {wc} words</span>
@@ -225,7 +225,7 @@ function FeynmanEditorInner({
           </p>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
+        <div className="mb-5">
           <h3
             style={{
               fontFamily: 'var(--serif)',
@@ -237,14 +237,14 @@ function FeynmanEditorInner({
           >
             Self-score your explanation
           </h3>
-          <p style={{ fontSize: 13, color: 'var(--ink-3)', margin: '0 0 16px', fontFamily: 'var(--mono)' }}>
+          <p className="mb-4" style={{ fontSize: 13, color: 'var(--ink-3)', margin: 0, fontFamily: 'var(--mono)' }}>
             Be honest — this is private. 1 = needs work, 5 = nailed it.
           </p>
 
-          <div style={{ display: 'grid', gap: 14 }}>
+          <div className="grid gap-3.5">
             {rubric.map((criterion) => (
               <div key={criterion.key}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div className="flex justify-between mb-1.5">
                   <label
                     htmlFor={`rubric-${criterion.key}`}
                     style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink)' }}
@@ -257,11 +257,11 @@ function FeynmanEditorInner({
                     {scores[criterion.key] ?? '—'} / 5
                   </span>
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '0 0 8px', lineHeight: 1.4 }}>
+                <p className="mb-2" style={{ fontSize: 12, color: 'var(--ink-3)', margin: 0, lineHeight: 1.4 }}>
                   {criterion.description}
                 </p>
                 <div
-                  style={{ display: 'flex', gap: 8 }}
+                  className="flex gap-2"
                   role="group"
                   aria-label={`${criterion.label} score`}
                   data-testid={`rubric-score-${criterion.key}`}
@@ -277,6 +277,7 @@ function FeynmanEditorInner({
                         height: 36,
                         borderRadius: 8,
                         border: '1px solid var(--rule)',
+                        // dynamic: background/color driven by selected score state
                         background:
                           scores[criterion.key] === n ? 'var(--accent)' : 'var(--paper-2)',
                         color: scores[criterion.key] === n ? 'white' : 'var(--ink-2)',
@@ -299,8 +300,8 @@ function FeynmanEditorInner({
         {errorMsg && (
           <div
             role="alert"
+            className="mb-3.5"
             style={{
-              marginBottom: 14,
               color: 'var(--error)',
               fontSize: 13,
               fontFamily: 'var(--mono)',
@@ -319,10 +320,11 @@ function FeynmanEditorInner({
 
   return (
     <form onSubmit={handleSubmit} data-testid="feynman-form">
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <label
           htmlFor="feynman-body"
-          style={{ fontSize: 13, color: 'var(--ink-2)', display: 'block', marginBottom: 6 }}
+          className="block mb-1.5"
+          style={{ fontSize: 13, color: 'var(--ink-2)' }}
         >
           Write your explanation below. Aim for ~{wordTarget} words.
         </label>
@@ -337,12 +339,11 @@ function FeynmanEditorInner({
           style={{ width: '100%' }}
         />
         <div
+          className="flex justify-between mt-1.5"
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginTop: 6,
             fontSize: 12,
             fontFamily: 'var(--mono)',
+            // dynamic: color driven by targetMet state
             color: targetMet ? 'var(--pass-strong)' : 'var(--ink-3)',
           }}
           aria-live="polite"
