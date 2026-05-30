@@ -8,6 +8,9 @@ import { SessionMerge } from '../components/SessionMerge';
 import MobileNavToggle from '../components/nav/MobileNavToggle';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import interTightLatinUrl from '@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2?url';
+import newsreaderLatinUrl from '@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2?url';
+import jetbrainsMonoLatinUrl from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url';
 
 interface Props {
   title: string;
@@ -47,6 +50,12 @@ const navLinks = [
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- Font preloads: above-the-fold faces only (latin, normal, opsz/wght axes) -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={interTightLatinUrl} />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={newsreaderLatinUrl} />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href={jetbrainsMonoLatinUrl} />
+
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -93,9 +102,9 @@ const navLinks = [
       </nav>
       <div class="nav__right">
         <MobileNavToggle client:media="(max-width: 767px)" links={navLinks} />
-        <SearchTrigger client:only="react" />
-        <ThemeToggle client:only="react" />
-        <AuthNav client:only="react" />
+        <SearchTrigger client:load />
+        <ThemeToggle client:load />
+        <AuthNav client:load />
       </div>
     </header>
     <SearchModal client:only="react" />
