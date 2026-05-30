@@ -25,17 +25,25 @@ const userId = session.user.id;
 // The slug param here is the `conceptSlug` — typically the topic slug (no cluster prefix).
 // Review cards use sourceRef = "<cluster>/<topicSlug>#<promptId>".
 // We count logs for any card whose sourceRef starts with any cluster prefix for this slug.
-const reviewCountRows = await db
-  .select({ count: sql<number>`cast(count(distinct ${reviewLogs.id}) as int)` })
-  .from(reviewLogs)
-  .innerJoin(reviewCards, eq(reviewLogs.cardId, reviewCards.id))
-  .where(
-    and(
-      eq(reviewLogs.userId, userId),
-      like(reviewCards.sourceRef, `%/${slug}#%`),
-      gte(reviewLogs.rating, 1),
+const [reviewCountRows, clusterRows] = await Promise.all([
+  db
+    .select({ count: sql<number>`cast(count(distinct ${reviewLogs.id}) as int)` })
+    .from(reviewLogs)
+    .innerJoin(reviewCards, eq(reviewLogs.cardId, reviewCards.id))
+    .where(
+      and(
+        eq(reviewLogs.userId, userId),
+        like(reviewCards.sourceRef, `%/${slug}#%`),
+        gte(reviewLogs.rating, 1),
+      ),
     ),
-  );
+  // Derive a cluster hint for the CTA: pick the first cluster prefix found on a card for this slug.
+  db
+    .select({ cluster: reviewCards.cluster })
+    .from(reviewCards)
+    .where(and(eq(reviewCards.userId, userId), like(reviewCards.sourceRef, `%/${slug}#%`)))
+    .limit(1),
+]);
 
 const reviewCount = reviewCountRows[0]?.count ?? 0;
 const needsMoreReviews = reviewCount < 2;
@@ -43,13 +51,6 @@ const needsMoreReviews = reviewCount < 2;
 // Allow override via query param ?override=1
 const override = Astro.url.searchParams.get('override') === '1';
 const showBlock = needsMoreReviews && !override;
-
-// Derive a cluster hint for the CTA: pick the first cluster prefix found on a card for this slug.
-const clusterRows = await db
-  .select({ cluster: reviewCards.cluster })
-  .from(reviewCards)
-  .where(and(eq(reviewCards.userId, userId), like(reviewCards.sourceRef, `%/${slug}#%`)))
-  .limit(1);
 
 const cluster = clusterRows[0]?.cluster ?? null;
 const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : '/review';

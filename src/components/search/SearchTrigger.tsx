@@ -5,10 +5,16 @@ function SearchTriggerInner() {
     window.dispatchEvent(new CustomEvent('search:open'));
   };
 
+  const handlePrefetch = () => {
+    window.dispatchEvent(new CustomEvent('search:prefetch'));
+  };
+
   return (
     <button
       type="button"
       onClick={handleClick}
+      onFocus={handlePrefetch}
+      onMouseEnter={handlePrefetch}
       aria-label="Search (Ctrl+K)"
       className="search-trigger"
     >
