@@ -1,23 +1,17 @@
 ---
-import DiagramIsland from './DiagramIsland';
-
 interface Props {
-  /** Mermaid source string. If omitted, inline SVG children are rendered via slot. */
-  src?: string;
+  /** Mermaid source — no longer supported; pass inline SVG via slot instead. */
+  src?: never;
   caption?: string;
   /** Depth-gate prop — accepted here, lint enforces correct usage (#144). */
   skip?: 'atomic-fact';
 }
 
-const { src, caption, skip } = Astro.props;
+const { caption, skip } = Astro.props;
 ---
 
 {skip === 'atomic-fact' ? (
   <div class="mdx-diagram mdx-diagram--skipped" data-skip={skip} aria-hidden="true"></div>
-) : src ? (
-  <figure class="mdx-diagram mdx-diagram--mermaid">
-    <DiagramIsland client:idle src={src} caption={caption} />
-  </figure>
 ) : (
   <figure class="mdx-diagram mdx-diagram--inline-svg">
     <div class="mdx-diagram__body">
@@ -38,25 +32,8 @@ const { src, caption, skip } = Astro.props;
   }
   .mdx-diagram--skipped { display: none; }
 
-  /* Reserve min-height to prevent layout shift while Mermaid hydrates */
-  .mdx-diagram--mermaid {
-    min-height: 160px;
-  }
-
   .mdx-diagram__body {
     overflow-x: auto;
-  }
-
-  :global(.mdx-diagram__mermaid) {
-    width: 100%;
-  }
-
-  /* Placeholder shown while Mermaid is loading */
-  :global(.mdx-diagram__placeholder) {
-    width: 100%;
-    min-height: 120px;
-    background: var(--paper);
-    border-radius: 4px;
   }
 
   :global(.mdx-diagram__svg-wrap) {
@@ -68,17 +45,6 @@ const { src, caption, skip } = Astro.props;
     height: auto;
     display: block;
     margin: 0 auto;
-  }
-
-  :global(.mdx-diagram__error) {
-    padding: 12px;
-    color: var(--ink-2);
-  }
-  :global(.mdx-diagram__error pre) {
-    font-family: var(--mono);
-    font-size: 12px;
-    white-space: pre-wrap;
-    margin: 8px 0 0;
   }
 
   .mdx-diagram__caption,
