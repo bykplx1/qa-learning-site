@@ -157,7 +157,7 @@ interface ActivityItem {
   kind: 'lesson' | 'quiz' | 'project';
   slug: string;
   title: string;
-  timestamp: string;
+  timestamp: string | Date;
   href: string;
   score?: number;
   total?: number;
@@ -262,12 +262,22 @@ function RetentionLeadSection({ summary }: { summary: RetentionSummary }) {
 
 type ProfileData = Omit<ProfilePayload, 'recentActivity'> & { recentActivity: ActivityItem[] };
 
-function ProfileShellInner() {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string; name?: string | null; email: string } | null>(null);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+interface ProfileShellProps {
+  initialUser?: { id: string; name?: string | null; email: string } | null;
+  initialData?: ProfileData | null;
+}
+
+function ProfileShellInner({ initialUser, initialData }: ProfileShellProps) {
+  const [loading, setLoading] = useState(() => initialUser === undefined);
+  const [user, setUser] = useState<{ id: string; name?: string | null; email: string } | null>(
+    initialUser ?? null,
+  );
+  const [profile, setProfile] = useState<ProfileData | null>(initialData ?? null);
 
   useEffect(() => {
+    // When SSR props are provided, skip the client fetch on first paint.
+    if (initialUser !== undefined) return;
+
     let cancelled = false;
     (async () => {
       const session = await authClient.getSession();
@@ -472,8 +482,8 @@ function ProfileShellInner() {
   );
 }
 
-export default function ProfileShell() {
-  return <ErrorBoundary label="ProfileShell"><ProfileShellInner /></ErrorBoundary>;
+export default function ProfileShell(props: ProfileShellProps) {
+  return <ErrorBoundary label="ProfileShell"><ProfileShellInner {...props} /></ErrorBoundary>;
 }
 
 // ─── Inline SubmissionsList (avoids double-island nesting) ────────────────────
