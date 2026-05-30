@@ -8,7 +8,7 @@ export function gitFirstCommittedAt(
 ): Date | null {
   const cacheKey = `${cwd}::${relativePath}`;
   if (cache.has(cacheKey)) return cache.get(cacheKey)!;
-  let out = '';
+  let out: string;
   try {
     out = execFileSync(
       'git',

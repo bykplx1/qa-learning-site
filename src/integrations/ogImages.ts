@@ -21,7 +21,7 @@ function walkMdx(dir: string, out: string[] = []): string[] {
 }
 
 function parseCurriculumFrontmatter(raw: string): CurriculumMeta | null {
-  const normalized = raw.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const m = normalized.match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   let parsed: unknown;

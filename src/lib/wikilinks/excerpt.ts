@@ -1,8 +1,8 @@
-const FRONTMATTER_RE = /^﻿?---[\s\S]*?^---\n?/m;
+const FRONTMATTER_RE = /^\uFEFF?---[\s\S]*?^---\n?/m;
 const FENCED_CODE_RE = /^```[\s\S]*?^```\n?/gm;
 
 export function extractExcerpt(markdown: string): string {
-  let text = markdown.replace(FRONTMATTER_RE, '').replace(FENCED_CODE_RE, '');
+  const text = markdown.replace(FRONTMATTER_RE, '').replace(FENCED_CODE_RE, '');
 
   const lines = text.split('\n');
   const buf: string[] = [];

@@ -13,8 +13,6 @@ import type { QuizQuestion } from '../../../lib/quiz/schema';
 import { loadQuizBySlug } from '../../../lib/quiz/loadQuiz';
 import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../../lib/encoding/repair';
-import type { CurriculumCluster } from '../../../lib/curriculum/schema';
-import { CURRICULUM_CLUSTERS } from '../../../lib/curriculum/schema';
 import VerifiedStamp from '../../../components/mdx/VerifiedStamp.astro';
 
 export async function getStaticPaths() {

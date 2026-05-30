@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { join } from 'node:path';
 import { buildRssXml, type RssItem } from '../lib/rss/buildRss';
 import { gitFirstCommittedAt } from '../lib/rss/publishedAt';
 import { clusterDisplay } from '../lib/curriculum/order';

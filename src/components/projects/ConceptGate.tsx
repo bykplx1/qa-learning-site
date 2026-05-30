@@ -100,7 +100,7 @@ function StabilityBar({ stability }: { stability: number }) {
   );
 }
 
-function ConceptGateInner({ projectSlug, gate, validTopicSlugs }: Props) {
+function ConceptGateInner({ projectSlug: _projectSlug, gate, validTopicSlugs }: Props) {
   const topicSlugSet = new Set(validTopicSlugs);
   const [overridden, setOverridden] = useState(false);
 

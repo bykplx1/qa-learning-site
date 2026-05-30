@@ -12,7 +12,7 @@
  * one successful review cycle.  Adjust in STABILITY_THRESHOLD to tune.
  */
 
-import { and, eq, lte, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { reviewCards } from '../../db/schema';
 

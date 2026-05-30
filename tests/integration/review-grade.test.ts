@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { eq, count } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../src/db';
 import { users, reviewCards, reviewLogs, prompts } from '../../src/db/schema';
 import { auth } from '../../src/lib/auth';
