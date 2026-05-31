@@ -8,9 +8,11 @@ import { SessionMerge } from '../components/SessionMerge';
 import MobileNavToggle from '../components/nav/MobileNavToggle';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import Footer from '../components/Footer.astro';
 import interTightLatinUrl from '@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2?url';
 import newsreaderLatinUrl from '@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2?url';
 import jetbrainsMonoLatinUrl from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url';
+import { OG_WIDTH, OG_HEIGHT } from '../lib/og/generate';
 
 interface Props {
   title: string;
@@ -21,6 +23,8 @@ interface Props {
   image?: string;
   /** Emit noindex,nofollow robots meta (private/dev/auth-gated pages). */
   noindex?: boolean;
+  /** Structured data objects to emit as application/ld+json. Can be a single object or array. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
@@ -30,9 +34,11 @@ const {
   ogType = 'website',
   image = '/og/default.png',
   noindex = false,
+  jsonLd,
 } = Astro.props;
 
 const imageUrl = new URL(image, Astro.site ?? Astro.url).href;
+const jsonLdArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
 const path = Astro.url.pathname;
 const isLessons = path.startsWith('/lessons');
@@ -65,17 +71,29 @@ const navLinks = [
     <link rel="canonical" href={canonicalUrl} />
 
     <!-- Open Graph -->
+    <meta property="og:site_name" content="QA Learning" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={imageUrl} />
+    <meta property="og:image:width" content={String(OG_WIDTH)} />
+    <meta property="og:image:height" content={String(OG_HEIGHT)} />
+    <meta property="og:image:alt" content={title} />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@qalearning" />
+    <meta name="twitter:creator" content="@qalearning" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
+
+    <!-- Structured data -->
+    {jsonLdArray.map((schema) => (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
 
     <script is:inline>
       (function () {
@@ -115,6 +133,7 @@ const navLinks = [
     <SearchModal client:only="react" />
     <SessionMerge client:idle />
     <slot />
+    <slot name="footer"><Footer /></slot>
     <Analytics />
     <SpeedInsights />
   </body>

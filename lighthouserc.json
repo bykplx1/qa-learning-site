@@ -4,8 +4,7 @@
       "url": [
         "http://localhost:4321/",
         "http://localhost:4321/lessons/foundations/qa-mindset",
-        "http://localhost:4321/exam",
-        "http://localhost:4321/profile"
+        "http://localhost:4321/exam"
       ],
       "numberOfRuns": 5,
       "settings": {

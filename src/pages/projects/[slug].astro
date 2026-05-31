@@ -82,12 +82,24 @@ function splitTitleAccent(t: string): { head: string; tail: string } {
 const { head, tail } = splitTitleAccent(title);
 
 const canonicalUrl = new URL(`/projects/${project.data.slug}/`, Astro.site).href;
+const siteOrigin = (Astro.site ?? Astro.url).origin;
+
+const projectJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteOrigin + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Build', item: siteOrigin + '/projects' },
+    { '@type': 'ListItem', position: 3, name: title, item: canonicalUrl },
+  ],
+};
 ---
 
 <BaseLayout
   title={`${title} — Build — QA Learning`}
   description={`${TIER_LABELS[tier]} project · ${estimate}. ${acceptanceCriteria.length} acceptance criteria.`}
   canonicalUrl={canonicalUrl}
+  jsonLd={projectJsonLd}
   ogType="article"
   image={`/og/project-${project.data.slug}.png`}
 >

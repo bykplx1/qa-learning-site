@@ -48,6 +48,37 @@ const layerClass =
 
 const ogDescription = topic.body ? repairWin1252(extractExcerpt(topic.body)) : undefined;
 const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}/`, Astro.site).href;
+const siteOrigin = (Astro.site ?? Astro.url).origin;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'LearningResource',
+    name: title,
+    description: ogDescription,
+    url: canonicalUrl,
+    learningResourceType: 'lesson',
+    educationalLevel: layer,
+    keywords: tags.join(', '),
+    timeRequired: `PT${estimatedEncodingMinutes}M`,
+    inLanguage: 'en',
+    provider: {
+      '@type': 'Organization',
+      name: 'QA Learning',
+      url: siteOrigin,
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteOrigin + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Lessons', item: siteOrigin + '/lessons' },
+      { '@type': 'ListItem', position: 3, name: formatCluster(cluster), item: siteOrigin + '/lessons' },
+      { '@type': 'ListItem', position: 4, name: title, item: canonicalUrl },
+    ],
+  },
+];
 
 const quizQuestions: QuizQuestion[] = loadQuizBySlug(topic.data.slug)?.questions ?? [];
 
@@ -79,6 +110,7 @@ const { options: endCtaOptions } = resolveEndCta({
   canonicalUrl={canonicalUrl}
   ogType="article"
   image={`/og/${topic.data.slug}.png`}
+  jsonLd={jsonLd}
 >
   <div class="lesson-grid">
     <aside class="lesson-sidebar">
