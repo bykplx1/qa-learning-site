@@ -1,0 +1,120 @@
+---
+slug: sec-a11y-capstone-juice-shop
+title: "Security + A11y Capstone: Full Audit with CI Gate on OWASP Juice Shop"
+tier: capstone
+track: sec-a11y
+target:
+  name: "OWASP Juice Shop"
+  ref: "https://github.com/juice-shop/juice-shop — pin to tag v17.1.1; run locally via Docker: docker run -d -p 3000:3000 bkimminich/juice-shop:v17.1.1"
+estimate: 4–5 days
+rubric: sec-a11y-capstone
+requiredConcepts:
+  - security-testing
+  - accessibility-testing
+acceptanceCriteria:
+  - You run OWASP Juice Shop locally and in CI at the pinned Docker tag.
+  - CI runs the ZAP baseline scan and axe scan on every push; the job fails if any new MEDIUM+ ZAP alert or WCAG critical/serious violation appears relative to the committed baseline.
+  - You produce a complete audit report (`report/audit.md`) covering all findings from both tools, triaged by severity with OWASP/WCAG references.
+  - You manually verify at least three ZAP findings by reproducing them in a browser (not just accepting the tool output) and document the reproduction steps.
+  - You document at least two accessibility findings that are also security-relevant (e.g. missing labels enabling credential stuffing, insufficient error messaging).
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - "You attest that CI is green at submission time (ci_green: true in your submission)."
+---
+
+## Brief
+
+Build a security and accessibility audit pipeline against
+[OWASP Juice Shop](https://owasp.org/www-project-juice-shop/) that runs in CI,
+enforces a quality gate, and produces a professional-grade audit report. This is
+a portfolio artifact — it should read like something you would deliver to a
+client or present in a security review meeting.
+
+You will combine automated scanning (ZAP + axe), manual verification, and CI
+enforcement into a reproducible pipeline. The quality gate is the piece that
+separates this from the mid-tier project: once your baseline is set, no new
+issue can ship without breaking the CI job.
+
+> **Drift notice.** This brief pins Juice Shop at tag `v17.1.1`
+> (`bkimminich/juice-shop:v17.1.1` on Docker Hub). Later versions may introduce
+> or fix issues; if you use a different tag, record it clearly in your README
+> and note any differences from the findings documented here. Do not run this
+> against a shared production instance — always use the local Docker image.
+
+## Suggested approach
+
+### Phase 1 — Baseline and toolchain (Day 1)
+
+1. Set up the environment from the mid-tier project (or start fresh):
+   ```
+   docker run -d -p 3000:3000 bkimminich/juice-shop:v17.1.1
+   ```
+2. Run the ZAP baseline scan and axe scans to establish your initial baseline.
+   Commit the baseline outputs to `baselines/zap-baseline.json` and
+   `baselines/axe/` — these are your reference for the CI gate.
+3. Write a comparison script (`scripts/check-baseline.ts` or `.js`) that:
+   - Reads the current scan output
+   - Compares MEDIUM+ ZAP alerts against the committed baseline
+   - Compares WCAG critical/serious axe violations against the baseline
+   - Exits with code 1 if new issues appear (not in baseline), 0 otherwise
+
+### Phase 2 — CI pipeline (Day 2)
+
+4. Write a `.github/workflows/security-a11y.yml` that:
+   - Starts the Juice Shop Docker container as a service
+   - Runs the ZAP baseline scan via Docker
+   - Runs the axe scan suite
+   - Runs your comparison script and fails the job on new findings
+   - Uploads `report/` as a CI artifact on every run
+5. Confirm: the job is green against the pinned baseline. Push a deliberate
+   regression (add a new page with a missing label), verify the job turns red,
+   then revert and confirm green again.
+
+### Phase 3 — Manual verification (Days 3–4)
+
+6. For three MEDIUM+ ZAP findings, reproduce them manually:
+   - Open the target in a browser with DevTools
+   - Follow the reproduction path the ZAP alert describes
+   - Screenshot or screencast the moment of exploitation or observation
+   - Write a reproduction section in `report/audit.md`:
+     `Steps to reproduce | Evidence | Impact | Recommended fix`
+7. For two accessibility findings, cross-reference to a security concern:
+   - Example: a missing `<label>` on the password field degrades both screen
+     reader usability (WCAG 1.3.1) and autocomplete hygiene (credential managers
+     rely on label association to fill the correct field).
+   - Document the overlap explicitly — this is the key insight of the track.
+
+### Phase 4 — Audit report and README (Day 5)
+
+8. Write `report/audit.md` with:
+   - Executive summary (3–5 sentences, non-engineer readable)
+   - Full findings table (all tools, all severities, with references)
+   - Manual verification section (three findings with reproduction steps)
+   - Cross-reference section (two a11y ↔ security overlaps)
+   - Scope and limitations (what the scan does NOT cover, e.g. active exploits,
+     authenticated flows beyond login)
+9. Add a green CI badge to the README. Add a paragraph explaining: what the
+   quality gate checks, what it does NOT check, and what you would add if this
+   were a real production audit.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Green CI badge (ZAP + axe gate, failing on new issues)
+- `baselines/` — committed baseline scan outputs
+- `report/audit.md` — full audit with manual verification and cross-references
+- `scripts/check-baseline.ts` — the comparison gate script
+- `.github/workflows/security-a11y.yml` — the full pipeline
+- A README covering: how to run locally, how CI works, and one limitation of
+  automated scanning you encountered
+
+## Why this matters
+
+Security and accessibility automation without a gate is noise. The same scan
+that finds 40 alerts on day one finds 40 alerts on day 90 — and nobody acts on
+any of them. A committed baseline plus a comparison gate transforms your scan
+from a report into a regression test: new issues block the build, existing
+issues are documented, and the signal-to-noise ratio stays manageable.
+
+This is the workflow that production security engineering teams actually use.
+This project makes you build it from scratch so you understand every decision
+in the pipeline — not just run a tool someone else configured.
