@@ -1,8 +1,19 @@
 ---
 slug: database-testing
-title: Database Testing
+title: Database Testing with Testcontainers + Drizzle
 cluster: non-functional
 layer: patterns
+kind: tool
+verified:
+  tool: Testcontainers (PostgreSQL module)
+  versions:
+    "@testcontainers/postgresql": "12.0.1"
+    testcontainers: "12.0.1"
+    drizzle-orm: "0.45.2"
+    drizzle-kit: "0.31.10"
+    vitest: "4.1.7"
+    node: ">=22.12.0"
+  date: "2026-05-31"
 prerequisites:
   - unit-integration-e2e-boundaries
   - mocking-stubbing-test-doubles
@@ -14,28 +25,249 @@ related:
   - security-testing
   - observability-for-testers
   - chaos-and-resilience-testing
-tags: [database, postgres, migrations, sql, testcontainers, data-integrity]
+tags: [database, postgres, migrations, sql, testcontainers, drizzle, data-integrity]
 estimatedEncodingMinutes: 22
 ---
 
 import Diagram from '../../../src/components/mdx/Diagram.astro';
 import Prompt from '../../../src/components/mdx/Prompt.astro';
 import Feynman from '../../../src/components/mdx/Feynman.astro';
+import Maintain from '../../../src/components/mdx/Maintain.astro';
 
 ## Core Idea
 
-Database testing is **the practice of verifying that your system's persistent state survives everything you put it through**: schema migrations, concurrent writes, partial failures, and data volume growth. It is not "did the SELECT return the right rows" — it is *did the data model survive the operations we ran, and will it survive next week's*.
-
-The test pyramid inverts for data. Application code favours unit tests; data-layer tests favour integration tests against a real database. In-memory substitutes (SQLite, H2) diverge from production dialects in ways that produce false confidence — constraint enforcement, query plans, and isolation behaviour are all dialect-specific. The structural answer is Testcontainers: a real Postgres instance spun up per test suite, destroyed when done.
+Database testing is **the practice of verifying that your system's persistent state survives everything you put it through**: schema migrations, concurrent writes, partial failures, and data-volume growth. The test pyramid inverts for data — application code favours unit tests; data-layer tests favour integration tests against a **real** database. In-memory substitutes (SQLite, H2) diverge from production dialects in constraint enforcement, query plans, and isolation behaviour, producing false confidence. The structural answer is **Testcontainers**: a throwaway Postgres instance spun up per test suite via Docker, then destroyed. The ~5-second startup cost buys production-faithful behaviour in every test that follows.
 
 The asymmetric stakes: most bugs cost a sprint to fix; data-corruption and migration disasters can be irreversible once they reach production.
 
-> The test pyramid inverts for data: most data-layer tests should run against a real database, not an in-memory substitute. Data errors are the one bug class where "fix it in prod" may not be an option.
+> The test pyramid inverts for data. Data errors are the one bug class where "fix it in prod" may not be an option.
 
-## Diagram
+## 1. Set up properly
 
-<Diagram caption="The expand-contract migration pattern for safely renaming a column — five phases, each independently reversible, each deployed separately">
+Everything from an empty folder to a green Testcontainers + Drizzle integration test. **Requires Docker Desktop running.**
+
+**Prerequisites:** Node ≥ 22.12.0, Docker Desktop, a terminal.
+
+### Create the project
+
+```bash
+mkdir db-runbook && cd db-runbook
+npm init -y
 ```
+
+### Install dependencies (pinned)
+
+```bash
+npm install drizzle-orm@0.45.2 postgres@3.4.9
+npm install --save-dev @testcontainers/postgresql@12.0.1 testcontainers@12.0.1 \
+  drizzle-kit@0.31.10 vitest@4.1.7 tsx@4.19.4
+```
+
+### Project structure
+
+```
+db-runbook/
+  src/
+    db/
+      schema.ts       # Drizzle table definitions
+      migrate.ts      # migration helper
+  drizzle/            # generated migration SQL (do not hand-edit)
+  tests/
+    integration/
+      constraints.test.ts
+  drizzle.config.ts
+  package.json
+  tsconfig.json
+```
+
+### Configure TypeScript
+
+Create `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*", "tests/**/*", "drizzle.config.ts"]
+}
+```
+
+### Define the schema
+
+Create `src/db/schema.ts`:
+
+```ts
+import { pgTable, serial, text, integer, unique } from 'drizzle-orm/pg-core';
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull(),
+  name: text('name').notNull(),
+}, (t) => [unique('users_email_unique').on(t.email)]);
+
+export const accounts = pgTable('accounts', {
+  id: serial('id').primaryKey(),
+  owner: text('owner').notNull(),
+  balance: integer('balance').notNull().default(0),
+});
+```
+
+### Configure Drizzle Kit
+
+Create `drizzle.config.ts`:
+
+```ts
+import type { Config } from 'drizzle-kit';
+
+export default {
+  schema: './src/db/schema.ts',
+  out: './drizzle',
+  dialect: 'postgresql',
+} satisfies Config;
+```
+
+### Generate migrations
+
+```bash
+npx drizzle-kit generate
+```
+
+This writes `drizzle/0000_*.sql`. Do not hand-edit the generated SQL.
+
+### Create the migration helper
+
+Create `src/db/migrate.ts`:
+
+```ts
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import postgres from 'postgres';
+
+export async function runMigrations(connectionString: string) {
+  const client = postgres(connectionString, { max: 1 });
+  const db = drizzle(client);
+  await migrate(db, { migrationsFolder: './drizzle' });
+  await client.end();
+}
+```
+
+### Write the first test
+
+Create `tests/integration/constraints.test.ts`:
+
+```ts
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { runMigrations } from '../../src/db/migrate.js';
+import { users } from '../../src/db/schema.js';
+
+let container: StartedPostgreSqlContainer;
+let db: ReturnType<typeof drizzle>;
+let client: ReturnType<typeof postgres>;
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer('postgres:16-alpine').start();
+  const url = container.getConnectionUri();
+  await runMigrations(url);
+  client = postgres(url);
+  db = drizzle(client);
+}, 60_000); // allow container startup
+
+afterAll(async () => {
+  await client?.end();
+  await container?.stop();
+});
+
+describe('unique email constraint', () => {
+  test('first insert succeeds', async () => {
+    await expect(
+      db.insert(users).values({ email: 'alice@example.com', name: 'Alice' })
+    ).resolves.toBeDefined();
+  });
+
+  test('duplicate email throws a unique-violation error', async () => {
+    await db.insert(users).values({ email: 'bob@example.com', name: 'Bob' });
+    await expect(
+      db.insert(users).values({ email: 'bob@example.com', name: 'Bob 2' })
+    ).rejects.toThrow(/unique/i);
+    // SQLite silently allows duplicate emails; Postgres enforces the constraint.
+  });
+});
+```
+
+### Configure Vitest for integration tests
+
+Add to `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  }
+}
+```
+
+Create `vitest.integration.config.ts`:
+
+```ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    include: ['tests/integration/**/*.test.ts'],
+    testTimeout: 90_000,
+  },
+});
+```
+
+### Run to green
+
+```bash
+npm run test:integration
+```
+
+Expected output:
+
+```
+ RUN  v4.1.7
+
+ ✓ tests/integration/constraints.test.ts (2 tests) 6.3s
+
+ Test Files  1 passed (1)
+ Tests  2 passed (2)
+ Duration  6.3s (container start + migration + tests)
+```
+
+If both tests pass, the setup is complete.
+
+<Diagram caption="Testcontainers lifecycle and the expand-contract migration pattern — how the two interact to validate safe schema changes">
+```
+TESTCONTAINERS LIFECYCLE (per test suite)
+  ┌─────────────────────────────────────────────────────────┐
+  │ beforeAll: PostgreSqlContainer('postgres:16').start()   │
+  │   → pulls image (first run only) → starts container    │
+  │   → exposes random host port → returns connectionUri   │
+  ├─────────────────────────────────────────────────────────┤
+  │ runMigrations(url)  — drizzle migrate()                 │
+  │   → applies every SQL file in drizzle/ in order        │
+  │   → schema is identical to production schema            │
+  ├─────────────────────────────────────────────────────────┤
+  │ TESTS RUN  (isolated, real Postgres constraints)        │
+  ├─────────────────────────────────────────────────────────┤
+  │ afterAll: container.stop()  → container + data removed  │
+  └─────────────────────────────────────────────────────────┘
+  Key property: each test suite starts from a clean schema.
+  Shared dev DB → tests develop ordering dependencies.
+  Testcontainers → each suite is fully isolated.
+
+EXPAND-CONTRACT MIGRATION (safe column rename)
 GOAL: rename users.email_address → users.email
 
   EXPAND PHASE
@@ -43,149 +275,181 @@ GOAL: rename users.email_address → users.email
   │ Phase 1 — Add new column (nullable)                     │
   │   ALTER TABLE users ADD COLUMN email TEXT;              │
   │   Reversible: DROP COLUMN email                         │
-  │   Running app: reads email_address only ✓               │
   └──────────────────────────┬──────────────────────────────┘
                              │ deploy
   ┌──────────────────────────▼──────────────────────────────┐
   │ Phase 2 — Dual-write in application code                │
   │   App writes both email_address AND email on every save │
   │   Reversible: stop writing email column                 │
-  │   Running app: reads email_address, writes both ✓       │
   └──────────────────────────┬──────────────────────────────┘
                              │ deploy
   ┌──────────────────────────▼──────────────────────────────┐
   │ Phase 3 — Backfill existing rows                        │
   │   UPDATE users SET email = email_address                │
-  │   WHERE email IS NULL;   (batch; 1k rows at a time)     │
+  │   WHERE email IS NULL;   (batch; 1 000 rows at a time)  │
   │   Reversible: rows still have email_address             │
   └──────────────────────────┬──────────────────────────────┘
                              │ deploy
   CONTRACT PHASE
   ┌──────────────────────────▼──────────────────────────────┐
   │ Phase 4 — Read from new column; add NOT NULL constraint │
-  │   App reads email; ALTER TABLE users                    │
-  │   ALTER COLUMN email SET NOT NULL;                      │
+  │   ALTER TABLE users ALTER COLUMN email SET NOT NULL;    │
   │   Reversible: revert app + DROP NOT NULL                │
   └──────────────────────────┬──────────────────────────────┘
                              │ deploy
   ┌──────────────────────────▼──────────────────────────────┐
   │ Phase 5 — Drop old column (contract)                    │
   │   ALTER TABLE users DROP COLUMN email_address;          │
-  │   ⚠ NOT reversible without a backup                     │
+  │   NOT reversible without a backup                       │
   └─────────────────────────────────────────────────────────┘
 
-  Single-step rename (the anti-pattern):
+  Anti-pattern (single-step rename):
     ALTER TABLE users RENAME COLUMN email_address TO email;
-    → locks table for entire duration (seconds → hours on 100M rows)
+    → table-lock for entire operation (hours on 100 M rows)
     → breaks running app reading email_address mid-deploy
     → irreversible mid-deploy
 ```
 </Diagram>
 
-## Worked Example
+## 2. Implement + best practice
 
-### The lost-update race at READ COMMITTED
+### Test concurrent writes — the lost-update race
 
-Consider an `accounts` table with `balance = 1000`. Two concurrent sessions both try to subtract 100:
+At Postgres's default `READ COMMITTED` isolation level, two concurrent sessions can each read a value and then write back a derived value, silently losing one update.
 
-```sql
--- Session A                          -- Session B (concurrent)
-BEGIN;                                 BEGIN;
-SELECT balance FROM accounts
-  WHERE id = 1;
--- sees 1000                           SELECT balance FROM accounts
-                                         WHERE id = 1;
-                                       -- also sees 1000
+```ts
+// tests/integration/concurrency.test.ts
+import { sql } from 'drizzle-orm';
+import { accounts } from '../../src/db/schema.js';
 
-UPDATE accounts
-  SET balance = 1000 - 100
-  WHERE id = 1;
--- writes 900
+test('atomic update prevents lost-update race', async () => {
+  const [row] = await db.insert(accounts)
+    .values({ owner: 'alice', balance: 1000 })
+    .returning();
 
-COMMIT;                                -- Session B hasn't committed yet
+  // Fix: atomic update — no separate read required.
+  // `SET balance = balance - 100` serialises at the row lock;
+  // both concurrent subtractions apply, giving 800 not 900.
+  await Promise.all([
+    db.update(accounts).set({ balance: sql`balance - 100` }).where(sql`id = ${row.id}`),
+    db.update(accounts).set({ balance: sql`balance - 100` }).where(sql`id = ${row.id}`),
+  ]);
 
-                                       UPDATE accounts
-                                         SET balance = 1000 - 100
-                                         WHERE id = 1;
-                                       -- also writes 900, not 800!
-                                       COMMIT;
--- Final balance: 900, not 800 — one update was silently lost
-```
+  const [after] = await db.select({ balance: accounts.balance })
+    .from(accounts).where(sql`id = ${row.id}`);
 
-This is the **lost update** problem. It occurs at Postgres's default `READ COMMITTED` isolation level when two transactions each read *then* write. Three valid fixes:
-
-**Fix 1 — Atomic update (no separate read):**
-```sql
-UPDATE accounts SET balance = balance - 100 WHERE id = 1;
--- The database serialises the row-level lock; both subtractions apply
--- Final balance: 800 ✓
-```
-
-**Fix 2 — Pessimistic lock (SELECT ... FOR UPDATE):**
-```sql
-BEGIN;
-SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;
--- Session B blocks here until Session A commits
-UPDATE accounts SET balance = balance - 100 WHERE id = 1;
-COMMIT;
-```
-
-**Fix 3 — SERIALIZABLE isolation:**
-```sql
-BEGIN ISOLATION LEVEL SERIALIZABLE;
--- One session will abort with serialization_failure; application must retry
-```
-
-**The test for this:** reproduce the race with two parallel transactions; assert final balance equals `1000 - (2 × 100) = 800`. A test that runs the operations sequentially will always pass and will never catch the bug.
-
-### Testcontainers integration test pattern
-
-```typescript
-// vitest integration test — real Postgres via Testcontainers
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
-import { drizzle } from 'drizzle-orm/node-postgres';
-
-let container: StartedPostgreSqlContainer;
-let db: ReturnType<typeof drizzle>;
-
-beforeAll(async () => {
-  container = await new PostgreSqlContainer('postgres:16').start();
-  db = drizzle(container.getConnectionString());
-  await migrate(db, { migrationsFolder: './drizzle' });
-}, 60_000); // allow container startup time
-
-afterAll(async () => {
-  await container.stop();
-});
-
-test('createUser enforces unique email constraint', async () => {
-  await db.insert(users).values({ email: 'a@b.com', name: 'Alice' });
-
-  // Second insert with same email must throw — the constraint is what we're testing
-  await expect(
-    db.insert(users).values({ email: 'a@b.com', name: 'Bob' })
-  ).rejects.toThrow(/unique/i);
-  // SQLite in-memory would pass this test trivially; Postgres enforces it correctly
+  expect(after.balance).toBe(800);
 });
 ```
 
-The key property: this test catches a `CHECK` or `UNIQUE` constraint violation that SQLite silently ignores. The ~5-second Testcontainers startup cost pays for production-faithful behaviour in every test that follows.
+> Use `SET balance = balance - 100` (atomic), not `SET balance = ${currentValue - 100}` (read-then-write). The former serialises at the row lock; the latter silently loses concurrent updates at `READ COMMITTED`.
 
-## Common Pitfalls
+### Test migration up and down paths
 
-- **Using SQLite (or any in-memory substitute) for Postgres-deployed code.** SQL dialects diverge on constraint enforcement, `RETURNING` clauses, `ON CONFLICT` syntax, and JSON operators. A passing SQLite test suite gives false confidence. Fix: use Testcontainers to spin up a real Postgres per test suite. The ~5-second startup cost is worth it; silent dialect divergence is not.
+```ts
+// tests/integration/migrations.test.ts
+test('addColumn migration can be rolled back cleanly', async () => {
+  const result = await db.execute(sql`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables
+      WHERE table_name = 'users'
+    )
+  `);
+  expect(result.rows[0].exists).toBe(true);
 
-- **Single-step migrations for rename, type-change, or NOT NULL addition.** A single `ALTER TABLE ... RENAME COLUMN` locks the table for the entire operation — seconds on a dev table, hours on a 100M-row production table. Fix: use expand-contract (five phases, each deployed separately). Each phase is independently reversible; the single-step rename is not.
+  // Apply a hypothetical addColumn migration (up)
+  await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`);
 
-- **`ALTER TABLE ... ADD COLUMN ... NOT NULL` without a default on large tables.** In Postgres before v11, this rewrites the entire table. In v11+ it is metadata-only for constant defaults but still blocks for non-constant. Fix: add the column nullable first (expand), backfill, then add the constraint (contract). Know your Postgres version.
+  // Roll back (down)
+  await db.execute(sql`ALTER TABLE users DROP COLUMN IF EXISTS bio`);
+
+  // Verify schema is restored
+  const cols = await db.execute(sql`
+    SELECT column_name FROM information_schema.columns
+    WHERE table_name = 'users'
+  `);
+  const colNames = cols.rows.map((r: { column_name: string }) => r.column_name);
+  expect(colNames).not.toContain('bio');
+});
+```
+
+Every migration that has never been reversed is a migration that will fail the rollback at 2 a.m. Test the down path before shipping.
+
+### Use per-test transaction rollback for speed
+
+When tests do not need to verify the commit path, wrap each test in a transaction and roll back rather than truncating:
+
+```ts
+beforeEach(async () => {
+  await client.unsafe('BEGIN');
+});
+
+afterEach(async () => {
+  await client.unsafe('ROLLBACK');
+});
+```
+
+Rollback is faster than `TRUNCATE` — it is a metadata operation with no disk writes on the cleanup path.
+
+### Review generated migrations before committing
+
+```bash
+# After editing schema.ts:
+npx drizzle-kit generate
+# Read the generated SQL before staging:
+cat drizzle/0001_*.sql
+```
+
+ORM migration generators occasionally produce `DROP COLUMN` when the intent was a rename. Read the diff; missing a destructive change is large.
+
+## 3. Common pitfalls
+
+- **Using SQLite (or any in-memory substitute) for Postgres-deployed code.** SQL dialects diverge on constraint enforcement, `RETURNING` clauses, `ON CONFLICT` syntax, and JSON operators. A passing SQLite test suite gives false confidence. Fix: use Testcontainers to spin up a real Postgres per test suite. The ~5-second container startup cost is worth it; silent dialect divergence is not.
+
+- **Single-step migrations for rename, type-change, or NOT NULL addition.** `ALTER TABLE ... RENAME COLUMN` locks the table for the entire operation — seconds on a dev table, hours on a 100 M-row production table. Fix: use expand-contract (five phases, each deployed separately). Each phase is independently reversible; the single-step rename is not.
+
+- **`ALTER TABLE ... ADD COLUMN ... NOT NULL` without a default on large tables.** In Postgres before v11, this rewrites the entire table. In v11+ it is metadata-only for constant defaults but still blocks for non-constant expressions. Fix: add the column nullable first (expand), backfill in batches, then add the `NOT NULL` constraint (contract). Know your Postgres version.
 
 - **Mocking the database in integration tests.** Mocks make assumptions about DB behaviour that diverge silently — constraint enforcement, transaction rollback, `RETURNING` values. The bug surfaces only when the code hits a real database. Fix: use Testcontainers or a dedicated test schema with per-test transaction rollback. Mocks belong at the service boundary, not the data boundary.
 
-- **No test for the migration down path.** Deploy processes need the rollback path. A migration that has never been reversed is a migration that will fail at 2 a.m. Fix: test both `up` and `down` for every migration; verify the down restores the prior schema exactly.
+- **No test for the migration down path.** Deploy processes need the rollback path. A migration that has never been reversed is a migration that will fail at 2 a.m. Fix: test both the up and down for every migration; verify the down restores the prior schema exactly.
 
 - **Shared development database for integration tests.** Tests that share a database develop ordering dependencies — a test passes in isolation but fails in CI because a prior test left state. Fix: use per-job isolated databases (GHA `services:` block or Testcontainers). No amount of `beforeEach` cleanup is as reliable as starting fresh.
 
-- **Trusting auto-generated migrations without review.** ORM migration generators occasionally produce `DROP COLUMN` when the intent was a rename, or add an unintended default that slows inserts. Fix: read the generated SQL before committing. The diff is small; missing a destructive change is large.
+- **Trusting ORM-generated migrations without review.** ORM migration generators occasionally produce `DROP COLUMN` when the intent was a rename, or add an unintended default that slows inserts. Fix: read the generated SQL before committing. The diff is small; missing a destructive change is large.
+
+## 4. Maintain
+
+<div role="list" aria-label="Maintenance triggers and responses">
+<Maintain trigger="Testcontainers ships a new major version (e.g. 12.x → 13.x)">
+  1. Read the changelog for breaking API changes (particularly `start()` return type and connection URI method names — these have changed between majors).
+  2. Bump `testcontainers` and `@testcontainers/postgresql` together in `package.json`; they must share the same major version.
+  3. Re-run `npm run test:integration` — most failures will be renamed methods or changed default timeouts.
+  4. Update the `verified.versions` block and `verified.date` in frontmatter.
+</Maintain>
+
+<Maintain trigger="Drizzle ORM or drizzle-kit ships a breaking schema-generation change">
+  1. Run `npx drizzle-kit generate` on the current schema — compare new output against existing migration files.
+  2. If the generator produces unexpected `DROP COLUMN` or `DROP TABLE` statements, do not commit; investigate whether the schema inference changed.
+  3. Re-run `npm run test:integration` to verify the migration still applies cleanly against a fresh container.
+  4. Update `verified.versions` (`drizzle-orm` and `drizzle-kit`) and `verified.date` in frontmatter.
+</Maintain>
+
+<Maintain trigger="Docker Desktop upgrades and containers fail to start (image pull or socket error)">
+  1. Check Docker is running: `docker ps` must return without error.
+  2. On Windows, verify the WSL2 backend is active and `DOCKER_HOST` is not overriding the socket path.
+  3. Run `docker pull postgres:16-alpine` manually to confirm the image is pullable.
+  4. If using a pinned image digest, update to the current digest for `postgres:16-alpine`.
+  5. Re-run `beforeAll` with a longer timeout (`120_000`) if the pull adds latency on cold CI runners.
+</Maintain>
+
+<Maintain trigger="A migration fails on production (table lock or constraint violation on existing rows)">
+  1. Identify whether the migration is a single-step operation (rename, NOT NULL add, index create) — these are the common lock sources.
+  2. Split into expand-contract phases: add nullable first, backfill in batches of 1 000 rows, then add the constraint once all rows satisfy it.
+  3. For index creation: use `CREATE INDEX CONCURRENTLY` instead of `CREATE INDEX` to avoid the table lock.
+  4. Test the phased migration against a Testcontainers instance seeded with representative row counts before shipping to production.
+</Maintain>
+</div>
 
 ## Retrieval Prompts
 
@@ -202,7 +466,7 @@ The key property: this test catches a `CHECK` or `UNIQUE` constraint violation t
 </Prompt>
 
 <Prompt id="db-4">
-  What is Testcontainers and why is it the recommended default for database integration tests? What does the ~5-second startup cost buy you?
+  What is Testcontainers and why is it the recommended default for database integration tests? What does the ~5-second startup cost buy you, and what is the alternative that should be avoided?
 </Prompt>
 
 <Prompt id="db-5">
