@@ -6,7 +6,7 @@ tasks:
       _______."
     answer: SSRF (Server-Side Request Forgery)
     hint: Server-side.
-    explanation: Server makes request on attacker's behalf. See [[#OWASP Top 10 (2021)]].
+    explanation: SSRF = Server makes an outbound request on the attacker's behalf (OWASP Top 10 2021 #10).
   - id: st-t002
     type: fill_blank
     q: "Task: List 3 HTTP response headers you'd verify in a security test of a web
@@ -16,10 +16,10 @@ tasks:
       - `Content-Security-Policy`
       - `X-Content-Type-Options: nosniff`
     hint: Hardening headers.
-    explanation: Mitigate downgrade, XSS, MIME sniffing. See [[#Headers To Verify]].
+    explanation: HSTS mitigates downgrade attacks; CSP mitigates XSS; X-Content-Type-Options prevents MIME sniffing.
   - id: st-t003
     type: fill_blank
     q: "Fill: Threat modeling acronym is _______."
     answer: STRIDE
     hint: Six categories.
-    explanation: STRIDE classifies threats by type. See [[#Threat Modeling (STRIDE)]].
+    explanation: STRIDE classifies threats into Spoofing, Tampering, Repudiation, Information disclosure, DoS, Elevation of privilege.

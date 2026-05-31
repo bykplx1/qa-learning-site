@@ -227,7 +227,7 @@ questions:
       - D) Untouched legacy
     answer: 1
     hint: Charter on hotspot.
-    explanation: Pair RBT with [[Exploratory-Testing]] for deep dive on risky zones.
+    explanation: Pair RBT with exploratory testing for a deep dive on risky zones using targeted charters.
   - id: rbt-020
     type: single
     difficulty: hard

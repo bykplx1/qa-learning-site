@@ -5,8 +5,7 @@ tasks:
     q: "Fill: A chaos experiment starts with a _______ around _______ behavior."
     answer: hypothesis; steady-state
     hint: Principle 1.
-    explanation: Hypothesis vs measurable steady-state is the foundation. See
-      [[#Principles (principlesofchaos.org)]].
+    explanation: Hypothesis vs measurable steady-state is the foundation of principlesofchaos.org Principle 1.
   - id: ce-t002
     type: fill_blank
     q: "Task: Write a chaos hypothesis for a checkout service tolerating 20% pod
@@ -15,12 +14,11 @@ tasks:
       traffic, p99 checkout latency stays below 1.2s and order-success rate
       stays above 99.5%."'
     hint: Include scope, duration, steady-state metric, threshold.
-    explanation: Specific, measurable, falsifiable hypothesis enables clear
-      conclude/refute. See [[#Experiment Loop]].
+    explanation: Specific, measurable, falsifiable hypothesis enables a clear conclude/refute decision in the experiment loop.
   - id: ce-t003
     type: fill_blank
     q: "Fill: The Netflix tool that randomly terminates production instances is
       _______."
     answer: Chaos Monkey
     hint: Original.
-    explanation: Chaos Monkey = first chaos tool, ~2010. See [[#Tools]].
+    explanation: Chaos Monkey = first chaos tool, ~2010, pioneered by Netflix.

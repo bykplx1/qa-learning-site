@@ -227,7 +227,7 @@ questions:
       - D) Sprint backlog
     answer: 1
     hint: Lightweight artifacts.
-    explanation: Session-Based Test Management uses charters + notes. and [[Exploratory-Testing]].
+    explanation: Session-Based Test Management uses charters + time-boxed session notes to document exploratory testing.
   - id: tdt-020
     type: single
     difficulty: hard

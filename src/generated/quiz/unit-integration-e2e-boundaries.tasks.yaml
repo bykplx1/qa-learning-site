@@ -6,16 +6,14 @@ tasks:
       integration."
     answer: Top-down (with stubs)
     hint: "Direction: high to low."
-    explanation: Top-down approach starts at top, fakes incomplete bottom via stubs.
-      See [[#Stubs vs Drivers vs Mocks]].
+    explanation: Top-down integration starts at the top level and uses stubs for incomplete lower modules; drivers are used in bottom-up integration.
   - id: tl-t002
     type: fill_blank
     q: "Fill: An anti-pattern with many UI tests and few unit tests is called the
       _______."
     answer: Ice-cream cone (or inverted pyramid)
     hint: Dessert shape.
-    explanation: Inverted pyramid metaphor. Slow + brittle + costly. See [[#Common
-      Mistakes]].
+    explanation: The ice-cream cone (inverted pyramid) is a common mistake — many UI/manual tests on top, few unit tests at the bottom.
   - id: tl-t003
     type: fill_blank
     q: "Task: For a checkout feature, list one test you'd write at each level (unit,
@@ -31,5 +29,4 @@ tasks:
       - Acceptance: business user runs scenario "discount code applies correctly
       per policy"
     hint: Different scope each level.
-    explanation: Each level targets different scope; mapping to one feature shows
-      coverage layering. See [[#The 4 Levels]].
+    explanation: Each of the 4 levels (unit, integration, system, acceptance) targets a different scope; mapping to one feature shows coverage layering.

@@ -5,13 +5,13 @@ tasks:
     q: "Fill: Severity measures _______ impact; priority measures _______ urgency."
     answer: technical; business
     hint: Two axes.
-    explanation: Independent dimensions of a defect. See [[#Severity vs Priority]].
+    explanation: Severity and priority are independent dimensions — a cosmetic crash can be low severity but high priority.
   - id: dl-t002
     type: fill_blank
     q: "Fill: When QA retest of a fix fails, the bug moves to state _______."
     answer: Reopened
     hint: Came back.
-    explanation: Failed retest reverts ticket back to dev. See [[#Standard States]].
+    explanation: Failed retest reverts the ticket back to the developer; the standard lifecycle state is "Reopened".
   - id: dl-t003
     type: fill_blank
     q: 'Task: Write a defect report for "checkout button does nothing on mobile
@@ -29,5 +29,4 @@ tasks:
       - Attachments: screen recording, Safari console export
       - Reporter: QA team / Date: 2026-05-02
     hint: Title + env + repro + expected/actual + sev/pri.
-    explanation: Complete report enables fast dev action. See [[#Defect Report
-      Fields (Minimum)]].
+    explanation: A complete report (title, env, steps, expected/actual, severity, reproducibility) enables fast dev action.

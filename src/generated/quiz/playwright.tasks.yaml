@@ -5,7 +5,7 @@ tasks:
     q: 'Fill: To enable auto-trace on retry, set `use.trace = "______"` in config.'
     answer: on-first-retry
     hint: Common CI setting.
-    explanation: Balances cost + debugging. See [[#Fixtures + Configuration]].
+    explanation: `on-first-retry` balances trace cost vs debugging value — trace only collected when the test first fails.
   - id: p-t002
     type: fill_blank
     q: 'Task: Write a Playwright test that intercepts `/api/users` and returns
@@ -21,10 +21,10 @@ tasks:
 
       ```
     hint: "`page.route` + `route.fulfill`."
-    explanation: Standard mocking pattern. See [[#Network Interception]].
+    explanation: `page.route` + `route.fulfill` is the standard Playwright pattern for network interception and mocking.
   - id: p-t003
     type: fill_blank
     q: "Fill: Run only chromium project: `npx playwright test --project=______`."
     answer: chromium
     hint: Matches config name.
-    explanation: Filters projects in suite. See [[#Fixtures + Configuration]].
+    explanation: `--project=chromium` filters the Playwright suite to only run the named project from playwright.config.ts.

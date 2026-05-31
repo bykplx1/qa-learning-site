@@ -6,7 +6,7 @@ tasks:
       _______."
     answer: Ice Cream Cone
     hint: Inverted pyramid.
-    explanation: Top-heavy distribution = slow, brittle, costly. See [[#Anti-Patterns]].
+    explanation: The ice-cream cone anti-pattern inverts the pyramid: many manual/E2E tests and few unit tests — slow, brittle, and costly.
   - id: tp-t002
     type: fill_blank
     q: 'Task: Login flow has flaky Selenium test for "wrong password shows error".
@@ -17,13 +17,11 @@ tasks:
 
       - Keep one E2E for the happy login path only.
     hint: Push down.
-    explanation: Logic verifiable at API; UI test just renders message — split
-      concerns. See [[#Practical Rules]].
+    explanation: Logic verifiable at API layer; the UI test only needs to confirm the message renders — split concerns for stability.
   - id: tp-t003
     type: fill_blank
     q: "Fill: Microservices teams sometimes prefer the _______ shape, with thinner
       unit + E2E and a fat integration middle."
     answer: Diamond (Testing Diamond)
     hint: Integration-heavy variant.
-    explanation: Microservice bugs cluster in integration boundaries. See [[#Diamond
-      / Honeycomb Variants]].
+    explanation: Microservice bugs cluster at integration boundaries, so the diamond / honeycomb shape puts more tests there than at unit level.

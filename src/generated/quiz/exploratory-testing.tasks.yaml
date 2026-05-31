@@ -5,8 +5,7 @@ tasks:
     q: "Fill: ET sessions are organized using _______-Based Test Management."
     answer: Session
     hint: Bach brothers.
-    explanation: SBTM = Session-Based Test Management; structures ET. See
-      [[#Session-Based Test Management (SBTM)]].
+    explanation: SBTM = Session-Based Test Management; structures ET with charters, time-boxes, and session notes.
   - id: et-t002
     type: fill_blank
     q: "Task: Write a charter for exploring a new file-upload feature with focus on
@@ -16,13 +15,11 @@ tasks:
       mid-upload) for 90 minutes. Goal: surface error-handling defects, unclear
       error messages, and resource leaks."
     hint: Mission + scope + duration + focus.
-    explanation: Good charter narrows attention without scripting steps. See
-      [[#Session-Based Test Management (SBTM)]].
+    explanation: Good charter narrows attention without scripting steps; mission + scope + duration define the session.
   - id: et-t003
     type: fill_blank
     q: "Fill: HICCUPPS is a set of _______ used to decide whether observed behavior
       is correct."
     answer: consistency oracles
     hint: Pass/fail decision aid.
-    explanation: Oracles compare against history, image, comparable, claims, etc.
-      See [[#Heuristics & Mnemonics]].
+    explanation: Oracles compare against history, image, comparable, claims, user expectations, product, and standards (HICCUPPS).

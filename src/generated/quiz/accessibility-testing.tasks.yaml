@@ -5,8 +5,7 @@ tasks:
     q: "Fill: WCAG AA contrast ratio for normal text is _______."
     answer: 4.5:1
     hint: 1.4.3.
-    explanation: Standard contrast threshold for normal text. See [[#Key WCAG
-      Criteria (AA highlights)]].
+    explanation: Standard contrast threshold for normal text per WCAG 2 SC 1.4.3.
   - id: at-t002
     type: fill_blank
     q: "Task: Write a Playwright test that scans the homepage with axe and asserts
@@ -22,11 +21,10 @@ tasks:
       });
       ```
     hint: AxeBuilder.analyze().
-    explanation: Catches automated-detectable violations in CI. See [[#Playwright +
-      axe Example]].
+    explanation: Catches automated-detectable violations in CI via axe-core integration.
   - id: at-t003
     type: fill_blank
     q: "Fill: Built-in macOS screen reader is _______."
     answer: VoiceOver
     hint: Apple SR.
-    explanation: macOS/iOS default screen reader. See [[#Testing Methods]].
+    explanation: macOS/iOS default screen reader; activate with Cmd+F5.

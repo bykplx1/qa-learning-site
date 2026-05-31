@@ -227,7 +227,7 @@ questions:
       - D) Localization
     answer: 1
     hint: Attack simulation.
-    explanation: Pentest = security testing technique simulating attacker. and [[Security-Testing]].
+    explanation: Penetration testing simulates an attacker to find exploitable vulnerabilities — a security testing technique.
   - id: tt-020
     type: single
     difficulty: hard

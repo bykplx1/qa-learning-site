@@ -45,7 +45,7 @@ Take a single defect: *the password-reset link expires after 60 seconds instead 
 
 **Waterfall:** The defect is introduced in the coding phase (month 4). It is discovered in the test phase (month 7). The fix requires re-testing all dependent flows — three months of compound cost.
 
-**V-Model:** The defect is introduced in coding (month 4). Because the V-Model requires a test plan for each design artifact, the *test for the reset flow* already exists from month 2. The defect is found within the integration-test window of month 5 — still late, but the plan existed earlier.
+**V-Model:** The defect is introduced in coding (month 4). Because the V-Model requires a test plan for each design artefact, the *test for the reset flow* already exists from month 2. The defect is found within the integration-test window of month 5 — still late, but the plan existed earlier.
 
 **Scrum:** The defect is introduced in sprint 4. It is caught in sprint-4 testing or sprint-5 regression. Total lag: one to two weeks.
 
@@ -61,7 +61,7 @@ Same defect, five wildly different costs — driven entirely by the model's feed
 - **Treating "the team uses Scrum" as a complete answer.** The Scrum Guide does not specify *how* to build or *how* to test. Engineering practices — CI, TDD, refactoring, pair programming — come from XP, not Scrum. A Scrum team without these practices is a meeting schedule. Fix: always ask what engineering practices ride on top of the framework.
 - **Misattributing testing failures to the delivery model.** "We're not testing well *because* Agile" is a permanent excuse. Fix: map the failure to a missing practice (CI, automation, test design technique) before blaming the model.
 - **Pretending the team isn't hybrid.** Management favours a pure label; pure labels lie. Most real teams sprint-shape execution against a phase-shaped contract or compliance regime. Fix: describe the actual hybrid honestly — "agile execution inside a Waterfall envelope" is a valid and common shape.
-- **Treating the V-Model as obsolete.** The V-Model's diagonal shape is less important than the discipline it imposes: name a test approach for every specification artifact. That discipline is portable and universally useful even if the full lifecycle is not followed.
+- **Treating the V-Model as obsolete.** The V-Model's diagonal shape is less important than the discipline it imposes: name a test approach for every specification artefact. That discipline is portable and universally useful even if the full lifecycle is not followed.
 - **Confusing SAFe vocabulary with SAFe value.** SAFe is the most-deployed scaled-agile framework in large enterprises; it is also frequently criticised for over-prescribing process. Fix: if your organisation runs SAFe, learn the vocabulary (PI Planning, System Team, Solution Train) — it will shape your testing work whether you approve of it or not. Do not apply SAFe practices to a five-person team.
 - **Stopping at the lifecycle diagram.** When each model is rendered as a timeline, only the *when* of testing is visible. The *what* of testing — which types of tests, serving which goals — is invisible. Fix: layer the Agile Testing Quadrants (Crispin & Gregory, after Marick) on top to show that unit tests, exploratory tests, performance tests, and acceptance criteria all have a place regardless of which lifecycle model the team runs.
 

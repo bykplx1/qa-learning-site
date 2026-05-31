@@ -113,6 +113,7 @@ const errorSchema = {
     code:  { type: 'string' },
   },
 };
+const validate404 = ajv.compile(errorSchema);
 
 const notFound = await request(app).get('/users/9999');
 expect(notFound.status).toBe(404);         // not 200 with { error: 'not found' }
@@ -128,7 +129,7 @@ const first  = await request(app).post('/payments').send(payload);
 const second = await request(app).post('/payments').send(payload);
 
 expect(first.status).toBe(201);
-expect(second.status).toBeOneOf([200, 409]);  // idempotent or conflict — not 201 again
+expect([200, 409]).toContain(second.status);   // idempotent or conflict — not 201 again
 // Verify only one payment exists in the DB
 const payments = await db.query('SELECT * FROM payments WHERE idempotency_key = ?', ['key-abc']);
 expect(payments.length).toBe(1);

@@ -6,8 +6,7 @@ tasks:
       _______ release."
     answer: canary
     hint: Coal mine bird.
-    explanation: Canary catches issues in narrow user slice before full rollout. See
-      [[#Practices]].
+    explanation: A canary release catches issues in a narrow user slice before full rollout, limiting blast radius.
   - id: slr-t002
     type: fill_blank
     q: "Task: Team only tests after dev-complete. Suggest 3 shift-left actions."
@@ -16,13 +15,11 @@ tasks:
       - Add unit + lint + type-check gates in pre-merge CI.
       - Adopt TDD or BDD for new features; tests authored with code.
     hint: Earlier collaboration + automation.
-    explanation: Earlier defect detection lowers cost + improves req clarity. See
-      [[#Practices]] and [[#Cost-of-Defect Curve]].
+    explanation: Shift-left practices (three-amigos, pre-merge CI, TDD) detect defects earlier, lowering cost per the cost-of-defect curve.
   - id: slr-t003
     type: fill_blank
     q: "Fill: Scripted probes that continuously hit production endpoints to detect
       outages are called _______ monitoring."
     answer: synthetic
     hint: Not real users.
-    explanation: Synthetic monitoring validates uptime and SLO from outside. See
-      [[#Practices]].
+    explanation: Synthetic monitoring validates uptime and SLO from outside the system using scripted probes, not real user traffic.

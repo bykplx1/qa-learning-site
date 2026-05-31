@@ -215,7 +215,7 @@ questions:
       - D) Skipping bugs
     answer: 1
     hint: Targeted exploration.
-    explanation: ET focuses sessions where risk highest. See [[Risk-Based-Testing]] and
+    explanation: ET focuses sessions where risk is highest; pair with risk-based testing for maximum coverage.
   - id: et-019
     type: single
     difficulty: hard
@@ -227,7 +227,7 @@ questions:
       - D) Auto-closing bugs
     answer: 1
     hint: Make case for fix.
-    explanation: Clear, motivated reports drive actual fixes. and [[Bug-Reporting]].
+    explanation: Clear, motivated reports drive actual fixes; bug advocacy is as important as bug discovery.
   - id: et-020
     type: single
     difficulty: hard

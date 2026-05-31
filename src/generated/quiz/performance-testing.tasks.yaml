@@ -6,7 +6,7 @@ tasks:
       _______."
     answer: Soak (Endurance)
     hint: Long duration.
-    explanation: Soak reveals slow degradation. See [[#Types]].
+    explanation: Soak (endurance) testing runs for many hours to reveal slow degradation like memory leaks.
   - id: pt-t002
     type: fill_blank
     q: "Task: Define a k6 threshold so the test fails when P95 latency exceeds 500ms
@@ -19,11 +19,11 @@ tasks:
       }
       ```
     hint: "`thresholds` block."
-    explanation: Codifies SLO into the test for pass/fail. See [[#k6 Example]].
+    explanation: k6 `thresholds` codify the SLO into the test so it fails automatically when the target is missed.
   - id: pt-t003
     type: fill_blank
     q: 'Fill: Internal target like "99% requests under 300ms" is an _______ (3
       letters).'
     answer: SLO
     hint: Objective.
-    explanation: SLO is the engineering target derived from SLIs. See [[#SLI / SLO / SLA]].
+    explanation: SLO (Service Level Objective) is the internal engineering target derived from SLIs, stricter than the customer-facing SLA.

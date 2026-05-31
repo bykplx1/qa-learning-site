@@ -240,13 +240,94 @@ describe('R9: tool-lesson runbook', () => {
   });
 });
 
+// ─── R10: Quiz YAML wikilink guard ────────────────────────────────────────────
+
+const QUIZ_PASS = path.join(FIXTURES, 'quiz', 'pass');
+const QUIZ_FAIL = path.join(FIXTURES, 'quiz', 'fail');
+
+describe('R10: quiz YAML wikilink guard', () => {
+  it('pass — quiz YAML with no wikilinks produces no R10 errors', () => {
+    const errors = lintDir(PASS, QUIZ_PASS).filter(
+      (e) => e.rule === 'R10:quiz-wikilinks'
+    );
+    expect(errors).toHaveLength(0);
+  });
+
+  it('fail — anchor-only [[#...]] in explanation triggers R10 error', () => {
+    const errors = lintDir(PASS, QUIZ_FAIL).filter(
+      (e) =>
+        e.rule === 'R10:quiz-wikilinks' &&
+        e.file.includes('r10-anchor-wikilink')
+    );
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].message).toMatch(/anchor-only/i);
+  });
+
+  it('fail — cross-page wikilink to unknown slug triggers R10 error', () => {
+    const errors = lintDir(PASS, QUIZ_FAIL).filter(
+      (e) =>
+        e.rule === 'R10:quiz-wikilinks' &&
+        e.file.includes('r10-cross-slug-wikilink')
+    );
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors[0].message).toMatch(/Nonexistent-Topic/);
+  });
+});
+
+// ─── R11: Spelling consistency ────────────────────────────────────────────────
+
+describe('R11: spelling consistency', () => {
+  it('pass — content using canonical UK spellings produces no R11 errors', () => {
+    const errors = lintDir(PASS).filter(
+      (e) => e.rule === 'R11:spelling' && e.file.includes('r11-spelling-ok')
+    );
+    expect(errors).toHaveLength(0);
+  });
+
+  it('fail — "artifact" in prose triggers R11 error', () => {
+    const errors = lintDir(FAIL).filter(
+      (e) => e.rule === 'R11:spelling' && e.file.includes('r11-spelling-bad')
+    );
+    const artifactError = errors.find((e) => e.message.includes('artifact'));
+    expect(artifactError).toBeDefined();
+    expect(artifactError?.message).toMatch(/artefact/);
+  });
+
+  it('fail — "analyze" in prose triggers R11 error', () => {
+    const errors = lintDir(FAIL).filter(
+      (e) => e.rule === 'R11:spelling' && e.file.includes('r11-spelling-bad')
+    );
+    const analyzeError = errors.find((e) => e.message.includes('analyze'));
+    expect(analyzeError).toBeDefined();
+    expect(analyzeError?.message).toMatch(/analyse/);
+  });
+
+  it('fail — "catalog" (without -ue) in prose triggers R11 error', () => {
+    const errors = lintDir(FAIL).filter(
+      (e) => e.rule === 'R11:spelling' && e.file.includes('r11-spelling-bad')
+    );
+    const catalogError = errors.find((e) => e.message.match(/\bcatalog\b/));
+    expect(catalogError).toBeDefined();
+    expect(catalogError?.message).toMatch(/catalogue/);
+  });
+
+  it('pass — identifiers inside inline code are not flagged', () => {
+    // The r11-spelling-ok fixture has `artifact.compile()` in inline code — no error
+    const errors = lintDir(PASS).filter(
+      (e) => e.rule === 'R11:spelling' && e.file.includes('r11-spelling-ok')
+    );
+    expect(errors).toHaveLength(0);
+  });
+});
+
 // ─── Smoke-test topic ─────────────────────────────────────────────────────────
 
 describe('K-P0 smoke-test topic', () => {
   const SMOKE_DIR = path.resolve(import.meta.dirname, '..', 'content', 'curriculum');
+  const QUIZ_DIR = path.resolve(import.meta.dirname, '..', 'src', 'generated', 'quiz');
 
   it('smoke-test topic passes all lint rules', () => {
-    const errors = lintDir(SMOKE_DIR);
+    const errors = lintDir(SMOKE_DIR, QUIZ_DIR);
     expect(errors).toHaveLength(0);
   });
 });

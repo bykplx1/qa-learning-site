@@ -5,7 +5,7 @@ tasks:
     q: "Fill: TDD's three-step loop is _______, _______, _______."
     answer: Red, Green, Refactor
     hint: Fail, pass, clean.
-    explanation: Canonical TDD micro-cycle. See [[#TDD — Red, Green, Refactor]].
+    explanation: Red-Green-Refactor is the canonical TDD micro-cycle: write a failing test, make it pass, then clean up.
   - id: bta-t002
     type: fill_blank
     q: 'Task: Write a Gherkin scenario for "user with locked account cannot log
@@ -20,12 +20,11 @@ tasks:
           And the response body should contain error code "ACCOUNT_LOCKED"
       ```
     hint: Given/When/Then declarative.
-    explanation: Declarative behavior, not UI clicks; reusable steps. See [[#Gherkin]].
+    explanation: Gherkin scenarios are declarative (behavior, not UI mechanics) and compose reusable Given/When/Then steps.
   - id: bta-t003
     type: fill_blank
     q: "Fill: BDD was introduced by _______ as an evolution of TDD focused on
       behavior + ubiquitous language."
     answer: Dan North
     hint: ~2006 article.
-    explanation: Dan North reframed TDD vocabulary into behavior-centric BDD. See
-      [[#BDD — Behavior-Driven Development]].
+    explanation: Dan North reframed TDD vocabulary into behavior-centric BDD (~2006), introducing ubiquitous language between devs and stakeholders.

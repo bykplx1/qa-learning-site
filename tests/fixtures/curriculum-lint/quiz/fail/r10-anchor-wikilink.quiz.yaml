@@ -1,0 +1,14 @@
+lesson: r1-valid-frontmatter
+questions:
+  - id: r10-fail-001
+    type: single
+    difficulty: easy
+    q: "What does BVA stand for?"
+    options:
+      - A) Boundary Value Analysis
+      - B) Binary Validation Algorithm
+      - C) Boolean Variable Assignment
+      - D) Basic Verification Approach
+    answer: 0
+    hint: Edges.
+    explanation: BVA tests at boundary values. See [[#Boundary Value Analysis]].
