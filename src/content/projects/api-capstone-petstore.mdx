@@ -1,0 +1,105 @@
+---
+slug: api-capstone-petstore
+title: "API Capstone: Contract-Tested Suite on Swagger Petstore"
+tier: capstone
+track: api
+target:
+  name: "Swagger Petstore (SmartBear)"
+  ref: "https://petstore.swagger.io — OpenAPI 3.0 spec at https://petstore.swagger.io/v2/swagger.json; pinned spec version noted below"
+estimate: 4–5 days
+rubric: api-capstone
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - Your suite derives its request/response schemas from the OpenAPI spec — not from hand-written schema files.
+  - Contract tests cover all primary endpoints in the `pet`, `store`, and `user` tags; each endpoint has a test for its documented error shape.
+  - You document a breaking-change scenario — identify one field rename or type change in the spec that would cause a specific test assertion to fire, and explain why contract tests catch it before ad-hoc smoke tests do.
+  - CI runs the full suite and fails the job on any test failure; a test report artifact (JUnit XML or HTML) is uploaded.
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - You attest that CI is green at submission time (set ci_green to true in your submission).
+---
+
+## Brief
+
+Build a contract-tested API suite against
+[Swagger Petstore](https://petstore.swagger.io) — SmartBear's canonical OpenAPI
+reference implementation. The Petstore exposes a full CRUD API across three
+resource domains (pets, store orders, users) with an OpenAPI 3.0 specification
+you can use as the source of truth for your schemas.
+
+This is a portfolio artifact. It should demonstrate that you can derive tests
+from a specification, not just from observation — the discipline that makes API
+suites survive breaking changes instead of silently passing through them.
+
+> **Drift notice.** `petstore.swagger.io` is the live hosted reference
+> implementation maintained by SmartBear. The OpenAPI spec is available at
+> `https://petstore.swagger.io/v2/swagger.json`. The spec itself is versioned;
+> the baseline used for this brief is the 1.0.7 spec (as of writing). If the
+> spec diverges from the live server (a known issue with demo systems), treat
+> the spec as the source of truth and note the discrepancy in your README. You
+> can also run a local instance via Docker:
+> `docker run -p 8080:8080 swaggerapi/petstore3` — note which URL you targeted
+> in your README.
+
+## Suggested approach
+
+### Phase 1 — Spec-first schema extraction (Day 1)
+
+1. Download or fetch the OpenAPI spec: `curl https://petstore.swagger.io/v2/swagger.json -o petstore.json`
+2. Use a schema generation tool (e.g. [openapi-typescript](https://github.com/drwpow/openapi-typescript), [json-schema-to-ts](https://github.com/ThomasAribart/json-schema-to-ts)) to generate TypeScript types, or manually transcribe the `components/schemas` into your schema library. The key constraint: **your schema definitions must reference the spec, not be written from observation of live responses.**
+3. Pick the three resource domains you'll fully cover: `pet`, `store`, `user`. For each, list the primary CRUD operations and their documented error shapes before writing a single test.
+
+### Phase 2 — Contract test suite (Days 2–3)
+
+4. Write tests in this order for the `pet` domain first (most complete):
+   - `GET /pet/{petId}` — valid id (200 + schema), non-existent id (404 + error schema)
+   - `POST /pet` — valid payload (200 + schema), missing required field (405)
+   - `PUT /pet` — update existing pet (200 + schema), invalid id (404 or 400)
+   - `DELETE /pet/{petId}` — valid id (200), non-existent id (404)
+5. Repeat for `store` (focus on `POST /store/order` + `GET /store/order/{orderId}`) and `user` (`POST /user` + `POST /user/login`).
+6. For every endpoint, assert both the happy-path response schema **and** at least one documented error response schema. If the live server returns an undocumented error shape, note it as a discrepancy.
+
+### Phase 3 — Breaking-change scenario (Day 3)
+
+7. In your README or a `docs/contract-analysis.md`, document a concrete breaking-change scenario:
+   - Pick one field in a response schema (e.g. `Pet.name` renamed to `Pet.petName`).
+   - Identify the exact test assertion that would fire.
+   - Explain why a contract test catches this at test time while an ad-hoc smoke test (which only checks status codes) would miss it.
+   - Explain why catching it at the schema layer is faster than catching it in a UI or integration test.
+
+### Phase 4 — CI and packaging (Days 4–5)
+
+8. Configure GitHub Actions:
+   - Run on every push to `main`
+   - Install deps with `npm ci` (or equivalent)
+   - Run the full test suite
+   - Fail the job on any test failure
+   - Upload a JUnit XML or HTML report as an artifact
+9. Add the CI status badge to your README.
+10. Confirm CI is green before submitting. The `ci_green` rubric row is binary: public repo + verifiable green badge, or it scores 0.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Schemas derived from the OpenAPI spec (not hand-written from observation)
+- Contract tests for all three resource domains including error shapes
+- `docs/contract-analysis.md` (or README section) with the breaking-change scenario
+- Green CI badge confirmed at submission time
+- A README covering: how to run locally, how CI is structured, which spec version was used, and one discrepancy you found between the spec and the live server (if any)
+
+## Why this matters
+
+The difference between a functional test ("does this endpoint return 200?") and
+a contract test ("does this endpoint return a response that matches its
+specification?") is the difference between a suite that passes when the service
+is broken and one that catches the exact breaking change before it reaches
+production.
+
+Swagger Petstore is the right target because its OpenAPI spec is the canonical
+reference for the format itself. Deriving schemas from the spec rather than from
+live responses is the skill that makes API suites useful in a CI pipeline — not
+just in your local environment.
+
+Cross-origin between what the spec says and what the live server returns is a
+real-world phenomenon. Finding and documenting those discrepancies is exactly the
+kind of investigative work that makes API testers valuable.

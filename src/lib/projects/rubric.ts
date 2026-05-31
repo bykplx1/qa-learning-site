@@ -646,6 +646,164 @@ export const rubrics = {
     ],
   },
 
+  // ---------------------------------------------------------------------------
+  // api track rubrics (starter / mid / capstone)
+  // ---------------------------------------------------------------------------
+
+  /** api track — Starter: first REST collection against JSONPlaceholder */
+  'api-starter': {
+    id: 'api-starter',
+    label: 'API Starter: First REST Collection',
+    rows: [
+      {
+        id: 'request_coverage',
+        criterion: 'Endpoint coverage',
+        band: [
+          'Only GET requests; no mutation (POST/PUT/PATCH/DELETE) tested.',
+          'GET and at least one mutation verb; other verbs absent.',
+          'All four CRUD verbs tested on at least one resource; status codes asserted.',
+          'All four CRUD verbs tested with both valid and invalid payloads per verb.',
+        ],
+      },
+      {
+        id: 'assertions',
+        criterion: 'Assertion depth',
+        band: [
+          'Only status code checked — no body or header assertions.',
+          'Status code plus one field from the response body spot-checked.',
+          'Status code, relevant response headers, and required body fields all asserted.',
+          'Status code, headers, body schema, and at least one contract invariant (e.g. id is returned and matches the URL param).',
+        ],
+      },
+      {
+        id: 'negative_cases',
+        criterion: 'Negative-case coverage',
+        band: [
+          'No negative tests.',
+          'One negative test (e.g. 404 for a missing resource) without body assertion.',
+          'At least one negative test per CRUD verb asserting both status and error body.',
+          'Negative tests cover missing resource, malformed payload, and missing required field — each with status + error message assertion.',
+        ],
+      },
+      {
+        id: 'runability',
+        criterion: 'Single-command runability',
+        band: [
+          'Cannot run — missing install step, broken import, or no entry point.',
+          'Runs after undocumented manual setup or environment changes.',
+          'Runs with one command; README lists prerequisites and expected output.',
+          'Runs with one command from a clean clone; emits a summary (pass/fail count) to stdout.',
+        ],
+      },
+    ],
+  },
+
+  /** api track — Mid: authenticated API test suite with schema validation */
+  'api-mid': {
+    id: 'api-mid',
+    label: 'API Mid: Authenticated Suite with Schema Validation',
+    rows: [
+      {
+        id: 'auth_flow',
+        criterion: 'Authentication flow coverage',
+        band: [
+          'No authentication tested; all requests are unauthenticated.',
+          'Auth token obtained but not validated — hardcoded in tests.',
+          'Token obtained programmatically in test setup; expiry or invalid-token case tested.',
+          'Token lifecycle fully tested: obtain, use, expired-token rejection, and re-auth; token never hardcoded.',
+        ],
+      },
+      {
+        id: 'schema_validation',
+        criterion: 'Schema validation depth',
+        band: [
+          'No schema validation — only status codes checked.',
+          'Ad-hoc field checks (e.g. `response.id !== undefined`) without a schema library.',
+          'Formal schema library used (e.g. Zod, ajv, Joi); required fields and types validated for happy paths.',
+          'Schema library validates happy path and error responses; schema defined once and reused across tests.',
+        ],
+      },
+      {
+        id: 'test_isolation',
+        criterion: 'Test isolation',
+        band: [
+          'Tests share mutable state and must run in a specific order.',
+          'Tests are ordered but each cleans up after itself.',
+          'Tests are independent; each creates its own prerequisite data and cleans up.',
+          'Tests are fully isolated and idempotent; can run in parallel without interference.',
+        ],
+      },
+      {
+        id: 'repo_url',
+        criterion: 'Public repo as artifact',
+        band: [
+          'No public repo submitted.',
+          'Repo exists but README is missing or does not explain how to run tests.',
+          'Repo with README covering setup, run command, and what the suite covers.',
+          'Repo with README + CI badge + commit history showing iterative development.',
+        ],
+      },
+    ],
+  },
+
+  /** api track — Capstone: contract-tested API suite with CI and mutation coverage */
+  'api-capstone': {
+    id: 'api-capstone',
+    label: 'API Capstone: Contract-Tested Suite with CI',
+    rows: [
+      {
+        id: 'contract_coverage',
+        criterion: 'Contract test coverage',
+        band: [
+          'No contract tests — only functional assertions against live responses.',
+          'One contract test validating shape of a single endpoint response.',
+          'Contract tests cover all primary endpoints; breaking-change scenario described.',
+          'Contract tests cover all endpoints including error shapes; a documented breaking-change scenario explains which assertion fires and why.',
+        ],
+      },
+      {
+        id: 'mutation_coverage',
+        criterion: 'Mutation and boundary coverage',
+        band: [
+          'Happy path only; no boundary or invalid-input cases.',
+          'One boundary test (e.g. max-length field) without schema assertion.',
+          'Boundary values, missing required fields, and type mismatches all tested with appropriate status + error body.',
+          'All mutation verbs covered with valid, boundary, and invalid payloads; payload factories used to avoid duplication.',
+        ],
+      },
+      {
+        id: 'ci_integration',
+        criterion: 'CI integration',
+        band: [
+          'No CI configuration.',
+          'CI exists but does not fail reliably on test failure.',
+          'CI runs the test suite and fails the job on any test failure.',
+          'CI runs tests, uploads a test report artifact (JUnit XML or HTML), and badge is visible in README.',
+        ],
+      },
+      {
+        id: 'ci_green',
+        criterion: 'Green CI on submitted repo',
+        band: [
+          'No CI or CI is red.',
+          'CI exists but green status not verifiable (private repo or broken badge).',
+          'Public repo with green CI badge confirmed at submission time.',
+          'Public repo + green CI badge + pipeline uploads report artifact and README documents the pipeline structure.',
+        ],
+      },
+      {
+        id: 'engineering_writeup',
+        criterion: 'Engineering writeup',
+        band: [
+          'No writeup.',
+          'README describes how to run tests but not design decisions.',
+          'README covers setup + one design decision (e.g. why this schema library, why this coverage boundary).',
+          'README covers setup + design decisions + at least one breaking-change scenario the suite catches, and which assertion fires first.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',
