@@ -25,10 +25,12 @@ function SearchModalInner() {
   const [selected, setSelected] = useState(0);
   const [ready, setReady] = useState(false);
   const [loadAttempted, setLoadAttempted] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const pagefindRef = useRef<PagefindInstance | null>(null);
   const loadStartedRef = useRef(false);
+  const returnFocusRef = useRef<Element | null>(null);
 
   const initPagefind = useCallback(async () => {
     if (loadStartedRef.current) return;
@@ -50,11 +52,13 @@ function SearchModalInner() {
     const handleKeydown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
+        returnFocusRef.current = document.activeElement;
         void initPagefind();
         setOpen((prev) => !prev);
       }
     };
     const handleOpen = () => {
+      returnFocusRef.current = document.activeElement;
       void initPagefind();
       setOpen(true);
     };
@@ -81,6 +85,7 @@ function SearchModalInner() {
   useEffect(() => {
     if (!query.trim() || !pagefindRef.current) {
       setResults([]);
+      setAnnouncement('');
       return;
     }
     let cancelled = false;
@@ -89,6 +94,7 @@ function SearchModalInner() {
       if (!cancelled) {
         setResults(data);
         setSelected(0);
+        setAnnouncement(data.length > 0 ? `${data.length} result${data.length === 1 ? '' : 's'}` : `No results for ${query}`);
       }
     });
     return () => {
@@ -107,6 +113,11 @@ function SearchModalInner() {
     setOpen(false);
     setQuery('');
     setResults([]);
+    setAnnouncement('');
+    const el = returnFocusRef.current;
+    if (el && 'focus' in el) {
+      requestAnimationFrame(() => (el as HTMLElement).focus());
+    }
   }, []);
 
   const navigate = useCallback(
@@ -348,6 +359,9 @@ function SearchModalInner() {
         >
           <span>Pagefind · static index</span>
           <span>{ready ? 'ready.' : loadAttempted ? 'Search available after build' : 'loading…'}</span>
+        </div>
+        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+          {announcement}
         </div>
       </div>
     </div>
