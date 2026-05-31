@@ -36,7 +36,7 @@ const pagefindDevStub = {
   configureServer(server) {
     server.middlewares.use('/pagefind/pagefind.js', (_req, res) => {
       res.setHeader('Content-Type', 'application/javascript');
-      res.end('export async function search(){return{results:[]}}\nexport async function init(){}');
+      res.end('export const __devStub=true;\nexport async function search(){return{results:[]}}\nexport async function init(){}');
     });
   },
 };

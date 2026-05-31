@@ -126,7 +126,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <span className="eyebrow">practice mode · sessionStorage</span>
+          <span className="eyebrow">Practice mode</span>
           <h2
             style={{
               fontFamily: 'var(--serif)',

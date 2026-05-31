@@ -5,6 +5,7 @@ import { loadReachableQuizzes } from '../lib/quiz/loadQuiz';
 import { sortCurriculum, groupByCluster, clusterDisplay } from '../lib/curriculum/order';
 import type { CurriculumEntry } from '../lib/curriculum/order';
 import type { CurriculumCluster } from '../lib/curriculum/schema';
+import { LessonCompletionMarkers } from '../components/lessons/LessonCompletionMarkers';
 
 const allTopics = await getCollection('curriculum');
 const sorted = sortCurriculum(allTopics);
@@ -179,5 +180,6 @@ function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
     ))}
   </section>
 
+  <LessonCompletionMarkers client:load />
   </main>
 </BaseLayout>

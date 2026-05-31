@@ -39,6 +39,8 @@ export interface ProfilePayload {
   selfExplanationCount: number;
   /** Mean cards reviewed per active review day (issue #387). Null = no data. */
   cardsPerSession: number | null;
+  /** Slugs of topics the user has marked complete — for client-side markers on /lessons. */
+  completedSlugs: string[];
 }
 
 export interface LoadProfileOptions {
@@ -107,7 +109,9 @@ export async function loadProfile(
     clusterBySlug,
   );
 
-  const completedCount = lessonViewRows.filter((v) => v.completedAt != null).length;
+  const completedViews = lessonViewRows.filter((v) => v.completedAt != null);
+  const completedCount = completedViews.length;
+  const completedSlugs = completedViews.map((v) => v.lessonSlug);
 
   // Headline attempt count: practice-mode only (#388).
   const attemptCount = practiceAttemptRows.length;
@@ -130,5 +134,6 @@ export async function loadProfile(
     retentionSummary,
     selfExplanationCount,
     cardsPerSession,
+    completedSlugs,
   };
 }
