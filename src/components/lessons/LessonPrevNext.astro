@@ -1,0 +1,111 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  prev: CollectionEntry<'curriculum'> | null;
+  next: CollectionEntry<'curriculum'> | null;
+}
+
+const { prev, next } = Astro.props;
+
+if (!prev && !next) return;
+---
+
+<nav class="lesson-prevnext" aria-label="Topic navigation">
+  {prev && (
+    <a
+      href={`/lessons/${prev.data.cluster}/${prev.data.slug}/`}
+      class="lesson-prevnext__link lesson-prevnext__link--prev"
+      rel="prev"
+    >
+      <span class="lesson-prevnext__dir eyebrow">Previous</span>
+      <span class="lesson-prevnext__title">{prev.data.title}</span>
+    </a>
+  )}
+  {!prev && <span class="lesson-prevnext__spacer" />}
+  {next && (
+    <a
+      href={`/lessons/${next.data.cluster}/${next.data.slug}/`}
+      class="lesson-prevnext__link lesson-prevnext__link--next"
+      rel="next"
+    >
+      <span class="lesson-prevnext__dir eyebrow">Next</span>
+      <span class="lesson-prevnext__title">{next.data.title}</span>
+    </a>
+  )}
+  {!next && <span class="lesson-prevnext__spacer" />}
+</nav>
+
+<style>
+  .lesson-prevnext {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .lesson-prevnext__spacer {
+    flex: 1;
+  }
+
+  .lesson-prevnext__link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 150ms ease, background 150ms ease;
+    max-width: 48%;
+  }
+
+  .lesson-prevnext__link:hover {
+    border-color: var(--ink-3);
+    background: var(--paper-2);
+  }
+
+  .lesson-prevnext__link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .lesson-prevnext__link--next {
+    text-align: right;
+    margin-left: auto;
+  }
+
+  .lesson-prevnext__dir {
+    font-size: 10px;
+  }
+
+  .lesson-prevnext__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  @media (max-width: 600px) {
+    .lesson-prevnext {
+      flex-direction: column;
+    }
+
+    .lesson-prevnext__link {
+      max-width: 100%;
+    }
+
+    .lesson-prevnext__link--next {
+      text-align: left;
+      margin-left: 0;
+    }
+
+    .lesson-prevnext__spacer {
+      display: none;
+    }
+  }
+</style>
