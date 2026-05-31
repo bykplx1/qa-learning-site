@@ -4,6 +4,10 @@ import { getSession } from '../../../lib/auth';
 import { recordQuizAttempt } from '../../../db/queries';
 import { mockRecordQuizAttempt } from '../../../lib/test-auth-mock';
 import { logError } from '../../../lib/observability/logger';
+import { buildKey, checkRateLimit, getClientIp, rateLimitResponse } from '../../../lib/rate-limit';
+
+// 30 submissions per 60-second window per user — generous for study sessions.
+const RATE_LIMIT = { windowSec: 60, max: 30 };
 
 export const prerender = false;
 
@@ -26,6 +30,12 @@ const bodySchema = z.object({
 export const POST: APIRoute = async ({ request }) => {
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
+
+  const rlResult = await checkRateLimit(
+    buildKey('/api/quiz/attempts', session.user.id, getClientIp(request)),
+    RATE_LIMIT,
+  );
+  if (rlResult.limited) return rateLimitResponse(rlResult.retryAfter!);
 
   let raw: unknown;
   try {

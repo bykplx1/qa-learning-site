@@ -7,6 +7,10 @@ import { getSession } from '../../../lib/auth';
 import { grade, type CardState, Rating } from '../../../lib/srs/fsrs';
 import { composeQueueForUser } from '../../../lib/srs/queue';
 import { logError } from '../../../lib/observability/logger';
+import { buildKey, checkRateLimit, getClientIp, rateLimitResponse } from '../../../lib/rate-limit';
+
+// 120 grades per 60-second window — an intensive review session grading 2 cards/sec.
+const RATE_LIMIT = { windowSec: 60, max: 120 };
 
 export const prerender = false;
 
@@ -14,6 +18,12 @@ export const POST: APIRoute = async ({ request }) => {
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
   const userId = session.user.id;
+
+  const rlResult = await checkRateLimit(
+    buildKey('/api/review/grade', userId, getClientIp(request)),
+    RATE_LIMIT,
+  );
+  if (rlResult.limited) return rateLimitResponse(rlResult.retryAfter!);
 
   let body: unknown;
   try {

@@ -6,6 +6,10 @@ import { setSubmissionPublic, submitProject } from '../../../../db/queries';
 import { rubrics } from '../../../../lib/projects/rubric';
 import { validateSubmission } from '../../../../lib/projects/validate-submission';
 import { logError } from '../../../../lib/observability/logger';
+import { buildKey, checkRateLimit, getClientIp, rateLimitResponse } from '../../../../lib/rate-limit';
+
+// 10 project submissions per 60-second window — more than enough for normal use.
+const RATE_LIMIT = { windowSec: 60, max: 10 };
 
 export const prerender = false;
 
@@ -30,6 +34,12 @@ export const POST: APIRoute = async ({ request, params }) => {
 
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
+
+  const rlResult = await checkRateLimit(
+    buildKey('/api/projects/submit', session.user.id, getClientIp(request)),
+    RATE_LIMIT,
+  );
+  if (rlResult.limited) return rateLimitResponse(rlResult.retryAfter!);
 
   let raw: unknown;
   try {
