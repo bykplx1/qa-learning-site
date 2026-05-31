@@ -60,7 +60,7 @@ function clusterToCategory(cluster: string): string {
 const TIER_LABEL: Record<string, string> = { starter: 'Starter', mid: 'Mid', capstone: 'Capstone' };
 
 function parseProjectFrontmatter(raw: string): ProjectMeta | null {
-  const normalized = raw.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const m = normalized.match(/^---\n([\s\S]*?)\n---/);
   if (!m) return null;
   let parsed: unknown;
