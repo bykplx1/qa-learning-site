@@ -1,0 +1,92 @@
+---
+slug: cicd-mid-act-matrix
+title: "CI/CD Mid: Matrix Strategy & Artifact Upload Pipeline"
+tier: mid
+track: cicd
+target:
+  name: "act (nektos)"
+  ref: "https://github.com/nektos/act — pinned at tag v0.2.65; see drift note below"
+estimate: 1 day
+rubric: cicd-mid
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - You configure a GitHub Actions workflow with a matrix strategy running tests against at least two Node.js versions (e.g. 20 and 22).
+  - The workflow uploads the test report (JUnit XML or HTML) as a CI artifact using `actions/upload-artifact@v4`.
+  - A failing test on any matrix leg causes the whole job to fail; passing all legs produces green across the board.
+  - You use `act` locally to verify the workflow runs before pushing (note the version and any local differences in your README).
+  - You submit a public repo URL with a green CI badge visible in the README.
+---
+
+## Brief
+
+Level up your pipeline: add a matrix strategy to run the same test suite
+against multiple Node.js versions simultaneously, and upload a structured
+report as an artifact so failures are inspectable without tailing raw logs.
+
+You'll use [act](https://github.com/nektos/act) to run the workflow locally
+before pushing, which closes the feedback loop from "push and wait" to
+"iterate in seconds."
+
+> **Drift notice.** `act` is pinned at `v0.2.65` (the stable release at time
+> of writing). The GitHub Actions runner environment (`ubuntu-latest`) evolves
+> regularly; minor differences between local `act` runs and GitHub-hosted
+> runners are expected. Document any divergences in your README — understanding
+> why local and CI differ is part of the exercise.
+
+## Suggested approach
+
+1. Start from your starter-tier repo, or create a fresh Node.js project with
+   Vitest (or Jest) producing JUnit XML output:
+   ```bash
+   # vitest
+   npx vitest run --reporter=junit --outputFile=test-results/junit.xml
+   ```
+2. Update `.github/workflows/ci.yml` to add a matrix:
+
+   ```yaml
+   jobs:
+     test:
+       strategy:
+         matrix:
+           node-version: ['20', '22']
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-node@v4
+           with:
+             node-version: ${{ matrix.node-version }}
+             cache: 'npm'
+         - run: npm ci
+         - run: npm test -- --reporter=junit --outputFile=test-results/junit.xml
+         - uses: actions/upload-artifact@v4
+           if: always()
+           with:
+             name: test-results-node-${{ matrix.node-version }}
+             path: test-results/
+   ```
+
+3. Install `act` locally (`brew install act` / `choco install act-cli` /
+   [binary releases](https://github.com/nektos/act/releases/tag/v0.2.65)).
+   Run `act push` and confirm both matrix legs execute.
+4. Push to GitHub. Confirm the Actions tab shows two parallel matrix legs.
+5. Deliberately fail one test. Confirm the failing leg marks the job red.
+6. Fix. Confirm green across both legs.
+7. Download the uploaded artifact from the Actions tab and verify the XML is
+   parseable.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A matrix workflow running across two Node.js versions
+- Artifacts uploaded on every run (`if: always()` so failures are inspectable)
+- A green CI badge in the README
+- A short README paragraph explaining: what the matrix strategy gives you and
+  one difference you noticed between `act` locally and GitHub-hosted runners
+
+## Why this matters
+
+Matrix pipelines are how real teams validate that a library works across
+supported runtime versions before shipping. The artifact upload habit — doing
+it with `if: always()` — is the difference between a pipeline that shows you
+evidence and one that just prints "red" with no debuggable output.
