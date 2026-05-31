@@ -19,6 +19,16 @@ import {
   clearServerExamState,
 } from '../../lib/exam/persistence.js';
 
+// Thresholds (ms) at which the polite timer announcer fires (descending).
+const TIMER_ANNOUNCE_THRESHOLDS_MS = [10 * 60_000, 5 * 60_000, 60_000, 30_000] as const;
+
+function thresholdLabel(ms: number): string {
+  if (ms >= 10 * 60_000) return '10 minutes remaining';
+  if (ms >= 5 * 60_000) return '5 minutes remaining';
+  if (ms >= 60_000) return '1 minute remaining';
+  return '30 seconds remaining';
+}
+
 interface Props {
   questions: QuizQuestion[];
   examSlug: string;
@@ -172,14 +182,38 @@ function ConfirmModal({ answeredCount, totalCount, onConfirm, onCancel, returnFo
 
 // ── Start gate ───────────────────────────────────────────────────────────────
 
+type TimingOption = 'standard' | 'x1.5' | 'x2' | 'untimed';
+
+const TIMING_OPTIONS: { value: TimingOption; label: string; description: string }[] = [
+  { value: 'standard', label: 'Standard (60 min)', description: 'Default timed exam.' },
+  { value: 'x1.5', label: 'Extended (90 min ×1.5)', description: '50% extra time.' },
+  { value: 'x2', label: 'Extended (120 min ×2)', description: 'Double time.' },
+  { value: 'untimed', label: 'Untimed practice', description: 'No time limit — submit when ready.' },
+];
+
+function effectiveDuration(base: number, option: TimingOption): number {
+  if (option === 'untimed') return 0; // signals no limit to callers
+  if (option === 'x1.5') return Math.round(base * 1.5);
+  if (option === 'x2') return base * 2;
+  return base;
+}
+
 interface StartGateProps {
   questionCount: number;
   durationMs: number;
-  onStart: () => void;
+  onStart: (resolvedDurationMs: number) => void;
 }
 
 function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
+  const [timing, setTiming] = useState<TimingOption>('standard');
   const durationMin = Math.round(durationMs / 60_000);
+
+  const handleStart = () => {
+    const eff = effectiveDuration(durationMs, timing);
+    // untimed: pass a very large number (24 h) so timer never fires
+    onStart(timing === 'untimed' ? 24 * 60 * 60_000 : eff);
+  };
+
   return (
     <div className="card my-12 mx-auto" style={{ maxWidth: 540, padding: 36 }} data-testid="exam-start-gate">
       <span className="eyebrow">ISTQB exam mode</span>
@@ -209,10 +243,70 @@ function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
       >
         {questionCount} questions · {durationMin}-minute time limit · navigate freely between questions · no feedback until you submit.
       </p>
+
+      <fieldset
+        style={{ border: 'none', padding: 0, margin: '0 0 24px' }}
+        aria-label="Time limit options"
+      >
+        <legend
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            color: 'var(--ink-3)',
+            marginBottom: 10,
+            padding: 0,
+          }}
+        >
+          Time limit
+        </legend>
+        <div className="grid gap-2" role="radiogroup" aria-label="Time limit options">
+          {TIMING_OPTIONS.map((opt) => {
+            const isSelected = timing === opt.value;
+            return (
+              <label
+                key={opt.value}
+                data-testid={`exam-timing-${opt.value}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  borderRadius: 8,
+                  border: isSelected ? '2px solid var(--accent)' : '1px solid var(--rule)',
+                  background: isSelected ? 'var(--accent-soft)' : 'var(--paper)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--sans)',
+                  fontSize: 14,
+                  color: 'var(--ink)',
+                  userSelect: 'none',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="exam-timing"
+                  value={opt.value}
+                  checked={isSelected}
+                  onChange={() => setTiming(opt.value)}
+                  style={{ accentColor: 'var(--accent)', flexShrink: 0 }}
+                />
+                <span>
+                  <strong style={{ fontWeight: 600 }}>{opt.label}</strong>
+                  {' — '}
+                  <span style={{ color: 'var(--ink-2)' }}>{opt.description}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
       <button
         type="button"
         className="btn btn--primary btn--lg"
-        onClick={onStart}
+        onClick={handleStart}
         data-testid="exam-start-btn"
       >
         Start exam
@@ -226,6 +320,8 @@ function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
 interface QuestionScreenProps {
   state: ExamState;
   remainingMs: number;
+  politeAnnouncement: string;
+  assertiveAnnouncement: string;
   onAnswer: (value: number | number[] | null) => void;
   onPrev: () => void;
   onNext: () => void;
@@ -234,7 +330,7 @@ interface QuestionScreenProps {
   submitBtnRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit, onGoto, submitBtnRef }: QuestionScreenProps) {
+function QuestionScreen({ state, remainingMs, politeAnnouncement, assertiveAnnouncement, onAnswer, onPrev, onNext, onSubmit, onGoto, submitBtnRef }: QuestionScreenProps) {
   const q = state.questions[state.currentIndex];
   const answer = state.answers[state.currentIndex];
   const isMulti = q.type === 'multi';
@@ -288,6 +384,22 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
 
   return (
     <div>
+      {/* Hidden live regions for SR announcements — must be mounted early so SR registers them */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }}
+      >
+        {politeAnnouncement}
+      </div>
+      <div
+        aria-live="assertive"
+        aria-atomic="true"
+        style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }}
+      >
+        {assertiveAnnouncement}
+      </div>
+
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <span className="eyebrow">exam mode · 60-minute · ISTQB-style</span>
@@ -308,8 +420,9 @@ function QuestionScreen({ state, remainingMs, onAnswer, onPrev, onNext, onSubmit
         </div>
         <div
           data-testid="exam-timer"
-          aria-live="polite"
-          aria-label={`Time remaining ${formatClock(remainingMs)}`}
+          role="timer"
+          aria-live="off"
+          aria-label={`Time remaining: ${formatClock(remainingMs)}`}
           className="py-2.5 px-4"
           style={{
             fontFamily: 'var(--mono)',
@@ -453,9 +566,16 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
     status: 'active',
   }));
   const [remainingMs, setRemainingMs] = useState<number>(durationMs);
+  // The effective duration for the current attempt (may differ from prop via user timing choice).
+  const [effectiveDurationMs, setEffectiveDurationMs] = useState<number>(durationMs);
   const [result, setResult] = useState<ExamResult | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [showConfirm, setShowConfirm] = useState(false);
+  // SR announcements: polite fires at time thresholds; assertive fires on auto-submit.
+  const [politeAnnouncement, setPoliteAnnouncement] = useState('');
+  const [assertiveAnnouncement, setAssertiveAnnouncement] = useState('');
+  // Tracks which threshold buckets have already been announced this attempt.
+  const announcedThresholdsRef = useRef<Set<number>>(new Set());
 
   const runnerRef = useRef<ExamRunnerHandle | null>(null);
   const submittedRef = useRef<boolean>(false);
@@ -489,6 +609,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
         answers: saved.answers,
         status: 'active',
       });
+      setEffectiveDurationMs(saved.durationMs);
       setRemainingMs(remaining);
       setPhase('active');
       return true;
@@ -548,14 +669,32 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
     if (phase !== 'active') return;
 
     const elapsed = startedAtRef.current > 0 ? Date.now() - startedAtRef.current : 0;
-    const effectiveDuration = Math.max(1, durationMs - elapsed);
+    const activeDurationMs = effectiveDurationMs;
+    const runnerDuration = Math.max(1, activeDurationMs - elapsed);
+
+    // Clear announced thresholds for a fresh attempt
+    announcedThresholdsRef.current = new Set();
+    setPoliteAnnouncement('');
+    setAssertiveAnnouncement('');
 
     const runner = createExamRunner({
       questions,
-      durationMs: effectiveDuration,
+      durationMs: runnerDuration,
       originalStartedAt: startedAtRef.current > 0 ? startedAtRef.current : undefined,
       onTick: (ms) => {
         setRemainingMs(ms);
+
+        // Threshold announcements — fire once per threshold per attempt.
+        for (const threshold of TIMER_ANNOUNCE_THRESHOLDS_MS) {
+          if (ms <= threshold && !announcedThresholdsRef.current.has(threshold)) {
+            announcedThresholdsRef.current.add(threshold);
+            const label = thresholdLabel(threshold);
+            // Toggle via a sentinel suffix so React re-renders even if same label
+            setPoliteAnnouncement((prev) => (prev === label ? label + '​' : label));
+            break;
+          }
+        }
+
         // sessionStorage every tick (cheap, local). Server PUT throttled
         // so a 60-min exam doesn't generate ~3,600 DB writes.
         if (startedAtRef.current > 0) {
@@ -563,7 +702,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
           const toSave = {
             examSlug,
             startedAt: startedAtRef.current,
-            durationMs,
+            durationMs: activeDurationMs,
             currentIndex: currentState.currentIndex,
             answers: currentState.answers,
           };
@@ -585,7 +724,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
           const toSave = {
             examSlug,
             startedAt: startedAtRef.current,
-            durationMs,
+            durationMs: activeDurationMs,
             currentIndex: s.currentIndex,
             answers: s.answers,
           };
@@ -600,6 +739,10 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
         clearExamState();
         if (signedInRef.current) void clearServerExamState();
         setRemainingMs(0);
+        // Assertive announcement only when timer expired (not manual submit)
+        if (r.reason === 'expired') {
+          setAssertiveAnnouncement('Time is up. Your exam has been automatically submitted.');
+        }
         setResult(r);
         setPhase('summary');
       },
@@ -652,7 +795,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
       });
   }, [adapter, examSlug, result, signedIn]);
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback((resolvedDurationMs: number) => {
     startedAtRef.current = Date.now();
     submittedRef.current = false;
     attemptIdRef.current = crypto.randomUUID();
@@ -664,9 +807,10 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
       answers: new Array(questions.length).fill(null),
       status: 'active',
     });
-    setRemainingMs(durationMs);
+    setEffectiveDurationMs(resolvedDurationMs);
+    setRemainingMs(resolvedDurationMs);
     setPhase('active');
-  }, [questions, durationMs]);
+  }, [questions]);
 
   const handleAnswer = useCallback((value: number | number[] | null) => {
     runnerRef.current?.dispatch({ type: 'answer', value });
@@ -707,6 +851,8 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
           <QuestionScreen
             state={state}
             remainingMs={remainingMs}
+            politeAnnouncement={politeAnnouncement}
+            assertiveAnnouncement={assertiveAnnouncement}
             onAnswer={handleAnswer}
             onPrev={handlePrev}
             onNext={handleNext}
