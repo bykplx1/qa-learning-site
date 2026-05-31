@@ -8,6 +8,7 @@ import { SessionMerge } from '../components/SessionMerge';
 import MobileNavToggle from '../components/nav/MobileNavToggle';
 import Analytics from '@vercel/analytics/astro';
 import SpeedInsights from '@vercel/speed-insights/astro';
+import Footer from '../components/Footer.astro';
 import interTightLatinUrl from '@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2?url';
 import newsreaderLatinUrl from '@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2?url';
 import jetbrainsMonoLatinUrl from '@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2?url';
@@ -111,6 +112,7 @@ const navLinks = [
     <SearchModal client:only="react" />
     <SessionMerge client:idle />
     <slot />
+    <slot name="footer"><Footer /></slot>
     <Analytics />
     <SpeedInsights />
   </body>

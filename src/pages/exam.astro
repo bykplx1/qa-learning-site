@@ -39,6 +39,9 @@ const examQuestions = buildExamPool();
       />
     )}
   </div>
+  {/* No site footer on the focused, timed exam surface: the client:only ExamRunner
+      renders empty on SSR, so a footer below it gets pushed down on hydration → CLS. */}
+  <Fragment slot="footer" />
 </BaseLayout>
 
 <style>
