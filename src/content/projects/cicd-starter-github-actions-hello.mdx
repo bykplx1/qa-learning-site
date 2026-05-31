@@ -1,0 +1,86 @@
+---
+slug: cicd-starter-github-actions-hello
+title: "CI/CD Starter: First GitHub Actions Pipeline"
+tier: starter
+track: cicd
+target:
+  name: "github-actions-starter-workflows (GitHub)"
+  ref: "https://github.com/actions/starter-workflows — pinned at commit d6f81be; see drift note below"
+estimate: 2–3 hr
+rubric: cicd-starter
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - You fork or create a public GitHub repo and add a `.github/workflows/ci.yml` that runs on every push and pull request to `main`.
+  - The workflow installs Node.js, runs `npm ci`, and executes at least one test command (e.g. `npm test`).
+  - A failing test causes the workflow to exit non-zero and show a red check on the commit.
+  - You use `actions/checkout@v4` and `actions/setup-node@v4` (pinned to major version tags, not `@latest`).
+  - Your README explains what the workflow does and how to verify it locally before pushing.
+---
+
+## Brief
+
+Wire your first real GitHub Actions pipeline: a CI workflow that installs
+dependencies and runs tests on every push. You'll use
+[starter-workflows](https://github.com/actions/starter-workflows) as a
+reference, then build your own from scratch so you understand every line.
+
+The lesson teaches you the GitHub Actions model. This project makes you own a
+pipeline that actually fails when tests fail — not one that silently passes.
+
+> **Drift notice.** The `starter-workflows` repo is maintained by GitHub and
+> updated regularly. The pinned commit (`d6f81be`) reflects the Node.js
+> starter template at time of writing. If the template syntax changes, adapt
+> accordingly and note it in your README — understanding the diff is part of the
+> exercise.
+
+## Suggested approach
+
+1. Create a public repo on GitHub. You can use a minimal Node.js project or
+   fork an existing one you've worked on.
+2. Add a test runner. If you have none, `npm init -y` and install Vitest:
+   `npm install -D vitest`. Write one trivial passing test and one that fails
+   when you break the code.
+3. Create `.github/workflows/ci.yml`:
+
+   ```yaml
+   name: CI
+   on:
+     push:
+       branches: [main]
+     pull_request:
+       branches: [main]
+
+   jobs:
+     test:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-node@v4
+           with:
+             node-version: '22'
+             cache: 'npm'
+         - run: npm ci
+         - run: npm test
+   ```
+
+4. Push to `main`. Watch the Actions tab. Confirm the run goes green.
+5. Deliberately break a test, push again, confirm the run goes red.
+6. Fix the test. Confirm green again. Screenshot both outcomes for your README.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A `.github/workflows/ci.yml` that runs `npm test` on push/PR
+- Evidence of at least one red run followed by a green run (commit history
+  or README screenshots)
+- A README paragraph explaining: what the workflow does, how to trigger it,
+  and what "pinning action versions" means
+
+## Why this matters
+
+Every pipeline you write later — Playwright suites, API tests, security
+scans — runs inside a CI workflow. Understanding the job/step model, why
+actions are pinned, and what a non-zero exit code means is the foundation.
+Getting this right on a trivial project means you won't debug workflow syntax
+when you're also debugging test failures.

@@ -1,0 +1,115 @@
+---
+slug: cicd-capstone-release-pipeline
+title: "CI/CD Capstone: Full Release Pipeline with Quality Gates"
+tier: capstone
+track: cicd
+target:
+  name: "fastify/demo (Fastify)"
+  ref: "https://github.com/fastify/demo — pinned at commit 3a7c2f1; see drift note below"
+estimate: 4–5 days
+rubric: cicd-capstone
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - Your pipeline has three sequential gates — lint → unit tests → integration/e2e tests — each as a separate job with explicit `needs:` dependency.
+  - A failure at any gate blocks downstream jobs; a passing run uploads a build artifact (e.g. dist tarball or Docker image digest) only after all gates pass.
+  - You implement at least one reusable workflow or composite action to deduplicate repeated steps (e.g. setup Node + cache).
+  - The pipeline enforces a coverage threshold — if test coverage falls below a configured floor (e.g. 80%), the unit-test job fails.
+  - CI is configured with concurrency cancellation so a new push cancels any in-flight run on the same branch.
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - You attest that CI is green at submission time by checking the ci_green field true in your submission.
+---
+
+## Brief
+
+Design and ship a production-grade GitHub Actions release pipeline against
+[fastify/demo](https://github.com/fastify/demo) — a real-world Fastify
+application with an existing test suite. You'll gate a build artifact behind
+sequential quality gates, enforce a coverage floor, eliminate CI run sprawl
+with concurrency cancellation, and extract shared setup into a reusable
+workflow.
+
+This is a portfolio-grade artifact. The goal is a pipeline another engineer
+can reason about in five minutes and extend without breaking.
+
+> **Drift notice.** `fastify/demo` is pinned at commit `3a7c2f1`. Fork it —
+> do not run your pipeline against the upstream repo directly. The application
+> dependencies and test suite evolve; if the pinned commit's tests are broken
+> after forking, note it in your README and fix or skip the broken tests as
+> appropriate. Understanding why upstream CI was green but your fork is not is
+> an intentional part of the exercise.
+
+## Suggested approach
+
+### Phase 1 — Fork and baseline (Day 1)
+
+1. Fork `fastify/demo` to your GitHub account.
+2. Clone locally. Run the existing tests. Confirm they pass. Note the test
+   command and coverage tool in use.
+3. Create `.github/workflows/ci.yml` with a single `test` job that replicates
+   the local green run in CI. Push. Confirm green.
+
+### Phase 2 — Sequential quality gates (Day 2)
+
+4. Split the single job into three:
+   - `lint` — runs `npm run lint` (add ESLint if absent)
+   - `unit-tests` — runs `npm test` with coverage; enforce the floor:
+     ```yaml
+     - run: npm test -- --coverage --coverageThreshold='{"global":{"lines":80}}'
+     ```
+   - `integration-tests` — runs any integration or e2e tests with `needs: unit-tests`
+5. Add `needs:` so `unit-tests` requires `lint`, and `integration-tests`
+   requires `unit-tests`.
+6. Deliberately drop coverage below the floor. Confirm `unit-tests` fails and
+   `integration-tests` is skipped (not just red — skipped).
+
+### Phase 3 — Reusable workflow (Day 3)
+
+7. Extract the repeated Node.js setup (checkout + setup-node + npm ci + cache)
+   into `.github/workflows/setup-node.yml` as a reusable workflow, or into
+   `.github/actions/setup-node/action.yml` as a composite action.
+8. Replace duplicated setup steps in all jobs with a `uses:` reference.
+9. Confirm the pipeline still passes after the refactor.
+
+### Phase 4 — Artifact gate + concurrency (Days 4–5)
+
+10. Add a `publish` job with `needs: [lint, unit-tests, integration-tests]`
+    that archives the built output:
+    ```yaml
+    - run: npm run build
+    - uses: actions/upload-artifact@v4
+      with:
+        name: release-${{ github.sha }}
+        path: dist/
+    ```
+11. Add concurrency cancellation at the workflow level:
+    ```yaml
+    concurrency:
+      group: ci-${{ github.ref }}
+      cancel-in-progress: true
+    ```
+12. Open two PRs in quick succession against your fork to trigger cancellation.
+    Screenshot the cancelled run for your README.
+13. Document in your README: the gate dependency graph (a text diagram is
+    fine), what happens to downstream jobs when an upstream gate fails, and
+    one trade-off you made in the pipeline design.
+
+## What "done" looks like
+
+A public GitHub repo (fork of fastify/demo) with:
+- Green CI badge covering all four jobs (lint, unit-tests, integration-tests,
+  publish)
+- A reusable workflow or composite action referenced by at least two jobs
+- Coverage threshold enforced; evidence of a failing run when threshold is
+  missed
+- Concurrency cancellation configured
+- A README covering: gate dependency graph, how to run locally, and at least
+  one design decision you'd revisit
+
+## Why this matters
+
+The gap between "CI runs tests" and "CI gates a release" is where most teams
+leak quality. Sequential jobs with explicit `needs:` dependencies, a coverage
+floor, and artifact gating turn a pipeline from a reporting tool into a
+deployment gate. These patterns are table stakes for any QA engineer
+contributing to a real delivery pipeline.
