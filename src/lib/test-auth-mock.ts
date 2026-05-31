@@ -353,5 +353,6 @@ export function mockLoadProfile(lessonMetaMap?: Map<string, LessonMetaRecord>) {
     retentionSummary: { retentionPct: null, latestStabilityDays: null, dueCount: 0 },
     selfExplanationCount: 0,
     cardsPerSession: null,
+    completedSlugs: mockStore.lessons.map((l) => l.lessonSlug),
   };
 }
