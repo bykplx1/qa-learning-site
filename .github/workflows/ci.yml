@@ -333,10 +333,34 @@ jobs:
 
   # ── Stage 3c: Lighthouse-CI budget gate ───────────────────────────────────
   lhci:
-    # Audits static pages from `dist/client/` against score budgets.
-    # SSR routes (prerender:false) are not audited here — the Vercel adapter
-    # does not implement `astro preview`; auditing them requires a live preview
-    # deployment URL (tracked as a follow-up issue).
+    # Audits prerendered (static) pages by serving dist/client/ with `serve`.
+    #
+    # AUDITED SURFACES (prerender:true — static HTML in dist/client/):
+    #   /                                  homepage
+    #   /lessons/foundations/qa-mindset    representative lesson
+    #   /exam                              mock exam shell
+    #
+    # NOT AUDITED — SSR / authenticated surfaces (prerender:false):
+    #   /profile                 requires a signed-in session; 404s from static server
+    #   /me/retention            auth-gated SSR; redirects to /login unauthenticated
+    #   /exam/attempts/[id]      auth-gated SSR; dynamic route, no static file
+    #
+    # WHY these surfaces are excluded:
+    #   The Vercel adapter does not implement `astro preview`, so there is no
+    #   built-in way to run SSR routes locally against the production build.
+    #   Vercel preview deployments cannot run GitHub/Google OAuth (redirect URIs
+    #   are not registered for preview URLs), and the /dev/login mock requires
+    #   ENABLE_TEST_LOGIN=1 + TEST_LOGIN_SECRET + a live DATABASE_URL — wiring
+    #   all three into a Lighthouse run would add fragile infra that defeats the
+    #   purpose of a fast, self-contained budget gate.
+    #
+    # CONSEQUENCE: performance, a11y, SEO, and CLS budgets are not enforced for
+    #   the authenticated SSR shell. Manual or RUM-based auditing is the
+    #   recommended complement (tracked as #417).
+    #
+    # NOTE: /profile was previously listed in lighthouserc*.json but it is an
+    #   SSR route — the static server returns 404 for it, so any "pass" result
+    #   was auditing the 404 page, not the real profile. It has been removed.
     runs-on: ubuntu-latest
     needs: integration
     permissions:
