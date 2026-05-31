@@ -12,6 +12,13 @@ export const CLUSTER_DISPLAY: Record<CurriculumCluster, string> = {
   'ai-llm-qa': 'AI / LLM Quality Engineering',
 };
 
+/** Pinned first/definitional slug per cluster — overrides layer+alpha sort for the lead CTA. */
+const CLUSTER_FIRST_SLUG: Partial<Record<CurriculumCluster, string>> = {
+  foundations: 'what-is-qa-quality',
+  'automation-cicd': 'selenium-vs-cypress-vs-playwright',
+  'ai-llm-qa': 'llm-fundamentals-for-testers',
+};
+
 const LAYER_ORDER = { facts: 0, patterns: 1, systems: 2 } as const;
 
 export function clusterOrder(cluster: CurriculumCluster): number {
@@ -39,7 +46,12 @@ export function groupByCluster(
     map.get(entry.data.cluster)!.push(entry);
   }
   for (const [cluster, list] of map) {
+    const pinnedSlug = CLUSTER_FIRST_SLUG[cluster];
     list.sort((a, b) => {
+      if (pinnedSlug) {
+        if (a.data.slug === pinnedSlug) return -1;
+        if (b.data.slug === pinnedSlug) return 1;
+      }
       const layerCmp = LAYER_ORDER[a.data.layer] - LAYER_ORDER[b.data.layer];
       if (layerCmp !== 0) return layerCmp;
       return a.data.title.localeCompare(b.data.title);
