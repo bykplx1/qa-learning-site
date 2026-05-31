@@ -222,7 +222,7 @@ const { options: endCtaOptions } = resolveEndCta({
         </section>
       )}
 
-      <EndOfLessonCTA options={endCtaOptions} />
+      <EndOfLessonCTA options={endCtaOptions} cluster={cluster} slug={topic.data.slug} title={title} />
 
       <LessonPrevNext prev={prevTopic} next={nextTopic} />
     </main>
