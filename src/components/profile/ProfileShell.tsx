@@ -222,7 +222,7 @@ function RetentionLeadSection({ summary }: { summary: RetentionSummary }) {
   return (
     <section className="retention-lead" aria-labelledby="retention-lead-heading" data-testid="retention-lead-section">
       <div className="retention-lead__header">
-        <span className="eyebrow">retention · the goal</span>
+        <span className="eyebrow" id="retention-lead-heading">retention · the goal</span>
         <a href="/me/retention" className="retention-lead__link">full dashboard →</a>
       </div>
       {hasData ? (
@@ -353,7 +353,7 @@ function ProfileShellInner({ initialUser, initialData }: ProfileShellProps) {
           <div className="avatar avatar--lg">{initials(user.name, user.email)}</div>
           <div>
             <span className="eyebrow">profile · private</span>
-            <div className="identity__name">{user.name ?? user.email}</div>
+            <h1 className="identity__name">{user.name ?? user.email}</h1>
             <div className="identity__email">{user.email}</div>
           </div>
         </div>

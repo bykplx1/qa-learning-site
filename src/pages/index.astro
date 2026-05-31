@@ -38,6 +38,7 @@ function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
   title="QA Learning"
   description={`Interactive study site for QA fundamentals. ${totalTopics} topics across ${clusterRows.length} tracks.`}
 >
+  <main id="main">
   <section class="hero">
     <div>
       <span class="eyebrow">QA · curriculum + practice</span>
@@ -182,4 +183,5 @@ function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
     <span>© 2026 · MIT · QA Learning</span>
     <span>{totalTopics} topics · {quizCount} quizzes</span>
   </footer>
+  </main>
 </BaseLayout>

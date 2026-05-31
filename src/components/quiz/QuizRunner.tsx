@@ -89,6 +89,16 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
 
   const [multiSelection, setMultiSelection] = useState<number[]>([]);
 
+  const feedbackRef = useRef<HTMLDivElement>(null);
+
+  // Move focus to feedback region after answering so SR users hear the polite live region
+  // and focus is not dropped to <body> when options become disabled.
+  useEffect(() => {
+    if (state.feedback) {
+      feedbackRef.current?.focus();
+    }
+  }, [state.feedback]);
+
   useEffect(() => {
     setMultiSelection([]);
   }, [state.currentIndex]);
@@ -160,7 +170,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
         <div className="eyebrow mb-3">
           Q{String(state.currentIndex + 1).padStart(2, '0')} · {isMulti ? 'multi-select' : 'single choice'}
         </div>
-        <div
+        <h3
           style={{
             fontFamily: 'var(--serif)',
             fontSize: 24,
@@ -168,10 +178,11 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
             letterSpacing: '-0.015em',
             margin: '0 0 24px',
             color: 'var(--ink)',
+            fontWeight: 400,
           }}
         >
           {q.q}
-        </div>
+        </h3>
 
         {q.options && (
           <div className="grid gap-2.5">
@@ -221,6 +232,10 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
 
         {state.feedback && (
           <div
+            ref={feedbackRef}
+            role="status"
+            aria-live="polite"
+            tabIndex={-1}
             className="mt-6"
             style={{
               padding: 18,
@@ -228,6 +243,7 @@ function QuestionScreen({ state, dispatch, signedIn }: QuestionScreenProps) {
               // dynamic: background driven by correct state
               background: correct ? 'var(--pass-soft)' : 'var(--accent-soft)',
               border: '1px solid transparent',
+              outline: 'none',
             }}
           >
             <div className="flex items-center gap-2 mb-2">
