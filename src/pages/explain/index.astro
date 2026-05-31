@@ -1,6 +1,9 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getSession } from '../../lib/auth';
+import { groupByCluster, clusterDisplay } from '../../lib/curriculum/order';
+import type { CurriculumCluster } from '../../lib/curriculum/schema';
 
 export const prerender = false;
 
@@ -8,6 +11,11 @@ const session = await getSession(Astro.request.headers);
 if (!session?.user?.id) {
   return Astro.redirect(`/login?next=${encodeURIComponent(Astro.url.pathname)}`);
 }
+
+const allTopics = await getCollection('curriculum');
+const groups = groupByCluster(allTopics);
+
+const clusterRows = Array.from(groups.entries()).filter(([, topics]) => topics.length > 0);
 ---
 
 <BaseLayout title="Explain it back — QA Learning" description="Feynman self-explanation exercises for every concept you have reviewed." noindex>
@@ -16,13 +24,29 @@ if (!session?.user?.id) {
       <span class="eyebrow">feynman technique · self-explanation</span>
       <h1>Explain it back</h1>
       <p class="explain-index__lead">
-        Pick a concept you have reviewed and explain it in plain language — as if you were teaching someone who has never heard of it.
+        Pick a concept and explain it in plain language — as if teaching someone who has never heard of it.
       </p>
     </header>
 
-    <p class="explain-index__hint">
-      Navigate to <strong>/explain/[concept-slug]</strong> to start an explanation session for a specific concept.
-    </p>
+    <div class="explain-index__clusters">
+      {clusterRows.map(([cluster, topics]) => (
+        <section class="explain-cluster">
+          <h2 class="explain-cluster__name">
+            <span class="eyebrow">{cluster}</span>
+            {clusterDisplay(cluster as CurriculumCluster)}
+          </h2>
+          <ul class="explain-cluster__list" role="list">
+            {topics.map((t) => (
+              <li>
+                <a class="explain-topic-link" href={`/explain/${encodeURIComponent(t.data.slug)}`}>
+                  {t.data.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   </main>
 </BaseLayout>
 
@@ -33,7 +57,7 @@ if (!session?.user?.id) {
     padding: 40px 24px 80px;
   }
   .explain-index__head {
-    margin-bottom: 28px;
+    margin-bottom: 36px;
   }
   .explain-index__head h1 {
     font-family: var(--serif);
@@ -51,14 +75,41 @@ if (!session?.user?.id) {
     margin: 16px 0 0;
     max-width: 560px;
   }
-  .explain-index__hint {
-    font-size: 14px;
-    color: var(--ink-3);
-    font-family: var(--mono);
-    padding: 14px 18px;
+  .explain-index__clusters {
+    display: grid;
+    gap: 32px;
+  }
+  .explain-cluster__name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+    margin: 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .explain-cluster__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 4px;
+  }
+  .explain-topic-link {
+    display: block;
+    padding: 10px 14px;
     background: var(--paper-2);
     border: 1px solid var(--rule);
     border-radius: 8px;
-    margin: 0;
+    font-size: 14px;
+    color: var(--ink);
+    text-decoration: none;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .explain-topic-link:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-strong, var(--accent));
   }
 </style>
