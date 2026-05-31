@@ -8,7 +8,10 @@ import WikiLink from '../../../components/WikiLink';
 import SegmentedLesson from '../../../components/lessons/SegmentedLesson';
 import { computeSegments, estimateWordCount } from '../../../lib/lessons/segmenter';
 import EndOfLessonCTA from '../../../components/lessons/EndOfLessonCTA.astro';
+import LessonPrevNext from '../../../components/lessons/LessonPrevNext.astro';
 import { resolveEndCta } from '../../../lib/lessons/end-cta';
+import { groupByCluster } from '../../../lib/curriculum/order';
+import type { CurriculumCluster } from '../../../lib/curriculum/schema';
 import type { QuizQuestion } from '../../../lib/quiz/schema';
 import { loadQuizBySlug } from '../../../lib/quiz/loadQuiz';
 import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
@@ -93,6 +96,15 @@ const lessonSegments = computeSegments(headings, wordCount);
 const allProjects = await getCollection('projects');
 const projectForCluster = allProjects.find((p) => p.data.cluster === cluster) ?? null;
 const projectSlugForCluster = projectForCluster?.data.slug ?? null;
+
+// Prev/next navigation within cluster (same ordering as groupByCluster: layer then title).
+const allTopicsForNav = await getCollection('curriculum');
+const clusterMap = groupByCluster(allTopicsForNav);
+const clusterTopics = clusterMap.get(cluster as CurriculumCluster) ?? [];
+const currentIndex = clusterTopics.findIndex((t) => t.data.slug === topic.data.slug);
+const prevTopic = currentIndex > 0 ? clusterTopics[currentIndex - 1] : null;
+const nextTopic = currentIndex >= 0 && currentIndex < clusterTopics.length - 1 ? clusterTopics[currentIndex + 1] : null;
+
 const { options: endCtaOptions } = resolveEndCta({
   dueCards: 0,
   reviewCount: 0,
@@ -188,10 +200,15 @@ const { options: endCtaOptions } = resolveEndCta({
       )}
 
       <EndOfLessonCTA options={endCtaOptions} />
+
+      <LessonPrevNext prev={prevTopic} next={nextTopic} />
     </main>
 
     <aside class="lesson-toc">
-      <TableOfContents headings={headings} />
+      <TableOfContents
+        headings={headings}
+        appendHeadings={quizQuestions.length > 0 ? [{ depth: 2, slug: 'quiz', text: 'Practice quiz' }] : []}
+      />
     </aside>
   </div>
 </BaseLayout>
