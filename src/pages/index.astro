@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { loadAllQuizzes } from '../lib/quiz/loadQuiz';
+import { loadReachableQuizzes } from '../lib/quiz/loadQuiz';
 import { sortCurriculum, groupByCluster, clusterDisplay } from '../lib/curriculum/order';
 import type { CurriculumEntry } from '../lib/curriculum/order';
 import type { CurriculumCluster } from '../lib/curriculum/schema';
@@ -23,9 +23,10 @@ const clusterRows = Array.from(groups.entries())
 const totalTopics = sorted.length;
 const totalMinutes = sorted.reduce((s, t) => s + t.data.estimatedEncodingMinutes, 0);
 
-const allQuizzes = loadAllQuizzes();
-const totalQuizQuestions = allQuizzes.reduce((sum, q) => sum + q.questions.length, 0);
-const quizCount = allQuizzes.length;
+const liveSlugs = new Set(sorted.map((t) => t.data.slug));
+const reachableQuizzes = loadReachableQuizzes(liveSlugs);
+const totalQuizQuestions = reachableQuizzes.reduce((sum, q) => sum + q.questions.length, 0);
+const quizCount = reachableQuizzes.length;
 
 const latestTopics = sorted.slice(0, 10);
 

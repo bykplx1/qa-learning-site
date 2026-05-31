@@ -216,7 +216,7 @@ function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
 
   return (
     <div className="card my-12 mx-auto" style={{ maxWidth: 540, padding: 36 }} data-testid="exam-start-gate">
-      <span className="eyebrow">ISTQB exam mode</span>
+      <span className="eyebrow">mock exam</span>
       <h2
         className="mt-3 mb-4"
         style={{
@@ -402,7 +402,7 @@ function QuestionScreen({ state, remainingMs, politeAnnouncement, assertiveAnnou
 
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <span className="eyebrow">exam mode · 60-minute · ISTQB-style</span>
+          <span className="eyebrow">exam mode · 60-minute</span>
           <h2
             className="mt-2"
             style={{

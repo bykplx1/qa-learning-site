@@ -62,12 +62,33 @@ export function loadQuizBySlug(slug: string): LoadedQuiz | null {
 }
 
 /**
+ * Returns only quizzes whose slug is in the provided live-curriculum slug set.
+ * Use this instead of loadAllQuizzes() wherever counts must reflect reachable content.
+ */
+export function loadReachableQuizzes(liveSlugs: ReadonlySet<string>): LoadedQuiz[] {
+  return loadAllQuizzes().filter((q) => liveSlugs.has(q.slug));
+}
+
+/**
  * Returns all validated, win1252-repaired quiz questions from all files,
  * with each question id namespaced as `<slug>:<id>`.
  * Used by exam/pool.ts as the canonical pool source.
  */
 export function loadExamPool(): Array<{ slug: string; questions: QuizQuestion[] }> {
   return loadAllQuizzes().map((quiz) => ({
+    slug: quiz.slug,
+    questions: quiz.questions.map((q) => ({ ...q, id: `${quiz.slug}:${q.id}` })),
+  }));
+}
+
+/**
+ * Like loadExamPool() but scoped to banks matching the live-curriculum slug set.
+ * Pass the slug set derived from getCollection('curriculum') at the call site.
+ */
+export function loadReachableExamPool(
+  liveSlugs: ReadonlySet<string>,
+): Array<{ slug: string; questions: QuizQuestion[] }> {
+  return loadReachableQuizzes(liveSlugs).map((quiz) => ({
     slug: quiz.slug,
     questions: quiz.questions.map((q) => ({ ...q, id: `${quiz.slug}:${q.id}` })),
   }));
