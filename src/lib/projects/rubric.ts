@@ -330,6 +330,164 @@ export const rubrics = {
     ],
   },
 
+  // ---------------------------------------------------------------------------
+  // cicd track rubrics (starter / mid / capstone) — added for #338
+  // ---------------------------------------------------------------------------
+
+  /** cicd track — Starter: first GitHub Actions pipeline */
+  'cicd-starter': {
+    id: 'cicd-starter',
+    label: 'CI/CD Starter: First GitHub Actions Pipeline',
+    rows: [
+      {
+        id: 'trigger_config',
+        criterion: 'Workflow trigger configuration',
+        band: [
+          'Workflow triggers on no events or uses `workflow_dispatch` only.',
+          'Triggers on push but not on pull requests — misses the PR gate use-case.',
+          'Triggers on push and pull_request for the main branch.',
+          'Triggers on push and pull_request with branch filters; actions are pinned to major version tags (not `@latest`).',
+        ],
+      },
+      {
+        id: 'failure_signal',
+        criterion: 'Failure signal fidelity',
+        band: [
+          'Workflow always reports green regardless of test outcome.',
+          'Workflow runs tests but swallows non-zero exit codes (`|| true` or equivalent).',
+          'A failing test causes the job to fail and the commit check to go red.',
+          'Failing test causes red check; passing test causes green check; both states are demonstrated (commit history or README screenshots).',
+        ],
+      },
+      {
+        id: 'step_quality',
+        criterion: 'Step hygiene',
+        band: [
+          'Missing `npm ci` — uses `npm install` or no install step at all.',
+          'Uses `npm ci` but no Node.js version pin or cache configuration.',
+          'Uses `actions/setup-node` with a pinned Node version and `cache: npm`.',
+          'All actions pinned to major tags; Node version matches project\'s `.nvmrc` or `engines` field; cache configured.',
+        ],
+      },
+      {
+        id: 'documentation',
+        criterion: 'README documentation',
+        band: [
+          'No README or README does not mention CI.',
+          'README mentions CI exists but does not explain what it does.',
+          'README explains what the workflow does and how to trigger it.',
+          'README covers workflow purpose, how to trigger it, what "pinning action versions" means, and includes at least one screenshot of a passing and failing run.',
+        ],
+      },
+    ],
+  },
+
+  /** cicd track — Mid: matrix strategy + artifact upload */
+  'cicd-mid': {
+    id: 'cicd-mid',
+    label: 'CI/CD Mid: Matrix Strategy & Artifact Upload',
+    rows: [
+      {
+        id: 'matrix_coverage',
+        criterion: 'Matrix strategy coverage',
+        band: [
+          'No matrix — single Node.js version only.',
+          'Matrix declared but only one version is active (others commented out).',
+          'Matrix runs tests across at least two Node.js versions in parallel.',
+          'Matrix runs across two or more versions; `fail-fast: false` set so all legs complete even if one fails.',
+        ],
+      },
+      {
+        id: 'artifact_upload',
+        criterion: 'Artifact upload quality',
+        band: [
+          'No artifact upload.',
+          'Artifact uploaded only on success — failures produce no inspectable output.',
+          'Artifact uploaded with `if: always()` so it is available on failure.',
+          'Artifact uploaded with `if: always()`; named with the matrix dimension (e.g. `test-results-node-22`); contains structured output (JUnit XML or HTML report).',
+        ],
+      },
+      {
+        id: 'local_verification',
+        criterion: 'Local verification with `act`',
+        band: [
+          'No evidence of local workflow testing.',
+          'README mentions `act` but no version recorded and no local run demonstrated.',
+          'README documents the `act` version used and confirms the workflow ran locally.',
+          'README documents `act` version, notes at least one difference between local and GitHub-hosted runner behaviour, and explains why.',
+        ],
+      },
+      {
+        id: 'repo_url',
+        criterion: 'Public repo as artifact',
+        band: [
+          'No public repo submitted.',
+          'Repo exists but README is missing or does not explain the pipeline.',
+          'Repo with README explaining matrix purpose and how to run locally.',
+          'Repo with README + green CI badge + matrix job visible in Actions tab + artifact downloadable.',
+        ],
+      },
+    ],
+  },
+
+  /** cicd track — Capstone: full release pipeline with quality gates */
+  'cicd-capstone': {
+    id: 'cicd-capstone',
+    label: 'CI/CD Capstone: Full Release Pipeline with Quality Gates',
+    rows: [
+      {
+        id: 'gate_sequencing',
+        criterion: 'Sequential gate design',
+        band: [
+          'All steps in a single job — no downstream blocking.',
+          'Multiple jobs exist but no `needs:` dependency — they run in parallel unconditionally.',
+          'Three distinct jobs with `needs:` dependencies; a failure in an upstream gate skips (not just fails) downstream jobs.',
+          'Three-gate chain with explicit `needs:`; failure in any gate is demonstrated to skip downstream jobs, not just mark them red.',
+        ],
+      },
+      {
+        id: 'coverage_gate',
+        criterion: 'Coverage threshold enforcement',
+        band: [
+          'No coverage measurement.',
+          'Coverage is reported but no threshold configured — pipeline never fails on low coverage.',
+          'Coverage threshold configured; pipeline fails the unit-test job when coverage falls below the floor.',
+          'Threshold configured and demonstrated: a commit that drops below the floor causes the unit-test job to fail and the integration-test job to be skipped.',
+        ],
+      },
+      {
+        id: 'reusable_workflow',
+        criterion: 'Reusable workflow or composite action',
+        band: [
+          'Setup steps duplicated verbatim across every job.',
+          'Partial extraction — one job still has inline setup not covered by the shared action.',
+          'Shared setup extracted into a reusable workflow or composite action; all jobs reference it.',
+          'Shared action extracted, documented in the README, and the pipeline still passes after the refactor.',
+        ],
+      },
+      {
+        id: 'concurrency_cancellation',
+        criterion: 'Concurrency cancellation',
+        band: [
+          'No concurrency configuration — multiple pushes queue unlimited parallel runs.',
+          'Concurrency group defined but `cancel-in-progress` is false or absent.',
+          'Concurrency group and `cancel-in-progress: true` configured.',
+          'Configured and demonstrated: README includes a screenshot of a cancelled run triggered by a rapid second push.',
+        ],
+      },
+      {
+        id: 'ci_green',
+        criterion: 'Green CI on submitted repo',
+        band: [
+          'No CI or CI is red.',
+          'CI exists but green status is not verifiable (private repo or broken badge).',
+          'Public repo with green CI badge confirmed at submission time.',
+          'Public repo + green CI badge + all four jobs (lint, unit-tests, integration-tests, publish) visible and green in Actions tab.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',
