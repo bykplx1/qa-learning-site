@@ -68,8 +68,13 @@ function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
     ))}
   </section>
 
-  <footer class="site-footer">
-    <span>© 2026 · MIT · QA Learning</span>
+  <footer class="site-footer" slot="footer" role="contentinfo" aria-label="Site footer">
+    <span>© {new Date().getFullYear()} · MIT · QA Learning</span>
+    <nav aria-label="Footer">
+      <a href="/lessons">Lessons</a>
+      <a href="/projects">Build</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
     <span>{totalTopics} topics across {clusterRows.length} tracks</span>
   </footer>
 </BaseLayout>

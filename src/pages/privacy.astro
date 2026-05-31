@@ -1,0 +1,149 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Privacy Policy — QA Learning"
+  description="What data QA Learning collects, why, how long it is kept, and how to request deletion."
+>
+  <main id="main" class="privacy-page">
+    <article class="prose privacy-prose">
+      <span class="eyebrow">legal</span>
+      <h1>Privacy Policy</h1>
+      <p class="privacy-meta">Last updated: <time datetime="2026-05-31">31 May 2026</time></p>
+
+      <p>
+        QA Learning is a personal portfolio and study site. This policy explains what personal data is
+        collected when you use the site, why it is collected, how long it is kept, and how you can
+        request deletion.
+      </p>
+
+      <h2>Data collected</h2>
+      <p>When you sign in with GitHub or Google, the following data is stored:</p>
+      <ul>
+        <li><strong>Name</strong> — as provided by your OAuth provider.</li>
+        <li><strong>Email address</strong> — used to link GitHub and Google accounts that share the
+          same verified email.</li>
+        <li><strong>Avatar URL</strong> — the profile picture URL from your OAuth provider.</li>
+        <li><strong>GitHub username</strong> (<code>githubHandle</code>) — stored when you sign in
+          with GitHub.</li>
+        <li><strong>Session cookie</strong> — a signed, HttpOnly cookie that keeps you authenticated
+          between visits. It expires after a multi-day period and is refreshed on activity.</li>
+      </ul>
+      <p>
+        Activity data is also stored against your account: quiz attempts and scores, lesson completion
+        marks, exam session results, spaced-repetition card grades, and a daily-activity heatmap.
+      </p>
+      <p>No passwords are stored. Email-and-password sign-in is disabled.</p>
+
+      <h2>Why data is collected</h2>
+      <ul>
+        <li>To persist your learning progress (lesson completion, quiz history, streak).</li>
+        <li>To power spaced-repetition reviews tied to your account.</li>
+        <li>To link GitHub and Google sign-ins that share a verified email, avoiding duplicate
+          accounts.</li>
+      </ul>
+      <p>
+        The session cookie is strictly necessary for the authenticated features above.
+        No marketing cookies, third-party tracking pixels, or advertising are used.
+      </p>
+
+      <h2>Retention</h2>
+      <p>
+        Account and activity data is kept for as long as your account exists.
+        Session cookies expire after their configured lifetime (typically 7–30 days of
+        inactivity) and are not re-issued after sign-out.
+      </p>
+
+      <h2>Third parties</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Party</th>
+            <th>Role</th>
+            <th>What they receive</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>GitHub</strong></td>
+            <td>OAuth provider</td>
+            <td>OAuth flow only; GitHub receives the OAuth callback. Profile data (name, email,
+              avatar, username) is fetched from GitHub's API at sign-in and stored locally.</td>
+          </tr>
+          <tr>
+            <td><strong>Google</strong></td>
+            <td>OAuth provider</td>
+            <td>OAuth flow only; Google receives the OAuth callback. Profile data (name, email,
+              avatar) is fetched from Google's API at sign-in and stored locally.</td>
+          </tr>
+          <tr>
+            <td><strong>Neon</strong></td>
+            <td>Postgres database host</td>
+            <td>All account and activity data is stored in a Neon serverless Postgres database.
+              Neon operates under its own
+              <a href="https://neon.tech/privacy-policy" rel="noopener noreferrer" target="_blank">privacy policy</a>.</td>
+          </tr>
+          <tr>
+            <td><strong>Vercel</strong></td>
+            <td>Hosting and edge runtime</td>
+            <td>Requests are served via Vercel. Vercel may collect standard server logs (IP address,
+              user-agent, timestamp) per its
+              <a href="https://vercel.com/legal/privacy-policy" rel="noopener noreferrer" target="_blank">privacy policy</a>.
+              Vercel Analytics (aggregate, cookie-free) and Speed Insights are enabled.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Account deletion</h2>
+      <p>
+        There is currently no self-serve account-deletion button in the UI. To request deletion of
+        your account and all associated data (profile, quiz attempts, lesson completions, exam
+        sessions, spaced-repetition cards, activity history), send an email to:
+      </p>
+      <p>
+        <a href="mailto:byk.plai@gmail.com" class="privacy-contact">byk.plai@gmail.com</a>
+      </p>
+      <p>
+        Include the email address linked to your account. Deletion will be completed within
+        <strong>30 days</strong> of the request.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        For any privacy questions or concerns, contact
+        <a href="mailto:byk.plai@gmail.com">byk.plai@gmail.com</a>.
+      </p>
+    </article>
+  </main>
+</BaseLayout>
+
+<style>
+  .privacy-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 40px 64px;
+  }
+
+  @media (max-width: 768px) {
+    .privacy-page {
+      padding: 32px 20px 48px;
+    }
+  }
+
+  .privacy-prose h1 {
+    margin: 8px 0 4px;
+  }
+
+  .privacy-meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    margin: 0 0 2em;
+  }
+
+  .privacy-contact {
+    font-family: var(--mono);
+    font-size: 15px;
+  }
+</style>
