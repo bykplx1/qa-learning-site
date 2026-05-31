@@ -1,0 +1,97 @@
+---
+slug: api-mid-restful-booker
+title: "API Mid: Authenticated Suite on restful-booker"
+tier: mid
+track: api
+target:
+  name: "restful-booker (Mark Winteringham)"
+  ref: "https://restful-booker.herokuapp.com — pinned at commit f4e1a5c in github.com/mwinteringham/restful-booker-platform"
+estimate: 1 day
+rubric: api-mid
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - You obtain an auth token programmatically in your test setup (no hardcoded tokens).
+  - You include at least one test that verifies a request with an invalid or expired token is rejected (status 403).
+  - All request/response bodies are validated with a schema library (Zod, ajv, Joi, or equivalent) — not ad-hoc field checks.
+  - Tests are independent and clean up after themselves (create then delete any bookings they make).
+  - You submit a public repo URL with a README covering setup, the run command, and what the suite covers.
+---
+
+## Brief
+
+Build an authenticated REST API test suite against
+[restful-booker](https://restful-booker.herokuapp.com) — Mark Winteringham's
+purpose-built practice API with token authentication, booking CRUD, and
+intentional quirks designed to surface common testing gaps.
+
+The starter project proved you can write thorough assertions. This project
+proves you can handle the authentication flow, validate schemas formally, and
+keep tests isolated from each other.
+
+> **Drift notice.** `restful-booker.herokuapp.com` is the live hosted version
+> and may receive updates. The pinned commit reference above (restful-booker-platform
+> `f4e1a5c`) is the stable baseline at the time of writing; you can run a local
+> copy via Docker if the live site diverges:
+> `docker run -d -p 3001:3001 mwinteringham/restfulbooker`. Note any divergence
+> in your README. The API does not persist data between Heroku dyno restarts —
+> treat each test run as starting from a blank slate and always create the data
+> you need.
+
+## Suggested approach
+
+1. Read the [restful-booker API documentation](https://restful-booker.herokuapp.com/apidoc/index.html) before writing a single test. There are intentional quirks (e.g. the `Accept` header matters; some endpoints return 200 for operations that logically should return 201).
+
+2. Auth first. Write a shared helper that calls `POST /auth` and returns a token. Every test that needs it should call this helper — never paste a token string into a test file.
+
+3. Define schemas before writing assertions. For a booking, that schema is:
+   ```
+   {
+     bookingid: number,
+     booking: {
+       firstname: string,
+       lastname: string,
+       totalprice: number,
+       depositpaid: boolean,
+       bookingdates: { checkin: string, checkout: string },
+       additionalneeds?: string
+     }
+   }
+   ```
+   Define it once and reuse it for every assertion that touches a booking response.
+
+4. Write tests in this order:
+   - `POST /auth` — happy path (get token) + invalid credentials (should get `"Bad credentials"`)
+   - `GET /booking/:id` — happy path + non-existent id (404)
+   - `POST /booking` — create a booking, assert response schema, assert id is returned
+   - `PUT /booking/:id` — update the booking you just created; verify all fields updated
+   - `DELETE /booking/:id` — delete the booking; verify subsequent GET returns 404
+   - Auth rejection: `DELETE /booking/:id` without a token → expect 403
+
+5. Each test that creates a booking must delete it in a teardown step (or use the booking id scoped to the test). Never leave data behind.
+
+6. Write a `README.md` that covers: how to run locally, what endpoints are tested, and one observation about the API's behaviour that surprised you (the quirks are pedagogically intentional).
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Auth token obtained and validated programmatically
+- Schema library used for all booking response assertions
+- Test isolation verified (each test independently creates and destroys its own data)
+- A README covering setup, run command, and suite scope
+- A CI badge (optional but encouraged — see the capstone if you want to add it now)
+
+## Why this matters
+
+Token authentication is present in nearly every real API you'll test
+professionally. Hardcoding tokens is the fastest way to create brittle,
+unmaintainable suites. Handling the token lifecycle — obtain, use, validate
+rejection — correctly from the start means you never have to retrofit it later.
+
+Schema libraries are the equivalent of type-checking for API responses. Ad-hoc
+field checks (`response.id !== undefined`) let breaking changes slip through;
+a formal schema catches them automatically.
+
+restful-booker is the right target because its intentional quirks force you to
+read documentation carefully and discover edge cases — exactly the skill that
+separates thorough API testers from ones who only test the happy path.

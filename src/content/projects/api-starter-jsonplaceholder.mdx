@@ -1,0 +1,76 @@
+---
+slug: api-starter-jsonplaceholder
+title: "API Starter: First REST Test Collection on JSONPlaceholder"
+tier: starter
+track: api
+target:
+  name: "JSONPlaceholder (typicode)"
+  ref: "https://jsonplaceholder.typicode.com — pinned behaviour; see drift note below"
+estimate: 2–3 hr
+rubric: api-starter
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - You write tests that exercise all four CRUD verbs (GET, POST, PUT/PATCH, DELETE) on at least one resource (e.g. /posts or /todos).
+  - Every test asserts the HTTP status code, at least one response header (e.g. Content-Type), and the relevant fields in the response body.
+  - You include at least one negative test per mutation verb (e.g. POST with a missing required field, GET for a non-existent id).
+  - Repeated setup (base URL, shared headers) is extracted into a shared helper or fixture — not copy-pasted per test.
+  - Your README explains how to run the suite from a clean clone in one command.
+---
+
+## Brief
+
+Write your first REST API test collection against
+[JSONPlaceholder](https://jsonplaceholder.typicode.com) — typicode's free fake
+REST API used by millions of developers for practice. It exposes standard CRUD
+endpoints for resources like posts, comments, albums, and todos.
+
+The api-testing lesson teaches you what to check at the HTTP layer. This project
+makes you apply that judgment on a real (if simulated) target without any
+scaffolding.
+
+> **Drift notice.** JSONPlaceholder is a hosted service maintained by typicode.
+> The API surface has been stable for years, but it is externally hosted and
+> not pinned to a commit. Write operations (POST/PUT/DELETE) are accepted and
+> return realistic responses but do not persist to a real datastore — this is
+> intentional and worth noting in your README. If the service is unavailable,
+> a self-hosted version is available via
+> [json-server](https://github.com/typicode/json-server) with the
+> [JSONPlaceholder data file](https://github.com/typicode/jsonplaceholder/blob/master/data.json).
+> Note any divergence in your README.
+
+## Suggested approach
+
+1. Pick your tooling. Common choices:
+   - **Node.js**: [supertest](https://github.com/ladjs/supertest) + Vitest/Jest, or the native `fetch` API with an assertion library
+   - **Python**: `requests` + pytest
+   - **Other**: Any HTTP client + test runner combination works — pick what you know
+2. Pick one resource to fully cover. Recommended: `/posts` (id 1–100 pre-seeded, supports all verbs).
+3. Write tests in this order:
+   - `GET /posts` — verify status 200, `Content-Type: application/json`, array of ≥1 items
+   - `GET /posts/1` — verify status 200, fields `id`, `userId`, `title`, `body` present
+   - `GET /posts/9999` — verify status 404
+   - `POST /posts` — verify status 201, response body echoes your payload plus an `id` field
+   - `PUT /posts/1` — verify status 200, response reflects your updated fields
+   - `DELETE /posts/1` — verify status 200, response body is `{}`
+4. Extract base URL and common headers into a shared setup so no test file imports the URL directly.
+5. Add a `npm test` (or equivalent) script to `package.json` and confirm it runs from a clean `npm ci`.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- contains a `package.json` (or equivalent) listing your test runner and HTTP client as dependencies
+- has tests covering GET (happy + 404), POST, PUT/PATCH, and DELETE
+- has a README with a one-command run instruction and the expected output (e.g. "6 tests passed")
+
+## Why this matters
+
+Status-code-only tests are the most common mistake in API testing: they pass
+when the service is broken but returns the wrong body. Getting assertion depth
+right — status + headers + body — is the difference between a test that gives
+you confidence and one that gives you a false green.
+
+JSONPlaceholder is the right first target because it requires no auth setup,
+covers all four CRUD verbs, and returns realistic payloads. Once you can write
+thorough, well-structured tests here, moving to an authenticated or stateful API
+is a configuration change, not a rethink.
