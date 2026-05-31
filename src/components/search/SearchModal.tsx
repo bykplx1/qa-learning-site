@@ -49,6 +49,10 @@ function SearchModalInner() {
   }, []);
 
   useEffect(() => {
+    document.documentElement.dataset.searchReady = 'true';
+  }, []);
+
+  useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
