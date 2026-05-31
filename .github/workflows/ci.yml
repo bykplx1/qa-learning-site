@@ -24,7 +24,7 @@ on:
 #
 #  Stage 3 — heavy gates (parallel, all need Stage 2 green)
 #    e2e-a11y         Playwright E2E + axe-core a11y assertions
-#    visual           Playwright visual regression (non-blocking while UI churns)
+#    visual           Playwright visual regression (blocking; non-blocking only on deliberate baseline-update dispatch)
 #    lhci             Lighthouse-CI budget gate (mobile + desktop)
 #
 # ─────────────────────────────────────────────────────────────────────────────
@@ -280,12 +280,13 @@ jobs:
     # to manage. Baselines live in CI exclusively; see CONTRIBUTING.md for the
     # deliberate baseline-update workflow (workflow_dispatch → update_visual_baselines).
     #
-    # Non-blocking (continue-on-error) while the design system rollout is in
-    # progress. Re-enable as a hard gate once the UI stabilises. Diffs are
-    # still uploaded as artifacts for manual review. See commit af4889d.
+    # Blocking on normal PR/push runs. Non-blocking only when
+    # update_visual_baselines=true is dispatched deliberately, because
+    # `--update-snapshots` exits 1 after writing new PNGs (any diff = exit 1)
+    # and we still need the artifact upload to succeed.
     runs-on: ubuntu-latest
     needs: integration
-    continue-on-error: true
+    continue-on-error: ${{ inputs.update_visual_baselines == true }}
 
     steps:
       - uses: actions/checkout@v4
