@@ -1,8 +1,16 @@
 ---
 slug: security-testing
-title: Security Testing
+title: Security Testing — OWASP ZAP, AuthZ Matrices & Shift-Left Pipelines
 cluster: non-functional
 layer: systems
+kind: tool
+verified:
+  tool: OWASP ZAP
+  versions:
+    zaproxy: "2.15.0"
+    node: ">=22.12.0"
+    java: ">=17"
+  date: "2026-05-31"
 prerequisites:
   - qa-mindset
   - risk-based-testing
@@ -13,7 +21,7 @@ related:
   - accessibility-testing
   - observability-for-testers
   - chaos-and-resilience-testing
-tags: [security, owasp, authn, authz, sast, dast, sca, threat-modeling]
+tags: [security, owasp, authn, authz, sast, dast, sca, threat-modeling, zap]
 estimatedEncodingMinutes: 25
 ---
 
@@ -21,6 +29,7 @@ import Diagram from '../../../src/components/mdx/Diagram.astro';
 import Prompt from '../../../src/components/mdx/Prompt.astro';
 import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
 import Feynman from '../../../src/components/mdx/Feynman.astro';
+import Maintain from '../../../src/components/mdx/Maintain.astro';
 
 ## Core Idea
 
@@ -29,8 +38,6 @@ Security testing is the practice of asking "what could an adversary do to this s
 The five disciplines: **threat modelling** (STRIDE — convert threats to test cases), **AuthN/AuthZ verification** (the wrong user cannot reach the wrong resource), **OWASP Top 10 coverage** (the well-known classes every team must verify), **secrets hygiene** (nothing secret leaks via code, logs, or CI), and **SAST/DAST/SCA** (overlapping layers at different cost points). No single layer catches everything; the value is in the overlap.
 
 > Security tests are functional tests with adversarial oracles. The tester's value lies in the attack classes they hold in their head — the tools are scaffolding around that knowledge.
-
-## Diagram
 
 <Diagram caption="Security testing layers: five overlapping disciplines, their primary tooling, and the OWASP categories each targets — plus the STRIDE threat-model cycle that feeds them all">
 ```
@@ -62,7 +69,7 @@ THREAT MODEL (STRIDE)
 ┌────────────────────────────────────────────────────────────────────────────┐
 │  SHIFT-RIGHT (dynamic / running app)                                       │
 │                                                                            │
-│  DAST   OWASP ZAP, Burp Suite  — reflected XSS, SQLi, missing headers     │
+│  DAST   OWASP ZAP 2.15.0          — reflected XSS, SQLi, missing headers  │
 │  Catch  business logic, complex auth flows, chained exploits               │
 │         (scanner blind spots — manual exploration fills the gap)           │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -78,14 +85,97 @@ OWASP Top 10 (2021) — memorise the categories, not just the numbers
   A08 Software Integrity Failures (supply chain, CI/CD tampering)
   A09 Logging/Monitoring Failures (audit gaps — STRIDE repudiation)
   A10 SSRF                    (URL-accepting features → metadata endpoints)
+
+ZAP BASELINE SCAN FLOW (what this runbook sets up)
+  docker run zaproxy/zap-stable:2.15.0 zap-baseline.py -t <target>
+    Spider   — discovers paths via passive crawl
+    Passive  — flags headers, cookies, info disclosure (no active attacks)
+    Report   — HTML + JSON artefact with PASS/WARN/FAIL per rule
+  Juice Shop (local) used as scan target — deliberately vulnerable, legal to probe
 ```
 </Diagram>
 
-## Worked Example
+## 1. Set up
+
+Everything from a clean machine to a first passing ZAP baseline scan against a local target.
+
+**Prerequisites:** Docker Desktop (or Docker Engine on Linux), Node ≥ 22.12.0, a terminal.
+
+> This runbook uses OWASP Juice Shop as the scan target — it is a deliberately-vulnerable Node app maintained by OWASP specifically for security tool practise. Never point a DAST scanner at a system you do not own or have written permission to test.
+
+### Pull ZAP and start Juice Shop
+
+```bash
+# Pull ZAP stable image (pinned to 2.15.0)
+docker pull zaproxy/zap-stable:2.15.0
+
+# Start OWASP Juice Shop locally on port 3000 — legal practice target
+docker pull bkimminich/juice-shop:v17.1.1
+docker run -d --name juice-shop -p 3000:3000 bkimminich/juice-shop:v17.1.1
+```
+
+Verify Juice Shop is up:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
+# Expected: 200
+```
+
+### Create the project folder
+
+```bash
+mkdir zap-runbook && cd zap-runbook && mkdir reports
+```
+
+### Run the ZAP baseline scan (passive only)
+
+```bash
+docker run --rm \
+  --network host \
+  -v "$(pwd)/reports:/zap/wrk:rw" \
+  zaproxy/zap-stable:2.15.0 \
+  zap-baseline.py \
+    -t http://localhost:3000 \
+    -g gen.conf \
+    -r report.html \
+    -J report.json \
+    -I
+```
+
+Expected output (abbreviated):
+
+```
+WARN-NEW: Cookie No HttpOnly Flag [10010]
+WARN-NEW: Cookie Without SameSite Attribute [10054]
+WARN-NEW: Content Security Policy (CSP) Header Not Set [10038]
+PASS: X-Content-Type-Options Header [10021]
+...
+FAIL-NEW: 0
+WARN-NEW: 14
+PASS: 36
+```
+
+The scan completes with exit 0 when using `-I` (ignore warnings as failures). The HTML report lands in `./reports/report.html`. Open it in a browser to inspect each finding.
+
+> The `-I` flag treats `WARN` as informational, not a failure. Remove it in CI to fail the build on new warnings.
+
+### Folder layout after setup
+
+```
+zap-runbook/
+  reports/
+    report.html      ← human-readable findings
+    report.json      ← machine-readable for CI parsing
+    gen.conf         ← generated rule configuration (edit to tune thresholds)
+```
+
+If the report is present and the scan returned exit 0, setup is complete. Move on.
+
+## 2. Implement + best practice
 
 ### STRIDE walkthrough on an authentication endpoint
 
-Take the login endpoint `POST /auth/login`. Apply each STRIDE category to produce a threat → test mapping:
+Apply each STRIDE category to `POST /auth/login` to produce threat → test mappings:
 
 | STRIDE | Threat | Test |
 |---|---|---|
@@ -96,7 +186,7 @@ Take the login endpoint `POST /auth/login`. Apply each STRIDE category to produc
 | **DoS** | Brute force with no rate limit | Send 20 requests in 5 seconds; verify 429 is returned before attempt 20 |
 | **Elevation of Privilege** | Token issued with higher role than user has | Inspect token claims post-login; verify role matches DB row, not request body |
 
-**Timing-leak variant (Info Disclosure):** measure mean response time for valid-user-invalid-password vs invalid-user-invalid-password. If the gap exceeds ~20 ms consistently, the server is performing a password hash check only for known users — leaking account existence via timing. The structural fix is constant-time comparison regardless of whether the user was found.
+**Timing-leak variant (Info Disclosure):** measure mean response time for valid-user-invalid-password vs invalid-user-invalid-password. If the gap exceeds ~20 ms consistently, the server performs a password hash check only for known users — leaking account existence via timing. The structural fix is constant-time comparison regardless of whether the user was found.
 
 ### AuthZ matrix for `GET /orders/:id`
 
@@ -132,9 +222,68 @@ test('security headers are present and configured', async ({ page }) => {
 
 This runs alongside functional tests in [[cicd-for-testing]] with no extra infra — a single Playwright spec covers the entire security headers surface.
 
-## Common Pitfalls
+### Tuning the ZAP rule configuration
+
+The generated `gen.conf` file controls per-rule thresholds. Edit it to silence known false positives without hiding real issues:
+
+```
+# gen.conf — ZAP rule tuning
+# Format: rule-id  IGNORE|WARN|FAIL  reason
+10054  IGNORE  # SameSite=None intentional for OAuth cross-site cookie
+10038  WARN    # CSP not yet deployed — track as warning, not failure
+10021  FAIL    # x-content-type-options must always be set
+```
+
+Re-run with the config applied:
+
+```bash
+docker run --rm \
+  --network host \
+  -v "$(pwd)/reports:/zap/wrk:rw" \
+  zaproxy/zap-stable:2.15.0 \
+  zap-baseline.py \
+    -t http://localhost:3000 \
+    -c /zap/wrk/gen.conf \
+    -r report.html \
+    -J report.json
+```
+
+### CI integration (GitHub Actions fragment)
+
+```yaml
+- name: Start Juice Shop
+  run: docker run -d --name juice-shop -p 3000:3000 bkimminich/juice-shop:v17.1.1
+
+- name: Wait for Juice Shop
+  run: |
+    for i in $(seq 1 30); do
+      curl -sf http://localhost:3000 && break || sleep 2
+    done
+
+- name: ZAP baseline scan
+  run: |
+    docker run --rm --network host \
+      -v "${{ github.workspace }}/reports:/zap/wrk:rw" \
+      zaproxy/zap-stable:2.15.0 \
+      zap-baseline.py -t http://localhost:3000 \
+        -c /zap/wrk/gen.conf \
+        -r report.html -J report.json
+
+- name: Upload ZAP report
+  uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: zap-report
+    path: reports/
+```
+
+Remove `-I` from the scan command once your rule configuration is stable — from that point, any new `FAIL`-level finding breaks the build.
+
+## 3. Common pitfalls
 
 - **Running a ZAP scan and calling it "security tested."** Scanners find reflected XSS, missing headers, default credentials — and miss business-logic flaws, complex auth flows, and chained exploits. Fix: treat DAST output as *one layer* of coverage; pair it with an AuthZ matrix, a STRIDE walkthrough, and manual exploration of high-risk flows. This happens because automated output is visible, countable, and reportable — manual security work is not, so it gets skipped.
+
+- **Using `-I` indefinitely in CI.** The flag suppresses `WARN`-level findings from failing the build. It is useful during initial integration while false positives are being triaged, but leaving it permanently means real new warnings are silently swallowed. Fix: triage `gen.conf` until known warnings are either `IGNORE` (documented false positives) or `FAIL` (must not regress), then remove `-I`. Any new finding then breaks the build by default.
 
 - **Trusting the framework to escape XSS.** React escapes `{content}` — but `dangerouslySetInnerHTML`, server-rendered templates, and third-party rich-text libraries can re-introduce the class. Fix: test the actual rendered output for user-controlled content; run `<img src=x onerror=alert(1)>` in every text input that renders to the DOM. Frameworks' defaults erode quietly across refactors.
 
@@ -144,9 +293,47 @@ This runs alongside functional tests in [[cicd-for-testing]] with no extra infra
 
 - **Hardcoding test credentials in code.** Test credentials end up in commit history. When the same credential pattern is reused for a real environment, or when the repo is later made public, the exposure is historical. Fix: use environment-injected fixtures; add a `gitleaks` pre-commit hook that catches password-shaped strings in test files before they are committed.
 
-- **Using `pull_request_target` for convenience.** `pull_request_target` runs the base repo's workflow with base repo secrets — but executes the PR's code. Any PR from a fork can read your secrets. Fix: use `pull_request` instead; if write-back access is required, redesign the workflow to separate the trusted step. This surfaces in [[cicd-for-testing]] explicitly; the security implication is a severe secret exfiltration path.
-
 - **Not testing logout.** "Log in" gets tested; "log out" rarely does. The gap is where session-fixation lives: if the session token is not invalidated server-side on logout, and the token is stolen after the user logs out, the attacker holds a valid session indefinitely. Fix: verify server-side token invalidation, session destruction, and refresh-token revocation as part of the AuthN test suite — not just that the UI redirects.
+
+## 4. Maintain
+
+<div role="list" aria-label="Maintenance triggers and responses">
+<Maintain trigger="OWASP ZAP ships a new stable release">
+  1. Check the ZAP release notes for deprecated or renamed rule IDs — `gen.conf` entries referencing old IDs become no-ops silently.
+  2. Update the `zaproxy/zap-stable` image tag in CI and in local `docker pull` commands.
+  3. Re-run the baseline scan against Juice Shop. Compare the new `report.json` against the previous one — new `WARN-NEW` entries need triage.
+  4. Update `gen.conf` for any new rule IDs that need custom thresholds.
+  5. Update `verified.versions.zaproxy` and `verified.date` in this file's frontmatter.
+</Maintain>
+
+<Maintain trigger="A new WARN or FAIL appears in CI after a code change">
+  1. Open the uploaded `zap-report` artefact from the CI run.
+  2. Find the rule ID and description in the HTML report. Look up the rule at `https://www.zaproxy.org/docs/alerts/`.
+  3. Determine whether it is a true positive (fix the app), a false positive (add an `IGNORE` entry to `gen.conf` with a comment), or a risk-accepted exception (add a `WARN` entry with documented rationale).
+  4. Never raise the global threshold (`-I`) to make a CI run green — triage per-rule.
+</Maintain>
+
+<Maintain trigger="ZAP scan times out or fails to connect to the target">
+  1. Verify the target is up before ZAP runs — add a readiness check loop to CI (curl with retry).
+  2. Check Docker network mode. On Linux CI runners `--network host` works; on macOS Docker Desktop, use `host.docker.internal` instead of `localhost` as the target URL.
+  3. If using a named Docker network, ensure both containers are on the same network: `docker network create zap-net`, then pass `--network zap-net` to both.
+  4. Increase the spider timeout with `-m 5` (minutes) if the target is slow to crawl.
+</Maintain>
+
+<Maintain trigger="gen.conf entries stop matching (rules silently ignored)">
+  1. Run the scan with `-d` (debug) to see which rules are loaded and whether `gen.conf` entries are parsed.
+  2. Cross-reference rule IDs against the current ZAP release — IDs occasionally change between major versions.
+  3. Check `report.json` for rule IDs present in the scan output; update `gen.conf` to match.
+  4. Treat an `IGNORE` entry for a non-existent rule ID as a lint error — remove stale entries to keep the config auditable.
+</Maintain>
+
+<Maintain trigger="Juice Shop version is outdated (new CVE classes not present in challenges)">
+  1. Check the Juice Shop release page for new challenge categories covering recently-added OWASP Top 10 patterns.
+  2. Update the `bkimminich/juice-shop` image tag in the setup commands and CI workflow.
+  3. Verify the new version still starts on port 3000 and responds 200 on `/`.
+  4. Re-run the full baseline scan — Juice Shop updates sometimes introduce new intentional findings that need triage in `gen.conf`.
+</Maintain>
+</div>
 
 ## Retrieval Prompts
 
@@ -207,15 +394,15 @@ This runs alongside functional tests in [[cicd-for-testing]] with no extra infra
   **Deliverable 4 — AuthZ matrix:**
   For the feature, build the role × endpoint × resource-owner matrix. Test (or document as N/A) every cell. Include the unauthenticated role and at least one wrong-tenant or cross-user row.
 
-  **Deliverable 5 — Security headers audit:**
-  Check the deployed headers using a Playwright spec (see Worked Example) or `securityheaders.com`. For each missing or misconfigured header, state: which OWASP category it mitigates, the correct value, and the remediation step.
+  **Deliverable 5 — ZAP baseline scan:**
+  Run `zap-baseline.py` against Juice Shop locally (follow Section 1 of this lesson). Produce the `report.json`. For each `WARN-NEW` or `FAIL-NEW` finding: name the OWASP category it maps to, decide whether it is a true positive or false positive, and write the `gen.conf` entry that correctly categorises it with a one-line rationale comment.
 
   Rubric (revealed after submission):
   - Does the STRIDE model produce ≥3 distinct threats per component, or does it repeat "injection" for every row? Repetition fails.
   - Does every threat map to a *specific* test (verb + parameter + expected response), not "test the auth"? Vague tests fail.
   - Does the AuthZ matrix include the unauthenticated role and at least one cross-user row? Missing either fails.
   - Did the candidate distinguish "tested and passed," "tested and failed," and "not testable from QA" honestly? Claiming "all pass" without evidence fails.
-  - Did the candidate notice anything they were not told to look for (missing rate limit, a header smell, a leaked error message)? Bonus point.
+  - Did the ZAP triage produce per-rule `gen.conf` entries with rationale comments, or just a blanket IGNORE? Blanket ignores fail.
   - Did the three run tests produce real evidence (request/response capture or test output), not just assertions about what would happen? No evidence fails.
 </PracticeTask>
 
