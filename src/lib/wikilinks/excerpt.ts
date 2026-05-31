@@ -1,8 +1,13 @@
 const FRONTMATTER_RE = /^\uFEFF?---[\s\S]*?^---\n?/m;
 const FENCED_CODE_RE = /^```[\s\S]*?^```\n?/gm;
+// MDX files emit import/export statements after the frontmatter; strip them before excerpting
+const MDX_IMPORT_EXPORT_RE = /^(import|export)\b[^\n]*\n/gm;
 
 export function extractExcerpt(markdown: string): string {
-  const text = markdown.replace(FRONTMATTER_RE, '').replace(FENCED_CODE_RE, '');
+  const text = markdown
+    .replace(FRONTMATTER_RE, '')
+    .replace(FENCED_CODE_RE, '')
+    .replace(MDX_IMPORT_EXPORT_RE, '');
 
   const lines = text.split('\n');
   const buf: string[] = [];

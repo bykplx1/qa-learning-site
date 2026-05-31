@@ -22,11 +22,29 @@ const totalMinutes = sorted.reduce((s, t) => s + t.data.estimatedEncodingMinutes
 function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
   return layer === 'facts' ? 'b' : layer === 'patterns' ? 'i' : 'a';
 }
+
+const siteOrigin = (Astro.site ?? Astro.url).origin;
+
+const lessonsJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'QA Learning Curriculum',
+  description: `All ${totalTopics} QA topics grouped by track.`,
+  url: siteOrigin + '/lessons',
+  numberOfItems: totalTopics,
+  itemListElement: sorted.map((t, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: t.data.title,
+    url: `${siteOrigin}/lessons/${t.data.cluster}/${t.data.slug}`,
+  })),
+};
 ---
 
 <BaseLayout
   title="Lessons — QA Learning"
   description={`All ${totalTopics} QA topics grouped by track. ${totalMinutes} minutes of reading across ${clusterRows.length} curriculum tracks.`}
+  jsonLd={lessonsJsonLd}
 >
   <section class="section">
     <div class="section__head">

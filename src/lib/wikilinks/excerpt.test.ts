@@ -71,4 +71,37 @@ describe('extractExcerpt', () => {
     const md = '---\nslug: x\n---\n\n```\ncode block\n```\n\nReal paragraph.\n';
     expect(extractExcerpt(md)).toBe('Real paragraph.');
   });
+
+  it('strips MDX import statements so excerpt does not start with import', () => {
+    const md = [
+      '---',
+      'slug: qa-mindset',
+      'title: The QA Mindset',
+      '---',
+      '',
+      "import Diagram from '../../../src/components/mdx/Diagram.astro';",
+      "import Prompt from '../../../src/components/mdx/Prompt.astro';",
+      '',
+      'Quality Assurance is not a phase at the end.',
+    ].join('\n');
+    const result = extractExcerpt(md);
+    expect(result).not.toMatch(/^import\b/);
+    expect(result).not.toMatch(/^export\b/);
+    expect(result).toContain('Quality Assurance');
+  });
+
+  it('strips MDX export statements so excerpt does not start with export', () => {
+    const md = [
+      '---',
+      'slug: x',
+      '---',
+      '',
+      "export const meta = { title: 'X' };",
+      '',
+      'Real prose here.',
+    ].join('\n');
+    const result = extractExcerpt(md);
+    expect(result).not.toMatch(/^export\b/);
+    expect(result).toBe('Real prose here.');
+  });
 });
