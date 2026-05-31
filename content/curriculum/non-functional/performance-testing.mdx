@@ -1,8 +1,15 @@
 ---
 slug: performance-testing
-title: Performance Testing
+title: Performance Testing with k6 — Load, Stress, Soak & Spike Runbook
 cluster: non-functional
 layer: systems
+kind: tool
+verified:
+  tool: k6
+  versions:
+    k6: "2.0.0"
+    node: ">=22.12.0"
+  date: "2026-05-31"
 prerequisites:
   - test-oracles-and-prioritization
   - shift-left-and-shift-right
@@ -21,18 +28,136 @@ import Diagram from '../../../src/components/mdx/Diagram.astro';
 import Prompt from '../../../src/components/mdx/Prompt.astro';
 import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
 import Feynman from '../../../src/components/mdx/Feynman.astro';
+import Maintain from '../../../src/components/mdx/Maintain.astro';
 
 ## Core Idea
 
-Performance testing is the practice of asking "how does this system behave under realistic and adversarial workloads?" — *before* production answers the question for you. It is not a single test type; it is a family of **workload shapes** run against an SLO-defined target, with results read as **distributions**, not averages.
+Performance testing is the practice of asking "how does this system behave under realistic and adversarial workloads?" — *before* production answers the question for you. It is not a single test type; it is a family of **workload shapes** run against an SLO-defined target, with results read as **distributions**, not averages. The load-bearing claims: a performance number without a **percentile** and a **workload shape** is meaningless. "Our API responds in 80 ms" is not a result. "Our `GET /search` p95 is 240 ms at 500 RPS sustained for 30 minutes, cache warm" is a result. The [[test-oracles-and-prioritization]] principle applies directly — without an SLO defining pass/fail, the perf test has no verdict.
 
-The load-bearing claims: a performance number without a **percentile** and a **workload shape** is meaningless. "Our API responds in 80 ms" is not a result. "Our `GET /search` p95 is 240 ms at 500 RPS sustained for 30 minutes, cache warm" is a result. The [[test-oracles-and-prioritization]] principle applies directly — without an SLO defining pass/fail, the perf test has no verdict.
+## 1. Set up
 
-Performance testing also spans two distinct disciplines: **backend perf** (server response distributions under concurrency) and **frontend perf** (user-experienced paint metrics). Both use the word "performance"; they answer different questions.
+Everything from an empty folder to a single green k6 run.
 
-> A performance number without a percentile and a workload shape is a feeling, not a measurement. The QA contribution is converting "the site feels slow" into "p95 LCP is 3.2 s at p75 of real users — fail by 28%."
+**Prerequisites:** k6 v2.0.0, Node ≥ 22.12.0, a terminal.
 
-## Diagram
+### Install k6
+
+k6 is a standalone binary — install it via your OS package manager or directly.
+
+**macOS (Homebrew):**
+
+```bash
+brew install k6
+```
+
+**Linux (Debian/Ubuntu):**
+
+```bash
+sudo gpg -k
+sudo gpg --no-default-keyring \
+  --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+  --keyserver hkp://keyserver.ubuntu.com:80 \
+  --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] \
+  https://dl.k6.io/deb stable main" \
+  | sudo tee /etc/apt/sources.list.d/k6.list
+sudo apt-get update && sudo apt-get install k6
+```
+
+**Windows (Chocolatey):**
+
+```bash
+choco install k6
+```
+
+**Verify the version:**
+
+```bash
+k6 version
+# k6 v2.0.0 (...)
+```
+
+> Pin the version in CI. k6's built-in metrics and options change across releases; a bump can silently change threshold semantics.
+
+### Create the project
+
+```bash
+mkdir k6-runbook && cd k6-runbook
+```
+
+No `npm init` needed — k6 scripts are plain JS/TS files executed by the k6 runtime, not Node.
+
+### Folder layout
+
+```
+k6-runbook/
+  smoke.js          ← first green run
+  load/
+    checkout-load.js
+  config/
+    thresholds.js
+```
+
+### Write a smoke test
+
+Create `smoke.js`:
+
+```js
+// smoke.js  — k6 2.0.0
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  vus: 1,         // 1 virtual user
+  duration: '10s',
+  thresholds: {
+    http_req_failed: ['rate<0.01'],          // error rate < 1%
+    http_req_duration: ['p(95)<1000'],       // p95 < 1 s
+  },
+};
+
+export default function () {
+  const res = http.get('https://httpbin.test.k6.io/get');
+  check(res, { 'status 200': (r) => r.status === 200 });
+  sleep(1);
+}
+```
+
+### Run to green
+
+```bash
+k6 run smoke.js
+```
+
+Expected output:
+
+```
+          /\      Grafana   /‾‾/
+     /\  /  \     |\  __   /  /
+    /  \/    \    | |/ /  /   ‾‾\
+   /          \   |   (  |  (‾)  |
+  / __________ \  |_|\_\  \_____/
+
+  execution: local
+     script: smoke.js
+     output: -
+
+  scenarios: (100.00%) 1 scenario, 1 max VUs, 40s max duration
+           * default: 1 looping VUs for 10s (gracefulStop: 30s)
+
+  ✓ status 200
+
+  checks.........................: 100.00% 10 out of 10
+  http_req_duration..............: avg=140ms  p(95)=210ms
+  http_req_failed................: 0.00%   0 out of 10
+
+  ✓ http_req_duration............: p(95)=210ms < 1000ms
+  ✓ http_req_failed..............: rate=0.00% < 1%
+
+  1 passed (10.2s)
+```
+
+If the run is green, the setup is complete. Move on.
 
 <Diagram caption="Four canonical workload shapes for one endpoint, showing what each shape reveals and the bug class each catches">
 ```
@@ -74,35 +199,31 @@ WORKLOAD MODEL: closed vs open
 ```
 </Diagram>
 
-## Worked Example
+## 2. Implement + best practice
 
-### Backend perf: from vibes to verdict
+### Define the SLO first — no oracle, no test
 
-A team reports "the checkout API is slow." Start by defining the oracle — no oracle, no test:
-
-```
-SLO (agreed with team before writing one line of test code):
-  POST /checkout
-  p95 latency ≤ 400 ms
-  p99 latency ≤ 800 ms
-  Error rate ≤ 0.1%
-  At: 300 RPS sustained for 15 minutes, cache warm, production-shaped data (10M orders)
-```
-
-Next, the k6 load test matching that SLO:
+Write the SLO as a comment at the top of every script before writing one line of test code:
 
 ```js
-// k6/checkout-load.js
+// k6/checkout-load.js  — k6 2.0.0
+//
+// SLO (agreed with team):
+//   POST /checkout
+//   p95 latency ≤ 400 ms
+//   p99 latency ≤ 800 ms
+//   error rate ≤ 0.1%
+//   at: 300 RPS sustained for 15 min, cache warm, 10 M order rows
 import http from 'k6/http';
-import { sleep } from 'k6';
+import { check, sleep } from 'k6';
 
 export const options = {
-  // Open-model executor: requests arrive at a fixed rate regardless of response time
-  // This avoids coordinated omission — slow responses do not throttle the test
   scenarios: {
     load: {
+      // Open model: requests arrive on schedule regardless of response time.
+      // Avoids coordinated omission — slow responses do not throttle the test.
       executor: 'constant-arrival-rate',
-      rate: 300,          // 300 requests per second
+      rate: 300,
       timeUnit: '1s',
       duration: '15m',
       preAllocatedVUs: 50,
@@ -110,32 +231,71 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_duration: ['p(95)<400', 'p(99)<800'],  // fail if SLO breached
-    http_req_failed: ['rate<0.001'],                 // fail if error rate > 0.1%
+    http_req_duration: ['p(95)<400', 'p(99)<800'],
+    http_req_failed:   ['rate<0.001'],
   },
 };
 
 export default function () {
-  const payload = JSON.stringify({ productId: Math.floor(Math.random() * 1000) + 1 });
-  http.post('https://staging.example.com/checkout', payload, {
-    headers: { 'Content-Type': 'application/json' },
+  const payload = JSON.stringify({
+    productId: Math.floor(Math.random() * 1000) + 1,
   });
-  sleep(2); // model real user think-time — not a delay, a workload shape decision
+  const res = http.post(
+    'https://staging.example.com/checkout',
+    payload,
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+  check(res, { 'status 200': (r) => r.status === 200 });
+  sleep(2); // model real user think-time — not overhead, a workload shape decision
 }
 ```
 
-**Two decisions in that script that most teams get wrong:**
+Two decisions that most teams get wrong:
 
-1. `constant-arrival-rate` instead of `constant-vus`: the closed model (`constant-vus`) waits for a response before sending the next request. If a response takes 5 s, no request is sent for 5 s — the test *under-counts* slow responses. This is **coordinated omission**. The open model (`constant-arrival-rate`) sends requests on schedule regardless, exposing the true tail.
+1. `constant-arrival-rate` instead of `constant-vus`: the closed model waits for a response before sending the next. Under saturation, slow responses throttle the test — which then under-reports tail latency. This is **coordinated omission**. The open model sends on schedule regardless, exposing the true tail.
 
-2. `sleep(2)` between iterations: real users read a confirmation page before clicking again. Without think-time, 50 VUs generate 50× the real concurrency. The sleep is not test overhead — it is workload modelling.
+2. `sleep(2)` between iterations: real users read a confirmation page before clicking again. Without think-time, 50 VUs generate 50× the real concurrency. The sleep is workload modelling, not test overhead.
+
+### Multi-scenario script — four shapes in one file
+
+```js
+// k6/all-shapes.js  — k6 2.0.0
+import http from 'k6/http';
+import { sleep } from 'k6';
+
+export const options = {
+  scenarios: {
+    load: {
+      executor: 'constant-arrival-rate',
+      rate: 300, timeUnit: '1s', duration: '15m',
+      preAllocatedVUs: 50, maxVUs: 200,
+      startTime: '0s',
+    },
+    soak: {
+      executor: 'constant-vus',
+      vus: 200, duration: '8h',
+      startTime: '16m', // run after load scenario
+    },
+  },
+  thresholds: {
+    'http_req_duration{scenario:load}': ['p(95)<400'],
+    'http_req_duration{scenario:soak}': ['p(95)<600'],
+  },
+};
+
+export default function () {
+  http.get('https://staging.example.com/api/products');
+  sleep(1);
+}
+```
+
+Tag thresholds with `{scenario:name}` to assert different budgets per shape. Without the tag, thresholds blend both scenarios' data.
 
 ### Frontend perf: Lighthouse-CI as a shift-left gate
 
-The [[cicd-for-testing]] topic already shows this site's `lhci` job. Here is the budget it enforces and what each metric means for the user:
+The [[cicd-for-testing]] topic shows this site's `lhci` job. The budget it enforces:
 
 ```json
-// lighthouserc.json (simplified)
 {
   "ci": {
     "assert": {
@@ -150,17 +310,11 @@ The [[cicd-for-testing]] topic already shows this site's `lhci` job. Here is the
 }
 ```
 
-- **LCP ≤ 2.5 s** — the largest element on screen has painted. Users perceive this as "the page loaded."
-- **INP ≤ 200 ms** — Interaction to Next Paint (replaced FID in March 2024). Samples *all* interactions per user, reports the worst tail. A site passing FID often fails INP because INP is harsher.
-- **CLS ≤ 0.1** — layout stability. A score of 0 means nothing jumped; 0.25+ means elements are shifting after paint.
+Budget the individual metrics, not the composite score. The score is a weighted blend — a regression in LCP can hide behind an improvement in SEO.
 
-Budget the *individual metrics*, not the composite Lighthouse score. The score is a weighted blend — a regression in LCP can hide behind an improvement in SEO. The score tells you "something changed"; the metrics tell you what.
+### Fan-out tail latency — the maths teams ignore
 
-### Fan-out tail latency — the math teams ignore
-
-A page calls 5 backend services in parallel. Each has p99 = 200 ms. What is the page's p99?
-
-Not 200 ms. The page completes when the *slowest* of the 5 responses returns. If each independently has a 1% chance of taking 200+ ms, the probability that *at least one* of the five takes 200+ ms is:
+A page calls 5 backend services in parallel. Each has p99 = 200 ms. The page completes when the *slowest* of the 5 returns:
 
 ```
 P(at least one slow) = 1 - P(all fast)
@@ -168,15 +322,15 @@ P(at least one slow) = 1 - P(all fast)
                      ≈ 4.9%
 ```
 
-So the page's p99 is actually the individual service's ~p95. With 10 parallel services it approaches the individual p90. This is **fan-out amplification** — "fast services" do not automatically produce fast pages. The lesson: instrument the *page* p99, not just the service p99. A [[playwright]] trace that shows 5 parallel fetches is a signal worth measuring under load.
+So the page's p99 is actually the individual service's ~p95. With 10 parallel services it approaches the individual p90. This is **fan-out amplification**. Instrument the *page* p99, not just the service p99.
 
-## Common Pitfalls
+## 3. Common pitfalls
 
-- **Reporting average response time.** Averages hide the tail. 990 requests at 50 ms and 10 requests at 5 s average to ~100 ms — which looks fine and is not. Fix: always report p50, p95, p99 (and p99.9 when the SLO demands). Ban the word "average" except for explicitly-named throughput metrics. This happens because most dashboards default to mean; change the default.
+- **Reporting average response time.** Averages hide the tail. 990 requests at 50 ms and 10 requests at 5 s average to ~100 ms — which looks fine and is not. Fix: always report p50, p95, p99. Ban the word "average" except for explicitly-named throughput metrics. This happens because most dashboards default to mean; change the default.
 
-- **Testing against a tiny database.** A perf test against a 1,000-row table reveals nothing about a 10-million-row production table. Query plans flip on data volume; indexes that work at small scale stop working at scale. Fix: seed production-shaped data (or a production clone with PII scrubbed) before running perf tests. Treat data setup as part of the test, not optional overhead.
+- **Testing against a tiny database.** A perf test against a 1,000-row table reveals nothing about a 10-million-row production table. Query plans flip on data volume; indexes that work at small scale stop working at scale. Fix: seed production-shaped data (or a scrubbed production clone) before running perf tests. Treat data setup as part of the test, not optional overhead.
 
-- **Coordinated omission with a closed-model executor.** `constant-vus` (the default in many tools) waits for a response before sending the next request. Under saturation, slow responses throttle the test — which then *under-reports* tail latency. Fix: use `constant-arrival-rate` (k6) or `injectOpen` (Gatling) for tail metrics; reserve closed-model for "how does the system behave with exactly N concurrent users" questions. Name the executor in every result.
+- **Coordinated omission with a closed-model executor.** `constant-vus` (the default) waits for a response before sending the next. Under saturation, slow responses throttle the test and under-report tail latency. Fix: use `constant-arrival-rate` for tail metrics; reserve `constant-vus` for "how does the system behave with exactly N concurrent users" questions. Name the executor in every result.
 
 - **No SLO before writing the test.** A perf test without a pass/fail oracle is exploratory, not a quality gate. "Looks fine" is not a result. Fix: define the SLO with the team — percentile, threshold, workload shape, cache state, data state — before writing one line of test code. The SLO is the oracle (back-reference: [[test-oracles-and-prioritization]]).
 
@@ -184,9 +338,48 @@ So the page's p99 is actually the individual service's ~p95. With 10 parallel se
 
 - **Running perf tests with cold caches and calling the result "production performance."** Most production requests hit warm caches; a cold-cache result is a worst-case, not a typical case. Fix: document the cache state in every perf result. Run separate cold-start and warm-state tests; label them correctly.
 
-- **Forgetting the warm-up period.** JIT compilation (JVM), connection-pool fill, and cache warming produce transient latency spikes in the first 5–10% of a test run. Including that data in steady-state results inflates the reported p99. Fix: add a ramp-up stage and discard results until the system stabilises; or build the warmup into the scenario and exclude warmup results from the threshold evaluation.
+- **Forgetting the warm-up period.** JIT compilation, connection-pool fill, and cache warming produce transient latency spikes in the first 5–10% of a test run. Including that data inflates the reported p99. Fix: add a ramp-up stage and discard results until the system stabilises; or build the warmup into the scenario and exclude warmup results from threshold evaluation.
 
-- **Reporting a single perf run as "the number."** Perf is a distribution; one run is one sample of that distribution. On shared CI runners, runner noise alone can account for 10–20% variance. Fix: run 3–5 times and report the median; flag outliers. When comparing across PRs on shared runners, use relative thresholds (vs. a same-job baseline) rather than absolute values. The [[cicd-for-testing]] pipeline's Lighthouse job is the right model for how to wire this.
+- **Reporting a single perf run as "the number."** Perf is a distribution; one run is one sample of that distribution. On shared CI runners, runner noise alone can account for 10–20% variance. Fix: run 3–5 times and report the median; flag outliers. Use relative thresholds (vs. a same-job baseline) rather than absolute values.
+
+## 4. Maintain
+
+<div role="list" aria-label="Maintenance triggers and responses">
+<Maintain trigger="k6 ships a new major version (e.g. 2.x → 3.x)">
+  1. Read the k6 migration guide — executor option names and metric labels sometimes change between majors.
+  2. Update the `k6` version in your CI install step and any pinned Docker images.
+  3. Run the full perf test suite in a staging environment; compare p95/p99 results against the previous baseline to confirm no silent threshold-semantics change.
+  4. Update the `verified.versions` block and `verified.date` in this frontmatter.
+</Maintain>
+
+<Maintain trigger="A threshold starts failing after a schema or infrastructure change (not a real regression)">
+  1. Check whether the data volume, cache state, or connection-pool configuration changed — these affect latency independently of code changes.
+  2. Re-run the test 3 times and compare the median with the previous 3-run median. If the delta is within the runner noise floor (≤10%), treat it as noise, not regression.
+  3. If the delta is confirmed, bisect: run the test against the old build in the same environment. If the old build also breaches, the infra changed, not the code.
+  4. Update the SLO threshold only after aligning with the team — do not silently bump numbers to make CI green.
+</Maintain>
+
+<Maintain trigger="A soak test surfaces a memory-leak or pool-exhaustion bug">
+  1. Note the time at which the metric diverged (p95 climbing, error rate rising) — this anchors the debugging window.
+  2. Correlate with application metrics: heap usage, DB connection count, active thread count. The divergence point in k6 should match a corresponding inflection in the application metric.
+  3. Add a `check` in the k6 script to assert response body structure, not just status code — pool exhaustion often returns 200 with an empty or error body.
+  4. Fix the resource leak, then run a new soak test for the same duration to confirm the metric is flat over time, not just low at the start.
+</Maintain>
+
+<Maintain trigger="CI perf job runtime exceeds the pipeline time budget">
+  1. Move soak tests (8+ hours) out of per-PR CI and into a scheduled nightly or pre-release gate.
+  2. Run only the smoke and load shapes per PR; reserve stress and soak for the release gate.
+  3. Use k6 Cloud or a dedicated runner for long-running scenarios to avoid competing with unit/integration jobs for resources.
+  4. Document which shapes run where in the team runbook so a future engineer does not re-add a soak test to the PR gate.
+</Maintain>
+
+<Maintain trigger="Lighthouse-CI budgets are consistently failing after a UI change">
+  1. Run Lighthouse locally against the production build: `npx lhci autorun`.
+  2. Identify which Core Web Vital is failing — LCP, INP, or CLS — not the composite score.
+  3. For LCP: check whether a new image or font was added without preload. For CLS: check for newly-added `client:only` islands that shift layout on mount. For INP: profile with Chrome DevTools Performance panel — look for long tasks blocking the main thread.
+  4. Fix the root cause, then re-run Lighthouse 3 times and report the median value vs. the budget before updating the CI config.
+</Maintain>
+</div>
 
 ## Retrieval Prompts
 
@@ -199,7 +392,7 @@ So the page's p99 is actually the individual service's ~p95. With 10 parallel se
 </Prompt>
 
 <Prompt id="perf-3">
-  Define coordinated omission. Explain in one paragraph how a constant-vus executor causes a load tool to under-report tail latency under saturation, and name the executor type that avoids it.
+  Define coordinated omission. Explain in one paragraph how a `constant-vus` executor causes a load tool to under-report tail latency under saturation, and name the executor type that avoids it.
 </Prompt>
 
 <Prompt id="perf-4" requiresDiagram>
@@ -265,7 +458,7 @@ So the page's p99 is actually the individual service's ~p95. With 10 parallel se
   Run Lighthouse-CI on the target site once (locally or in CI) and report the actual numbers vs. your proposed budget. If the numbers breach your budget, name the specific Lighthouse diagnostic you would read first and what it would tell you.
 
   Rubric (revealed after submission):
-  - Does each SLO have a percentile AND a workload shape AND a cache state? Missing any one is a partial credit only.
+  - Does each SLO have a percentile AND a workload shape AND a cache state? Missing any one is partial credit only.
   - Does the rationale cite an external anchor (CrUX, Google threshold, benchmark) rather than an internally-generated number? Unsupported numbers fail.
   - Does the test plan name a specific executor type for the backend load test (closed vs. open) and justify the choice?
   - Does the failure-mode plan define a noise-floor threshold (not just "we'll decide")? A threshold-free plan is a fail.
@@ -276,5 +469,5 @@ So the page's p99 is actually the individual service's ~p95. With 10 parallel se
 ## Feynman Prompt
 
 <Feynman id="perf-feynman-1" wordTarget={150}>
-  Explain performance testing to a developer who thinks "it's fast on my machine, so performance is fine." Cover: why "fast on my machine" is not a performance result (name the three things missing), what the difference is between average response time and p99, and why a load test with a closed-model executor can report lower tail latency than a test using an open-model executor against the same service. Give one concrete example of a performance bug that would pass a "fast on my machine" check and fail a properly configured p99 SLO gate. Rubric (revealed after submit): Did you name the three things missing from "fast on my machine" (percentile, workload shape, concurrency)? Did you explain p99 versus average in terms of the *user who experiences the tail*, not just the math? Did you explain coordinated omission without using the phrase "the test is wrong" as a substitute for the mechanism? Did your concrete example name a specific bug class (memory leak, slow query, connection-pool exhaustion, cache miss) rather than "something slow"?
+  Explain performance testing to a developer who thinks "it's fast on my machine, so performance is fine." Cover: why "fast on my machine" is not a performance result (name the three things missing), what the difference is between average response time and p99, and why a load test with a closed-model executor can report lower tail latency than a test using an open-model executor against the same service. Give one concrete example of a performance bug that would pass a "fast on my machine" check and fail a properly configured p99 SLO gate. Rubric (revealed after submit): Did you name the three things missing from "fast on my machine" (percentile, workload shape, concurrency)? Did you explain p99 versus average in terms of the *user who experiences the tail*, not just the maths? Did you explain coordinated omission without using the phrase "the test is wrong" as a substitute for the mechanism? Did your concrete example name a specific bug class (memory leak, slow query, connection-pool exhaustion, cache miss) rather than "something slow"?
 </Feynman>
