@@ -27,7 +27,8 @@ test('home → lesson → quiz → refresh restores state → finish → summary
   await expect(page.locator('#quiz')).toBeVisible();
   await expect(page.getByText(`Question 1 / ${TOTAL_QUESTIONS}`)).toBeVisible();
 
-  // 4. Answer Q1 — click first option button
+  // 4. Wait for QuizRunner to finish hydrating, then click first option button
+  await expect(page.locator('#quiz [data-quiz-ready="true"]')).toBeVisible();
   await page.locator('#quiz button').first().click();
 
   // 5. Feedback appears
@@ -59,6 +60,7 @@ test('home → lesson → quiz → refresh restores state → finish → summary
 
   // 9. On last question — answer it
   await expect(page.getByText(`Question ${TOTAL_QUESTIONS} / ${TOTAL_QUESTIONS}`)).toBeVisible();
+  await expect(page.locator('#quiz [data-quiz-ready="true"]')).toBeVisible();
   await page.locator('#quiz button').first().click();
   await expect(page.getByRole('button', { name: 'See Results' })).toBeVisible();
   await page.getByRole('button', { name: 'See Results' }).click();

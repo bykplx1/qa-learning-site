@@ -471,10 +471,15 @@ function QuizRunnerInner({ questions, quizSlug }: Props) {
   const [markedComplete, setMarkedComplete] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [promptDismissed, setPromptDismissed] = useState(false);
+  const [quizReady, setQuizReady] = useState(false);
 
   const startedAtRef = useRef<number>(Date.now());
   const submittedRef = useRef<boolean>(false);
   const attemptIdRef = useRef<string>(crypto.randomUUID());
+
+  useEffect(() => {
+    setQuizReady(true);
+  }, []);
 
   const adapter: QuizPersistenceAdapter = useMemo(
     () => selectAdapter(signedIn === true),
@@ -564,7 +569,7 @@ function QuizRunnerInner({ questions, quizSlug }: Props) {
   }, [questions, quizSlug]);
 
   return (
-    <section className="mt-14 pt-10 border-t border-[var(--rule)]">
+    <section className="mt-14 pt-10 border-t border-[var(--rule)]" data-quiz-ready={quizReady ? 'true' : undefined}>
       {state.status === 'summary' ? (
         <SummaryScreen
           state={state}

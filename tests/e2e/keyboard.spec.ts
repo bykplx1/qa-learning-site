@@ -18,9 +18,10 @@ test.describe('keyboard-only operability', () => {
     await page.goto('/');
     await expect(page.locator('h1').first()).toBeVisible();
     // SearchModal is client:only — its keydown listener is attached on mount.
-    // Waiting for the (also client:only) SearchTrigger button confirms the
-    // React islands hydrated; pressing Ctrl+K beforehand races the listener.
+    // SearchTrigger (client:load) and SearchModal (client:only) hydrate
+    // independently; wait for SearchModal's own mount signal instead.
     await expect(page.getByRole('button', { name: /Search.*Ctrl\+K/i })).toBeVisible();
+    await expect(page.locator('html[data-search-ready="true"]')).toBeAttached();
 
     await page.keyboard.press('Control+k');
     const dialog = page.getByRole('dialog', { name: 'Search' });
@@ -36,6 +37,7 @@ test.describe('keyboard-only operability', () => {
     const quiz = page.locator('#quiz');
     await expect(quiz).toBeVisible();
     await expect(quiz.getByText('Question 1 / 20')).toBeVisible();
+    await expect(quiz.locator('[data-quiz-ready="true"]')).toBeVisible();
 
     const firstOption = quiz.locator('button').first();
     await firstOption.focus();
