@@ -76,6 +76,10 @@
 
 * { box-sizing: border-box; }
 
+html {
+  scroll-padding-top: 76px;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -162,7 +166,11 @@ a { color: inherit; }
 .nav__links a {
   color: inherit;
   text-decoration: none;
+  padding-top: 2px;
   padding-bottom: 2px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
   border-bottom: 1px solid transparent;
 }
 .nav__links a:hover { color: var(--ink); }
@@ -178,6 +186,11 @@ a { color: inherit; }
 @media (max-width: 768px) {
   .nav { padding: 14px 20px; }
   .nav__links { display: none; }
+}
+@media (max-width: 360px) {
+  .nav { gap: 8px; }
+  .nav__brand span:not(.nav__mark) { display: none; }
+  .nav__right { gap: 8px; }
 }
 
 /* Mobile nav toggle — hidden on desktop */
@@ -604,6 +617,38 @@ a { color: inherit; }
 }
 
 /* ====================================================================
+   Skip-to-content link (#357)
+   ==================================================================== */
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--sans);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+/* ====================================================================
+   Global focus ring (#361)
+   ==================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ====================================================================
    Forms / inputs
    ==================================================================== */
 
@@ -934,4 +979,19 @@ mark {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ====================================================================
+   Reduced motion (#364)
+   ==================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
