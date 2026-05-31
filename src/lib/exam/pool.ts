@@ -1,11 +1,11 @@
 import { type QuizQuestion } from '../quiz/schema.js';
-import { loadExamPool, slugFromGlobKey } from '../quiz/loadQuiz.js';
+import { loadExamPool, loadReachableExamPool, slugFromGlobKey } from '../quiz/loadQuiz.js';
 import { EXAM_QUESTION_COUNT } from './config.js';
 
 export { slugFromGlobKey as slugFromKey };
 
-export function buildExamPool(): QuizQuestion[] {
-  const poolBuckets = loadExamPool();
+export function buildExamPool(liveSlugs?: ReadonlySet<string>): QuizQuestion[] {
+  const poolBuckets = liveSlugs ? loadReachableExamPool(liveSlugs) : loadExamPool();
   const sortedBuckets = poolBuckets.slice().sort((a, b) => a.slug.localeCompare(b.slug));
   const buckets: QuizQuestion[][] = sortedBuckets.map((b) => b.questions);
 

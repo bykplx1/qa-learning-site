@@ -1,4 +1,5 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ExamRunner from '../components/exam/ExamRunner';
 import { buildExamPool } from '../lib/exam/pool';
@@ -10,12 +11,14 @@ import {
 
 export const prerender = true;
 
-const examQuestions = buildExamPool();
+const allTopics = await getCollection('curriculum');
+const liveSlugs = new Set(allTopics.map((t) => t.data.slug));
+const examQuestions = buildExamPool(liveSlugs);
 ---
 
 <BaseLayout
   title="Mock exam — QA Learning"
-  description={`${examQuestions.length}-question, ${EXAM_DURATION_MINUTES}-minute ISTQB-style mock exam.`}
+  description={`${examQuestions.length}-question, ${EXAM_DURATION_MINUTES}-minute mock exam covering live curriculum topics.`}
 >
   <div class="exam-page">
     <header class="exam-page__head">
