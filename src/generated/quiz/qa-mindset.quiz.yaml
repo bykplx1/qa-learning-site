@@ -1,0 +1,151 @@
+lesson: qa-mindset
+questions:
+  - id: qam-001
+    type: single
+    difficulty: easy
+    q: "The QA Mindset is best described as:"
+    options:
+      - A) Executing pre-written test scripts at the end of development
+      - B) Evidence-based skepticism applied continuously — treating every claim about behaviour as a hypothesis until a test confirms or refutes it
+      - C) Writing bug reports after the product ships
+      - D) Ensuring 100% code coverage on every build
+    answer: 1
+    hint: |-
+      It starts at requirements, not at the test phase.
+    explanation: |-
+      The QA mindset frames quality as a continuous discipline of asking "what could go wrong?" — not a gate at the end. Every claim is a hypothesis needing evidence.
+
+  - id: qam-002
+    type: single
+    difficulty: easy
+    q: "The distinction between 'testing' and 'checking' (Bach & Bolton) is:"
+    options:
+      - A) Testing is automated; checking is manual
+      - B) Testing is exploratory questioning; checking is mechanically confirming known expectations
+      - C) Testing is for QA engineers; checking is for developers
+      - D) Testing runs in CI; checking runs in production
+    answer: 1
+    hint: |-
+      Automation automates checks — it cannot replace testing.
+    explanation: |-
+      Testing is a human activity of questioning, exploring, and learning. Checking is mechanically confirming a known expectation — the thing automation does. Automating checks is valuable; it does not replace the human activity of testing.
+
+  - id: qam-003
+    type: single
+    difficulty: medium
+    q: "The context-driven school holds that:"
+    options:
+      - A) There is one universally correct testing approach
+      - B) Test-driven development is mandatory for quality
+      - C) No practice is universally good — value depends on the situation
+      - D) Exploratory testing should replace all scripted testing
+    answer: 2
+    hint: |-
+      "It depends" — on what, specifically?
+    explanation: |-
+      Context-driven testing (Bach, Bolton, Kaner) rejects universal recipes. A practice's value is determined by the context it is applied in. "It depends" is not a complete answer — always follow it with "depends on what specifically?"
+
+  - id: qam-004
+    type: single
+    difficulty: easy
+    q: "A developer writes a passing unit test for a login function. What is the QA mindset response?"
+    options:
+      - A) Mark the feature done — a passing test proves correctness
+      - B) Ask: what about empty passwords, SQL injection, 429 after brute force, concurrent logins?
+      - C) Re-run the same test in a different environment
+      - D) Convert the unit test into an E2E test
+    answer: 1
+    hint: |-
+      One passing happy-path test covers one path, not the threat surface.
+    explanation: |-
+      The QA mindset maps boundary conditions and threat surfaces the developer did not explore. A passing test confirms one happy path; the QA role is to question assumptions about all the other paths.
+
+  - id: qam-005
+    type: single
+    difficulty: medium
+    q: "Testing only the happy path and calling a feature 'done' is a deliberate mistake because:"
+    options:
+      - A) Happy-path tests are too slow
+      - B) It leaves boundary conditions, error paths, and adversarial inputs unexamined
+      - C) Happy-path tests cannot be automated
+      - D) The happy path is already covered by the specification
+    answer: 1
+    hint: |-
+      The spec defines one success path; the threat surface is much larger.
+    explanation: |-
+      Most defects live outside the happy path — at boundaries, in error conditions, under load, or under adversarial input. Calling a feature done after one positive test leaves the threat surface unexamined.
+
+  - id: qam-006
+    type: single
+    difficulty: medium
+    q: "Which statement best describes the QA mindset's relationship to evidence?"
+    options:
+      - A) Evidence is gathered only when a bug is reported
+      - B) Every claim about behaviour is a hypothesis until a test confirms or refutes it
+      - C) Evidence is the developer's responsibility; QA interprets results
+      - D) Passing CI is sufficient evidence that a feature works
+    answer: 1
+    hint: |-
+      Skepticism + continuous evidence gathering.
+    explanation: |-
+      The QA mindset treats every claim — "this feature works," "this edge case is handled" — as a hypothesis. The test is the experiment that produces evidence. Green CI confirms one set of hypotheses; it does not close the hypothesis space.
+
+  - id: qam-007
+    type: single
+    difficulty: hard
+    q: "The QA mindset applied to a 'trivial' password-reset link bug reveals:"
+    options:
+      - A) Trivial bugs are not worth the QA mindset overhead
+      - B) The apparent bug may be a symptom of a broader design failure — what else does the same code touch?
+      - C) Only UI bugs warrant systematic questioning
+      - D) The QA mindset applies only to security-critical features
+    answer: 1
+    hint: |-
+      Ask one level deeper — what system produced this symptom?
+    explanation: |-
+      The QA mindset asks not just "is this bug fixed?" but "what assumption produced this bug?" A password-reset timer defect might signal that all time-bounded tokens share the same faulty constant — widening the scope of the investigation.
+
+  - id: qam-008
+    type: single
+    difficulty: medium
+    q: "Why does the QA mindset distinguish QA from a gatekeeper role?"
+    options:
+      - A) Because gatekeepers have more authority to block releases
+      - B) Because quality is everyone's responsibility, not a phase enforced by one team
+      - C) Because QA teams should not have authority to reject builds
+      - D) Because gatekeeping is only relevant in regulated industries
+    answer: 1
+    hint: |-
+      Quality Assurance is continuous, not a single gate.
+    explanation: |-
+      A gatekeeper waits at the end and approves or rejects. The QA mindset is distributed — the discipline of asking "what could go wrong?" is applied at requirements, design, code, and deployment, not only at a final test gate.
+
+  - id: qam-009
+    type: single
+    difficulty: easy
+    q: "Automation in the QA mindset is best characterised as:"
+    options:
+      - A) A replacement for human testing judgment
+      - B) A tool that automates checks — mechanical confirmation of known expectations
+      - C) Only appropriate for regression suites
+      - D) A signal that the QA role is no longer needed
+    answer: 1
+    hint: |-
+      Automation automates checks; testing is the human activity.
+    explanation: |-
+      Automation is valuable for checks — repeatedly confirming expectations that are already known. It does not replace the human activity of questioning, exploring, and learning about the system.
+
+  - id: qam-010
+    type: single
+    difficulty: hard
+    q: "A team consistently ships green builds that users hate. The QA mindset diagnosis is:"
+    options:
+      - A) The test suite needs more coverage metrics
+      - B) The oracles used by the tests do not capture user value — the tests confirm the spec, not the right spec
+      - C) The CI pipeline needs more stages
+      - D) Users need better documentation
+    answer: 1
+    hint: |-
+      Green tests prove the spec was met — not that the right spec was chosen.
+    explanation: |-
+      This is the verification/validation gap applied to the QA mindset. Tests can confirm that the system behaves per spec (verification) while the spec itself is wrong for the user's actual need (validation failure). The mindset must ask both "did we build it right?" and "did we build the right thing?"

@@ -106,6 +106,7 @@ export function parseQuiz(markdown: string, lessonSlug: string): QuizFile {
       q: qText,
       options: options.length > 0 ? options : undefined,
       answer,
+      difficulty: 'medium' as const,
       ...(hint !== undefined && { hint }),
       ...(explanation !== undefined && { explanation }),
     };

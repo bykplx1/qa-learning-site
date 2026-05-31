@@ -1,0 +1,148 @@
+lesson: observability-for-testers
+questions:
+  - id: oft-001
+    type: single
+    difficulty: easy
+    q: "Observability is the property that lets you:"
+    options:
+      - A) Deploy code without tests
+      - B) Ask any question about a system's current and past behaviour without shipping new code
+      - C) Run tests in production automatically
+      - D) Eliminate the need for pre-production testing
+    answer: 1
+    hint: |-
+      Post-deployment truth without code changes.
+    explanation: |-
+      Observability means the system emits enough signal that any question about its behaviour can be answered from the existing telemetry — without adding new logging or instrumenting new code.
+
+  - id: oft-002
+    type: single
+    difficulty: easy
+    q: "The three primary observability signals are:"
+    options:
+      - A) Tests, coverage, performance
+      - B) Logs, metrics, traces
+      - C) Uptime, latency, error rate
+      - D) Dashboards, alerts, runbooks
+    answer: 1
+    hint: The classic three pillars.
+    explanation: |-
+      Logs (timestamped event records), metrics (numeric measurements over time), and traces (distributed request journeys across services) are the three primary observability signals. Together they answer: what happened, how much/how often, and where.
+
+  - id: oft-003
+    type: single
+    difficulty: medium
+    q: "The difference between monitoring and observability is:"
+    options:
+      - A) Monitoring is automated; observability requires human judgment
+      - B) Monitoring tells you when something is wrong; observability tells you why
+      - C) Monitoring uses dashboards; observability uses logs only
+      - D) Monitoring is for operations; observability is for developers
+    answer: 1
+    hint: Known unknowns vs unknown unknowns.
+    explanation: |-
+      Monitoring tells you that a known metric crossed a threshold. Observability enables investigation of unknown failure modes — questions you did not anticipate when writing the alert rules. Observability subsumes monitoring.
+
+  - id: oft-004
+    type: single
+    difficulty: medium
+    q: "For a tester, observability is most valuable because:"
+    options:
+      - A) It replaces pre-production test suites
+      - B) It provides production-truth feedback for bugs that only appear under real load, real data, and real user behaviour
+      - C) It generates test cases automatically from production traffic
+      - D) It eliminates the need for incident retrospectives
+    answer: 1
+    hint: |-
+      Tests cover known scenarios; production covers everything else.
+    explanation: |-
+      Pre-production tests exercise scenarios the team anticipated. Observability reveals what tests cannot exercise — the tail of real traffic distributions, rare device combinations, and emergent behaviours under real concurrency. It is the tester's window into unknown-unknowns in production.
+
+  - id: oft-005
+    type: single
+    difficulty: easy
+    q: "A trace in distributed systems shows:"
+    options:
+      - A) A single log line from one service
+      - B) A numeric measurement like request count per second
+      - C) The complete journey of a single request across multiple services, with timing at each hop
+      - D) An alert threshold configuration
+    answer: 2
+    hint: |-
+      Follow one request end-to-end across all services.
+    explanation: |-
+      A distributed trace follows a single request as it propagates through microservices, databases, and queues — capturing timing, error status, and context at each hop. Traces answer "where did this specific request slow down or fail?"
+
+  - id: oft-006
+    type: single
+    difficulty: medium
+    q: "An SLO (Service Level Objective) in observability is:"
+    options:
+      - A) A legal agreement with customers
+      - B) A measurable target for a reliability characteristic — e.g. p99 latency < 500 ms for 99.9% of requests
+      - C) An alert that fires when a metric crosses a threshold
+      - D) A log aggregation policy
+    answer: 1
+    hint: |-
+      The oracle for observability-based testing.
+    explanation: |-
+      An SLO defines the target level of reliability as a measurable objective. It is the oracle for post-deployment testing — "are we meeting the SLO?" is the pass/fail criterion for operational quality, analogous to what a spec is for verification testing.
+
+  - id: oft-007
+    type: single
+    difficulty: hard
+    q: "An error budget in observability is:"
+    options:
+      - A) The cost of fixing bugs in production
+      - B) The allowed amount of SLO violation before a team must stop feature work and focus on reliability
+      - C) The number of errors per minute before an alert fires
+      - D) A financial reserve for infrastructure costs
+    answer: 1
+    hint: |-
+      100% - SLO target = how much unreliability you are allowed.
+    explanation: |-
+      If an SLO targets 99.9% availability, the error budget is 0.1% — the allowed period of unavailability. When the error budget is consumed, it signals that reliability work must take priority over features. Error budgets make the reliability/velocity trade-off explicit and data-driven.
+
+  - id: oft-008
+    type: single
+    difficulty: medium
+    q: "OpenTelemetry is relevant to testers because:"
+    options:
+      - A) It provides an automated testing framework
+      - B) It is the vendor-neutral standard for emitting traces, metrics, and logs — enabling consistent observability across different tools
+      - C) It replaces CI/CD pipelines
+      - D) It is a performance testing tool
+    answer: 1
+    hint: Vendor-neutral instrumentation standard.
+    explanation: |-
+      OpenTelemetry defines standard APIs, SDKs, and protocols for emitting observability signals. A system instrumented with OTel can send traces to Jaeger, metrics to Prometheus, and logs to any compatible backend — without changing application code when switching tools.
+
+  - id: oft-009
+    type: single
+    difficulty: hard
+    q: "The investigation 'checkout is slow sometimes' takes days without telemetry because:"
+    options:
+      - A) Slow checkout only happens in production, never in test environments
+      - B) Without telemetry, you cannot identify which service, query, or code path caused the slowness for a specific request at a specific time
+      - C) Performance issues cannot be diagnosed with logs
+      - D) Checkout slowness is always caused by network issues
+    answer: 1
+    hint: |-
+      Without traces and metrics, you have no map to the failure.
+    explanation: |-
+      "Slow sometimes" without telemetry means reproduction is required — which may be impossible with production load. With a distributed trace, you can find the specific request that was slow, identify which service added latency, and correlate with a deploy or database event. Days of investigation become minutes.
+
+  - id: oft-010
+    type: single
+    difficulty: medium
+    q: "The relationship between testing and observability is:"
+    options:
+      - A) Observability replaces testing in modern systems
+      - B) Testing and observability are redundant — both answer the same questions
+      - C) Testing catches what you can anticipate pre-ship; observability reveals what tests cannot exercise — real traffic, real users, real concurrency
+      - D) Observability is only relevant for operations teams, not testers
+    answer: 2
+    hint: |-
+      Pre-ship vs post-ship — complementary, not redundant.
+    explanation: |-
+      Tests catch anticipated failure modes in controlled conditions. Observability reveals failures that are only visible under real conditions — tail-of-distribution traffic, emergent behaviour from real user combinations, production data edge cases. The two instruments are complementary, covering different parts of the quality space.

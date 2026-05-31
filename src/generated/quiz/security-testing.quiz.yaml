@@ -2,6 +2,7 @@ lesson: security-testing
 questions:
   - id: st-001
     type: single
+    difficulty: easy
     q: "SAST scans:"
     options:
       - A) Running app
@@ -10,9 +11,10 @@ questions:
       - D) DNS
     answer: 1
     hint: Static analysis.
-    explanation: SAST = Static Application Security Testing on source. See [[#Test Types]].
+    explanation: SAST = Static Application Security Testing on source.
   - id: st-002
     type: single
+    difficulty: easy
     q: "DAST requires:"
     options:
       - A) Source code
@@ -21,9 +23,10 @@ questions:
       - D) Database dump
     answer: 1
     hint: Dynamic.
-    explanation: DAST exercises live app like attacker. See [[#Test Types]].
+    explanation: DAST exercises live app like attacker.
   - id: st-003
     type: single
+    difficulty: easy
     q: "IDOR stands for:"
     options:
       - A) Insecure Direct Object Reference
@@ -33,9 +36,9 @@ questions:
     answer: 0
     hint: Authorization gap.
     explanation: Endpoint trusts client-supplied object ID without ownership check.
-      See [[#Common Vulnerabilities Cheat]].
   - id: st-004
     type: single
+    difficulty: easy
     q: "CIA triad:"
     options:
       - A) Confidentiality, Integrity, Availability
@@ -44,9 +47,10 @@ questions:
       - D) Cipher, Index, Audit
     answer: 0
     hint: Core security goals.
-    explanation: CIA = foundational properties. See [[#CIA Triad]].
+    explanation: CIA = foundational properties.
   - id: st-005
     type: single
+    difficulty: easy
     q: "SQLi test payload example:"
     options:
       - A) `<script>alert(1)</script>`
@@ -55,9 +59,10 @@ questions:
       - D) `?next=evil.com`
     answer: 1
     hint: Quote + always true.
-    explanation: Tautology breaks WHERE clause. See [[#Common Vulnerabilities Cheat]].
+    explanation: Tautology breaks WHERE clause.
   - id: st-006
     type: single
+    difficulty: easy
     q: "XSS payload:"
     options:
       - A) `' OR 1=1`
@@ -66,10 +71,10 @@ questions:
       - D) `;rm -rf /`
     answer: 1
     hint: Browser script injection.
-    explanation: XSS executes JS in victim's browser context. See [[#Common
-      Vulnerabilities Cheat]].
+    explanation: XSS executes JS in victim's browser context.
   - id: st-007
     type: single
+    difficulty: easy
     q: "CSRF mitigation:"
     options:
       - A) HTTPS only
@@ -78,10 +83,10 @@ questions:
       - D) Disable JS
     answer: 1
     hint: Cross-site request.
-    explanation: Token + SameSite prevent forged cross-origin requests. See
-      [[#Common Vulnerabilities Cheat]].
+    explanation: Token + SameSite prevent forged cross-origin requests.
   - id: st-008
     type: single
+    difficulty: medium
     q: "SCA tool checks:"
     options:
       - A) Source style
@@ -90,9 +95,10 @@ questions:
       - D) DB perf
     answer: 1
     hint: Software composition.
-    explanation: SCA flags vulnerable libs/images. See [[#Tools]].
+    explanation: SCA flags vulnerable libs/images.
   - id: st-009
     type: single
+    difficulty: medium
     q: 'STRIDE "T":'
     options:
       - A) Tampering
@@ -101,9 +107,10 @@ questions:
       - D) Tunneling
     answer: 0
     hint: Integrity threat.
-    explanation: T = Tampering with data/code. See [[#Threat Modeling (STRIDE)]].
+    explanation: T = Tampering with data/code.
   - id: st-010
     type: single
+    difficulty: medium
     q: "Header that prevents clickjacking:"
     options:
       - A) `X-Frame-Options` / CSP frame-ancestors
@@ -112,9 +119,10 @@ questions:
       - D) `Server`
     answer: 0
     hint: Iframe restriction.
-    explanation: Restricts who can frame the site. See [[#Headers To Verify]].
+    explanation: Restricts who can frame the site.
   - id: st-011
     type: single
+    difficulty: medium
     q: "CVSS High range:"
     options:
       - A) 0.1–3.9
@@ -123,9 +131,10 @@ questions:
       - D) 9.0+
     answer: 2
     hint: High vs Critical.
-    explanation: High = 7.0–8.9; Critical = 9.0+. See [[#Risk Scoring (CVSS)]].
+    explanation: High = 7.0–8.9; Critical = 9.0+.
   - id: st-012
     type: single
+    difficulty: medium
     q: "SSRF means:"
     options:
       - A) Server-Side Request Forgery
@@ -134,10 +143,10 @@ questions:
       - D) Secure Socket RF
     answer: 0
     hint: Server fetches attacker URL.
-    explanation: Attacker forces server to call internal/sensitive URL. See [[#OWASP
-      Top 10 (2021)]].
+    explanation: Attacker forces server to call internal/sensitive URL.
   - id: st-013
     type: single
+    difficulty: medium
     q: "JWT `alg=none` exploit:"
     options:
       - A) Bypass signature
@@ -146,10 +155,10 @@ questions:
       - D) Compresses
     answer: 0
     hint: No verification.
-    explanation: Server accepts unsigned token if `alg=none` allowed. See [[#Common
-      Vulnerabilities Cheat]].
+    explanation: Server accepts unsigned token if `alg=none` allowed.
   - id: st-014
     type: single
+    difficulty: medium
     q: "HSTS header purpose:"
     options:
       - A) Force HTTPS
@@ -158,9 +167,10 @@ questions:
       - D) DNS pinning
     answer: 0
     hint: Strict Transport.
-    explanation: HSTS forces HTTPS to prevent SSL strip. See [[#Headers To Verify]].
+    explanation: HSTS forces HTTPS to prevent SSL strip.
   - id: st-015
     type: single
+    difficulty: medium
     q: "Vertical privilege escalation:"
     options:
       - A) User → other user
@@ -169,10 +179,10 @@ questions:
       - D) Read → write
     answer: 1
     hint: Role uplift.
-    explanation: Vertical = gain higher role; horizontal = peer access. See [[#Auth
-      Test Checklist]].
+    explanation: Vertical = gain higher role; horizontal = peer access.
   - id: st-016
     type: single
+    difficulty: hard
     q: "Fuzzing means:"
     options:
       - A) Manual review
@@ -181,9 +191,10 @@ questions:
       - D) Logging
     answer: 1
     hint: Bombard inputs.
-    explanation: Fuzzers feed unexpected input to surface defects. See [[#Test Types]].
+    explanation: Fuzzers feed unexpected input to surface defects.
   - id: st-017
     type: single
+    difficulty: hard
     q: "Burp Suite role:"
     options:
       - A) DAST proxy / pen-test toolkit
@@ -192,9 +203,10 @@ questions:
       - D) IDE
     answer: 0
     hint: Intercept proxy.
-    explanation: Burp intercepts/modifies HTTP for security testing. See [[#Tools]].
+    explanation: Burp intercepts/modifies HTTP for security testing.
   - id: st-018
     type: single
+    difficulty: hard
     q: "OWASP Top 10 #1 (2021):"
     options:
       - A) Injection
@@ -203,10 +215,10 @@ questions:
       - D) CSRF
     answer: 1
     hint: Moved to top.
-    explanation: Broken Access Control most common in 2021 list. See [[#OWASP Top 10
-      (2021)]].
+    explanation: Broken Access Control most common in 2021 list.
   - id: st-019
     type: single
+    difficulty: hard
     q: "Secret scanning typical stage:"
     options:
       - A) After release
@@ -215,9 +227,10 @@ questions:
       - D) Never
     answer: 1
     hint: Catch early.
-    explanation: Pre-commit + CI block secrets reaching repo. See [[#Shift-Left Security]].
+    explanation: Pre-commit + CI block secrets reaching repo.
   - id: st-020
     type: single
+    difficulty: hard
     q: "Pen test should be done:"
     options:
       - A) On prod without notice
@@ -226,7 +239,4 @@ questions:
       - D) Once ever
     answer: 1
     hint: Rules of engagement.
-    explanation: |-
-      Authorization + scope = legal + safe testing. See [[#Best Practices]].
-
-      ---
+    explanation: Authorization + scope = legal + safe testing.

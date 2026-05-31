@@ -1,0 +1,242 @@
+lesson: shift-left-and-shift-right
+questions:
+  - id: slr-001
+    type: single
+    difficulty: easy
+    q: "Shift-left testing means:"
+    options:
+      - A) Testing only after release
+      - B) Testing earlier in SDLC
+      - C) Manual UI testing
+      - D) Performance only
+    answer: 1
+    hint: Earlier = left on timeline.
+    explanation: Shift-left brings quality activities into reqs/design/code.
+  - id: slr-002
+    type: single
+    difficulty: easy
+    q: "Shift-right testing means:"
+    options:
+      - A) Testing in production / post-release
+      - B) Skipping QA
+      - C) Code review only
+      - D) Static analysis
+    answer: 0
+    hint: Later = right.
+    explanation: Shift-right validates real-world behavior in prod.
+  - id: slr-003
+    type: single
+    difficulty: easy
+    q: "Cost of fixing defect is highest in:"
+    options:
+      - A) Requirements
+      - B) Coding
+      - C) Testing
+      - D) Production
+    answer: 3
+    hint: Latest = priciest.
+    explanation: "Prod defects costly: customer impact, hotfix, support, reputation."
+  - id: slr-004
+    type: single
+    difficulty: easy
+    q: "Three amigos refers to:"
+    options:
+      - A) Three QAs
+      - B) BA + Dev + Tester reviewing requirements together
+      - C) Three managers
+      - D) Three test types
+    answer: 1
+    hint: Cross-role review.
+    explanation: Three amigos session aligns understanding before code.
+  - id: slr-005
+    type: single
+    difficulty: easy
+    q: "Canary release is:"
+    options:
+      - A) Test in canary VMs only
+      - B) Roll out to small subset of users first
+      - C) Release on Wednesdays
+      - D) Type of unit test
+    answer: 1
+    hint: Limited blast radius.
+    explanation: Canary detects issues with real traffic on small slice before full rollout.
+  - id: slr-006
+    type: single
+    difficulty: easy
+    q: "Synthetic monitoring:"
+    options:
+      - A) Fake users in dev
+      - B) Scripted probes hitting prod endpoints continuously
+      - C) Random fuzz
+      - D) Manual smoke
+    answer: 1
+    hint: Robotic prod check.
+    explanation: Synthetic = scheduled scripted requests for uptime + perf.
+  - id: slr-007
+    type: single
+    difficulty: easy
+    q: "RUM stands for:"
+    options:
+      - A) Random User Mocking
+      - B) Real User Monitoring
+      - C) Regression Unit Module
+      - D) Runtime Update Manager
+    answer: 1
+    hint: Actual users.
+    explanation: RUM collects telemetry from real user sessions.
+  - id: slr-008
+    type: single
+    difficulty: medium
+    q: "TDD is a shift-_____ practice:"
+    options:
+      - A) Right
+      - B) Left
+      - C) Center
+      - D) Down
+    answer: 1
+    hint: Tests precede code.
+    explanation: TDD forces test thinking before code = shift-left.
+  - id: slr-009
+    type: single
+    difficulty: medium
+    q: "Chaos engineering belongs to:"
+    options:
+      - A) Shift-left
+      - B) Shift-right
+      - C) Code review
+      - D) Linting
+    answer: 1
+    hint: Inject failure in prod-like.
+    explanation: Chaos validates resilience under real failure conditions.
+  - id: slr-010
+    type: single
+    difficulty: medium
+    q: "Feature flags help shift-right by:"
+    options:
+      - A) Hiding bugs
+      - B) Enabling gradual rollout + kill switch
+      - C) Replacing tests
+      - D) Deleting branches
+    answer: 1
+    hint: Toggle without redeploy.
+    explanation: Flags decouple deploy from release; allow targeted exposure.
+  - id: slr-011
+    type: single
+    difficulty: medium
+    q: "Static analysis runs:"
+    options:
+      - A) Only in prod
+      - B) Before/at code commit, no execution
+      - C) In load tests
+      - D) After UAT
+    answer: 1
+    hint: No runtime needed.
+    explanation: Static tools scan source for bugs/style/security pre-execution.
+  - id: slr-012
+    type: single
+    difficulty: medium
+    q: "A/B testing primarily measures:"
+    options:
+      - A) Code coverage
+      - B) Hypothesis impact (variant vs control metric)
+      - C) Latency only
+      - D) Memory leaks
+    answer: 1
+    hint: Compare variants.
+    explanation: A/B compares user behavior between two versions.
+  - id: slr-013
+    type: single
+    difficulty: medium
+    q: "Shift-left misconception:"
+    options:
+      - A) Devs collaborate on quality
+      - B) Testers fired
+      - C) Earlier feedback
+      - D) Test in CI
+    answer: 1
+    hint: Not replacement.
+    explanation: Shift-left expands collaboration; QA still needed.
+  - id: slr-014
+    type: single
+    difficulty: medium
+    q: "Observability pillars:"
+    options:
+      - A) Logs, metrics, traces
+      - B) Code, tests, docs
+      - C) Build, deploy, run
+      - D) Plan, do, check
+    answer: 0
+    hint: Three pillars.
+    explanation: Logs/metrics/traces = standard observability triad.
+  - id: slr-015
+    type: single
+    difficulty: medium
+    q: "Pre-merge CI gate is:"
+    options:
+      - A) Shift-right
+      - B) Shift-left
+      - C) Manual
+      - D) Production
+    answer: 1
+    hint: Block before merge.
+    explanation: Tests/lints before merge = early defect catch.
+  - id: slr-016
+    type: single
+    difficulty: hard
+    q: "Blue/green deployment goal:"
+    options:
+      - A) Color-coded code
+      - B) Switch traffic between two prod envs for safe release
+      - C) Backup
+      - D) Static analysis
+    answer: 1
+    hint: Two parallel envs.
+    explanation: Blue/green reduces downtime + enables fast rollback.
+  - id: slr-017
+    type: single
+    difficulty: hard
+    q: "Defect cost ratio reqs vs prod is roughly:"
+    options:
+      - A) 1:1
+      - B) 1:10
+      - C) 1:100+
+      - D) 1:0.1
+    answer: 2
+    hint: Two orders of magnitude.
+    explanation: Industry studies show ~100× cost increase prod vs reqs.
+  - id: slr-018
+    type: single
+    difficulty: hard
+    q: "Threat modeling supports:"
+    options:
+      - A) Shift-right only
+      - B) Shift-left security
+      - C) UI design
+      - D) Logging
+    answer: 1
+    hint: Security in design.
+    explanation: Threat models identify risks before code = shift-left security.
+  - id: slr-019
+    type: single
+    difficulty: hard
+    q: Dogfooding =
+    options:
+      - A) Animal welfare test
+      - B) Internal staff use product before public
+      - C) Pet store API
+      - D) Type of fuzzing
+    answer: 1
+    hint: Eat own dog food.
+    explanation: Internal users find issues before customers.
+  - id: slr-020
+    type: single
+    difficulty: hard
+    q: "Both shifts together aim for:"
+    options:
+      - A) Replace QA
+      - B) Continuous quality across full lifecycle
+      - C) Less testing
+      - D) Only manual
+    answer: 1
+    hint: Loop.
+    explanation: Combine = early prevention + late validation.

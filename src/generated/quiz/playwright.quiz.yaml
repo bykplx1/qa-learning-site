@@ -2,6 +2,7 @@ lesson: playwright
 questions:
   - id: p-001
     type: single
+    difficulty: easy
     q: "Playwright auto-wait means:"
     options:
       - A) Sleep before each action
@@ -10,9 +11,10 @@ questions:
       - D) Lazy load only
     answer: 1
     hint: Visible + enabled + stable.
-    explanation: Eliminates flaky manual waits. See [[#Auto-Wait]].
+    explanation: Eliminates flaky manual waits.
   - id: p-002
     type: single
+    difficulty: easy
     q: "Preferred locator strategy:"
     options:
       - A) XPath
@@ -21,10 +23,10 @@ questions:
       - D) Tag name
     answer: 1
     hint: Resilient + accessible.
-    explanation: "`getByRole` aligns with how users find elements. See [[#Locators
-      (Recommended API)]]."
+    explanation: "`getByRole` aligns with how users find elements."
   - id: p-003
     type: single
+    difficulty: easy
     q: "Web-first assertion advantage:"
     options:
       - A) Faster
@@ -33,9 +35,10 @@ questions:
       - D) Cached
     answer: 1
     hint: Built-in retry.
-    explanation: "`expect(locator).toHaveText(...)` polls. See [[#Assertions (web-first)]]."
+    explanation: "`expect(locator).toHaveText(...)` polls."
   - id: p-004
     type: single
+    difficulty: easy
     q: "Mock API response:"
     options:
       - A) `page.intercept`
@@ -44,10 +47,10 @@ questions:
       - D) `page.fake`
     answer: 1
     hint: Route handler.
-    explanation: "`page.route()` registers fulfill/continue/abort. See [[#Network
-      Interception]]."
+    explanation: "`page.route()` registers fulfill/continue/abort."
   - id: p-005
     type: single
+    difficulty: easy
     q: "Run tests on three browsers:"
     options:
       - A) Three suites
@@ -56,9 +59,10 @@ questions:
       - D) Manual loop
     answer: 1
     hint: Project config.
-    explanation: Playwright runs tests per project. See [[#Fixtures + Configuration]].
+    explanation: Playwright runs tests per project.
   - id: p-006
     type: single
+    difficulty: easy
     q: "Trace viewer shows:"
     options:
       - A) Console only
@@ -67,9 +71,10 @@ questions:
       - D) Linter
     answer: 1
     hint: Time-travel debug.
-    explanation: Trace records full execution. See [[#Tracing + Debugging]].
+    explanation: Trace records full execution.
   - id: p-007
     type: single
+    difficulty: easy
     q: "Skip re-login per test:"
     options:
       - A) Cookie hard-code
@@ -78,10 +83,10 @@ questions:
       - D) Singleton
     answer: 1
     hint: Save/restore state.
-    explanation: Save context state once, reuse via project. See [[#Storage State
-      (Auth Reuse)]].
+    explanation: Save context state once, reuse via project.
   - id: p-008
     type: single
+    difficulty: medium
     q: "Built-in API testing client:"
     options:
       - A) `axios`
@@ -90,9 +95,10 @@ questions:
       - D) None
     answer: 1
     hint: Fixture.
-    explanation: "`request` provides API context. See [[#API Testing (Built-in)]]."
+    explanation: "`request` provides API context."
   - id: p-009
     type: single
+    difficulty: medium
     q: "Shard tests across 4 CI nodes:"
     options:
       - A) `--workers=4`
@@ -101,9 +107,10 @@ questions:
       - D) Custom script
     answer: 1
     hint: Shard flag.
-    explanation: Splits suite by hash for distributed CI. See [[#Parallel + Sharding]].
+    explanation: Splits suite by hash for distributed CI.
   - id: p-010
     type: single
+    difficulty: medium
     q: "Codegen does:"
     options:
       - A) Generate code coverage
@@ -112,9 +119,10 @@ questions:
       - D) Mocks data
     answer: 1
     hint: Recorder.
-    explanation: "`playwright codegen` outputs scaffolding. See [[#Setup]]."
+    explanation: "`playwright codegen` outputs scaffolding."
   - id: p-011
     type: single
+    difficulty: medium
     q: "UI mode benefit:"
     options:
       - A) Required for tests
@@ -123,9 +131,10 @@ questions:
       - D) Mocking
     answer: 1
     hint: Dev loop.
-    explanation: "`--ui` opens interactive runner. See [[#Tracing + Debugging]]."
+    explanation: "`--ui` opens interactive runner."
   - id: p-012
     type: single
+    difficulty: medium
     q: "Default workers value source:"
     options:
       - A) 1
@@ -134,9 +143,10 @@ questions:
       - D) Disabled
     answer: 1
     hint: Config-driven.
-    explanation: "`workers` in config; default auto. See [[#Fixtures + Configuration]]."
+    explanation: "`workers` in config; default auto."
   - id: p-013
     type: single
+    difficulty: medium
     q: "Tests in same file run:"
     options:
       - A) Always parallel
@@ -145,10 +155,10 @@ questions:
       - D) Reverse
     answer: 1
     hint: File scope.
-    explanation: Same-file tests share worker by default; opt-in to parallel via
-      describe. See [[#Parallel + Sharding]].
+    explanation: Same-file tests share worker by default; opt-in to parallel via describe.
   - id: p-014
     type: single
+    difficulty: medium
     q: "`page.waitForTimeout(2000)` advice:"
     options:
       - A) Use freely
@@ -157,9 +167,10 @@ questions:
       - D) Mocks time
     answer: 1
     hint: Anti-pattern.
-    explanation: Fixed sleeps cause flakiness. See [[#Common Pitfalls]].
+    explanation: Fixed sleeps cause flakiness.
   - id: p-015
     type: single
+    difficulty: medium
     q: "Custom fixture purpose:"
     options:
       - A) Mock browser
@@ -168,9 +179,10 @@ questions:
       - D) Required for CI
     answer: 1
     hint: Test extension.
-    explanation: "`test.extend` creates per-test context. See [[#Custom Fixtures]]."
+    explanation: "`test.extend` creates per-test context."
   - id: p-016
     type: single
+    difficulty: hard
     q: "`expect(page).toHaveURL(/x/)`:"
     options:
       - A) Sync check
@@ -179,10 +191,10 @@ questions:
       - D) Network only
     answer: 1
     hint: Web-first.
-    explanation: Same retry semantics as locator assertions. See [[#Assertions
-      (web-first)]].
+    explanation: Same retry semantics as locator assertions.
   - id: p-017
     type: single
+    difficulty: hard
     q: "WebKit testing matters because:"
     options:
       - A) Same as Chromium
@@ -191,9 +203,10 @@ questions:
       - D) Required by spec
     answer: 1
     hint: Safari engine.
-    explanation: Catches Safari-only bugs without Mac. See [[#Why Playwright]].
+    explanation: Catches Safari-only bugs without Mac.
   - id: p-018
     type: single
+    difficulty: hard
     q: "Trace setting `on-first-retry`:"
     options:
       - A) Always trace
@@ -202,9 +215,10 @@ questions:
       - D) Trace failures only
     answer: 1
     hint: Save resources.
-    explanation: Avoids tracing every passing run. See [[#Fixtures + Configuration]].
+    explanation: Avoids tracing every passing run.
   - id: p-019
     type: single
+    difficulty: hard
     q: "`getByTestId` selects via:"
     options:
       - A) `id`
@@ -213,10 +227,10 @@ questions:
       - D) Class
     answer: 1
     hint: Configurable attr.
-    explanation: Convention; testIdAttribute customizable. See [[#Locators
-      (Recommended API)]].
+    explanation: Convention; testIdAttribute customizable.
   - id: p-020
     type: single
+    difficulty: hard
     q: "Component tests run:"
     options:
       - A) Inside Node only
@@ -225,9 +239,4 @@ questions:
       - D) JSDOM
     answer: 1
     hint: Real browser.
-    explanation: >-
-      CT mounts components in actual browser context. See [[#Component Testing
-      (experimental)]].
-
-
-      ---
+    explanation: CT mounts components in actual browser context.

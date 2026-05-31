@@ -1,0 +1,149 @@
+lesson: test-management-tools
+questions:
+  - id: tmt-001
+    type: single
+    difficulty: easy
+    q: "Test management tools (TestRail, qTest, Zephyr) primarily provide:"
+    options:
+      - A) Automated test execution engines
+      - B) Case databases, run trackers, traceability surfaces, and reporting dashboards in one
+      - C) CI/CD pipeline orchestration
+      - D) Performance benchmarking infrastructure
+    answer: 1
+    hint: |-
+      Where test cases, runs, and results live in a queryable record.
+    explanation: |-
+      Test management tools turn the abstract artefacts of testing into queryable records. They track which cases were run against which build in which environment, and surface coverage and progress to non-engineering stakeholders.
+
+  - id: tmt-002
+    type: single
+    difficulty: medium
+    q: "The deciding question for adopting a test management tool is:"
+    options:
+      - A) How many test cases do we have?
+      - B) Who needs to read the results — engineers already in the repo, or external stakeholders like regulators and auditors?
+      - C) Which CI system do we use?
+      - D) How often do we release?
+    answer: 1
+    hint: Audience drives the tool decision.
+    explanation: |-
+      When readers of test results are outside the engineering team (regulators, account managers, auditors), a TMT is leverage — it produces the dashboard they need. When every reader is already in the repo, a TMT is overhead.
+
+  - id: tmt-003
+    type: single
+    difficulty: medium
+    q: "The 'spreadsheet hinge' in test management marks:"
+    options:
+      - A) When to automate manual tests
+      - B) The tipping point (~200 cases, one release environment) beyond which a shared sheet no longer suffices
+      - C) When to add a performance testing tool
+      - D) The point at which a second QA engineer is needed
+    answer: 1
+    hint: |-
+      Below the hinge, a spreadsheet is fine. Above it, answering 'who ran case X in release Z?' breaks.
+    explanation: |-
+      The hinge is roughly 200 maintained test cases and a single release environment. Below this, a shared spreadsheet usually provides enough queryability. Above it, questions like "who ran case X against env Y in release Z?" cannot be answered from a column.
+
+  - id: tmt-004
+    type: single
+    difficulty: easy
+    q: "Traceability in a test management tool connects:"
+    options:
+      - A) Test cases to code commits
+      - B) Test cases to requirements and to run results — proving what was tested and what passed
+      - C) Test cases to team members
+      - D) Test cases to performance budgets
+    answer: 1
+    hint: |-
+      Coverage proof — requirement X was covered by case Y which passed in run Z.
+    explanation: |-
+      Traceability links requirements → test cases → run results. This allows a stakeholder to ask "is requirement R covered by tests, and did those tests pass in the last release?" — a question regulators and auditors frequently need answered.
+
+  - id: tmt-005
+    type: single
+    difficulty: medium
+    q: "Zephyr and Xray differ from standalone tools like TestRail because:"
+    options:
+      - A) They support more test types
+      - B) They are plugins that live inside Jira — keeping test management in the same tool as issue tracking
+      - C) They only support BDD scenarios
+      - D) They include automated execution engines
+    answer: 1
+    hint: |-
+      Embedded in Jira — no context switch for teams already using Jira.
+    explanation: |-
+      Zephyr and Xray are Jira plugins. For teams already using Jira for issue tracking, embedding test management avoids a separate tool login and keeps defects, requirements, and test cases in one system.
+
+  - id: tmt-006
+    type: single
+    difficulty: hard
+    q: "When is a test management tool overhead rather than leverage?"
+    options:
+      - A) When the team is too small
+      - B) When every reader of the results is already in the repository and can read CI logs
+      - C) When the team uses agile delivery
+      - D) When tests are automated
+    answer: 1
+    hint: |-
+      If every reader is in the repo, the info is already in CI logs and Slack.
+    explanation: |-
+      A TMT is overhead when it duplicates information already accessible to all readers via CI logs, test reports, and dashboards. The marginal value of a TMT is producing readable outputs for stakeholders who cannot or do not access engineering tooling directly.
+
+  - id: tmt-007
+    type: single
+    difficulty: easy
+    q: "Test run in a TMT context means:"
+    options:
+      - A) A single automated test execution
+      - B) A specific execution of a test plan against a build/environment at a point in time
+      - C) A sprint planning meeting
+      - D) A CI pipeline trigger
+    answer: 1
+    hint: |-
+      Snapshot: which cases, which build, which environment, which date.
+    explanation: |-
+      A test run captures the specific instance: test plan X was executed against build Y in environment Z on date D by tester T, producing these results. The run is the queryable record that answers "what was tested when?"
+
+  - id: tmt-008
+    type: single
+    difficulty: medium
+    q: "The primary benefit of test management tools in regulated industries (medical, finance, aviation) is:"
+    options:
+      - A) Faster test execution
+      - B) Audit-ready traceability — evidence that requirements were tested and results recorded
+      - C) Reduced number of test cases needed
+      - D) Automated compliance checking
+    answer: 1
+    hint: |-
+      Regulators need to see evidence that testing happened and what it showed.
+    explanation: |-
+      In regulated industries, the value of a TMT is producing auditable evidence: requirement R was verified by test case T, which was run in environment E, producing result R, signed off by approver A. This chain of custody is mandatory for regulatory submission.
+
+  - id: tmt-009
+    type: single
+    difficulty: hard
+    q: "A team with 3,000 automated tests in CI that release weekly is questioning whether to adopt TestRail. The key diagnostic question is:"
+    options:
+      - A) Are there enough test cases to justify the licence cost?
+      - B) Do any stakeholders who cannot read CI dashboards need to see test coverage reports?
+      - C) Are the tests in Python or TypeScript?
+      - D) How long does the CI pipeline take?
+    answer: 1
+    hint: |-
+      Audience is the deciding factor — not volume.
+    explanation: |-
+      The diagnostic is audience, not volume. 3,000 automated tests in CI already have test results, coverage reports, and history accessible to engineers. The TMT adds value only if there are external stakeholders — auditors, customers, account managers — who need readable reports they cannot get from the CI dashboard.
+
+  - id: tmt-010
+    type: single
+    difficulty: medium
+    q: "Test case vs test scenario vs test plan — the most common collapse that loses information is:"
+    options:
+      - A) Calling all four altitudes 'test cases' — losing the ability to discuss coverage and risk without step-by-step minutiae
+      - B) Separating plan from case
+      - C) Using scenarios for exploratory testing
+      - D) Writing plans in the TMT and cases in code
+    answer: 0
+    hint: Four altitudes collapsed to one term.
+    explanation: |-
+      When plan, scenario, case, and charter are all called "test cases," teams lose the ability to reason at different altitudes. Risk conversations need the plan level; coverage discussions need scenarios; procedural verification needs cases; exploratory governance needs charters.

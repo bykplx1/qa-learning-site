@@ -1,0 +1,150 @@
+lesson: black-white-gray-box-thinking
+questions:
+  - id: bwg-001
+    type: single
+    difficulty: easy
+    q: "Black-box testing uses as its primary input:"
+    options:
+      - A) Source code and control flow
+      - B) System inputs and observable outputs only — the system is a sealed box
+      - C) Schema, API contract, and logs
+      - D) Database query plans
+    answer: 1
+    hint: |-
+      The system is a sealed box — only I/O visible.
+    explanation: |-
+      Black-box testing admits only inputs and outputs as evidence. The internal structure is hidden — or deliberately ignored — and tests are designed purely from the external interface.
+
+  - id: bwg-002
+    type: single
+    difficulty: easy
+    q: "White-box testing uses as its primary input:"
+    options:
+      - A) User stories only
+      - B) Performance metrics
+      - C) Source code, control flow, internal state
+      - D) Browser DOM only
+    answer: 2
+    hint: |-
+      Also called clear-box or structural testing.
+    explanation: |-
+      White-box testing designs tests from knowledge of the internal structure — source code, control flow graphs, branch conditions, and internal state. Also called structural or glass-box testing.
+
+  - id: bwg-003
+    type: single
+    difficulty: easy
+    q: "Gray-box testing uses:"
+    options:
+      - A) Source code exclusively
+      - B) Observable outputs only
+      - C) Some structural knowledge — schema, API contract, logs — without full source access
+      - D) User acceptance criteria only
+    answer: 2
+    hint: |-
+      Partial insider knowledge, not full source.
+    explanation: |-
+      Gray-box testing has some structural knowledge — knowing the data model, API contract, or log format — without necessarily reading the full source code. Most API testing is gray-box.
+
+  - id: bwg-004
+    type: single
+    difficulty: medium
+    q: "The three terms (black, white, gray box) describe:"
+    options:
+      - A) Which team writes the test
+      - B) What phase of development the test runs in
+      - C) What type of test it is (unit, integration, E2E)
+      - D) How much internal information the tester admits as evidence when designing the test
+    answer: 3
+    hint: A per-test choice, not a role or phase.
+    explanation: |-
+      Black/white/gray box name what the tester reads to design the test — a per-test choice. Treating them as roles, test types, or phases hides the actual decision, which is always: what information am I allowing myself to use?
+
+  - id: bwg-005
+    type: single
+    difficulty: medium
+    q: "A Playwright E2E test that selects elements by data-testid attributes is:"
+    options:
+      - A) Black-box — it tests the UI like a user
+      - B) White-box — it uses source code knowledge
+      - C) Gray-box at the system level — it uses structural knowledge (the DOM contract) without reading the full source
+      - D) Not a valid classification
+    answer: 2
+    hint: |-
+      data-testid is a structural contract — not user-visible, not full source.
+    explanation: |-
+      data-testid attributes are not visible to users but are not the full source code either. Knowing their existence and naming conventions is structural knowledge — making this a gray-box test at the system level despite running through the browser.
+
+  - id: bwg-006
+    type: single
+    difficulty: medium
+    q: "A unit test that only checks the public output of a function, ignoring internal state:"
+    options:
+      - A) Must be white-box because it is a unit test
+      - B) Is black-box at the unit level — only public I/O is admitted
+      - C) Is gray-box because it knows the function signature
+      - D) Cannot be classified
+    answer: 1
+    hint: |-
+      The label follows what information the tester uses, not the test level.
+    explanation: |-
+      A unit test that only asserts on the return value of a function, without inspecting internal state or branches, is black-box at the unit level. The test level (unit) and the box colour (black) are independent classifications.
+
+  - id: bwg-007
+    type: single
+    difficulty: hard
+    q: "In security testing, a black-box penetration test simulates:"
+    options:
+      - A) An internal developer who knows the full architecture
+      - B) A limited insider with some architectural knowledge
+      - C) An external attacker with no prior knowledge of the system
+      - D) A regulatory auditor with code access
+    answer: 2
+    hint: |-
+      No prior knowledge — like a real external attacker.
+    explanation: |-
+      Black-box pen testing simulates an external attacker who must discover everything about the system through probing. White-box provides full source and architecture. Gray-box provides limited insider knowledge — simulating a threat like a malicious contractor.
+
+  - id: bwg-008
+    type: single
+    difficulty: easy
+    q: "The same vocabulary (black/white/gray box) recurs in security testing because:"
+    options:
+      - A) Security is a separate discipline with different terminology
+      - B) Security testing borrowed the terms from ISTQB for marketing
+      - C) The fundamental question is the same — how much internal knowledge does the attacker/tester have?
+      - D) Both fields use automated tools
+    answer: 2
+    hint: |-
+      The underlying question is identical — what information is the tester/attacker working from?
+    explanation: |-
+      Security and functional testing use the same vocabulary because both answer the same question: what does the person probing the system know about its internals? The tester's knowledge level determines both what tests are designed and what attack vectors are explored.
+
+  - id: bwg-009
+    type: single
+    difficulty: hard
+    q: "Treating black/white/gray box as mutually exclusive roles rather than per-test choices causes:"
+    options:
+      - A) Faster test execution
+      - B) Better coverage metrics
+      - C) The choice of what information to admit becoming hidden and unexamined
+      - D) Improved collaboration between dev and QA
+    answer: 2
+    hint: |-
+      The choice is the skill — hiding it removes the skill.
+    explanation: |-
+      When the terms are treated as roles ("black-box testers do X, white-box developers do Y"), the per-test decision disappears. Testers stop explicitly choosing what information to use, which means they stop exercising the design judgment the terms are meant to surface.
+
+  - id: bwg-010
+    type: single
+    difficulty: medium
+    q: "Which layer of the system does gray-box testing typically access?"
+    options:
+      - A) Raw machine code and memory addresses
+      - B) User-visible UI elements only
+      - C) API contracts, schemas, log formats, or database structure — without requiring full source
+      - D) Operating system kernel calls
+    answer: 2
+    hint: |-
+      The middle layer — contracts and observable internals.
+    explanation: |-
+      Gray-box testing uses the middle layer: the machine-readable contract between components. API documentation, schema definitions, log structures, and query plans are all gray-box inputs — structural knowledge that is not the same as reading implementation source.

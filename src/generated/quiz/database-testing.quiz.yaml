@@ -2,6 +2,7 @@ lesson: database-testing
 questions:
   - id: dt-001
     type: single
+    difficulty: easy
     q: 'ACID "I":'
     options:
       - A) Indexing
@@ -10,9 +11,10 @@ questions:
       - D) Idempotent
     answer: 1
     hint: Concurrency.
-    explanation: I = Isolation between concurrent transactions. See [[#ACID]].
+    explanation: I = Isolation between concurrent transactions.
   - id: dt-002
     type: single
+    difficulty: easy
     q: "Highest isolation level:"
     options:
       - A) Read Uncommitted
@@ -21,10 +23,10 @@ questions:
       - D) Serializable
     answer: 3
     hint: Strictest.
-    explanation: Serializable prevents phantom + repeatable + dirty reads. See
-      [[#Isolation Levels (SQL)]].
+    explanation: Serializable prevents phantom + repeatable + dirty reads.
   - id: dt-003
     type: single
+    difficulty: easy
     q: "Phantom read prevented at:"
     options:
       - A) Read Uncommitted
@@ -33,10 +35,10 @@ questions:
       - D) Serializable
     answer: 3
     hint: Range locks.
-    explanation: Only Serializable removes phantom rows from new inserts. See
-      [[#Isolation Levels (SQL)]].
+    explanation: Only Serializable removes phantom rows from new inserts.
   - id: dt-004
     type: single
+    difficulty: easy
     q: "PK implies:"
     options:
       - A) Nullable + duplicate
@@ -45,9 +47,10 @@ questions:
       - D) Indexed only
     answer: 1
     hint: Identity.
-    explanation: PRIMARY KEY = unique + not null implicitly. See [[#Constraint Types]].
+    explanation: PRIMARY KEY = unique + not null implicitly.
   - id: dt-005
     type: single
+    difficulty: easy
     q: "EXPLAIN shows:"
     options:
       - A) Schema dump
@@ -56,9 +59,10 @@ questions:
       - D) Lock list
     answer: 1
     hint: Optimizer plan.
-    explanation: EXPLAIN reveals chosen plan / index usage. See [[#Performance Checks]].
+    explanation: EXPLAIN reveals chosen plan / index usage.
   - id: dt-006
     type: single
+    difficulty: easy
     q: "Testcontainers benefit:"
     options:
       - A) Mock DB in memory
@@ -67,9 +71,10 @@ questions:
       - D) Replaces docker
     answer: 1
     hint: Real engine.
-    explanation: Tests against real engine via ephemeral container. See [[#Tools]].
+    explanation: Tests against real engine via ephemeral container.
   - id: dt-007
     type: single
+    difficulty: easy
     q: "Migration tool:"
     options:
       - A) Postman
@@ -78,9 +83,10 @@ questions:
       - D) Selenium
     answer: 1
     hint: Versioned schema.
-    explanation: Flyway/Liquibase manage versioned migrations. See [[#Tools]].
+    explanation: Flyway/Liquibase manage versioned migrations.
   - id: dt-008
     type: single
+    difficulty: medium
     q: "Risk of using SQLite in tests for Postgres app:"
     options:
       - A) None
@@ -89,9 +95,10 @@ questions:
       - D) No FK support ever
     answer: 1
     hint: Dialect mismatch.
-    explanation: Different types, JSON, CTE, locking semantics. See [[#Best Practices]].
+    explanation: Different types, JSON, CTE, locking semantics.
   - id: dt-009
     type: single
+    difficulty: medium
     q: "ON DELETE CASCADE means:"
     options:
       - A) Block delete
@@ -100,9 +107,10 @@ questions:
       - D) Delete table
     answer: 1
     hint: Propagate.
-    explanation: Children deleted with parent. See [[#SQL Tests You Should Write]].
+    explanation: Children deleted with parent.
   - id: dt-010
     type: single
+    difficulty: medium
     q: "Atomicity ensures:"
     options:
       - A) Partial txn allowed
@@ -111,9 +119,10 @@ questions:
       - D) Lock free
     answer: 1
     hint: Indivisible.
-    explanation: Atomic = entire txn commits or rolls back. See [[#ACID]].
+    explanation: Atomic = entire txn commits or rolls back.
   - id: dt-011
     type: single
+    difficulty: medium
     q: 'Best place to enforce business rule "age >= 18":'
     options:
       - A) Only frontend
@@ -122,9 +131,10 @@ questions:
       - D) Manual review
     answer: 1
     hint: Defense in depth.
-    explanation: DB last line; app first; tests verify both. See [[#Constraint Types]].
+    explanation: DB last line; app first; tests verify both.
   - id: dt-012
     type: single
+    difficulty: medium
     q: "Migration must be:"
     options:
       - A) One-way
@@ -133,9 +143,10 @@ questions:
       - D) Skipped in dev
     answer: 1
     hint: Rollback safety.
-    explanation: Reversible migrations enable safe rollback. See [[#Migration Testing]].
+    explanation: Reversible migrations enable safe rollback.
   - id: dt-013
     type: single
+    difficulty: medium
     q: "dbt tests verify:"
     options:
       - A) UI
@@ -144,9 +155,10 @@ questions:
       - D) Network
     answer: 1
     hint: Analytics layer.
-    explanation: dbt tests = data quality assertions on models. See [[#Tools]].
+    explanation: dbt tests = data quality assertions on models.
   - id: dt-014
     type: single
+    difficulty: medium
     q: "Time zone bug:"
     options:
       - A) Layout
@@ -155,9 +167,10 @@ questions:
       - D) Slow query
     answer: 1
     hint: UTC vs local.
-    explanation: Mixed TZ causes wrong dates / windows. See [[#Common Bugs]].
+    explanation: Mixed TZ causes wrong dates / windows.
   - id: dt-015
     type: single
+    difficulty: medium
     q: "NULL in WHERE x = NULL:"
     options:
       - A) Matches null rows
@@ -166,9 +179,10 @@ questions:
       - D) Error
     answer: 1
     hint: Three-valued logic.
-    explanation: NULL ≠ NULL; need IS NULL. See [[#Common Bugs]].
+    explanation: NULL ≠ NULL; need IS NULL.
   - id: dt-016
     type: single
+    difficulty: hard
     q: "Index missing symptom:"
     options:
       - A) Schema error
@@ -177,9 +191,10 @@ questions:
       - D) Data loss
     answer: 1
     hint: Plan = seq scan.
-    explanation: Missing index forces full scans. See [[#Common Bugs]].
+    explanation: Missing index forces full scans.
   - id: dt-017
     type: single
+    difficulty: hard
     q: "Trigger test verifies:"
     options:
       - A) UI
@@ -188,10 +203,10 @@ questions:
       - D) Logs
     answer: 1
     hint: Event reaction.
-    explanation: Trigger correctness = fires + does intended change. See [[#SQL
-      Tests You Should Write]].
+    explanation: Trigger correctness = fires + does intended change.
   - id: dt-018
     type: single
+    difficulty: hard
     q: "Repeatable Read prevents:"
     options:
       - A) Phantom only
@@ -200,10 +215,10 @@ questions:
       - D) Deadlock
     answer: 1
     hint: Stable rows.
-    explanation: Repeatable Read locks read rows; phantom may still occur. See
-      [[#Isolation Levels (SQL)]].
+    explanation: Repeatable Read locks read rows; phantom may still occur.
   - id: dt-019
     type: single
+    difficulty: hard
     q: "Backup strategy test:"
     options:
       - A) Skip
@@ -212,9 +227,10 @@ questions:
       - D) Drop tables
     answer: 1
     hint: Restore = real test.
-    explanation: Untested backup = no backup. See [[#Scope]].
+    explanation: Untested backup = no backup.
   - id: dt-020
     type: single
+    difficulty: hard
     q: "ETL output testing tool:"
     options:
       - A) Selenium
@@ -223,7 +239,4 @@ questions:
       - D) Cypress
     answer: 1
     hint: Data quality.
-    explanation: |-
-      Great Expectations validates dataset properties. See [[#Tools]].
-
-      ---
+    explanation: Great Expectations validates dataset properties.

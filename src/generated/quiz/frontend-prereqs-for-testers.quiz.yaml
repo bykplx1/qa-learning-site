@@ -1,0 +1,151 @@
+lesson: frontend-prereqs-for-testers
+questions:
+  - id: fpt-001
+    type: single
+    difficulty: easy
+    q: "The browser maintains how many simultaneous trees of the page?"
+    options:
+      - A) One — the DOM
+      - B) Two — DOM and render tree
+      - C) Three — DOM, render tree, and accessibility tree
+      - D) Four — DOM, CSSOM, render tree, and layout tree
+    answer: 2
+    hint: |-
+      getByRole queries the third one, not the DOM.
+    explanation: |-
+      The browser maintains three trees simultaneously: the DOM (source HTML + JavaScript mutations), the render tree (what is visually painted), and the accessibility tree (what assistive technology sees). getByRole queries the accessibility tree.
+
+  - id: fpt-002
+    type: single
+    difficulty: medium
+    q: "view-source vs the Elements panel in DevTools differ because:"
+    options:
+      - A) They always show the same HTML
+      - B) view-source shows what came down the wire; Elements shows what JavaScript has done to the DOM since
+      - C) view-source is only for developers; Elements is for testers
+      - D) view-source requires authentication; Elements does not
+    answer: 1
+    hint: |-
+      Static source vs live post-JS-mutation DOM.
+    explanation: |-
+      view-source shows the original HTML as served. The Elements panel shows the current live DOM after all JavaScript mutations, hydration, and dynamic content injection. For SPAs, these can differ dramatically.
+
+  - id: fpt-003
+    type: single
+    difficulty: medium
+    q: "SSR (Server-Side Rendering) vs CSR (Client-Side Rendering) matters to testers because:"
+    options:
+      - A) SSR is always faster for users
+      - B) The timing of when content is visible, interactive, and testable differs — SSR renders HTML on the server; CSR renders in the browser after JS loads
+      - C) CSR cannot be automated by Playwright
+      - D) SSR requires a different testing tool
+    answer: 1
+    hint: |-
+      Hydration timing determines when elements are actually interactive.
+    explanation: |-
+      SSR sends fully-rendered HTML; the page is visible before JS loads. CSR sends minimal HTML and renders after the JS bundle executes. For testers, this affects: when elements appear in the DOM, when they are interactive, and why "element visible" does not always mean "element interactive."
+
+  - id: fpt-004
+    type: single
+    difficulty: easy
+    q: "Hydration in the context of SSR/CSR frameworks means:"
+    options:
+      - A) Adding water to dry test data
+      - B) Attaching JavaScript event handlers to server-rendered HTML so it becomes interactive
+      - C) Loading images lazily
+      - D) Caching API responses
+    answer: 1
+    hint: |-
+      Static HTML + JS event wiring = interactive component.
+    explanation: |-
+      Hydration is the process of attaching client-side JavaScript (event handlers, React/Vue component state) to server-rendered HTML. Until hydration completes, buttons and forms may be visible but not interactive — a common source of "element not clickable" flakiness.
+
+  - id: fpt-005
+    type: single
+    difficulty: medium
+    q: "The dominant source of frontend test flakiness caused by ignoring rendering strategy is:"
+    options:
+      - A) Tests that assume a single static DOM they can read once
+      - B) Tests that use data-testid attributes
+      - C) Tests that run in parallel
+      - D) Tests that use CSS selectors
+    answer: 0
+    hint: |-
+      The DOM changes over time — reading it once is not enough.
+    explanation: |-
+      Tests that read the DOM once and assert on its static state fail when rendering is asynchronous (SSR hydration, lazy loading, deferred rendering). The DOM is a living state machine, not a snapshot.
+
+  - id: fpt-006
+    type: single
+    difficulty: hard
+    q: "Why does getByRole() produce more resilient tests than getById() or getByClassName()?"
+    options:
+      - A) getByRole is faster to execute
+      - B) getByRole queries the accessibility tree — what the user and assistive technology actually perceive — decoupled from implementation details like IDs and classes
+      - C) getByRole only works for interactive elements
+      - D) getByRole is required by WCAG
+    answer: 1
+    hint: |-
+      Tests the user-facing contract, not implementation details.
+    explanation: |-
+      IDs and class names are implementation details that change during refactoring. ARIA roles are part of the semantic contract — they change only when the component's purpose changes. Selecting by role makes tests resilient to implementation changes that do not affect user experience.
+
+  - id: fpt-007
+    type: single
+    difficulty: medium
+    q: "Shadow DOM matters to testers because:"
+    options:
+      - A) Shadow DOM elements are always inaccessible to users
+      - B) Standard DOM queries (querySelector, getByRole) cannot pierce shadow roots by default — testers need to know whether an element is inside a shadow boundary
+      - C) Shadow DOM is only used for performance optimisation
+      - D) Shadow DOM automatically handles accessibility
+    answer: 1
+    hint: |-
+      Shadow roots create DOM boundaries that standard selectors cannot cross.
+    explanation: |-
+      Shadow DOM encapsulates component internals in a separate tree. Standard `querySelector` and many testing library queries cannot pierce shadow roots without explicit piercing options. Testers must know when an element is inside a shadow root to query it correctly.
+
+  - id: fpt-008
+    type: single
+    difficulty: easy
+    q: "The Network panel in browser DevTools is most useful to testers for:"
+    options:
+      - A) Measuring code coverage
+      - B) Inspecting HTTP requests, responses, status codes, timing, and headers — the same visibility as API testing
+      - C) Editing JavaScript in production
+      - D) Taking screenshots
+    answer: 1
+    hint: |-
+      Every API call the page makes is visible here.
+    explanation: |-
+      The Network panel shows every HTTP request the page makes, with full request/response bodies, headers, status codes, and timing. This gives testers API-level visibility without a proxy, enabling verification of what the UI actually sends and receives.
+
+  - id: fpt-009
+    type: single
+    difficulty: hard
+    q: "A PWA (Progressive Web App) test environment consideration not present in standard web testing is:"
+    options:
+      - A) PWAs cannot be tested with Playwright
+      - B) Service workers can cache responses, meaning a test environment may serve stale data from a cache rather than the test server
+      - C) PWAs do not have a DOM
+      - D) PWAs require iOS devices for testing
+    answer: 1
+    hint: |-
+      Service workers intercept network requests — including test requests.
+    explanation: |-
+      Service workers sit between the network and the page and can serve cached responses. In a test environment, this means a test asserting on API response data may be receiving a cached response from a prior run rather than a live response from the test server.
+
+  - id: fpt-010
+    type: single
+    difficulty: medium
+    q: "Why do tests selecting by CSS class names break more often than tests selecting by ARIA role?"
+    options:
+      - A) CSS class names change when the visual design changes; ARIA roles change only when the component's purpose changes
+      - B) CSS class names are case-sensitive; ARIA roles are not
+      - C) Browsers do not expose class names to testing tools
+      - D) CSS class name selectors are deprecated in Playwright
+    answer: 0
+    hint: |-
+      Style vs semantics — which changes more often?
+    explanation: |-
+      CSS class names are tied to visual styling and frequently change during refactoring or redesign. ARIA roles are tied to semantic meaning — what the element is for — and change only when the component's purpose changes. Semantic selectors are structurally more stable than style selectors.

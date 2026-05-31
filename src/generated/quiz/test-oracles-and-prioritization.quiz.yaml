@@ -1,0 +1,147 @@
+lesson: test-oracles-and-prioritization
+questions:
+  - id: top-001
+    type: single
+    difficulty: easy
+    q: "A test oracle is:"
+    options:
+      - A) The CI system that runs tests
+      - B) Anything that lets you decide whether an observed behaviour is correct or incorrect
+      - C) The person who approves test plans
+      - D) An automated test framework
+    answer: 1
+    hint: |-
+      Every test has one, even when nobody named it.
+    explanation: |-
+      A test oracle is the mechanism that determines whether the test result is a pass or a failure. It can be a written specification, a human's expectation, a reference implementation, or even an implicit assumption like "no crash."
+
+  - id: top-002
+    type: single
+    difficulty: medium
+    q: "The oracle problem is:"
+    options:
+      - A) Oracles are too expensive to maintain
+      - B) Deciding correct behaviour for a non-trivial program is undecidable in general — most testing uses fallible approximate oracles
+      - C) Automated oracles cannot handle visual assertions
+      - D) Oracles only work for functional tests, not non-functional
+    answer: 1
+    hint: |-
+      Undecidable in general — testing is a heuristic activity.
+    explanation: |-
+      The oracle problem (Weyuker, 1982) recognises that for most non-trivial programs, determining what the correct output is for every input is computationally undecidable. All practical oracles are approximations that can be wrong.
+
+  - id: top-003
+    type: single
+    difficulty: easy
+    q: "A 'specified' oracle is:"
+    options:
+      - A) A snapshot of past test results
+      - B) An implicit assumption like 'no crash'
+      - C) A formal spec, contract, or state machine
+      - D) A separately-implemented reference
+    answer: 2
+    hint: Written down and formal.
+    explanation: |-
+      A specified oracle uses a formal artefact — a requirements specification, API contract, or state machine — as the source of truth for correct behaviour.
+
+  - id: top-004
+    type: single
+    difficulty: medium
+    q: "A 'derived' oracle is:"
+    options:
+      - A) A formal specification
+      - B) A snapshot, golden-master, or regression baseline
+      - C) A separately-implemented reference implementation
+      - D) An implicit assumption like 'no unhandled exception'
+    answer: 1
+    hint: Derived from a previous known-good run.
+    explanation: |-
+      A derived oracle uses a prior output as the expected value — snapshot testing, golden-master testing, and regression baselines all use derived oracles. The oracle's accuracy depends on the prior run being correct.
+
+  - id: top-005
+    type: single
+    difficulty: medium
+    q: "A 'pseudo' oracle is:"
+    options:
+      - A) A made-up oracle with no basis
+      - B) A separately-implemented reference that should produce the same output
+      - C) An implicit no-crash assumption
+      - D) A stakeholder's subjective opinion
+    answer: 1
+    hint: |-
+      Differential testing — two independent implementations compared.
+    explanation: |-
+      A pseudo oracle (Barr et al.) is a separately-implemented reference. Differential testing compares two implementations of the same spec; disagreements between them surface bugs in one or both. Useful when no formal spec exists.
+
+  - id: top-006
+    type: single
+    difficulty: easy
+    q: "Risk prioritisation uses the formula:"
+    options:
+      - A) Risk = Defects + Time
+      - B) Risk = Impact × Likelihood
+      - C) Risk = Effort × Cost
+      - D) Risk = Features × Users
+    answer: 1
+    hint: Two-axis scoring — score and multiply.
+    explanation: |-
+      Risk = Impact × Likelihood is the base prioritisation formula. Features with high impact × high likelihood get tested first; low × low areas get documented and monitored.
+
+  - id: top-007
+    type: single
+    difficulty: medium
+    q: "The FMEA-aware extension of risk prioritisation adds a third axis:"
+    options:
+      - A) Cost to fix
+      - B) Team velocity
+      - C) Detectability — a silent corruption is more dangerous than a loud crash of equal impact
+      - D) Number of users affected
+    answer: 2
+    hint: |-
+      Risk = Impact × Likelihood × Detectability^-1
+    explanation: |-
+      FMEA adds detectability as the inverse: a failure that is silent (never noticed by users) is far more dangerous than a loud crash of equal impact. The formula becomes Risk = Impact × Likelihood × (1/Detectability).
+
+  - id: top-008
+    type: single
+    difficulty: hard
+    q: "The defining move in risk prioritisation is reading Impact before Likelihood because:"
+    options:
+      - A) Likelihood is harder to estimate accurately
+      - B) Without this ordering, likelihood dominates discussion and rare catastrophes get under-invested
+      - C) Impact is always higher than likelihood
+      - D) It matches the order in ISO 31000
+    answer: 1
+    hint: Rare catastrophe vs frequent annoyance.
+    explanation: |-
+      When likelihood is discussed first, the team naturally allocates effort to frequent events. Reading impact first forces the question "how bad would this be?" before "how often does it happen?" — ensuring rare, high-impact risks get proportionate attention.
+
+  - id: top-009
+    type: single
+    difficulty: medium
+    q: "An implicit oracle fires when:"
+    options:
+      - A) The spec is violated
+      - B) No crash, no 5xx, no unhandled exception — the system reached a stable state
+      - C) A golden-master comparison fails
+      - D) A reference implementation disagrees
+    answer: 1
+    hint: |-
+      No explicit assertion needed — absence of failure is the oracle.
+    explanation: |-
+      An implicit oracle is the assumption that the system should not crash or produce server errors. Many fuzz tests use implicit oracles — the only assertion is that the system handles the input without crashing or exposing an error.
+
+  - id: top-010
+    type: single
+    difficulty: hard
+    q: "Why must effort flow to high-risk areas rather than evenly across all features?"
+    options:
+      - A) High-risk features take longer to test
+      - B) Exhaustive testing is impossible — the alternative to a deliberate allocation is an accidental one
+      - C) Regulatory requirements mandate risk-based testing
+      - D) Low-risk areas have no bugs
+    answer: 1
+    hint: |-
+      You cannot test everything — choose deliberately or choose accidentally.
+    explanation: |-
+      Exhaustive testing is impossible for any non-trivial system. If effort is not explicitly allocated by risk, it defaults to an accidental allocation driven by what is easiest to test or what testers find most interesting — which has no systematic relationship to where bugs matter most.

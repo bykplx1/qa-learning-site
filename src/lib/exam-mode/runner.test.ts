@@ -12,6 +12,7 @@ function makeQuestions(n: number): QuizQuestion[] {
   return Array.from({ length: n }, (_, i) => ({
     id: `q-${String(i + 1).padStart(3, '0')}`,
     type: 'single' as const,
+    difficulty: 'medium' as const,
     q: `Question ${i + 1}`,
     options: ['A', 'B', 'C', 'D'],
     answer: 0,

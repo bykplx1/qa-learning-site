@@ -1,0 +1,242 @@
+lesson: chaos-and-resilience-testing
+questions:
+  - id: ce-001
+    type: single
+    difficulty: easy
+    q: "Chaos engineering originated at:"
+    options:
+      - A) Google
+      - B) Netflix
+      - C) Amazon
+      - D) Microsoft
+    answer: 1
+    hint: Streaming.
+    explanation: Netflix coined it with Chaos Monkey ~2010.
+  - id: ce-002
+    type: single
+    difficulty: easy
+    q: "First principle of chaos engineering:"
+    options:
+      - A) Random failures
+      - B) Hypothesis around steady-state behavior
+      - C) Always run in dev
+      - D) Skip metrics
+    answer: 1
+    hint: Measurable normal.
+    explanation: Define steady-state first; everything else compares to it.
+  - id: ce-003
+    type: single
+    difficulty: easy
+    q: Blast radius =
+    options:
+      - A) Network bandwidth
+      - B) Scope of users/resources affected by experiment
+      - C) CPU usage
+      - D) Test runtime
+    answer: 1
+    hint: Containment.
+    explanation: Limit who/what is impacted to keep experiment safe.
+  - id: ce-004
+    type: single
+    difficulty: easy
+    q: "Game Day is:"
+    options:
+      - A) Sports event
+      - B) Scheduled team chaos exercise + debrief
+      - C) Production deploy
+      - D) Sprint planning
+    answer: 1
+    hint: Hands-on rehearsal.
+    explanation: Live exercise to train response + find gaps.
+  - id: ce-005
+    type: single
+    difficulty: easy
+    q: "Chaos Monkey kills:"
+    options:
+      - A) Disks
+      - B) Random production instances
+      - C) Build agents
+      - D) Cache
+    answer: 1
+    hint: Original tool.
+    explanation: Random instance termination forces tolerance.
+  - id: ce-006
+    type: single
+    difficulty: easy
+    q: "Prerequisite for safe chaos:"
+    options:
+      - A) New language
+      - B) Observability + rollback + steady-state metric
+      - C) Big team
+      - D) Manual scripts
+    answer: 1
+    hint: Can't measure outcome otherwise.
+    explanation: No observability → can't validate hypothesis.
+  - id: ce-007
+    type: single
+    difficulty: easy
+    q: "Toxiproxy operates at:"
+    options:
+      - A) Disk layer
+      - B) TCP / network layer
+      - C) UI layer
+      - D) DB layer
+    answer: 1
+    hint: Shopify proxy.
+    explanation: Toxiproxy injects TCP conditions (latency, drop).
+  - id: ce-008
+    type: single
+    difficulty: medium
+    q: "Chaos Mesh is built for:"
+    options:
+      - A) Bare metal
+      - B) Kubernetes (CRDs)
+      - C) Mainframe
+      - D) iOS
+    answer: 1
+    hint: CNCF project.
+    explanation: K8s-native chaos via CRDs.
+  - id: ce-009
+    type: single
+    difficulty: medium
+    q: "Hypothesis-free failure injection is:"
+    options:
+      - A) Best practice
+      - B) Anti-pattern (random damage)
+      - C) Required
+      - D) Standard
+    answer: 1
+    hint: Not learning.
+    explanation: Without hypothesis no measurable outcome.
+  - id: ce-010
+    type: single
+    difficulty: medium
+    q: "Abort condition purpose:"
+    options:
+      - A) Speed up tests
+      - B) Auto-stop experiment when steady-state breaks
+      - C) Skip rollback
+      - D) Increase blast radius
+    answer: 1
+    hint: Safety brake.
+    explanation: Prevent experiment becoming real outage.
+  - id: ce-011
+    type: single
+    difficulty: medium
+    q: "Failure mode example — dependency:"
+    options:
+      - A) Disk full
+      - B) Downstream returns 5xx / slow
+      - C) AZ outage
+      - D) Memory leak
+    answer: 1
+    hint: Other service.
+    explanation: Dependency faults model real upstream issues.
+  - id: ce-012
+    type: single
+    difficulty: medium
+    q: "Running chaos in production is:"
+    options:
+      - A) Forbidden
+      - B) Encouraged because staging ≠ prod
+      - C) Pointless
+      - D) Optional always
+    answer: 1
+    hint: Realism matters.
+    explanation: Only prod proves prod.
+  - id: ce-013
+    type: single
+    difficulty: medium
+    q: "AWS Fault Injection Simulator (FIS):"
+    options:
+      - A) Linting tool
+      - B) Managed chaos service for AWS resources
+      - C) Container runtime
+      - D) Backup tool
+    answer: 1
+    hint: AWS-managed.
+    explanation: FIS injects faults on AWS-native targets.
+  - id: ce-014
+    type: single
+    difficulty: medium
+    q: "Steady-state metric example:"
+    options:
+      - A) GitHub stars
+      - B) p99 checkout latency or success rate
+      - C) Lines of code
+      - D) Linter score
+    answer: 1
+    hint: Business + perf KPI.
+    explanation: Steady-state must be measurable + business-meaningful.
+  - id: ce-015
+    type: single
+    difficulty: medium
+    q: "Maturity level 4:"
+    options:
+      - A) Manual ad-hoc
+      - B) Continuous, integrated with CI/CD
+      - C) No chaos
+      - D) Only staging
+    answer: 1
+    hint: Pipeline-integrated.
+    explanation: Level 4 = automated + CI/CD-integrated.
+  - id: ce-016
+    type: single
+    difficulty: hard
+    q: "Network failure mode:"
+    options:
+      - A) Disk full
+      - B) Latency injection / packet loss
+      - C) Memory leak
+      - D) Process kill
+    answer: 1
+    hint: Layer 3/4.
+    explanation: Network class = latency, loss, partition, DNS.
+  - id: ce-017
+    type: single
+    difficulty: hard
+    q: "Skipping post-mortem leads to:"
+    options:
+      - A) Faster recovery
+      - B) Same failure recurring; learning lost
+      - C) Lower cost
+      - D) Better metrics
+    answer: 1
+    hint: No fix loop.
+    explanation: Findings must drive fixes.
+  - id: ce-018
+    type: single
+    difficulty: hard
+    q: "Chaos vs fault injection:"
+    options:
+      - A) Identical
+      - B) Chaos = hypothesis-driven, prod, continuous; FI = narrower, often unit/integration
+      - C) Chaos is dev-only
+      - D) FI is broader
+    answer: 1
+    hint: Scope + discipline.
+    explanation: Chaos formalizes around hypothesis + production.
+  - id: ce-019
+    type: single
+    difficulty: hard
+    q: "Litmus is:"
+    options:
+      - A) UI lib
+      - B) K8s chaos engineering platform with experiment hub
+      - C) Cloud DB
+      - D) CI server
+    answer: 1
+    hint: CNCF.
+    explanation: Litmus = K8s chaos with hub of experiments.
+  - id: ce-020
+    type: single
+    difficulty: hard
+    q: "Skip chaos when:"
+    options:
+      - A) Distributed system with redundancy
+      - B) Monolith on single VM, no SLOs, no observability
+      - C) Have on-call team
+      - D) Microservices
+    answer: 1
+    hint: No turbulence to model + no signal.
+    explanation: Without redundancy/observability, chaos = outage.

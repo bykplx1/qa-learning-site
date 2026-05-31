@@ -1,0 +1,150 @@
+lesson: verification-vs-validation
+questions:
+  - id: vv-001
+    type: single
+    difficulty: easy
+    q: "Verification asks:"
+    options:
+      - A) Are we building the right product?
+      - B) Are we building the product right?
+      - C) Is the product still right in production?
+      - D) Are users satisfied?
+    answer: 1
+    hint: Checked against the specification.
+    explanation: |-
+      Verification checks conformance to spec — "did we build what we were told to build?" It does not ask whether the spec was the right thing to build.
+
+  - id: vv-002
+    type: single
+    difficulty: easy
+    q: "Validation asks:"
+    options:
+      - A) Are we building the product right?
+      - B) Are we building the right product?
+      - C) Is the CI pipeline green?
+      - D) Does the code meet style guidelines?
+    answer: 1
+    hint: |-
+      Checked against the user's actual need.
+    explanation: |-
+      Validation asks whether the right product was built — checked against the user's actual need, not the written spec. A product can pass verification (meets spec) and fail validation (spec was wrong).
+
+  - id: vv-003
+    type: single
+    difficulty: medium
+    q: "A team ships exactly what was specified in requirements, but the customer hates it. This is:"
+    options:
+      - A) A verification failure — the product did not conform to spec
+      - B) A validation failure — the right spec was not chosen
+      - C) Both verification and validation failure
+      - D) Neither — the customer is wrong
+    answer: 1
+    hint: |-
+      "We shipped exactly what was asked for and the customer hates it."
+    explanation: |-
+      This is a classic validation failure. Verification passed (the spec was met). Validation failed because the spec did not capture what the user actually needed. The most common path to "we shipped exactly what was asked for and the customer hates it."
+
+  - id: vv-004
+    type: single
+    difficulty: medium
+    q: "The third question added by modern practice to V&V is:"
+    options:
+      - A) Was the architecture correct?
+      - B) Was the code reviewed?
+      - C) Is the product still right in production, under real load, with real users, today?
+      - D) Was the test coverage sufficient?
+    answer: 2
+    hint: |-
+      Observability, SLOs, and error budgets answer this.
+    explanation: |-
+      Modern practice adds operational validation: is the product still correct now, under real conditions? This is answered by observability dashboards, SLO monitoring, and error budgets — not by pre-production tests.
+
+  - id: vv-005
+    type: single
+    difficulty: easy
+    q: "A tester who runs only verification produces:"
+    options:
+      - A) Shipped products with broken internal contracts
+      - B) Green test suites for products users hate
+      - C) Complete coverage of user needs
+      - D) Optimal performance test results
+    answer: 1
+    hint: |-
+      Spec-conformant does not mean user-valuable.
+    explanation: |-
+      Running only verification means checking that the spec was met — not that the spec was correct. This produces systems that pass all tests but fail the users they were built for.
+
+  - id: vv-006
+    type: single
+    difficulty: medium
+    q: "A tester who runs only validation produces:"
+    options:
+      - A) Shipped products with broken internal contracts
+      - B) Green test suites for products users hate
+      - C) 100% specification coverage
+      - D) Zero defect escapes
+    answer: 0
+    hint: |-
+      Validation checks user need — not internal contracts or specs.
+    explanation: |-
+      Running only validation means checking whether users are satisfied — without verifying that the internal contracts (APIs, data models, interfaces) are correct. Products can be user-approved while carrying hidden technical debt or contract violations that cause future failures.
+
+  - id: vv-007
+    type: single
+    difficulty: hard
+    q: "The operational validation question ('is the product still right in production?') is answered primarily by:"
+    options:
+      - A) Pre-production test results
+      - B) Regression test suites
+      - C) Observability signals — logs, metrics, traces, SLOs, error budgets
+      - D) Code review sign-off
+    answer: 2
+    hint: |-
+      No pre-production test can reproduce real production conditions.
+    explanation: |-
+      Operational validation — knowing whether the product is still correct under real load, real users, and real data today — can only be answered by production observability. Pre-production tests exercise known scenarios; production reveals the unknown-unknowns.
+
+  - id: vv-008
+    type: single
+    difficulty: medium
+    q: "The V&V triangle's three oracles are:"
+    options:
+      - A) Spec, Performance baseline, User survey
+      - B) Spec, User need, Production signal
+      - C) Unit test, Integration test, E2E test
+      - D) Developer, QA, Business
+    answer: 1
+    hint: |-
+      One oracle per question: spec / user need / production signal.
+    explanation: |-
+      Verification uses the spec as oracle. Validation uses user need as oracle. Operational validation uses production signals as oracle. Each question requires a different source of truth.
+
+  - id: vv-009
+    type: single
+    difficulty: hard
+    q: "A SaaS application passes all regression tests after a database migration, but p99 latency doubles in production. Which V&V category caught this?"
+    options:
+      - A) Verification — the spec included a latency SLO
+      - B) Validation — users reported the slowdown
+      - C) Operational validation — production observability revealed the regression
+      - D) None — this is a deployment failure, not a V&V concern
+    answer: 2
+    hint: |-
+      Production signal detected what pre-production tests did not.
+    explanation: |-
+      This is operational validation: the product was correct per spec and per pre-production tests, but production observability revealed a regression invisible in test conditions. This third question — "is it still right now, in production?" — is what operational validation answers.
+
+  - id: vv-010
+    type: single
+    difficulty: easy
+    q: "The reason V and V are deliberately kept separate in practice:"
+    options:
+      - A) Verification is faster than validation
+      - B) Confusing them causes teams to ship spec-conformant products that fail users, or user-approved products with hidden contract violations
+      - C) Standards require separate teams for each
+      - D) Validation only applies after production release
+    answer: 1
+    hint: |-
+      Collapsing them hides which question you are actually answering.
+    explanation: |-
+      When V and V are collapsed into "testing," teams lose the ability to name which question they are answering. The result is either green tests for products users hate (all verification, no validation) or shipped products with internal contract failures (all validation, no verification).

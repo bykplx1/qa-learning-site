@@ -1,0 +1,149 @@
+lesson: rag-testing
+questions:
+  - id: ragt-001
+    type: single
+    difficulty: easy
+    q: "RAG stands for:"
+    options:
+      - A) Regression Automated Grading
+      - B) Retrieval-Augmented Generation
+      - C) Risk-Adjusted Gating
+      - D) Random Answer Generation
+    answer: 1
+    hint: |-
+      Retrieval brings documents; generation uses them.
+    explanation: |-
+      Retrieval-Augmented Generation gives a model relevant documents at inference time so it answers from retrieved context rather than from its training weights alone. This grounds the model and reduces hallucination.
+
+  - id: ragt-002
+    type: single
+    difficulty: medium
+    q: "The load-bearing insight in RAG testing is:"
+    options:
+      - A) Most RAG bugs are generation bugs masquerading as retrieval bugs
+      - B) Most RAG bugs are retrieval bugs masquerading as generation bugs
+      - C) End-to-end accuracy is the only metric that matters
+      - D) The embedding model choice determines all RAG quality
+    answer: 1
+    hint: |-
+      "The bot doesn't know about Feature X" — where is the real problem?
+    explanation: |-
+      When users report "the bot doesn't know about Feature X," the real cause is almost always that the chunk containing Feature X never made the top-k retrieval results. Teams that debug by tweaking prompts or swapping models — when retrieval is the problem — waste weeks.
+
+  - id: ragt-003
+    type: single
+    difficulty: medium
+    q: "The five stages of a RAG pipeline are:"
+    options:
+      - A) Query, rank, summarise, answer, log
+      - B) Ingest, chunk, embed, retrieve, generate
+      - C) Parse, index, search, generate, cache
+      - D) Load, split, encode, query, respond
+    answer: 1
+    hint: Each stage has its own failure modes.
+    explanation: |-
+      RAG pipelines have five distinct stages: ingest (load documents), chunk (split into retrievable units), embed (encode chunks and queries as vectors), retrieve (find top-k relevant chunks), generate (produce the final answer using retrieved context). Each stage can fail independently.
+
+  - id: ragt-004
+    type: single
+    difficulty: easy
+    q: "Why must retrieval and generation be tested separately, not just end-to-end?"
+    options:
+      - A) End-to-end testing is too expensive
+      - B) A single end-to-end score hides which stage is responsible for failures
+      - C) Retrieval cannot be automated
+      - D) Generation metrics are not yet standardised
+    answer: 1
+    hint: |-
+      You cannot fix what you cannot localise to a stage.
+    explanation: |-
+      End-to-end accuracy is a combined signal. A system with poor retrieval but a strong generator may produce correct-sounding but unfaithful answers. Per-stage metrics let you identify whether retrieval is finding the wrong chunks, or generation is hallucinating despite correct retrieval.
+
+  - id: ragt-005
+    type: single
+    difficulty: hard
+    q: "Faithfulness as a RAG metric measures:"
+    options:
+      - A) Whether the retrieved chunks are relevant to the query
+      - B) Whether the generated answer is supported by the retrieved context — no hallucination beyond the chunks
+      - C) Whether the answer is factually correct according to external knowledge
+      - D) Whether the response follows the style guidelines
+    answer: 1
+    hint: |-
+      Grounded in the context — not hallucinated beyond it.
+    explanation: |-
+      Faithfulness measures whether the model's answer is entailed by the retrieved context. A faithful answer only claims what the context supports. An unfaithful answer adds information not present in — or contradicted by — the retrieved documents.
+
+  - id: ragt-006
+    type: single
+    difficulty: hard
+    q: "Contextual relevance as a RAG metric measures:"
+    options:
+      - A) Whether the answer is factually correct
+      - B) Whether the retrieved chunks are relevant to the user's query
+      - C) Whether the answer follows the required format
+      - D) Whether the generation model is appropriate for the task
+    answer: 1
+    hint: Did retrieval find the right chunks?
+    explanation: |-
+      Contextual relevance measures retrieval quality: are the top-k chunks actually relevant to the query? Low contextual relevance means retrieval is returning poor documents — and no matter how good the generator, it cannot produce a good answer from irrelevant context.
+
+  - id: ragt-007
+    type: single
+    difficulty: medium
+    q: "Chunking strategy affects RAG quality because:"
+    options:
+      - A) Larger chunks always produce better retrieval
+      - B) Chunk boundaries determine whether the information needed to answer a query is contained within a single retrievable unit
+      - C) Chunking only affects ingestion speed
+      - D) All embedding models handle any chunk size equally well
+    answer: 1
+    hint: |-
+      If the answer spans a chunk boundary, retrieval cannot find it in one chunk.
+    explanation: |-
+      If a query's answer requires information that spans two chunks (e.g., a table header and its rows are split), neither chunk alone contains enough context to produce a correct answer. Chunking strategy determines whether semantically related information stays together.
+
+  - id: ragt-008
+    type: single
+    difficulty: medium
+    q: "Answer grounding in RAG testing means verifying that:"
+    options:
+      - A) The answer is fast enough
+      - B) The answer is supported by and traceable to the retrieved context
+      - C) The answer matches the training data
+      - D) The answer uses formal language
+    answer: 1
+    hint: |-
+      Can you trace each claim in the answer to a specific retrieved document?
+    explanation: |-
+      Grounding verifies that each factual claim in the answer can be traced to a specific retrieved document. Ungrounded claims are hallucinations. Testing grounding requires either human evaluation or a model-graded eval with access to both the answer and the retrieved chunks.
+
+  - id: ragt-009
+    type: single
+    difficulty: hard
+    q: "A RAG system produces correct answers for common queries but fails for rare product features. The most likely root cause is:"
+    options:
+      - A) The generation model is too small
+      - B) The system prompt is incorrectly formatted
+      - C) Rare features are under-represented or absent from the indexed document corpus
+      - D) The embedding model does not support the query language
+    answer: 2
+    hint: |-
+      If it's not in the index, it cannot be retrieved.
+    explanation: |-
+      Retrieval can only surface what was ingested and indexed. If documentation for rare features is missing, outdated, or poorly indexed, those features will never make the top-k — no matter how good the retrieval algorithm or generation model.
+
+  - id: ragt-010
+    type: single
+    difficulty: medium
+    q: "The correct test strategy for a RAG pipeline includes:"
+    options:
+      - A) End-to-end accuracy only — the user only sees the final answer
+      - B) Per-stage tests: retrieval precision/recall, chunk quality, faithfulness, grounding — plus end-to-end accuracy
+      - C) Comparing the RAG system to a non-RAG LLM baseline only
+      - D) Human evaluation only — automated metrics cannot measure RAG quality
+    answer: 1
+    hint: |-
+      Test each stage plus the combined outcome.
+    explanation: |-
+      A complete RAG test strategy includes per-stage metrics (retrieval: precision, recall; chunking: coherence; generation: faithfulness, grounding) plus end-to-end accuracy. Per-stage metrics localise failures; end-to-end accuracy confirms the whole pipeline works for real users.

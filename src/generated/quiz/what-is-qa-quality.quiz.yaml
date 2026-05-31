@@ -1,0 +1,149 @@
+lesson: what-is-qa-quality
+questions:
+  - id: wqq-001
+    type: single
+    difficulty: easy
+    q: "Crosby's definition of quality is:"
+    options:
+      - A) Fitness for use
+      - B) Conformance to requirements
+      - C) Value to some person
+      - D) Absence of defects
+    answer: 1
+    hint: |-
+      Contractual view — useful when requirements are correct.
+    explanation: |-
+      Crosby defines quality as conformance to requirements. This is useful in regulated/contract contexts but collapses when the requirements themselves are wrong.
+
+  - id: wqq-002
+    type: single
+    difficulty: easy
+    q: "Juran's definition of quality is:"
+    options:
+      - A) Conformance to spec
+      - B) Fitness for use
+      - C) Zero defects
+      - D) Value to some person
+    answer: 1
+    hint: User-goal lens.
+    explanation: |-
+      Juran defines quality as fitness for use — useful when users have clear goals, but still assumes a known user purpose.
+
+  - id: wqq-003
+    type: single
+    difficulty: medium
+    q: "Weinberg's definition of quality is:"
+    options:
+      - A) Zero bugs
+      - B) Conformance to requirements
+      - C) Value to some person
+      - D) Reliability over time
+    answer: 2
+    hint: |-
+      The most flexible framing — forces the question 'which person?'
+    explanation: |-
+      Weinberg defines quality as value to some person. This forces the question "which person?" — making quality explicitly relational and politically owned. Two stakeholders can correctly disagree about whether the same build is high quality.
+
+  - id: wqq-004
+    type: single
+    difficulty: medium
+    q: "ISO/IEC 25010:2023 defines quality across how many product-quality characteristics?"
+    options:
+      - A) 4
+      - B) 7
+      - C) 9
+      - D) 12
+    answer: 2
+    hint: |-
+      New in 2023 — includes Safety as a new addition.
+    explanation: |-
+      ISO/IEC 25010:2023 defines nine product-quality characteristics: Functional Suitability, Performance Efficiency, Compatibility, Interaction Capability (incl. Accessibility), Reliability, Security, Maintainability, Flexibility, and Safety (added in 2023).
+
+  - id: wqq-005
+    type: single
+    difficulty: easy
+    q: "Most defects that users punish a product for fall on which side?"
+    options:
+      - A) Functional (wrong output)
+      - B) Non-functional (slow, inaccessible, insecure, data-losing)
+      - C) Documentation
+      - D) Build configuration
+    answer: 1
+    hint: |-
+      Functional correctness is only ~20% of what users actually experience as quality.
+    explanation: |-
+      Users most commonly complain about performance, reliability, security, and accessibility failures — not about logical incorrectness. Yet most test suites disproportionately cover functional correctness.
+
+  - id: wqq-006
+    type: single
+    difficulty: medium
+    q: "A tester who can only say 'it works / it doesn't work' is doing approximately what percentage of the QA job?"
+    options:
+      - A) 100%
+      - B) 80%
+      - C) 50%
+      - D) 20%
+    answer: 3
+    hint: |-
+      Functional check is just one of nine ISO characteristics.
+    explanation: |-
+      Functional correctness is roughly one of nine quality characteristics in ISO 25010. A tester focused only on "does it produce the right output?" is ignoring performance, security, accessibility, maintainability, and reliability — the non-functional side where most user-visible defects live.
+
+  - id: wqq-007
+    type: single
+    difficulty: hard
+    q: "Two stakeholders correctly disagree about whether a build is high quality. Per Weinberg's definition, this is:"
+    options:
+      - A) A sign of team dysfunction requiring mediation
+      - B) Impossible — quality is objective
+      - C) Expected — quality is relational and depends on whose values are being measured
+      - D) Evidence that the requirements are wrong
+    answer: 2
+    hint: Value to some person — which person?
+    explanation: |-
+      Weinberg's definition makes quality explicitly relational. A build can have high quality for the security team (no known vulnerabilities) and low quality for the performance team (p99 latency exceeds SLO). Both assessments can be correct simultaneously because they measure value for different stakeholders.
+
+  - id: wqq-008
+    type: single
+    difficulty: medium
+    q: "Which ISO 25010 characteristic was newly added in the 2023 revision?"
+    options:
+      - A) Security
+      - B) Reliability
+      - C) Safety
+      - D) Maintainability
+    answer: 2
+    hint: |-
+      Relevant to medical devices, autonomous vehicles, industrial control systems.
+    explanation: |-
+      Safety was added as a new ninth characteristic in ISO/IEC 25010:2023, recognising the growing importance of systems where software failures can cause physical harm.
+
+  - id: wqq-009
+    type: single
+    difficulty: hard
+    q: "Why does Crosby's definition 'conformance to requirements' fail in practice?"
+    options:
+      - A) Requirements are always too vague to measure conformance
+      - B) It is circular — quality is conformance to the requirements, but quality requirements may themselves be absent or wrong
+      - C) It only applies to manufactured goods, not software
+      - D) Conformance is too expensive to verify
+    answer: 1
+    hint: |-
+      What if the requirements specify the wrong thing?
+    explanation: |-
+      Crosby's definition collapses when requirements are wrong. A system that perfectly conforms to incorrect requirements is formally "high quality" by his definition but a quality failure by any user-oriented measure. The definition provides no handle on "are the requirements themselves any good?"
+
+  - id: wqq-010
+    type: single
+    difficulty: medium
+    q: "Interaction Capability in ISO 25010:2023 includes which sub-characteristic?"
+    options:
+      - A) Security
+      - B) Accessibility
+      - C) Portability
+      - D) Testability
+    answer: 1
+    hint: |-
+      Formerly 'Usability' in earlier versions.
+    explanation: |-
+      In the 2023 revision, Interaction Capability subsumes what was previously called Usability, explicitly including Accessibility as a sub-characteristic — reflecting the centrality of accessible design in modern software.

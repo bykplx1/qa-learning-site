@@ -1,0 +1,242 @@
+lesson: llm-fundamentals-for-testers
+questions:
+  - id: at-001
+    type: single
+    difficulty: easy
+    q: "AI output usually:"
+    options:
+      - A) Deterministic
+      - B) Probabilistic
+      - C) Constant
+      - D) Pre-cached
+    answer: 1
+    hint: Sampling.
+    explanation: Models sample from distribution → varying outputs.
+  - id: at-002
+    type: single
+    difficulty: easy
+    q: Hallucination =
+    options:
+      - A) Slow output
+      - B) Confident fabricated content
+      - C) Refusal
+      - D) UI lag
+    answer: 1
+    hint: Plausible but wrong.
+    explanation: LLM invents facts not in source.
+  - id: at-003
+    type: single
+    difficulty: easy
+    q: Covariate drift =
+    options:
+      - A) Output drift
+      - B) Input feature distribution shift
+      - C) Same data
+      - D) Crash
+    answer: 1
+    hint: X distribution changes.
+    explanation: Inputs differ from training distribution.
+  - id: at-004
+    type: single
+    difficulty: easy
+    q: Concept drift =
+    options:
+      - A) New columns
+      - B) X→Y relationship changes
+      - C) Schema mismatch
+      - D) Cache miss
+    answer: 1
+    hint: Mapping shift.
+    explanation: Relationship between features and target evolves.
+  - id: at-005
+    type: single
+    difficulty: easy
+    q: "Promptfoo is for:"
+    options:
+      - A) Web load
+      - B) LLM eval / regression
+      - C) DB migration
+      - D) Mobile
+    answer: 1
+    hint: YAML eval suite.
+    explanation: Promptfoo evaluates prompts across models with assertions.
+  - id: at-006
+    type: single
+    difficulty: easy
+    q: "RAG faithfulness checks:"
+    options:
+      - A) Latency
+      - B) Answer grounded in retrieved context
+      - C) Token count
+      - D) Cost
+    answer: 1
+    hint: No hallucination beyond context.
+    explanation: Faithfulness = answer derivable from retrieved chunks.
+  - id: at-007
+    type: single
+    difficulty: easy
+    q: "Recall@k measures:"
+    options:
+      - A) Latency at k
+      - B) Fraction of relevant items in top k
+      - C) Cost
+      - D) BLEU
+    answer: 1
+    hint: Retrieval quality.
+    explanation: Recall@k = relevant retrieved / total relevant.
+  - id: at-008
+    type: single
+    difficulty: medium
+    q: "LLM-as-judge risk:"
+    options:
+      - A) Free + perfect
+      - B) Bias + miscalibration vs humans
+      - C) Always correct
+      - D) Forbidden
+    answer: 1
+    hint: Calibrate.
+    explanation: Judge LLMs have own biases; calibrate against humans.
+  - id: at-009
+    type: single
+    difficulty: medium
+    q: "Best metric for imbalanced classification:"
+    options:
+      - A) Accuracy
+      - B) F1 / precision-recall
+      - C) RMSE
+      - D) BLEU
+    answer: 1
+    hint: Skewed labels.
+    explanation: Accuracy misleading on imbalanced data; F1 better.
+  - id: at-010
+    type: single
+    difficulty: medium
+    q: "Prompt injection:"
+    options:
+      - A) Caching prompt
+      - B) Untrusted input overrides system instructions
+      - C) Compressing prompt
+      - D) Prepend logo
+    answer: 1
+    hint: '"Ignore previous instructions".'
+    explanation: Adversary input hijacks model behavior.
+  - id: at-011
+    type: single
+    difficulty: medium
+    q: "PSI used for:"
+    options:
+      - A) Latency
+      - B) Distribution drift detection
+      - C) Cost
+      - D) Accuracy
+    answer: 1
+    hint: Population Stability Index.
+    explanation: PSI measures distribution shift between two samples.
+  - id: at-012
+    type: single
+    difficulty: medium
+    q: "Golden set is:"
+    options:
+      - A) Random data
+      - B) Curated inputs with expected outputs / properties
+      - C) Production logs
+      - D) Empty
+    answer: 1
+    hint: Reference suite.
+    explanation: Hand-curated test cases for regression.
+  - id: at-013
+    type: single
+    difficulty: medium
+    q: "Fairness metric example:"
+    options:
+      - A) Demographic parity
+      - B) Throughput
+      - C) Token count
+      - D) Bandwidth
+    answer: 0
+    hint: Group rates equal.
+    explanation: Demographic parity compares positive rates across groups.
+  - id: at-014
+    type: single
+    difficulty: medium
+    q: "Robustness test:"
+    options:
+      - A) Pretty UI
+      - B) Add noise / adversarial perturbation, observe stability
+      - C) Login flow
+      - D) Cache hit
+    answer: 1
+    hint: Perturbation.
+    explanation: Robust models handle noisy/adversarial inputs.
+  - id: at-015
+    type: single
+    difficulty: medium
+    q: "Reproducibility requires:"
+    options:
+      - A) Fixed seed + temperature 0 (or near)
+      - B) Random sampling
+      - C) High temperature
+      - D) Multiple models
+    answer: 0
+    hint: Determinism settings.
+    explanation: Seed + low temperature stabilize output.
+  - id: at-016
+    type: single
+    difficulty: hard
+    q: "Garak tool focus:"
+    options:
+      - A) Mobile testing
+      - B) LLM red-team / vulnerability scan
+      - C) DB migration
+      - D) UI
+    answer: 1
+    hint: LLM security probe.
+    explanation: Garak probes LLMs for jailbreaks/safety issues.
+  - id: at-017
+    type: single
+    difficulty: hard
+    q: Data leakage in ML =
+    options:
+      - A) Disk leak
+      - B) Test/eval data accidentally in training
+      - C) Network leak
+      - D) Cache eviction
+    answer: 1
+    hint: Inflated metrics.
+    explanation: Leakage gives unrealistic eval scores.
+  - id: at-018
+    type: single
+    difficulty: hard
+    q: "Counterfactual fairness test:"
+    options:
+      - A) A/B
+      - B) Flip protected attribute, check output difference
+      - C) Schema check
+      - D) Latency
+    answer: 1
+    hint: '"What if" same person different group.'
+    explanation: Output should not change due to protected attr alone.
+  - id: at-019
+    type: single
+    difficulty: hard
+    q: "Refusal calibration test:"
+    options:
+      - A) Refuse all
+      - B) Verify refuses unsafe + answers safe (no over-refusal)
+      - C) Always answer
+      - D) Random
+    answer: 1
+    hint: Both directions.
+    explanation: Both over- and under-refusal hurt UX.
+  - id: at-020
+    type: single
+    difficulty: hard
+    q: "Production AI monitoring includes:"
+    options:
+      - A) Drift, output distribution, feedback loop
+      - B) Only crash logs
+      - C) UI screenshots only
+      - D) None
+    answer: 0
+    hint: Continuous eval.
+    explanation: Drift + feedback essential post-deploy.

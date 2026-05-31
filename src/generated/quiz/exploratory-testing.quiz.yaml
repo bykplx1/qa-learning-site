@@ -2,6 +2,7 @@ lesson: exploratory-testing
 questions:
   - id: et-001
     type: single
+    difficulty: easy
     q: "Exploratory testing is best defined as:"
     options:
       - A) Random clicking
@@ -10,10 +11,10 @@ questions:
       - D) Performance test
     answer: 1
     hint: Kaner definition.
-    explanation: Concurrent learn-design-execute is core ET definition. See
-      [[#Definition (Cem Kaner)]].
+    explanation: Concurrent learn-design-execute is core ET definition.
   - id: et-002
     type: single
+    difficulty: easy
     q: "Charter in SBTM:"
     options:
       - A) Legal contract
@@ -22,10 +23,10 @@ questions:
       - D) Bug ID
     answer: 1
     hint: Goal of session.
-    explanation: Charter sets focus + scope for time-boxed exploration. See
-      [[#Session-Based Test Management (SBTM)]].
+    explanation: Charter sets focus + scope for time-boxed exploration.
   - id: et-003
     type: single
+    difficulty: easy
     q: "Typical SBTM session length:"
     options:
       - A) 5 min
@@ -34,10 +35,10 @@ questions:
       - D) Days
     answer: 1
     hint: Focused window.
-    explanation: Long enough to explore, short enough to stay sharp. See
-      [[#Session-Based Test Management (SBTM)]].
+    explanation: Long enough to explore, short enough to stay sharp.
   - id: et-004
     type: single
+    difficulty: easy
     q: "ET vs ad-hoc differ in:"
     options:
       - A) Same thing
@@ -46,9 +47,10 @@ questions:
       - D) Ad-hoc records bugs better
     answer: 1
     hint: Structure.
-    explanation: ET is disciplined; ad-hoc is unstructured. See [[#ET ≠ Ad-hoc]].
+    explanation: ET is disciplined; ad-hoc is unstructured.
   - id: et-005
     type: single
+    difficulty: easy
     q: "SFDIPOT is a heuristic for:"
     options:
       - A) Login flows
@@ -57,10 +59,10 @@ questions:
       - D) CI pipelines
     answer: 1
     hint: Bach mnemonic.
-    explanation: Coverage heuristic ensures broad area sweep. See [[#Heuristics &
-      Mnemonics]].
+    explanation: Coverage heuristic ensures broad area sweep.
   - id: et-006
     type: single
+    difficulty: easy
     q: "HICCUPPS oracles help by:"
     options:
       - A) Generating tests
@@ -69,10 +71,10 @@ questions:
       - D) Replacing requirements
     answer: 1
     hint: Oracle = decide right/wrong.
-    explanation: HICCUPPS lists ways to judge correctness without explicit spec. See
-      [[#Heuristics & Mnemonics]].
+    explanation: HICCUPPS lists ways to judge correctness without explicit spec.
   - id: et-007
     type: single
+    difficulty: easy
     q: "Tours technique by Whittaker is:"
     options:
       - A) Travel agency
@@ -81,9 +83,10 @@ questions:
       - D) UI design
     answer: 1
     hint: Themed exploration.
-    explanation: Tours guide ET via varied perspectives. See [[#Heuristics & Mnemonics]].
+    explanation: Tours guide ET via varied perspectives.
   - id: et-008
     type: single
+    difficulty: medium
     q: "Best fit for ET:"
     options:
       - A) Spec-mature stable feature regression
@@ -92,9 +95,10 @@ questions:
       - D) Static lint
     answer: 1
     hint: Unknown unknowns.
-    explanation: ET excels where info is scarce + risk high. See [[#When ET Shines]].
+    explanation: ET excels where info is scarce + risk high.
   - id: et-009
     type: single
+    difficulty: medium
     q: "Less ideal for ET:"
     options:
       - A) Prototype
@@ -103,10 +107,10 @@ questions:
       - D) Usability check
     answer: 1
     hint: Reproducibility need.
-    explanation: Regulated checks need scripted, traceable reruns. See [[#When ET
-      Less Useful]].
+    explanation: Regulated checks need scripted, traceable reruns.
   - id: et-010
     type: single
+    difficulty: medium
     q: "ET and automation are:"
     options:
       - A) Mutually exclusive
@@ -115,10 +119,10 @@ questions:
       - D) Both manual
     answer: 1
     hint: Two roles.
-    explanation: Automation checks known; ET discovers unknown. See [[#ET +
-      Automation = Complement]].
+    explanation: Automation checks known; ET discovers unknown.
   - id: et-011
     type: single
+    difficulty: medium
     q: "TBS in session sheet:"
     options:
       - A) Test, Build, Ship
@@ -127,10 +131,10 @@ questions:
       - D) Time blocking system
     answer: 1
     hint: Time split categories.
-    explanation: TBS tracks where session time went. See [[#Session-Based Test
-      Management (SBTM)]].
+    explanation: TBS tracks where session time went.
   - id: et-012
     type: single
+    difficulty: medium
     q: "Soap-opera test means:"
     options:
       - A) Audio test
@@ -139,10 +143,10 @@ questions:
       - D) Unit test
     answer: 1
     hint: Drama-rich flow.
-    explanation: Soap-opera stresses with realistic but extreme combinations. See
-      [[#Heuristics & Mnemonics]].
+    explanation: Soap-opera stresses with realistic but extreme combinations.
   - id: et-013
     type: single
+    difficulty: medium
     q: "Debrief after session is for:"
     options:
       - A) Punishment
@@ -151,10 +155,10 @@ questions:
       - D) Closing session sheet
     answer: 1
     hint: Reflection.
-    explanation: Debrief turns notes into actionable insights + plans. See
-      [[#Session-Based Test Management (SBTM)]].
+    explanation: Debrief turns notes into actionable insights + plans.
   - id: et-014
     type: single
+    difficulty: medium
     q: "ET note-taking should be:"
     options:
       - A) Skipped
@@ -163,10 +167,10 @@ questions:
       - D) Only on bug
     answer: 1
     hint: Live capture.
-    explanation: Concurrent notes preserve context and reproducibility. See
-      [[#Session-Based Test Management (SBTM)]].
+    explanation: Concurrent notes preserve context and reproducibility.
   - id: et-015
     type: single
+    difficulty: medium
     q: "ET output examples:"
     options:
       - A) Bug reports + new automated test ideas + risk insights
@@ -175,9 +179,10 @@ questions:
       - D) Test scripts only
     answer: 0
     hint: Multi-output.
-    explanation: ET informs many artifacts beyond bugs. See [[#Outputs]].
+    explanation: ET informs many artifacts beyond bugs.
   - id: et-016
     type: single
+    difficulty: hard
     q: "SBTM coined by:"
     options:
       - A) Cem Kaner
@@ -186,10 +191,10 @@ questions:
       - D) Mike Cohn
     answer: 1
     hint: Bach brothers.
-    explanation: Bachs introduced SBTM in 2000s. See [[#Session-Based Test
-      Management (SBTM)]].
+    explanation: Bachs introduced SBTM in 2000s.
   - id: et-017
     type: single
+    difficulty: hard
     q: "Goldilocks heuristic targets:"
     options:
       - A) Login defaults
@@ -198,10 +203,10 @@ questions:
       - D) UI fonts
     answer: 1
     hint: Three sizes.
-    explanation: Tests boundaries via too-much / too-little / right. See
-      [[#Heuristics & Mnemonics]].
+    explanation: Tests boundaries via too-much / too-little / right.
   - id: et-018
     type: single
+    difficulty: hard
     q: "ET supports risk-based testing by:"
     options:
       - A) Replacing it
@@ -210,10 +215,10 @@ questions:
       - D) Skipping bugs
     answer: 1
     hint: Targeted exploration.
-    explanation: ET focuses sessions where risk highest. See [[Risk-Based-Testing]]
-      and [[#When ET Shines]].
+    explanation: ET focuses sessions where risk highest. See [[Risk-Based-Testing]] and
   - id: et-019
     type: single
+    difficulty: hard
     q: "Bug advocacy in ET means:"
     options:
       - A) Hiding defects
@@ -222,10 +227,10 @@ questions:
       - D) Auto-closing bugs
     answer: 1
     hint: Make case for fix.
-    explanation: Clear, motivated reports drive actual fixes. See [[#Skills]] and
-      [[Bug-Reporting]].
+    explanation: Clear, motivated reports drive actual fixes. and [[Bug-Reporting]].
   - id: et-020
     type: single
+    difficulty: hard
     q: "ET reproducibility achieved via:"
     options:
       - A) Memory
@@ -234,9 +239,4 @@ questions:
       - D) Random seed
     answer: 1
     hint: Documented artifacts.
-    explanation: >-
-      Records enable replay + audit. See [[#Session-Based Test Management
-      (SBTM)]].
-
-
-      ---
+    explanation: Records enable replay + audit.

@@ -1,0 +1,242 @@
+lesson: tdd-bdd-atdd
+questions:
+  - id: bta-001
+    type: single
+    difficulty: easy
+    q: "TDD cycle is:"
+    options:
+      - A) Plan, Code, Test
+      - B) Red, Green, Refactor
+      - C) Build, Run, Ship
+      - D) Spec, Code, Deploy
+    answer: 1
+    hint: Three steps.
+    explanation: Red (fail), Green (pass), Refactor (clean) is canonical TDD loop.
+  - id: bta-002
+    type: single
+    difficulty: easy
+    q: "BDD scenario language:"
+    options:
+      - A) JSON Schema
+      - B) Gherkin (Given/When/Then)
+      - C) SQL
+      - D) UML
+    answer: 1
+    hint: Plain English.
+    explanation: Gherkin keywords structure behavior examples.
+  - id: bta-003
+    type: single
+    difficulty: easy
+    q: "ATDD primarily ensures:"
+    options:
+      - A) Code coverage
+      - B) Shared understanding via acceptance examples before code
+      - C) Random testing
+      - D) Performance baseline
+    answer: 1
+    hint: Spec by example.
+    explanation: ATDD aligns team on "done" via tests-first acceptance.
+  - id: bta-004
+    type: single
+    difficulty: easy
+    q: "BDD coined by:"
+    options:
+      - A) Kent Beck
+      - B) Dan North
+      - C) James Bach
+      - D) Cem Kaner
+    answer: 1
+    hint: ~2006.
+    explanation: Dan North introduced BDD as TDD evolution.
+  - id: bta-005
+    type: single
+    difficulty: easy
+    q: "TDD's Refactor step purpose:"
+    options:
+      - A) Add features
+      - B) Improve code structure with tests still green
+      - C) Delete tests
+      - D) Rewrite all code
+    answer: 1
+    hint: Clean while safe.
+    explanation: Tests pin behavior; refactor improves design.
+  - id: bta-006
+    type: single
+    difficulty: easy
+    q: "London-school TDD favors:"
+    options:
+      - A) State-based testing with real collaborators
+      - B) Interaction-based testing with mocks
+      - C) No mocks ever
+      - D) Property-based testing
+    answer: 1
+    hint: Mockist.
+    explanation: London style verifies object interactions via mocks.
+  - id: bta-007
+    type: single
+    difficulty: easy
+    q: "Detroit (classicist) TDD favors:"
+    options:
+      - A) Mocking everything
+      - B) Real collaborators, state-based
+      - C) Skipping tests
+      - D) Only UI tests
+    answer: 1
+    hint: Beck origin.
+    explanation: Classicist uses real objects, asserts on state.
+  - id: bta-008
+    type: single
+    difficulty: medium
+    q: 'Gherkin "Given" represents:'
+    options:
+      - A) Action
+      - B) Expected outcome
+      - C) Precondition / context
+      - D) Tag
+    answer: 2
+    hint: Setup.
+    explanation: Given establishes initial state.
+  - id: bta-009
+    type: single
+    difficulty: medium
+    q: 'Gherkin "Then" represents:'
+    options:
+      - A) Setup
+      - B) Action
+      - C) Expected outcome
+      - D) Cleanup
+    answer: 2
+    hint: Assert.
+    explanation: Then asserts result of When.
+  - id: bta-010
+    type: single
+    difficulty: medium
+    q: "Cucumber is associated with:"
+    options:
+      - A) Performance testing
+      - B) BDD execution of Gherkin
+      - C) Static analysis
+      - D) Containers
+    answer: 1
+    hint: Vegetable mascot.
+    explanation: Cucumber executes Gherkin against step defs.
+  - id: bta-011
+    type: single
+    difficulty: medium
+    q: "SpecFlow targets:"
+    options:
+      - A) Java
+      - B) Python
+      - C) .NET
+      - D) Ruby
+    answer: 2
+    hint: Microsoft stack.
+    explanation: SpecFlow = .NET BDD framework.
+  - id: bta-012
+    type: single
+    difficulty: medium
+    q: "Anti-pattern in BDD scenarios:"
+    options:
+      - A) Declarative steps
+      - B) Imperative UI-driven steps ("click button X")
+      - C) Reusing steps
+      - D) Three amigos
+    answer: 1
+    hint: Too low-level.
+    explanation: Imperative scenarios couple to UI; declarative captures intent.
+  - id: bta-013
+    type: single
+    difficulty: medium
+    q: "Three amigos roles in ATDD:"
+    options:
+      - A) PM, PM, PM
+      - B) BA / Product, Dev, QA
+      - C) Three QAs
+      - D) Sales, Marketing, Legal
+    answer: 1
+    hint: Cross-role.
+    explanation: Three roles align before code starts.
+  - id: bta-014
+    type: single
+    difficulty: medium
+    q: "TDD primarily improves:"
+    options:
+      - A) Visual design
+      - B) Code design + regression confidence
+      - C) Network throughput
+      - D) Marketing
+    answer: 1
+    hint: Design tool.
+    explanation: TDD shapes APIs + builds safety net.
+  - id: bta-015
+    type: single
+    difficulty: medium
+    q: "Living documentation in BDD:"
+    options:
+      - A) Wiki copy
+      - B) Specs always in sync because executed as tests
+      - C) Manual reports
+      - D) Email logs
+    answer: 1
+    hint: Auto-verified.
+    explanation: Gherkin specs run as tests; can't drift silently.
+  - id: bta-016
+    type: single
+    difficulty: hard
+    q: "Choose pure TDD when:"
+    options:
+      - A) Business stakeholders read tests
+      - B) Internal unit-level dev work
+      - C) Acceptance ceremony
+      - D) UAT
+    answer: 1
+    hint: Code-level.
+    explanation: TDD optimal for unit dev where xUnit suffices.
+  - id: bta-017
+    type: single
+    difficulty: hard
+    q: "Choose BDD when:"
+    options:
+      - A) Stakeholders need to read + agree on behavior
+      - B) Pure perf
+      - C) Mock-heavy unit work
+      - D) Lint config
+    answer: 0
+    hint: Shared language.
+    explanation: BDD's value is alignment via Gherkin.
+  - id: bta-018
+    type: single
+    difficulty: hard
+    q: "ATDD test format:"
+    options:
+      - A) Always Gherkin
+      - B) Examples / tables / scenarios per team
+      - C) Random scripts
+      - D) UML diagrams
+    answer: 1
+    hint: Format flexible.
+    explanation: ATDD focuses on examples; format varies (Fit, Concordion, Gherkin).
+  - id: bta-019
+    type: single
+    difficulty: hard
+    q: "BDD step explosion happens when:"
+    options:
+      - A) Steps reused
+      - B) Each scenario adds new bespoke steps without consolidation
+      - C) Charter focus
+      - D) Three amigos used
+    answer: 1
+    hint: No reuse.
+    explanation: Lack of step library bloats maintenance.
+  - id: bta-020
+    type: single
+    difficulty: hard
+    q: "BDD ⊆ ATDD relationship:"
+    options:
+      - A) BDD replaces ATDD
+      - B) BDD = ATDD with structured natural-language scenarios
+      - C) Unrelated
+      - D) Same as TDD
+    answer: 1
+    hint: Subset/specialization.
+    explanation: BDD specializes ATDD with Gherkin + ubiquitous language.

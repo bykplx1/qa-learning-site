@@ -1,0 +1,150 @@
+lesson: prompt-engineering-regression
+questions:
+  - id: per-001
+    type: single
+    difficulty: easy
+    q: "A prompt is best described as:"
+    options:
+      - A) A configuration file for the LLM runtime
+      - B) The spec, the source code, and the runtime contract for an LLM-powered feature — all at once
+      - C) A pre-written test case for LLM outputs
+      - D) A fine-tuning dataset
+    answer: 1
+    hint: The highest-leverage code in the system.
+    explanation: |-
+      A prompt is simultaneously the specification (defines desired behaviour), the source code (determines runtime behaviour), and the contract (shapes what the model will and will not do). It is the highest-leverage code in an LLM system — yet most teams ship prompt changes with zero test coverage.
+
+  - id: per-002
+    type: single
+    difficulty: medium
+    q: "Prompt regression is the discipline that:"
+    options:
+      - A) Prevents prompts from being modified after deployment
+      - B) Treats prompts like production code — version-controlled, diff-reviewable, and gated behind a regression eval before any change goes live
+      - C) Automatically generates prompts from test cases
+      - D) Runs prompts faster by removing redundant tokens
+    answer: 1
+    hint: |-
+      The same discipline applied to code, applied to prompts.
+    explanation: |-
+      Prompt regression treats prompt changes the same way code changes are treated: version-controlled in git, diff-reviewable in PRs, gated behind an eval suite before merging. Without this discipline, prompt changes are black-box deployments with no regression safety net.
+
+  - id: per-003
+    type: single
+    difficulty: easy
+    q: "Structured output testing (JSON mode) is important because:"
+    options:
+      - A) JSON is the fastest output format for LLMs
+      - B) Downstream code that parses the LLM output will fail if the output does not conform to the expected schema
+      - C) Structured outputs improve model accuracy
+      - D) JSON mode is required by all LLM APIs
+    answer: 1
+    hint: |-
+      The consumer breaks if the schema drifts.
+    explanation: |-
+      When LLM output is consumed by code — parsed as JSON, extracted as structured data — any deviation from the expected schema causes runtime failures. Structured output testing verifies that the model reliably produces schema-conformant output under the prompt.
+
+  - id: per-004
+    type: single
+    difficulty: medium
+    q: "Prompt versioning in git enables:"
+    options:
+      - A) Running prompts faster with cached versions
+      - B) Diff-reviewing prompt changes, reverting regressions, and attributing quality changes to specific prompt edits
+      - C) Automatic prompt optimisation
+      - D) Sharing prompts across teams
+    answer: 1
+    hint: |-
+      Same benefits as code versioning — for prompts.
+    explanation: |-
+      Version-controlled prompts can be diffed (what changed?), reverted (this change regressed quality — roll back), attributed (which commit introduced this failure?), and reviewed (PR review before deployment). Without versioning, prompt changes are invisible.
+
+  - id: per-005
+    type: single
+    difficulty: hard
+    q: "The eval is the test suite, the schema is the type system, and the CI gate is the merge check. This maps prompt engineering to:"
+    options:
+      - A) Infrastructure as code
+      - B) The same software engineering disciplines applied to code — evals as tests, schema as types, CI as merge guard
+      - C) Traditional unit testing
+      - D) Database migration management
+    answer: 1
+    hint: |-
+      Prompt-as-code requires code-quality disciplines.
+    explanation: |-
+      The analogy is exact: evals are the test suite (do not merge without passing), schema/structured outputs are the type system (fail fast on shape violations), CI gate is the merge check (no prompt change ships without eval sign-off).
+
+  - id: per-006
+    type: single
+    difficulty: medium
+    q: "A prompt change that improves output on happy-path queries but silently degrades output on edge cases is caught by:"
+    options:
+      - A) Manual review of the changed prompt text
+      - B) A comprehensive eval dataset that includes edge cases — not just the most common queries
+      - C) The LLM API's built-in regression detection
+      - D) Monitoring after deployment only
+    answer: 1
+    hint: |-
+      The eval dataset's coverage determines what regressions are caught.
+    explanation: |-
+      An eval suite that only covers common cases will miss regressions on edge cases. Comprehensive eval datasets deliberately include edge cases, adversarial inputs, and underrepresented scenarios — the cases most likely to be silently broken by a prompt change.
+
+  - id: per-007
+    type: single
+    difficulty: hard
+    q: "Why does temperature=0 not guarantee deterministic LLM outputs across runs?"
+    options:
+      - A) temperature=0 is not supported by all LLM APIs
+      - B) temperature=0 is greedy decoding — but hardware floating-point non-determinism and API infrastructure changes can still produce different outputs
+      - C) temperature=0 makes outputs slower but not more deterministic
+      - D) Different models interpret temperature differently
+    answer: 1
+    hint: |-
+      Greedy decoding is deterministic on paper; production APIs are not.
+    explanation: |-
+      temperature=0 uses greedy decoding (always selecting the highest-probability token), which is theoretically deterministic. However, floating-point arithmetic differences across hardware, batching strategies, and API infrastructure changes (model version updates, quantisation changes) mean production LLM APIs are not reliably reproducible even at temperature=0.
+
+  - id: per-008
+    type: single
+    difficulty: medium
+    q: "Prompt injection resistance testing is part of prompt engineering regression because:"
+    options:
+      - A) Prompt injection only affects security features
+      - B) A prompt change can inadvertently weaken defences against injection — regressions in safety constraints are quality regressions
+      - C) Prompt injection testing requires a separate security team
+      - D) Injection attacks only work against older models
+    answer: 1
+    hint: |-
+      Safety constraints are part of the prompt contract.
+    explanation: |-
+      System prompts often contain safety constraints and injection defences. A prompt change that improves helpfulness might inadvertently weaken a safety constraint — allowing injected instructions to override the system prompt. Safety regression is a regression like any other and must be in the eval suite.
+
+  - id: per-009
+    type: single
+    difficulty: easy
+    q: "Prompt-as-code means that prompt changes should be:"
+    options:
+      - A) Made directly in production without testing
+      - B) Written in a formal language like SQL
+      - C) Reviewed, tested via evals, and deployed with the same rigour as code changes
+      - D) Generated automatically by the LLM itself
+    answer: 2
+    hint: |-
+      The same engineering disciplines that apply to code apply to prompts.
+    explanation: |-
+      Treating prompts as code means: they live in version control, changes are reviewed in PRs, they are tested before deployment, and regressions are caught before they reach users. The same discipline that makes code reliable makes prompts reliable.
+
+  - id: per-010
+    type: single
+    difficulty: hard
+    q: "A model upgrade (e.g. GPT-4o to GPT-4.1) without running evals is risky because:"
+    options:
+      - A) Model upgrades always improve quality
+      - B) New model versions can change output format, tone, instruction-following behaviour, and refusal patterns — invalidating existing prompt assumptions
+      - C) Model APIs are not backwards-compatible
+      - D) Evals cannot be run against new model versions
+    answer: 1
+    hint: |-
+      The prompt was tuned for one model — a different model behaves differently.
+    explanation: |-
+      Each model version has different instruction-following behaviour, output style preferences, and default safety constraints. A prompt that works well with one version can produce significantly different output with another. Eval suites catch these regressions before they reach users.

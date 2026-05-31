@@ -2,6 +2,7 @@ lesson: performance-testing
 questions:
   - id: pt-001
     type: single
+    difficulty: easy
     q: "Which metric most useful for tail latency:"
     options:
       - A) Average
@@ -10,10 +11,10 @@ questions:
       - D) Mode
     answer: 1
     hint: Average hides outliers.
-    explanation: P95/P99 expose worst user experience the average masks. See [[#Key
-      Metrics]].
+    explanation: P95/P99 expose worst user experience the average masks.
   - id: pt-002
     type: single
+    difficulty: easy
     q: "Stress test goal:"
     options:
       - A) Verify happy path
@@ -22,9 +23,10 @@ questions:
       - D) UI rendering
     answer: 1
     hint: Push past limit.
-    explanation: Stress tests probe failure mode and recovery. See [[#Types]].
+    explanation: Stress tests probe failure mode and recovery.
   - id: pt-003
     type: single
+    difficulty: easy
     q: "Soak test detects:"
     options:
       - A) UI bugs
@@ -33,9 +35,10 @@ questions:
       - D) Schema drift
     answer: 1
     hint: Long duration.
-    explanation: Sustained run exposes leaks, fragmentation, queue buildup. See [[#Types]].
+    explanation: Sustained run exposes leaks, fragmentation, queue buildup.
   - id: pt-004
     type: single
+    difficulty: easy
     q: "SLO vs SLA:"
     options:
       - A) Same
@@ -44,10 +47,10 @@ questions:
       - D) SLO log; SLA metric
     answer: 1
     hint: Contractual.
-    explanation: SLA carries consequences; SLO is engineering target. See [[#SLI /
-      SLO / SLA]].
+    explanation: SLA carries consequences; SLO is engineering target.
   - id: pt-005
     type: single
+    difficulty: easy
     q: "Open vs closed workload:"
     options:
       - A) Closed = fixed VUs with think time; Open = arrival rate
@@ -56,10 +59,10 @@ questions:
       - D) Open = paid
     answer: 0
     hint: Real web traffic.
-    explanation: Open model better matches independent user arrivals. See
-      [[#Workload Models]].
+    explanation: Open model better matches independent user arrivals.
   - id: pt-006
     type: single
+    difficulty: easy
     q: "k6 written in:"
     options:
       - A) Java
@@ -68,9 +71,10 @@ questions:
       - D) Go scripting
     answer: 1
     hint: JS test scripts.
-    explanation: k6 uses JS for test scripts (Go core engine). See [[#Tools]].
+    explanation: k6 uses JS for test scripts (Go core engine).
   - id: pt-007
     type: single
+    difficulty: easy
     q: "Spike test pattern:"
     options:
       - A) Slow ramp
@@ -79,9 +83,10 @@ questions:
       - D) Soak
     answer: 1
     hint: Burst.
-    explanation: Spike checks behavior + recovery from sudden surge. See [[#Types]].
+    explanation: Spike checks behavior + recovery from sudden surge.
   - id: pt-008
     type: single
+    difficulty: medium
     q: "Apdex measures:"
     options:
       - A) CPU
@@ -90,10 +95,10 @@ questions:
       - D) Throughput
     answer: 1
     hint: 0–1 score.
-    explanation: Apdex = ratio of satisfied/tolerating/frustrated requests. See
-      [[#Key Metrics]].
+    explanation: Apdex = ratio of satisfied/tolerating/frustrated requests.
   - id: pt-009
     type: single
+    difficulty: medium
     q: "Common DB bottleneck:"
     options:
       - A) Missing index, N+1 queries
@@ -102,9 +107,10 @@ questions:
       - D) DNS only
     answer: 0
     hint: Query plan.
-    explanation: Index gaps + N+1 dominate DB perf issues. See [[#Common Bottlenecks]].
+    explanation: Index gaps + N+1 dominate DB perf issues.
   - id: pt-010
     type: single
+    difficulty: medium
     q: "P95 = 300ms means:"
     options:
       - A) Avg 300ms
@@ -113,9 +119,10 @@ questions:
       - D) 5 errors
     answer: 1
     hint: Percentile.
-    explanation: 95th percentile threshold for response time. See [[#Key Metrics]].
+    explanation: 95th percentile threshold for response time.
   - id: pt-011
     type: single
+    difficulty: medium
     q: "JMeter strength:"
     options:
       - A) JS native
@@ -124,9 +131,10 @@ questions:
       - D) Headless only
     answer: 1
     hint: Apache, decade+.
-    explanation: JMeter mature with plugins for many protocols. See [[#Tools]].
+    explanation: JMeter mature with plugins for many protocols.
   - id: pt-012
     type: single
+    difficulty: medium
     q: "Why warmup before measuring:"
     options:
       - A) Save energy
@@ -135,9 +143,10 @@ questions:
       - D) Avoid lint
     answer: 1
     hint: Cold start.
-    explanation: Warmup stabilizes runtime to measure steady state. See [[#Anti-Patterns]].
+    explanation: Warmup stabilizes runtime to measure steady state.
   - id: pt-013
     type: single
+    difficulty: medium
     q: "Saturation refers to:"
     options:
       - A) Color depth
@@ -146,9 +155,10 @@ questions:
       - D) User count
     answer: 1
     hint: Bottleneck signal.
-    explanation: Saturated resource = candidate bottleneck. See [[#Key Metrics]].
+    explanation: Saturated resource = candidate bottleneck.
   - id: pt-014
     type: single
+    difficulty: medium
     q: "Volume test focuses on:"
     options:
       - A) Many users
@@ -157,9 +167,10 @@ questions:
       - D) UI
     answer: 1
     hint: Big data.
-    explanation: Volume tests system with large datasets (DB rows, files). See [[#Types]].
+    explanation: Volume tests system with large datasets (DB rows, files).
   - id: pt-015
     type: single
+    difficulty: medium
     q: "Realistic test env:"
     options:
       - A) Dev laptop
@@ -168,9 +179,10 @@ questions:
       - D) Whiteboard
     answer: 1
     hint: Prod parity.
-    explanation: Lab-grade env yields misleading numbers. See [[#Anti-Patterns]].
+    explanation: Lab-grade env yields misleading numbers.
   - id: pt-016
     type: single
+    difficulty: hard
     q: "Cache stampede:"
     options:
       - A) Cache hit storm
@@ -179,10 +191,10 @@ questions:
       - D) Cache TTL = 0
     answer: 1
     hint: Thundering herd.
-    explanation: Expiry triggers many parallel rebuilds → backend overload. See
-      [[#Common Bottlenecks]].
+    explanation: Expiry triggers many parallel rebuilds → backend overload.
   - id: pt-017
     type: single
+    difficulty: hard
     q: "Throughput unit:"
     options:
       - A) ms
@@ -191,9 +203,10 @@ questions:
       - D) GB
     answer: 1
     hint: Per-second rate.
-    explanation: Throughput = requests/transactions per second. See [[#Key Metrics]].
+    explanation: Throughput = requests/transactions per second.
   - id: pt-018
     type: single
+    difficulty: hard
     q: "Closed model needs:"
     options:
       - A) Arrival rate
@@ -202,9 +215,10 @@ questions:
       - D) GUI
     answer: 1
     hint: VUs with pause.
-    explanation: Closed = N users, each pauses between actions. See [[#Workload Models]].
+    explanation: Closed = N users, each pauses between actions.
   - id: pt-019
     type: single
+    difficulty: hard
     q: "Why P50 alone insufficient:"
     options:
       - A) Hard to compute
@@ -213,9 +227,10 @@ questions:
       - D) Same as max
     answer: 1
     hint: Median.
-    explanation: P50 ignores worst half-of-percent that hurts UX most. See [[#Key Metrics]].
+    explanation: P50 ignores worst half-of-percent that hurts UX most.
   - id: pt-020
     type: single
+    difficulty: hard
     q: "Gatling DSL language:"
     options:
       - A) Python
@@ -224,7 +239,4 @@ questions:
       - D) Bash
     answer: 1
     hint: JVM.
-    explanation: |-
-      Gatling scripts in Scala (Java/Kotlin supported). See [[#Tools]].
-
-      ---
+    explanation: Gatling scripts in Scala (Java/Kotlin supported).
