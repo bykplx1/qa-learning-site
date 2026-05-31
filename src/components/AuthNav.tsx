@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { authClient } from '../lib/auth-client';
 import { ErrorBoundary } from './ErrorBoundary';
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 type SessionUser = { name?: string | null; email?: string | null; image?: string | null } | null;
 
@@ -16,6 +19,43 @@ function AuthNavInner() {
   const [user, setUser] = useState<SessionUser>(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    requestAnimationFrame(() => triggerRef.current?.focus());
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const firstFocusable = menuRef.current?.querySelector<HTMLElement>(FOCUSABLE);
+    firstFocusable?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    };
+    const handlePointerDown = (e: PointerEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [open, close]);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,10 +93,12 @@ function AuthNavInner() {
   return (
     <div style={{ position: 'relative' }}>
       <button
+        ref={triggerRef}
         type="button"
         className="avatar"
         aria-label="Account menu"
         aria-expanded={open}
+        aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
         data-testid="auth-user-name-trigger"
       >
@@ -64,6 +106,7 @@ function AuthNavInner() {
       </button>
       {open && (
         <div
+          ref={menuRef}
           style={{
             position: 'absolute',
             right: 0,
