@@ -132,6 +132,16 @@ function AuthNavInner() {
           <a href="/profile" className="btn btn--ghost btn--sm" style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
             Profile
           </a>
+          <a href="/review" className="btn btn--ghost btn--sm" style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            Review
+          </a>
+          <a href="/exam" className="btn btn--ghost btn--sm" style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            Mock exam
+          </a>
+          <a href="/me/retention" className="btn btn--ghost btn--sm" style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            Retention
+          </a>
+          <hr style={{ border: 0, borderTop: '1px solid var(--rule)', margin: '4px 0 12px' }} />
           <button
             type="button"
             onClick={() => authClient.signOut().then(() => window.location.reload())}
