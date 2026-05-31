@@ -1,0 +1,77 @@
+---
+slug: perf-mid-quickpizza
+title: "Perf Mid: Scenario-Based Suite with Thresholds in CI"
+tier: mid
+track: perf
+target:
+  name: "QuickPizza (Grafana Labs)"
+  ref: "https://quickpizza.grafana.com — purpose-built k6 demo API; pinned Docker image grafana/quickpizza-local for reproducible CI runs"
+estimate: 1 day
+rubric: perf-mid
+requiredConcepts:
+  - performance-testing
+acceptanceCriteria:
+  - You model at least two named scenarios (e.g. browse and checkout) using k6's scenarios option — each with its own executor, VU count, and duration.
+  - Each scenario has at least one threshold scoped to it using a tag filter keyed on the scenario name.
+  - You configure a GitHub Actions workflow that runs k6 run and fails the job when any threshold is breached.
+  - The k6 summary JSON (--summary-export) is uploaded as a CI artifact.
+  - You submit a public repo URL with a green CI badge visible in the README.
+---
+
+## Brief
+
+Build a scenario-based k6 suite against
+[QuickPizza](https://quickpizza.grafana.com) that models two distinct user
+workloads, enforces per-scenario thresholds, and runs in CI so threshold
+failures break the build.
+
+The lesson shows you how k6 scenarios and executors work. This project makes
+you architect a suite that maps to real traffic shapes — not just "N users for
+X seconds".
+
+> **Drift notice.** `quickpizza.grafana.com` is the live hosted version and may
+> receive updates. For reproducible CI runs, use the pinned Docker image:
+> `docker run -p 3333:3333 grafana/quickpizza-local` and point your `baseURL`
+> at `http://localhost:3333`. Note in your README whether your CI pipeline
+> runs against the live site or the Docker image, and why.
+
+## Suggested approach
+
+1. Start from your starter script or a clean k6 project.
+2. Define two scenarios in the `options.scenarios` object. Recommended pair:
+   - `browse` — a `constant-vus` executor (10 VUs, 30s) hitting `GET /api/pizza` — simulates sustained browsing traffic.
+   - `recommend` — a `ramping-vus` executor (0→20→0 VUs over 1 min) hitting `POST /api/pizza/recommendations` — simulates a traffic spike on the recommendation engine.
+3. Tag each request with `{ scenario: __ENV.K6_SCENARIO_NAME }` so thresholds can be scoped per scenario.
+4. Define thresholds per scenario using the tag filter:
+   ```js
+   'http_req_duration{scenario:browse}': ['p(95)<400'],
+   'http_req_duration{scenario:recommend}': ['p(99)<1000'],
+   'http_req_failed{scenario:browse}': ['rate<0.01'],
+   ```
+5. Add a `.github/workflows/k6.yml` that:
+   - Runs on every push to `main`
+   - Sets up k6 using `grafana/setup-k6-action@v1` (or installs via `brew`/`apt`)
+   - Runs `k6 run --summary-export=summary.json script.js`
+   - Uploads `summary.json` with `actions/upload-artifact`
+   - Fails the job when k6 exits non-zero (i.e., any threshold is breached)
+6. Add the CI status badge to your README.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A `script.js` with two named scenarios and per-scenario thresholds
+- A `.github/workflows/k6.yml` that fails on threshold breach
+- A `summary.json` artifact uploaded in CI
+- A short paragraph in the README explaining one threshold decision (why you chose that percentile and budget for that scenario)
+- A green CI badge in the README
+
+## Why this matters
+
+A single `duration: '30s', vus: 10` block tells you nothing about whether your
+system handles a traffic spike differently from sustained load. Scenarios are
+the tool that makes the distinction explicit — and CI enforcement is what stops
+a regression from shipping silently.
+
+QuickPizza is the right target here because its recommendation endpoint has
+meaningfully different latency characteristics from its browse endpoint, giving
+your thresholds something real to measure.
