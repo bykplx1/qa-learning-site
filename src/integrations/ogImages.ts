@@ -11,6 +11,12 @@ interface CurriculumMeta {
   cluster: string;
 }
 
+interface ProjectMeta {
+  slug: string;
+  title: string;
+  tier: string;
+}
+
 function walkMdx(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
@@ -51,6 +57,47 @@ function clusterToCategory(cluster: string): string {
   return cluster.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
+const TIER_LABEL: Record<string, string> = { starter: 'Starter', mid: 'Mid', capstone: 'Capstone' };
+
+function parseProjectFrontmatter(raw: string): ProjectMeta | null {
+  const normalized = raw.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const m = normalized.match(/^---\n([\s\S]*?)\n---/);
+  if (!m) return null;
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(m[1]);
+  } catch {
+    return null;
+  }
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    typeof (parsed as Record<string, unknown>)['slug'] !== 'string' ||
+    typeof (parsed as Record<string, unknown>)['title'] !== 'string' ||
+    typeof (parsed as Record<string, unknown>)['tier'] !== 'string'
+  ) {
+    return null;
+  }
+  const p = parsed as Record<string, unknown>;
+  return {
+    slug: p['slug'] as string,
+    title: p['title'] as string,
+    tier: p['tier'] as string,
+  };
+}
+
+function readProjectMeta(projectsPath: string): ProjectMeta[] {
+  const out: ProjectMeta[] = [];
+  for (const entry of readdirSync(projectsPath)) {
+    const full = join(projectsPath, entry);
+    if (extname(entry) !== '.mdx') continue;
+    const raw = readFileSync(full, 'utf-8');
+    const fm = parseProjectFrontmatter(raw);
+    if (fm) out.push(fm);
+  }
+  return out;
+}
+
 function readCurriculumMeta(curriculumPath: string): CurriculumMeta[] {
   const out: CurriculumMeta[] = [];
   for (const file of walkMdx(curriculumPath)) {
@@ -63,12 +110,14 @@ function readCurriculumMeta(curriculumPath: string): CurriculumMeta[] {
 
 export function ogImagesIntegration(): AstroIntegration {
   let curriculumPath = '';
+  let projectsPath = '';
   let cacheDir = '';
   return {
     name: 'qa-og-images',
     hooks: {
       'astro:config:setup': ({ config }) => {
         curriculumPath = fileURLToPath(new URL('content/curriculum/', config.root));
+        projectsPath = fileURLToPath(new URL('src/content/projects/', config.root));
         cacheDir = fileURLToPath(new URL('og-cache/', config.cacheDir));
       },
       'astro:build:done': async ({ dir, logger }) => {
@@ -77,11 +126,17 @@ export function ogImagesIntegration(): AstroIntegration {
         mkdirSync(cacheDir, { recursive: true });
 
         const curriculumTopics = readCurriculumMeta(curriculumPath);
+        const projectTopics = readProjectMeta(projectsPath);
         const targets: Array<{ slug: string; title: string; category: string }> = [
           ...curriculumTopics.map((t) => ({
             slug: t.slug,
             title: t.title,
             category: clusterToCategory(t.cluster),
+          })),
+          ...projectTopics.map((p) => ({
+            slug: `project-${p.slug}`,
+            title: p.title,
+            category: `Build Project · ${TIER_LABEL[p.tier] ?? p.tier}`,
           })),
           { slug: 'default', title: 'QA Learning', category: 'Curriculum + practice' },
         ];

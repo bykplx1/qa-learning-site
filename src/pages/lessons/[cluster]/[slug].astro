@@ -47,7 +47,7 @@ const layerClass =
       : 'pill pill--accent';
 
 const ogDescription = topic.body ? repairWin1252(extractExcerpt(topic.body)) : undefined;
-const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}`, Astro.site).href;
+const canonicalUrl = new URL(`/lessons/${cluster}/${topic.data.slug}/`, Astro.site).href;
 const siteOrigin = (Astro.site ?? Astro.url).origin;
 
 const jsonLd = [

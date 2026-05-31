@@ -81,7 +81,7 @@ function splitTitleAccent(t: string): { head: string; tail: string } {
 }
 const { head, tail } = splitTitleAccent(title);
 
-const canonicalUrl = new URL(`/projects/${project.data.slug}`, Astro.site).href;
+const canonicalUrl = new URL(`/projects/${project.data.slug}/`, Astro.site).href;
 const siteOrigin = (Astro.site ?? Astro.url).origin;
 
 const projectJsonLd = {
@@ -101,6 +101,7 @@ const projectJsonLd = {
   canonicalUrl={canonicalUrl}
   jsonLd={projectJsonLd}
   ogType="article"
+  image={`/og/project-${project.data.slug}.png`}
 >
   <main class="brief">
     <nav class="breadcrumb" aria-label="Breadcrumb">
