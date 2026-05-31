@@ -330,6 +330,164 @@ export const rubrics = {
     ],
   },
 
+  // ---------------------------------------------------------------------------
+  // sec-a11y track rubrics (starter / mid / capstone) — #340
+  // ---------------------------------------------------------------------------
+
+  /** sec-a11y track — Starter: axe scan + manual form inspection on the-internet */
+  'sec-a11y-starter': {
+    id: 'sec-a11y-starter',
+    label: 'Security + A11y Starter: axe Scan + Form Inspection',
+    rows: [
+      {
+        id: 'a11y_coverage',
+        criterion: 'Accessibility scan coverage',
+        band: [
+          'No axe scan run, or scan output not captured.',
+          'Scan run on one page only; violations listed without categorisation.',
+          'Scan run on at least three pages; violations categorised by WCAG criterion and severity.',
+          'Scan on three+ pages; each serious/critical violation has a one-paragraph user-impact note.',
+        ],
+      },
+      {
+        id: 'security_observation',
+        criterion: 'Security form inspection',
+        band: [
+          'No security observations — form HTML not inspected.',
+          'Form inspected but observations are vague ("it looks fine") with no reference to specific attributes or standards.',
+          'At least one concrete observation (e.g. missing autocomplete, absent CSRF token) tied to a named misconfiguration.',
+          'Multiple observations noted with references to OWASP or browser security standards; each observation explains the exploit path.',
+        ],
+      },
+      {
+        id: 'report_quality',
+        criterion: 'Report clarity',
+        band: [
+          'Raw tool output only — no summary or analysis.',
+          'Summary exists but findings are listed without actionable next steps.',
+          'Structured report: each finding has WCAG/OWASP reference, severity, and a one-line recommended fix.',
+          'PM-ready report: executive summary + structured findings a developer can act on without follow-up questions.',
+        ],
+      },
+      {
+        id: 'runability',
+        criterion: 'Single-command reproducibility',
+        band: [
+          'Cannot reproduce — missing dependencies or entry point.',
+          'Reproduces after manual steps not documented in README.',
+          'Runs with one command; README lists prerequisites and expected output.',
+          'Runs with one command from a clean clone; README includes a sample of expected output.',
+        ],
+      },
+    ],
+  },
+
+  /** sec-a11y track — Mid: ZAP baseline + axe audit on Juice Shop */
+  'sec-a11y-mid': {
+    id: 'sec-a11y-mid',
+    label: 'Security + A11y Mid: ZAP Baseline + axe Audit',
+    rows: [
+      {
+        id: 'zap_scan',
+        criterion: 'ZAP baseline scan completeness',
+        band: [
+          'ZAP not run or report not captured.',
+          'ZAP run but only alert count reported; no classification by severity or OWASP category.',
+          'ZAP report captured; MEDIUM+ alerts classified by OWASP Top 10 category.',
+          'ZAP report captured; all MEDIUM+ alerts classified, each with recommended fix and OWASP reference.',
+        ],
+      },
+      {
+        id: 'axe_coverage',
+        criterion: 'axe scan breadth',
+        band: [
+          'axe not run or run on fewer than three pages.',
+          'axe run on three+ pages but violations listed without WCAG reference.',
+          'axe run on five+ pages; violations categorised by WCAG criterion and severity.',
+          'axe run on five+ pages; each serious/critical violation has user-impact note and recommended fix.',
+        ],
+      },
+      {
+        id: 'triage',
+        criterion: 'Findings triage and false-positive investigation',
+        band: [
+          'No triage — all tool alerts accepted uncritically.',
+          'Findings listed by severity but no false-positive analysis.',
+          'Priority table present; at least one alert ruled out as a false positive with reasoning.',
+          'Priority table present; false-positive section explains investigation method and why each ruled-out alert is not exploitable.',
+        ],
+      },
+      {
+        id: 'repo_artifact',
+        criterion: 'Public repo as artifact',
+        band: [
+          'No public repo submitted.',
+          'Repo exists but scan artefacts or findings document is missing.',
+          'Repo with raw scan outputs and `findings.md`; README explains how to reproduce.',
+          'Repo with scan outputs + findings + README covering tool versions, reproduction steps, and one surprising finding.',
+        ],
+      },
+    ],
+  },
+
+  /** sec-a11y track — Capstone: full audit pipeline with CI gate on Juice Shop */
+  'sec-a11y-capstone': {
+    id: 'sec-a11y-capstone',
+    label: 'Security + A11y Capstone: Full Audit with CI Gate',
+    rows: [
+      {
+        id: 'ci_gate',
+        criterion: 'CI quality gate',
+        band: [
+          'No CI configuration.',
+          'CI runs scans but does not fail on new findings — gate is absent or always green.',
+          'CI runs scans and fails on new MEDIUM+ ZAP or critical/serious axe findings vs committed baseline.',
+          'CI gate verified by deliberate regression (job turned red) and revert (job turned green); documented in README.',
+        ],
+      },
+      {
+        id: 'manual_verification',
+        criterion: 'Manual verification of automated findings',
+        band: [
+          'No manual verification — tool output accepted as-is.',
+          'One finding manually checked with screenshots but no reproduction steps documented.',
+          'Three findings manually reproduced with steps, evidence, and impact statements.',
+          'Three findings reproduced with steps + evidence + impact; at least one false positive identified and ruled out with explanation.',
+        ],
+      },
+      {
+        id: 'cross_reference',
+        criterion: 'Security–accessibility overlap analysis',
+        band: [
+          'No cross-reference between security and accessibility findings.',
+          'Cross-reference mentioned but without a concrete example.',
+          'Two a11y findings identified as security-relevant with named WCAG criterion and exploit path explained.',
+          'Two+ cross-references with WCAG and OWASP citations; a paragraph explaining why the overlap exists structurally (not just coincidentally).',
+        ],
+      },
+      {
+        id: 'audit_report',
+        criterion: 'Audit report completeness',
+        band: [
+          'No audit report, or raw tool output only.',
+          'Report lists findings but lacks executive summary, scope, or recommendations.',
+          'Report has executive summary + findings table + scope/limitations section.',
+          'Full professional report: executive summary + prioritised findings + manual verification section + cross-references + scope — readable by a non-engineer without follow-up.',
+        ],
+      },
+      {
+        id: 'ci_green',
+        criterion: 'Green CI on submitted repo',
+        band: [
+          'No CI or CI is red.',
+          'CI exists but green status not verifiable (private repo or broken badge).',
+          'Public repo with green CI badge confirmed at submission time.',
+          'Public repo + green CI badge + pipeline runs full ZAP + axe gate + uploads report artifact.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',

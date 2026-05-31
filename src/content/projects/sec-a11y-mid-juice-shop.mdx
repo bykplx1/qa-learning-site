@@ -1,0 +1,99 @@
+---
+slug: sec-a11y-mid-juice-shop
+title: "Security + A11y Mid: Baseline Scan + ZAP Audit on OWASP Juice Shop"
+tier: mid
+track: sec-a11y
+target:
+  name: "OWASP Juice Shop"
+  ref: "https://github.com/juice-shop/juice-shop — pin to tag v17.1.1; run locally via Docker: docker run -d -p 3000:3000 bkimminich/juice-shop:v17.1.1"
+estimate: 1 day
+rubric: sec-a11y-mid
+requiredConcepts:
+  - security-testing
+  - accessibility-testing
+acceptanceCriteria:
+  - You run OWASP Juice Shop locally via Docker at the pinned tag.
+  - You run a ZAP baseline scan (passive, no active attack) and capture the full JSON report.
+  - You run an axe scan across at least five distinct pages (including the login, product listing, and user profile pages) and produce a structured violation report.
+  - You triage findings into a prioritised list — severity + WCAG/OWASP reference for each — in `report/findings.md`.
+  - "You write a short false-positive section: at least one ZAP or axe alert that you investigated and ruled out, with a one-paragraph explanation."
+  - You submit a public repo URL containing the scan config, report artefacts, and findings document.
+---
+
+## Brief
+
+Run a dual security + accessibility baseline against
+[OWASP Juice Shop](https://owasp.org/www-project-juice-shop/) — the canonical
+deliberately-vulnerable web application — pinned to a specific Docker image so
+your results are reproducible regardless of when you run this.
+
+You will use two automated tools in combination: **OWASP ZAP** for passive
+security scanning and **axe-core** for accessibility auditing. The deliverable
+is not a list of alerts — it is a triaged, referenced, actionable findings
+document that a developer or security engineer can read and prioritise.
+
+> **Drift notice.** This brief pins Juice Shop at tag `v17.1.1`
+> (`bkimminich/juice-shop:v17.1.1` on Docker Hub). Later versions may introduce
+> or fix issues; if you use a different tag, record it clearly in your README
+> and note any differences from the findings documented here. Do not run this
+> against a shared production instance — always use the local Docker image.
+
+## Suggested approach
+
+### Phase 1 — Environment (30 min)
+
+1. Pull and start the pinned Docker image:
+   ```
+   docker run -d -p 3000:3000 bkimminich/juice-shop:v17.1.1
+   ```
+   Verify: `curl -s http://localhost:3000 | grep -i "juice shop"` should return a match.
+2. Download OWASP ZAP (or use the Docker image: `ghcr.io/zaproxy/zaproxy:stable`).
+
+### Phase 2 — ZAP baseline scan (1 hr)
+
+3. Run a passive ZAP baseline scan against `http://localhost:3000`. The baseline
+   scan spiders the site and flags passive issues (no active attacks):
+   ```
+   docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+     -t http://host.docker.internal:3000 \
+     -J report/zap-baseline.json
+   ```
+4. Review the alerts. For each MEDIUM or HIGH alert, note the OWASP Top 10
+   category (e.g. A05:2021 – Security Misconfiguration).
+
+### Phase 3 — axe scan (1 hr)
+
+5. Install `@axe-core/playwright` and write a scan script that visits at least:
+   - `/#/` — home / product listing
+   - `/#/login`
+   - `/#/register`
+   - `/#/contact`
+   - `/#/privacy-security`
+6. Capture the full violations array per page. Write JSON to `report/axe/`.
+
+### Phase 4 — Findings document (1–2 hr)
+
+7. Write `report/findings.md` with:
+   - A prioritised table (Critical → High → Medium → Low) of all findings
+   - Tool source (ZAP / axe) and reference (OWASP Top 10 category or WCAG criterion)
+   - One-line recommended fix per finding
+   - A "False positives investigated" section with at least one ruled-out alert
+
+## What "done" looks like
+
+A public GitHub repo with:
+- `docker-compose.yml` or `README.md` instructions to spin up the target
+- `report/zap-baseline.json` — raw ZAP output
+- `report/axe/` — raw axe JSON per page
+- `report/findings.md` — triaged findings with references and false-positive section
+- A README covering: how to reproduce each scan, tool versions used, and one
+  finding you found most surprising
+
+## Why this matters
+
+Professionals do not just run tools — they triage results. The same ZAP scan
+will produce dozens of alerts on any real application; knowing which to escalate
+and which to ignore (and being able to justify the call) is the engineering
+judgment this project builds. Combining two tools on the same target also shows
+you where security and accessibility overlap: missing labels degrade both WCAG
+conformance and phishing resistance.

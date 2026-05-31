@@ -1,0 +1,74 @@
+---
+slug: sec-a11y-starter-the-internet
+title: "Security + A11y Starter: axe Scan on the-internet"
+tier: starter
+track: sec-a11y
+target:
+  name: "the-internet (Heroku)"
+  ref: "https://the-internet.herokuapp.com — pinned behaviour; see drift note below"
+estimate: 2–3 hr
+rubric: sec-a11y-starter
+requiredConcepts:
+  - security-testing
+  - accessibility-testing
+acceptanceCriteria:
+  - You install axe-core and write a Node script (or Playwright test) that scans at least three distinct pages on the-internet and outputs a structured violation report.
+  - You categorise each violation by WCAG criterion and severity (critical / serious / moderate / minor).
+  - You write a one-paragraph risk note for each serious or critical violation, explaining what type of user is affected and why.
+  - You identify at least one security-relevant form on the site (e.g. the Login page) and note whether the form exposes any common misconfigurations (missing autocomplete attributes, no CSRF token visible, cleartext credential hints in HTML source).
+  - Your README explains how to reproduce the scan from a clean clone with one command.
+---
+
+## Brief
+
+Run your first automated accessibility scan against
+[the-internet](https://the-internet.herokuapp.com) and layer in a manual
+inspection of one security-relevant form. This project connects two lesson
+threads — `security-testing` and `accessibility-testing` — in a single sitting.
+
+You are not fixing the target. You are building the discipline of finding,
+classifying, and documenting issues with enough precision that a developer can
+act on your report without asking follow-up questions.
+
+> **Drift notice.** the-internet is a hosted Heroku app maintained by Sauce Labs.
+> It has been stable for years but is not pinned to a commit. If a page's
+> structure changes between now and when you run this, update your selectors and
+> note the change in your README — that investigation is part of the exercise.
+
+## Suggested approach
+
+1. Create an empty Node project and install the axe-core CLI or `@axe-core/playwright`:
+   ```
+   npm init -y
+   npm install --save-dev @axe-core/playwright @playwright/test
+   npx playwright install --with-deps chromium
+   ```
+2. Write a scan script (or Playwright test file) that visits at least these pages:
+   - `/` — home index
+   - `/login` — the login form (security-relevant)
+   - `/dynamic_loading/1` — dynamically loaded element
+3. For each page, run `checkAccessibility()` (axe-core) and capture the full
+   violations array. Write the results to a `report/` directory as JSON.
+4. Write a Markdown summary (`report/summary.md`) with a table:
+   | Page | Violation | WCAG criterion | Severity | User impact |
+5. On the `/login` page, inspect the raw HTML source. Note:
+   - Does the `<input type="password">` have `autocomplete="current-password"`?
+   - Is there any CSRF token in the form?
+   - Does any attribute or comment expose implementation details?
+6. Add a short "Security observations" section to your summary with your findings.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- contains a `package.json` listing dependencies
+- has a scan script that runs with one command and writes to `report/`
+- has `report/summary.md` with the violation table and security observations
+- has a README with a one-command run instruction
+
+## Why this matters
+
+Accessibility and security share the same root discipline: you are looking for
+discrepancies between what a system promises and what it actually does, from the
+perspective of a user who cannot rely on the happy path. Running axe and reading
+a form's HTML are both forms of structured observation. This project makes you
+practice both in the same hour.
