@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About — QA Learning"
+  description="About QA Learning: a personal QA study portfolio built and maintained by bykplx1. Learn about the site's intent, content review process, and how to contribute."
+>
+  <main id="main" class="about-page">
+    <article class="prose about-prose">
+      <span class="eyebrow">about this site</span>
+      <h1>About QA Learning</h1>
+
+      <h2>What this site is</h2>
+      <p>
+        QA Learning is a personal portfolio and study site for software quality assurance. It covers
+        QA fundamentals across six curriculum tracks — from testing foundations through to AI/LLM
+        quality engineering — with written lessons, practice quizzes, a mock exam, and a set of
+        self-directed project briefs.
+      </p>
+      <p>
+        The site is built and maintained by
+        <a href="https://github.com/bykplx1" rel="noopener noreferrer" target="_blank">bykplx1</a>
+        as a learning portfolio. It is not affiliated with any certification body or employer.
+      </p>
+
+      <h2>Content review process</h2>
+      <p>
+        All 36 curriculum topics are hand-written MDX, versioned in
+        <a href="https://github.com/bykplx1/qa-learning-site" rel="noopener noreferrer" target="_blank">the public repository</a>.
+        The review process is straightforward:
+      </p>
+      <ul>
+        <li>Content is drafted against established QA references (ISTQB syllabi, practitioner literature).</li>
+        <li>Quiz questions are written to be unambiguous, with a single correct answer and a plain-English explanation.</li>
+        <li>Factual corrections and improvements are accepted via GitHub issues or pull requests.</li>
+        <li>There is no formal editorial board — this is a solo portfolio project. Treat the content as a study aid, not a definitive authority.</li>
+      </ul>
+
+      <h2>Tech stack</h2>
+      <p>
+        Built with Astro 6, MDX, React 19, Tailwind v4, Drizzle ORM, and Neon Postgres. Hosted on
+        Vercel. Open-source under the
+        <a href="https://github.com/bykplx1/qa-learning-site/blob/main/LICENSE" rel="noopener noreferrer" target="_blank">MIT licence</a>.
+      </p>
+
+      <h2>Contact &amp; corrections</h2>
+      <p>
+        For content corrections, feature ideas, or questions, open a
+        <a href="https://github.com/bykplx1/qa-learning-site/issues" rel="noopener noreferrer" target="_blank">GitHub issue</a>
+        or email
+        <a href="mailto:byk.plai@gmail.com">byk.plai@gmail.com</a>.
+      </p>
+      <p>
+        For privacy-related requests (data deletion, questions about stored data) see the
+        <a href="/privacy">Privacy Policy</a>.
+      </p>
+    </article>
+  </main>
+</BaseLayout>
+
+<style>
+  .about-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 40px 64px;
+  }
+
+  @media (max-width: 768px) {
+    .about-page {
+      padding: 32px 20px 48px;
+    }
+  }
+
+  .about-prose h1 {
+    margin: 8px 0 4px;
+  }
+</style>

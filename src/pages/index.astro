@@ -27,7 +27,6 @@ const totalMinutes = sorted.reduce((s, t) => s + t.data.estimatedEncodingMinutes
 const liveSlugs = new Set(sorted.map((t) => t.data.slug));
 const reachableQuizzes = loadReachableQuizzes(liveSlugs);
 const totalQuizQuestions = reachableQuizzes.reduce((sum, q) => sum + q.questions.length, 0);
-const quizCount = reachableQuizzes.length;
 
 const latestTopics = sorted.slice(0, 10);
 
@@ -183,13 +182,4 @@ function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
 
   <LessonCompletionMarkers client:load />
   </main>
-  <footer class="site-footer" slot="footer" role="contentinfo" aria-label="Site footer">
-    <span>© {new Date().getFullYear()} · MIT · QA Learning</span>
-    <nav aria-label="Footer">
-      <a href="/lessons">Lessons</a>
-      <a href="/projects">Build</a>
-      <a href="/privacy">Privacy</a>
-    </nav>
-    <span>{totalTopics} topics · {quizCount} quizzes</span>
-  </footer>
 </BaseLayout>
