@@ -1,0 +1,8 @@
+lesson: r1-valid-frontmatter
+tasks:
+  - id: r10-fail-task-001
+    type: fill_blank
+    q: "Fill: Cross-page link test."
+    answer: some answer
+    hint: Hint text.
+    explanation: This references [[Nonexistent-Topic]] which does not exist in curriculum.

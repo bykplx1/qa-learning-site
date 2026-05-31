@@ -5,7 +5,7 @@ tasks:
     q: "Fill: Status code _______ means client authenticated but lacks permission."
     answer: "403"
     hint: Forbidden.
-    explanation: 403 = authorization failure. See [[#HTTP Status Quick Map]].
+    explanation: 403 = authorization failure (authenticated but lacks permission).
   - id: at-t002
     type: fill_blank
     q: "Task: Write a pytest test asserting `GET /users/{id}` returns 404 for
@@ -18,10 +18,10 @@ tasks:
           assert "not found" in r.json().get("error","").lower()
       ```
     hint: Negative path.
-    explanation: Tests error contract, not just happy path. See [[#Test Categories]].
+    explanation: Tests error contract, not just happy path; negative paths are often where shape rot silently accumulates.
   - id: at-t003
     type: fill_blank
     q: "Fill: A consumer-driven contract testing tool is _______."
     answer: Pact
     hint: Provider-consumer pinning.
-    explanation: Pact verifies consumer expectations against provider. See [[#Tools]].
+    explanation: Pact verifies consumer expectations against provider via contract tests.

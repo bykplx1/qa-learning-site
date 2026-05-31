@@ -282,6 +282,118 @@ function ruleEncodingMinutesCap(meta: FileMeta): LintError[] {
   ];
 }
 
+// ─── R10: Quiz YAML wikilink guard ────────────────────────────────────────────
+
+// Scan src/generated/quiz/*.quiz.yaml and *.tasks.yaml for unresolved [[...]]
+// references in explanation, hint, or q fields.
+
+interface QuizItem {
+  explanation?: string;
+  hint?: string;
+  q?: string;
+  [key: string]: unknown;
+}
+
+function ruleQuizYamlWikilinks(
+  quizDir: string,
+  slugSet: Set<string>
+): LintError[] {
+  const errors: LintError[] = [];
+
+  if (!fs.existsSync(quizDir)) return errors;
+
+  const yamlFiles = fs
+    .readdirSync(quizDir)
+    .filter((f) => f.endsWith('.quiz.yaml') || f.endsWith('.tasks.yaml'));
+
+  for (const fileName of yamlFiles) {
+    const filePath = path.join(quizDir, fileName);
+    let parsed: unknown;
+    try {
+      parsed = yamlLoad(fs.readFileSync(filePath, 'utf-8'));
+    } catch {
+      // malformed YAML — skip, not our rule to catch
+      continue;
+    }
+
+    const data = parsed as { tasks?: QuizItem[]; questions?: QuizItem[] };
+    const items: QuizItem[] = [
+      ...(Array.isArray(data?.tasks) ? data.tasks : []),
+      ...(Array.isArray(data?.questions) ? data.questions : []),
+    ];
+
+    for (const item of items) {
+      for (const field of ['explanation', 'hint', 'q'] as const) {
+        const text = item[field];
+        if (typeof text !== 'string') continue;
+
+        WIKILINK_RE.lastIndex = 0;
+        let m: RegExpExecArray | null;
+        while ((m = WIKILINK_RE.exec(text)) !== null) {
+          if (m[1]) continue; // escaped
+          const target = m[2].trim();
+          const anchor = m[3];
+          // bare [[#anchor]] — anchor-only refs are always unresolved (no vault)
+          if (!target && anchor !== undefined) {
+            errors.push({
+              rule: 'R10:quiz-wikilinks',
+              file: filePath,
+              message: `Unresolved anchor-only wikilink [[#${anchor}]] in field "${field}" — remove or rewrite as plain text`,
+            });
+          } else if (target && !slugSet.has(target)) {
+            // cross-page link to unknown slug
+            errors.push({
+              rule: 'R10:quiz-wikilinks',
+              file: filePath,
+              message: `Unresolved wikilink [[${target}]] in field "${field}" — slug not found in curriculum`,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
+// ─── R11: Spelling consistency ────────────────────────────────────────────────
+// Canonical variants: artefact (not artifact), analyse (not analyze),
+// catalogue (not catalog). Prose-only — code blocks and inline code are excluded.
+
+const SPELLING_RULES: Array<{ forbidden: RegExp; canonical: string }> = [
+  { forbidden: /\bartifact(s?)\b/gi, canonical: 'artefact' },
+  { forbidden: /\banalyze(s|d|r|rs|ing)?\b/gi, canonical: 'analyse' },
+  { forbidden: /\bcatalog\b(?!ue)/gi, canonical: 'catalogue' },
+];
+
+// Strip fenced code blocks and inline code from body before checking.
+function stripCodeFromBody(body: string): string {
+  // Remove fenced code blocks (``` or ~~~)
+  let stripped = body.replace(/^`{3,}[^\n]*\n[\s\S]*?^`{3,}/gm, '');
+  // Remove inline code
+  stripped = stripped.replace(/`[^`\n]+`/g, '');
+  return stripped;
+}
+
+function ruleSpelling(meta: FileMeta): LintError[] {
+  const errors: LintError[] = [];
+  const prose = stripCodeFromBody(meta.rawBody);
+
+  for (const rule of SPELLING_RULES) {
+    rule.forbidden.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = rule.forbidden.exec(prose)) !== null) {
+      errors.push({
+        rule: 'R11:spelling',
+        file: meta.filePath,
+        message: `"${m[0]}" — use "${rule.canonical}" (UK spelling variant)`,
+      });
+    }
+  }
+
+  return errors;
+}
+
 // ─── Corpus-level rules (require all files) ───────────────────────────────────
 
 function ruleDuplicatePromptIds(allMeta: FileMeta[]): LintError[] {
@@ -333,7 +445,7 @@ function ruleWikilinksResolve(
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export function lintDir(curriculumDir: string): LintError[] {
+export function lintDir(curriculumDir: string, quizDir?: string): LintError[] {
   const mdxFiles: string[] = [];
 
   function walkDir(dir: string) {
@@ -371,10 +483,23 @@ export function lintDir(curriculumDir: string): LintError[] {
     errors.push(...rulePracticeTaskRequired(meta));
     errors.push(...ruleEncodingMinutesCap(meta));
     errors.push(...ruleToolLesson(meta));
+    errors.push(...ruleSpelling(meta));
   }
 
   errors.push(...ruleDuplicatePromptIds(allMeta));
   errors.push(...ruleWikilinksResolve(allMeta, allowedUnresolved));
+
+  // R10: quiz YAML wikilink guard
+  const slugSet = new Set(allMeta.map((m) => m.slug));
+  const resolvedQuizDir =
+    quizDir ??
+    path.join(
+      path.resolve(path.dirname(curriculumDir), '..'),
+      'src',
+      'generated',
+      'quiz'
+    );
+  errors.push(...ruleQuizYamlWikilinks(resolvedQuizDir, slugSet));
 
   return errors;
 }
@@ -395,13 +520,14 @@ if (isMain) {
     dirArgIdx !== -1 && process.argv[dirArgIdx + 1]
       ? path.resolve(process.argv[dirArgIdx + 1])
       : path.join(repoRoot, 'content', 'curriculum');
+  const quizDir = path.join(repoRoot, 'src', 'generated', 'quiz');
 
   if (!fs.existsSync(curriculumDir)) {
     console.error(`[lint-curriculum] Directory not found: ${curriculumDir}`);
     process.exit(1);
   }
 
-  const errors = lintDir(curriculumDir);
+  const errors = lintDir(curriculumDir, quizDir);
 
   if (errors.length === 0) {
     console.log('[lint-curriculum] All rules passed.');

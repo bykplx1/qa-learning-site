@@ -6,14 +6,14 @@ tasks:
       called the _______."
     answer: Traceability Matrix (RTM)
     hint: Coverage map.
-    explanation: RTM links reqs ↔ cases ↔ defects. See [[#Traceability Matrix (RTM)]].
+    explanation: A Requirements Traceability Matrix (RTM) links each requirement to its test cases and any related defects.
   - id: td-t002
     type: fill_blank
     q: "Fill: Conditions that must be satisfied before testing begins are called
       _______ criteria."
     answer: Entry
     hint: Gate to start.
-    explanation: Entry criteria gate start of cycle. See [[#Entry / Exit Criteria]].
+    explanation: Entry criteria gate the start of a test cycle; without them teams begin testing on broken or incomplete builds.
   - id: td-t003
     type: fill_blank
     q: 'Task: Draft a test case for "user resets password via email link". Include
@@ -43,4 +43,4 @@ tasks:
 
       - Linked Req: REQ-AUTH-09
     hint: Use anatomy table fields.
-    explanation: Complete case verifiable + traceable. See [[#Test Case Anatomy]].
+    explanation: A complete test case (ID, title, preconditions, data, steps, expected, priority, linked req) is verifiable and traceable.

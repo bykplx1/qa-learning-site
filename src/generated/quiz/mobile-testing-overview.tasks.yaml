@@ -6,7 +6,7 @@ tasks:
       _______."
     answer: Charles (or Network Link Conditioner / mitmproxy)
     hint: Proxy throttler.
-    explanation: Simulates real-world network for mobile. See [[#Best Practices]].
+    explanation: Charles Proxy / Network Link Conditioner simulates real-world network conditions (throttling, packet loss) for mobile testing.
   - id: mt-t002
     type: fill_blank
     q: "Task: List 3 interrupt scenarios you must cover during mobile testing."
@@ -15,11 +15,11 @@ tasks:
       - Push notification during checkout.
       - Low battery / power save mode toggle.
     hint: Real-world events.
-    explanation: Interrupts test resilience to OS-level events. See [[#Test Categories]].
+    explanation: Interrupt testing verifies resilience to OS-level events like calls, notifications, and power changes.
   - id: mt-t003
     type: fill_blank
     q: "Fill: Cross-platform mobile automation tool using WebDriver protocol is
       _______."
     answer: Appium
     hint: WebDriver mobile.
-    explanation: Appium = de facto cross-platform mobile automation. See [[#Tools]].
+    explanation: Appium is the de facto cross-platform mobile automation tool using the WebDriver protocol.

@@ -6,7 +6,7 @@ tasks:
       production data is _______."
     answer: PSI (Population Stability Index) or KS test
     hint: Drift metric.
-    explanation: Standard tool for detecting covariate drift. See [[#Drift Types]].
+    explanation: PSI and KS test are standard tools for detecting covariate drift between training and production distributions.
   - id: at-t002
     type: fill_blank
     q: "Task: Write a Promptfoo assertion that ensures the model's response contains
@@ -20,12 +20,11 @@ tasks:
               value: "Paris"
       ```
     hint: "`contains` assertion."
-    explanation: Property assertion verifies factual correctness. See [[#Promptfoo
-      Example]].
+    explanation: A `contains` property assertion in Promptfoo verifies factual correctness by checking the model output.
   - id: at-t003
     type: fill_blank
     q: "Fill: Adversarial input that overrides system instructions in an LLM is
       called _______."
     answer: Prompt injection
     hint: "OWASP LLM Top 10 #1."
-    explanation: User input subverts intended behavior. See [[#LLM Test Dimensions]].
+    explanation: Prompt injection = adversarial user input that overrides the LLM's system instructions (#1 on OWASP LLM Top 10).

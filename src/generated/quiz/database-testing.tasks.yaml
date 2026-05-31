@@ -5,7 +5,7 @@ tasks:
     q: "Fill: Isolation level that prevents phantom reads is _______."
     answer: Serializable
     hint: Strictest.
-    explanation: Only Serializable forbids phantoms. See [[#Isolation Levels (SQL)]].
+    explanation: Only Serializable forbids phantom reads; lower isolation levels allow them.
   - id: dt-t002
     type: fill_blank
     q: "Task: Write a SQL test that asserts inserting two rows with same `email`
@@ -17,10 +17,10 @@ tasks:
       INSERT INTO users(email) VALUES ('a@x.com');  -- expect: unique violation
       ```
     hint: Trigger UNIQUE constraint.
-    explanation: Verifies UNIQUE constraint enforced. See [[#SQL Tests You Should Write]].
+    explanation: Verifies UNIQUE constraint is enforced at the database level, not just application layer.
   - id: dt-t003
     type: fill_blank
     q: "Fill: Tool that spins ephemeral real DB in tests via Docker is _______."
     answer: Testcontainers
     hint: Container lib.
-    explanation: Testcontainers brings real engine into tests. See [[#Tools]].
+    explanation: Testcontainers brings a real DB engine into tests via Docker, eliminating mocks.

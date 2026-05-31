@@ -1,0 +1,14 @@
+lesson: r1-valid-frontmatter
+questions:
+  - id: r10-pass-001
+    type: single
+    difficulty: easy
+    q: "What is the primary goal of unit testing?"
+    options:
+      - A) Covering the full stack
+      - B) Verifying a small unit of code in isolation
+      - C) Replacing integration tests
+      - D) Testing the UI
+    answer: 1
+    hint: Small scope.
+    explanation: Unit tests verify individual functions or classes in isolation, enabling fast feedback.

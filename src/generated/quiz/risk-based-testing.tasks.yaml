@@ -5,8 +5,7 @@ tasks:
     q: "Fill: Risk score is computed as likelihood _____ impact."
     answer: ×  (multiplied by)
     hint: Product not sum.
-    explanation: Multiplication amplifies items high on both axes. See [[#Risk =
-      Likelihood × Impact]].
+    explanation: Risk = Likelihood × Impact; multiplication amplifies items that score high on both axes.
   - id: rbt-t002
     type: fill_blank
     q: "Task: For a banking transfer feature, list 3 product risks and rate each (L,
@@ -16,12 +15,11 @@ tasks:
       - Duplicate transfer on retry — L=4, I=5, score 20 (critical)
       - UI rounding shows wrong fee — L=2, I=2, score 4 (low)
     hint: Money + correctness drive impact.
-    explanation: Concrete scoring → coverage decisions. See [[#Risk Matrix]].
+    explanation: A scored risk matrix turns qualitative gut-feel into concrete prioritisation decisions for coverage.
   - id: rbt-t003
     type: fill_blank
     q: "Fill: Risks affecting schedule, staffing, or environment are called _______
       risks."
     answer: project
     hint: Not in product code.
-    explanation: Project risks live outside the product but threaten delivery. See
-      [[#Types of Risk]].
+    explanation: Project risks (staffing, schedule, environment) live outside the product code but directly threaten delivery.

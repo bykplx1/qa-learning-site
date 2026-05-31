@@ -6,16 +6,14 @@ tasks:
       called _______ testing."
     answer: Confirmation (re-test)
     hint: Specific to the fix.
-    explanation: Confirmation rerun verifies fix works. See [[#Confirmation vs
-      Regression Testing]].
+    explanation: Confirmation testing reruns the specific failed case to verify the fix works; regression testing checks that the fix didn't break anything else.
   - id: tt-t002
     type: fill_blank
     q: "Fill: A test that runs the system for many hours to detect memory leaks is
       _______ testing."
     answer: Endurance (soak)
     hint: Long duration.
-    explanation: Memory leaks emerge over time; endurance reveals them. See
-      [[#Non-Functional Test Types]].
+    explanation: Memory leaks emerge over time; endurance (soak) testing runs the system for many hours to surface them.
   - id: tt-t003
     type: fill_blank
     q: "Task: For a login API, list one test of each: smoke, regression, security,
@@ -26,5 +24,4 @@ tasks:
       - Security: SQL injection payload in username field rejected
       - Performance: 500 concurrent logins under 1s p95
     hint: Same feature, different angle.
-    explanation: Single feature has multiple test type angles. See [[#Functional
-      Test Types]] and [[#Non-Functional Test Types]].
+    explanation: A single feature (login API) can be exercised across functional and non-functional test types, each revealing different defects.
