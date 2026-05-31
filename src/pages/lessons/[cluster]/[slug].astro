@@ -14,6 +14,8 @@ import { loadQuizBySlug } from '../../../lib/quiz/loadQuiz';
 import { extractExcerpt } from '../../../lib/wikilinks/excerpt';
 import { repairWin1252 } from '../../../lib/encoding/repair';
 import VerifiedStamp from '../../../components/mdx/VerifiedStamp.astro';
+import { resolveLessonDate, formatDisplayDate } from '../../../lib/curriculum/git-date';
+import { join } from 'node:path';
 
 export async function getStaticPaths() {
   const allTopics = await getCollection('curriculum');
@@ -25,7 +27,12 @@ export async function getStaticPaths() {
 
 const { topic } = Astro.props;
 const { Content, headings } = await render(topic);
-const { title, cluster, estimatedEncodingMinutes, tags, layer, kind, verified } = topic.data;
+const { title, cluster, estimatedEncodingMinutes, tags, layer, kind, verified, updatedAt, reviewedAt } = topic.data;
+
+const mdxFilePath = topic.filePath ? join(process.cwd(), topic.filePath) : '';
+const resolvedUpdatedAt = resolveLessonDate(updatedAt, mdxFilePath);
+const displayUpdatedAt = resolvedUpdatedAt ? formatDisplayDate(resolvedUpdatedAt) : null;
+const displayReviewedAt = reviewedAt ? formatDisplayDate(reviewedAt) : null;
 
 function formatCluster(c: string): string {
   return c.replace(/-/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
@@ -157,6 +164,22 @@ const { options: endCtaOptions } = resolveEndCta({
             )}
             {tags.map((t) => <span class="pill">{t}</span>)}
           </div>
+          {(displayUpdatedAt || displayReviewedAt) && (
+            <div class="lesson-dates">
+              {displayUpdatedAt && (
+                <span class="lesson-date">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  Updated {displayUpdatedAt}
+                </span>
+              )}
+              {displayReviewedAt && (
+                <span class="lesson-date">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                  Reviewed {displayReviewedAt}
+                </span>
+              )}
+            </div>
+          )}
           {kind === 'tool' && verified && (
             <VerifiedStamp verified={verified} />
           )}
@@ -252,4 +275,18 @@ const { options: endCtaOptions } = resolveEndCta({
   @media (max-width: 768px) { .lesson-title { font-size: 38px; } }
 
   .hidden { display: none !important; }
+
+  .lesson-dates {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .lesson-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
 </style>
