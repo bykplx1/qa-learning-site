@@ -5,6 +5,10 @@ import { db } from '../../../db';
 import { selfExplanations } from '../../../db/schema';
 import { getSession } from '../../../lib/auth';
 import { logError } from '../../../lib/observability/logger';
+import { buildKey, checkRateLimit, getClientIp, rateLimitResponse } from '../../../lib/rate-limit';
+
+// 20 self-explanations per 60-second window — covers rapid review sessions.
+const RATE_LIMIT = { windowSec: 60, max: 20 };
 
 export const prerender = false;
 
@@ -18,6 +22,12 @@ export const POST: APIRoute = async ({ request }) => {
   const session = await getSession(request.headers);
   if (!session?.user?.id) return new Response('Unauthorized', { status: 401 });
   const userId = session.user.id;
+
+  const rlResult = await checkRateLimit(
+    buildKey('/api/explain/submit', userId, getClientIp(request)),
+    RATE_LIMIT,
+  );
+  if (rlResult.limited) return rateLimitResponse(rlResult.retryAfter!);
 
   let raw: unknown;
   try {

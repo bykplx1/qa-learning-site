@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index, real, smallint, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, jsonb, date, primaryKey, uniqueIndex, index, real, smallint, pgEnum, bigint } from 'drizzle-orm/pg-core';
 
 export const quizAttemptModeEnum = pgEnum('quiz_attempt_mode', ['practice', 'exam', 'mock-exam']);
 export const projectSubmissionStatusEnum = pgEnum('project_submission_status', ['submitted']);
@@ -236,6 +236,21 @@ export const examSessions = pgTable('exam_sessions', {
 
 export type ExamSession = typeof examSessions.$inferSelect;
 export type InsertExamSession = typeof examSessions.$inferInsert;
+
+// Shared rate-limit store used by better-auth (storage: "database") and
+// the custom write-endpoint limiter in src/lib/rate-limit/.
+// Key format: "<userId|ip>:<route>" — one row per (key).
+// better-auth expects the Drizzle export named "rateLimits" when usePlural:true.
+export const rateLimits = pgTable(
+  'rate_limits',
+  {
+    key: text('key').primaryKey(),
+    count: integer('count').notNull().default(0),
+    lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
+  },
+);
+
+export type RateLimit = typeof rateLimits.$inferSelect;
 
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;

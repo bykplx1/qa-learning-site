@@ -18,6 +18,13 @@ export const auth = betterAuth({
     provider: 'pg',
     usePlural: true,
   }),
+  rateLimit: {
+    enabled: true,
+    storage: 'database',
+    // Auth endpoints: 20 attempts per 60-second window (generous for legit use; blocks brute-force).
+    window: 60,
+    max: 20,
+  },
   emailAndPassword: { enabled: false },
   user: {
     fields: { image: 'avatar' },
