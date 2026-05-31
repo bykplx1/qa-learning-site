@@ -1,0 +1,148 @@
+lesson: mocking-stubbing-test-doubles
+questions:
+  - id: mst-001
+    type: single
+    difficulty: easy
+    q: "The five kinds of test double defined by Meszaros are:"
+    options:
+      - A) Fake, Stub, Mock, Real, Spy
+      - B) Dummy, Fake, Stub, Spy, Mock
+      - C) Mock, Stub, Spy, Real, Null
+      - D) Fake, Stub, Dummy, Decorator, Proxy
+    answer: 1
+    hint: From xUnit Test Patterns (2007).
+    explanation: |-
+      Gerard Meszaros defined five distinct test double kinds in xUnit Test Patterns: Dummy (unused param filler), Fake (working simplified impl), Stub (canned response), Spy (records calls), Mock (verifies interactions). They are not synonyms.
+
+  - id: mst-002
+    type: single
+    difficulty: easy
+    q: "A Stub is a test double that:"
+    options:
+      - A) Records all calls made to it for later assertion
+      - B) Returns canned, pre-programmed responses without real logic
+      - C) Verifies expected interactions were made
+      - D) Is a fully working but simplified implementation
+    answer: 1
+    hint: |-
+      Hard-coded return values, no real computation.
+    explanation: |-
+      A Stub returns pre-programmed responses to calls. It does not verify how it was called. Use stubs when the test only cares about the system's reaction to certain return values from a collaborator.
+
+  - id: mst-003
+    type: single
+    difficulty: medium
+    q: "A Spy is a test double that:"
+    options:
+      - A) Replaces real logic with simplified logic
+      - B) Returns canned responses only
+      - C) Records calls, arguments, and counts for later assertion — can still delegate to real implementation
+      - D) Blocks all calls to prevent side effects
+    answer: 2
+    hint: Observation without enforcement.
+    explanation: |-
+      A Spy records how it was called — which methods, with what arguments, how many times — while potentially delegating to the real implementation. Unlike a Mock, it does not enforce expectations upfront; assertions happen after the fact.
+
+  - id: mst-004
+    type: single
+    difficulty: medium
+    q: "A Mock is a test double that:"
+    options:
+      - A) Returns canned values like a Stub
+      - B) Enforces expected interactions — the test fails if calls do not match the pre-programmed expectations
+      - C) Records calls without enforcing expectations
+      - D) Is a full working implementation
+    answer: 1
+    hint: |-
+      Expectations set upfront — fail if violated.
+    explanation: |-
+      A Mock pre-programs expectations about how it should be called. If the system under test does not call the mock as expected (wrong method, wrong args, wrong number of times), the test fails. Mocks are interaction-based assertions.
+
+  - id: mst-005
+    type: single
+    difficulty: easy
+    q: "A Fake is a test double that:"
+    options:
+      - A) Returns null for all calls
+      - B) Records all method calls
+      - C) Is a real working implementation simplified for testing — e.g. an in-memory database
+      - D) Verifies all interactions were made
+    answer: 2
+    hint: |-
+      Real logic, simplified for speed or isolation.
+    explanation: |-
+      A Fake has real working logic but a simplified implementation — an in-memory database instead of a real one, or a local filesystem instead of S3. It behaves correctly but is too simplified for production use.
+
+  - id: mst-006
+    type: single
+    difficulty: easy
+    q: "A Dummy is a test double that:"
+    options:
+      - A) Returns canned responses to queries
+      - B) Is passed as a required parameter but never actually used in the test
+      - C) Records all calls made to it
+      - D) Verifies that no calls were made
+    answer: 1
+    hint: |-
+      Just to satisfy a required parameter — never actually called.
+    explanation: |-
+      A Dummy fills a required parameter slot but is never actually invoked during the test. Its value is irrelevant; it only satisfies a type constraint or required argument.
+
+  - id: mst-007
+    type: single
+    difficulty: hard
+    q: "The 'don't mock what you don't own' rule (Freeman & Pryce) means:"
+    options:
+      - A) Never mock third-party APIs under any circumstances
+      - B) Mocks belong at interfaces your code defines, not at third-party library boundaries
+      - C) Only mock internal microservices, not external ones
+      - D) Fakes should be used instead of mocks for all collaborators
+    answer: 1
+    hint: |-
+      Mocking axios tests your assumption about axios, not your code's behaviour.
+    explanation: |-
+      When you mock a third-party library directly, you test your assumption about how that library behaves — which can be wrong or drift. Instead, introduce a thin adapter interface you own, and mock the adapter. This keeps the mock at a seam you control.
+
+  - id: mst-008
+    type: single
+    difficulty: medium
+    q: "Using a Stub when you need to verify a call was made is the wrong double because:"
+    options:
+      - A) Stubs are too slow
+      - B) Stubs return canned values but do not record or verify calls — you need a Spy or Mock for call verification
+      - C) Stubs cannot be configured with return values
+      - D) Stubs only work for static methods
+    answer: 1
+    hint: |-
+      Choose the double based on the question the test is asking.
+    explanation: |-
+      Stubs answer "what does the system do when a collaborator returns X?" Spies and Mocks answer "did the system call the collaborator correctly?" Choosing a Stub when you need call verification means your test never actually checks what it claims to check.
+
+  - id: mst-009
+    type: single
+    difficulty: hard
+    q: "Every test double is placed at a seam. The choice of which kind to use is the choice of:"
+    options:
+      - A) Which test framework to use
+      - B) Which question the test is asking about the system under test
+      - C) Which developer wrote the collaborator
+      - D) Which CI stage the test runs in
+    answer: 1
+    hint: |-
+      Do I need state? Do I need to observe a call? Do I need to enforce a call?
+    explanation: |-
+      The five double kinds each answer a different question: Dummy (do I need this param?), Fake (do I need real logic cheaply?), Stub (do I need a controlled return value?), Spy (do I need to observe calls?), Mock (do I need to enforce calls?). Choosing the double is choosing the test's question.
+
+  - id: mst-010
+    type: single
+    difficulty: medium
+    q: "The architectural rule from GOOS (Growing Object-Oriented Software, Guided by Tests) about test doubles is:"
+    options:
+      - A) Use as many mocks as possible to achieve full isolation
+      - B) Avoid all test doubles and use integration tests instead
+      - C) Place doubles at interfaces your code defines — not at third-party library boundaries
+      - D) Use fakes in unit tests and mocks in integration tests
+    answer: 2
+    hint: Own the seam you mock.
+    explanation: |-
+      Freeman & Pryce's core rule: doubles belong at interfaces your code owns and defines. This keeps the test honest — you are testing your code's behaviour, not your assumption about a third-party dependency's behaviour.

@@ -1,0 +1,147 @@
+lesson: ai-observability-and-drift
+questions:
+  - id: aod-001
+    type: single
+    difficulty: easy
+    q: "AI observability is the discipline of:"
+    options:
+      - A) Measuring LLM training dataset quality
+      - B) Seeing what an LLM-integrated system actually does in production — across inputs, outputs, context, costs, latencies, and eval signals — and knowing when behaviour drifts
+      - C) Monitoring GPU utilisation during inference
+      - D) Evaluating model architecture choices
+    answer: 1
+    hint: Production truth for LLM systems.
+    explanation: |-
+      AI observability extends classic observability (logs, metrics, traces) with three new signals: prompt/response logs, evals-as-signal (quality checks on live traffic), and drift metrics. Together they answer: what is the system doing, how good is it, and is it changing?
+
+  - id: aod-002
+    type: single
+    difficulty: medium
+    q: "The three new observability signals unique to LLM systems (beyond classic logs/metrics/traces) are:"
+    options:
+      - A) Tokens, embeddings, fine-tune runs
+      - B) Evals-as-signal, prompt/response logs, drift metrics
+      - C) CPU, memory, latency
+      - D) Datasets, model versions, inference endpoints
+    answer: 1
+    hint: |-
+      The three legs of the AI observability stool.
+    explanation: |-
+      LLM observability adds: prompt/response logs (full assembled prompt + full output), evals-as-signal (running quality checks on a sample of live traffic), and drift metrics (detecting shifts in input, output, and quality score distributions over time).
+
+  - id: aod-003
+    type: single
+    difficulty: easy
+    q: "The three inseparable roles in AI observability are:"
+    options:
+      - A) Developer, QA, operations
+      - B) The eval is the contract; the trace is the evidence; the drift metric is the alarm
+      - C) Prompt, model, output
+      - D) Latency, cost, accuracy
+    answer: 1
+    hint: Contract + evidence + alarm.
+    explanation: |-
+      These three roles are inseparable: the eval defines what quality means (contract), the trace captures what the system actually did (evidence), and the drift metric tells you when quality is changing (alarm). Missing any leg leaves the observability structure incomplete.
+
+  - id: aod-004
+    type: single
+    difficulty: medium
+    q: "Input distribution drift in an LLM system means:"
+    options:
+      - A) The model's weights have changed
+      - B) The statistical distribution of queries from users is shifting over time — types of questions, vocabulary, languages are changing
+      - C) The system's inference latency is increasing
+      - D) The retrieval corpus is becoming outdated
+    answer: 1
+    hint: The questions people ask are changing.
+    explanation: |-
+      Input distribution drift occurs when the real user queries in production shift away from the distribution the system was evaluated on. Queries that were rare become common, new topics appear, user vocabulary changes. The system may not have been evaluated on the new distribution.
+
+  - id: aod-005
+    type: single
+    difficulty: hard
+    q: "Why are input, output, and judge-score distributions described as 'shifting independently'?"
+    options:
+      - A) They are measured by different tools
+      - B) Each can drift without the others drifting — input changes don't automatically produce output changes, and output changes don't automatically change eval scores
+      - C) They are stored in separate databases
+      - D) Different teams own each signal
+    answer: 1
+    hint: Three independent dimensions of drift.
+    explanation: |-
+      Input distribution can shift (different query types) without immediately degrading outputs. Output distribution can shift (different answer styles or lengths) without changing eval scores. Judge scores can drift (quality degradation) even when input and output distributions look stable. Each requires independent monitoring.
+
+  - id: aod-006
+    type: single
+    difficulty: medium
+    q: "Evals-as-signal (eval-in-prod) applies which discipline to production quality?"
+    options:
+      - A) Load testing methodology
+      - B) The chaos engineering scientific method — define steady state, observe, alert on deviation
+      - C) Database migration management
+      - D) A/B testing statistics
+    answer: 1
+    hint: |-
+      Define healthy, observe, alert on change.
+    explanation: |-
+      Eval-in-prod applies the chaos engineering method to quality: define steady state (expected eval score distribution), run evals on sampled production traffic, and alert when scores deviate. The eval becomes a continuous production health check, not a one-time pre-deployment gate.
+
+  - id: aod-007
+    type: single
+    difficulty: easy
+    q: "Prompt/response logging in production means capturing:"
+    options:
+      - A) Only the user's raw query
+      - B) Only the model's final output
+      - C) The fully assembled prompt (including system prompt, retrieved context, conversation history) and the complete model output
+      - D) Only error responses
+    answer: 2
+    hint: |-
+      Full assembled prompt — everything the model saw.
+    explanation: |-
+      Prompt/response logs capture the full assembled prompt (system prompt + injected context + conversation history + user query) and the full output. This is the evidence needed to diagnose why a specific response was produced — and to detect when system prompts or retrieved context are behaving unexpectedly.
+
+  - id: aod-008
+    type: single
+    difficulty: hard
+    q: "Cost-as-signal in AI observability means treating inference cost increases as:"
+    options:
+      - A) A budget management concern only
+      - B) A potential quality signal — unexpected cost spikes may indicate longer outputs, more tool calls, or retrieval anomalies
+      - C) A hardware procurement trigger
+      - D) A sign that the model needs fine-tuning
+    answer: 1
+    hint: |-
+      Unexpectedly longer responses or more tool calls = something changed.
+    explanation: |-
+      If average inference cost per request suddenly increases, it may indicate: responses are getting longer (possible quality regression), more tool calls per turn (agentic loop behaviour change), or retrieval returning more chunks (configuration drift). Cost is a cheap leading indicator of structural changes.
+
+  - id: aod-009
+    type: single
+    difficulty: medium
+    q: "A team with evals but no traces is missing:"
+    options:
+      - A) The ability to measure aggregate quality
+      - B) The evidence layer — when an eval fails, they cannot trace back to what the model actually received and produced
+      - C) The ability to deploy the LLM system
+      - D) Monitoring for cost overruns
+    answer: 1
+    hint: |-
+      Evals tell you something is wrong; traces tell you why.
+    explanation: |-
+      Evals tell you that quality dropped. Without traces, you cannot investigate why — you cannot see what prompt the model received, what context was retrieved, or what the full output was for the failing case. Traces are the evidence that makes eval failures actionable.
+
+  - id: aod-010
+    type: single
+    difficulty: hard
+    q: "Refusal-rate monitoring in AI observability detects:"
+    options:
+      - A) Model API downtime
+      - B) Shifts in how often the model declines to answer, which can indicate prompt drift, policy changes, or adversarial traffic
+      - C) Network latency increases
+      - D) Whether the model is generating valid JSON
+    answer: 1
+    hint: |-
+      More refusals or fewer refusals than baseline = something changed.
+    explanation: |-
+      Unexpected changes in refusal rate are a quality signal. A spike in refusals may mean: the system prompt changed, a new user population is probing for jailbreaks, a model update tightened safety constraints, or prompt injection is triggering safety filters. Stable refusal rate is part of the quality steady state.

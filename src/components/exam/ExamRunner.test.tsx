@@ -8,6 +8,7 @@ function makeQuestions(n: number): QuizQuestion[] {
   return Array.from({ length: n }, (_, i) => ({
     id: `q-${i + 1}`,
     type: 'single' as const,
+    difficulty: 'medium' as const,
     q: `What is question ${i + 1}?`,
     options: ['Alpha', 'Beta', 'Gamma', 'Delta'],
     answer: 0,

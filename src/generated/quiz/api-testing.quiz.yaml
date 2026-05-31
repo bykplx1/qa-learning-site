@@ -2,6 +2,7 @@ lesson: api-testing
 questions:
   - id: at-001
     type: single
+    difficulty: easy
     q: "401 vs 403:"
     options:
       - A) Same thing
@@ -10,10 +11,10 @@ questions:
       - D) 403 = not found
     answer: 1
     hint: Authentication vs authorization.
-    explanation: 401 = identity unknown/invalid; 403 = identity known, action
-      denied. See [[#HTTP Status Quick Map]].
+    explanation: 401 = identity unknown/invalid; 403 = identity known, action denied.
   - id: at-002
     type: single
+    difficulty: easy
     q: "Idempotent method:"
     options:
       - A) POST
@@ -22,10 +23,10 @@ questions:
       - D) None
     answer: 1
     hint: Re-run same result.
-    explanation: PUT replaces resource — repeat = same state. POST creates new each
-      call. See [[#Test Categories]].
+    explanation: PUT replaces resource — repeat = same state. POST creates new each call.
   - id: at-003
     type: single
+    difficulty: easy
     q: 'Status code for "rate limited":'
     options:
       - A) 400
@@ -34,9 +35,10 @@ questions:
       - D) 503
     answer: 2
     hint: Too Many Requests.
-    explanation: 429 signals client exceeded rate limit. See [[#HTTP Status Quick Map]].
+    explanation: 429 signals client exceeded rate limit.
   - id: at-004
     type: single
+    difficulty: easy
     q: "Best place to validate response shape:"
     options:
       - A) Manual eyeball
@@ -45,10 +47,10 @@ questions:
       - D) Type-only check
     answer: 1
     hint: Spec-driven.
-    explanation: Schema validates types + required fields automatically; catches
-      drift. See [[#Response Checks]].
+    explanation: Schema validates types + required fields automatically; catches drift.
   - id: at-005
     type: single
+    difficulty: easy
     q: "IDOR bug found via API testing means:"
     options:
       - A) Image overflow
@@ -57,10 +59,10 @@ questions:
       - D) CSRF
     answer: 1
     hint: Insecure Direct Object Reference.
-    explanation: Endpoint trusts client-supplied ID without ownership check. See
-      [[#Common Bugs Found]].
+    explanation: Endpoint trusts client-supplied ID without ownership check.
   - id: at-006
     type: single
+    difficulty: easy
     q: "Why test API below UI:"
     options:
       - A) UI mandatory
@@ -69,10 +71,10 @@ questions:
       - D) UI deprecated
     answer: 1
     hint: Test pyramid.
-    explanation: API tests fast, deterministic, catch logic without browser
-      overhead. See [[#Why API Testing]].
+    explanation: API tests fast, deterministic, catch logic without browser overhead.
   - id: at-007
     type: single
+    difficulty: easy
     q: "422 typically means:"
     options:
       - A) Auth failed
@@ -81,10 +83,10 @@ questions:
       - D) Cache miss
     answer: 2
     hint: Unprocessable Entity.
-    explanation: Body parsed OK but values violate business rules. See [[#HTTP
-      Status Quick Map]].
+    explanation: Body parsed OK but values violate business rules.
   - id: at-008
     type: single
+    difficulty: medium
     q: "Bearer token sent in:"
     options:
       - A) Body
@@ -93,9 +95,10 @@ questions:
       - D) Cookie only
     answer: 1
     hint: "`Authorization: Bearer <token>`."
-    explanation: Standard placement; avoids URL leakage in logs. See [[#Auth Patterns]].
+    explanation: Standard placement; avoids URL leakage in logs.
   - id: at-009
     type: single
+    difficulty: medium
     q: "Newman is:"
     options:
       - A) Browser
@@ -104,9 +107,10 @@ questions:
       - D) Schema linter
     answer: 1
     hint: CI for collections.
-    explanation: Newman runs Postman collections headless in pipelines. See [[#Tools]].
+    explanation: Newman runs Postman collections headless in pipelines.
   - id: at-010
     type: single
+    difficulty: medium
     q: "Schema drift means:"
     options:
       - A) Server moved
@@ -116,9 +120,9 @@ questions:
     answer: 1
     hint: Contract broken.
     explanation: Field added/removed/renamed without versioning breaks consumers.
-      See [[#Common Bugs Found]].
   - id: at-011
     type: single
+    difficulty: medium
     q: "Negative API test example:"
     options:
       - A) Valid login → 200
@@ -127,10 +131,10 @@ questions:
       - D) Schema valid
     answer: 1
     hint: Bad input expected.
-    explanation: Negative tests verify error handling and status codes. See [[#Test
-      Categories]].
+    explanation: Negative tests verify error handling and status codes.
   - id: at-012
     type: single
+    difficulty: medium
     q: "Pact tool is for:"
     options:
       - A) Load testing
@@ -139,9 +143,10 @@ questions:
       - D) Mock browser
     answer: 1
     hint: Provider–consumer contracts.
-    explanation: Pact pins integration shape between services. See [[#Tools]].
+    explanation: Pact pins integration shape between services.
   - id: at-013
     type: single
+    difficulty: medium
     q: "Best status for successful DELETE without body:"
     options:
       - A) 200
@@ -150,10 +155,10 @@ questions:
       - D) 404
     answer: 2
     hint: No Content.
-    explanation: 204 signals success with empty body — common for DELETE. See
-      [[#HTTP Status Quick Map]].
+    explanation: 204 signals success with empty body — common for DELETE.
   - id: at-014
     type: single
+    difficulty: medium
     q: "Test data strategy preferred:"
     options:
       - A) Shared mutable fixture
@@ -162,10 +167,10 @@ questions:
       - D) Manual setup each run
     answer: 1
     hint: Isolation.
-    explanation: Per-test data avoids order dependence and pollution. See [[#Best
-      Practices]].
+    explanation: Per-test data avoids order dependence and pollution.
   - id: at-015
     type: single
+    difficulty: medium
     q: "mTLS uses:"
     options:
       - A) Username
@@ -174,9 +179,10 @@ questions:
       - D) IP only
     answer: 1
     hint: Mutual TLS.
-    explanation: Both sides present certs — strong identity. See [[#Auth Patterns]].
+    explanation: Both sides present certs — strong identity.
   - id: at-016
     type: single
+    difficulty: hard
     q: "502 vs 504:"
     options:
       - A) Same
@@ -185,10 +191,10 @@ questions:
       - D) 502 redirect
     answer: 1
     hint: Upstream errors.
-    explanation: 502 = invalid upstream response; 504 = upstream didn't reply in
-      time. See [[#HTTP Status Quick Map]].
+    explanation: 502 = invalid upstream response; 504 = upstream didn't reply in time.
   - id: at-017
     type: single
+    difficulty: hard
     q: "Concurrency test on API checks:"
     options:
       - A) UI rendering
@@ -197,9 +203,10 @@ questions:
       - D) DNS
     answer: 1
     hint: Two writers same resource.
-    explanation: Parallel writes reveal lock/version bugs. See [[#Test Categories]].
+    explanation: Parallel writes reveal lock/version bugs.
   - id: at-018
     type: single
+    difficulty: hard
     q: "OpenAPI is:"
     options:
       - A) Open-source UI lib
@@ -208,10 +215,10 @@ questions:
       - D) Browser
     answer: 1
     hint: YAML/JSON spec.
-    explanation: OpenAPI describes endpoints, schemas — basis for contract
-      validation. See [[#Test Categories]].
+    explanation: OpenAPI describes endpoints, schemas — basis for contract validation.
   - id: at-019
     type: single
+    difficulty: hard
     q: "PUT with same payload twice on same resource should:"
     options:
       - A) Create two
@@ -220,9 +227,10 @@ questions:
       - D) Return 201 each
     answer: 1
     hint: Idempotent.
-    explanation: PUT idempotency = repeated identical state. See [[#Test Categories]].
+    explanation: PUT idempotency = repeated identical state.
   - id: at-020
     type: single
+    difficulty: hard
     q: "Smoke API test focuses on:"
     options:
       - A) Edge cases
@@ -231,7 +239,4 @@ questions:
       - D) Security fuzzing
     answer: 1
     hint: Quick health check.
-    explanation: |-
-      Smoke verifies core endpoints up after deploy. See [[#Best Practices]].
-
-      ---
+    explanation: Smoke verifies core endpoints up after deploy.

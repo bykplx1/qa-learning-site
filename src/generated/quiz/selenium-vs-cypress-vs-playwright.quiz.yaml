@@ -1,0 +1,151 @@
+lesson: selenium-vs-cypress-vs-playwright
+questions:
+  - id: scvp-001
+    type: single
+    difficulty: easy
+    q: "Selenium's architectural bet is on:"
+    options:
+      - A) In-browser ergonomics and direct DOM access
+      - B) Protocol stability — WebDriver is a W3C standard
+      - C) Out-of-process control with cheap browser contexts
+      - D) React-specific component testing
+    answer: 1
+    hint: |-
+      A 2018 test has a strong chance of running in 2030.
+    explanation: |-
+      Selenium bets on the W3C WebDriver protocol, meaning tests written today are likely to remain valid for years. Its value proposition is long-term compatibility over ergonomic or performance optimisations.
+
+  - id: scvp-002
+    type: single
+    difficulty: medium
+    q: "Cypress's architectural advantage is:"
+    options:
+      - A) Multi-tab and multi-origin support
+      - B) Running the test inside the same JavaScript context as the application — enabling low-latency command retry and direct DOM access
+      - C) Native iOS and Android automation
+      - D) Out-of-process browser control
+    answer: 1
+    hint: |-
+      Same JS context = no cross-process communication latency.
+    explanation: |-
+      Cypress runs tests in the browser alongside the application, in the same JavaScript event loop. This enables synchronous-feeling command retry, direct DOM and window access, and low-latency assertions — at the cost of the cross-origin and multi-tab constraints that come with the iframe model.
+
+  - id: scvp-003
+    type: single
+    difficulty: medium
+    q: "Playwright's primary architectural bet is on:"
+    options:
+      - A) In-browser ergonomics
+      - B) Protocol stability and legacy compatibility
+      - C) Out-of-process control with first-class isolation — browser contexts are cheap, parallel, and fully isolated
+      - D) Python-first automation
+    answer: 2
+    hint: |-
+      Browser contexts are cheap — parallel isolation by default.
+    explanation: |-
+      Playwright bets on out-of-process control (CDP/BiDi protocol) with isolation by default. Browser contexts are lightweight, fast to create, and fully isolated. Parallelism and multi-tab/multi-origin support are first-class, without the cross-origin constraints of the Cypress iframe model.
+
+  - id: scvp-004
+    type: single
+    difficulty: hard
+    q: "The Cypress iframe model's primary constraint is:"
+    options:
+      - A) Tests run slowly due to iframe overhead
+      - B) Cross-origin navigation and multi-tab testing are structurally difficult
+      - C) Cypress cannot test React applications
+      - D) Cypress does not support TypeScript
+    answer: 1
+    hint: |-
+      Same-origin policy applies inside the iframe.
+    explanation: |-
+      Cypress runs the app inside an iframe, which means cross-origin navigation (e.g., OAuth flows that redirect to a third-party domain) and multi-tab interactions are constrained by the same-origin policy. These use cases require workarounds or are simply impossible.
+
+  - id: scvp-005
+    type: single
+    difficulty: easy
+    q: "When multi-tab or multi-origin testing is required, the structurally correct tool is:"
+    options:
+      - A) Selenium WebDriver
+      - B) Cypress
+      - C) Playwright
+      - D) All three support it equally
+    answer: 2
+    hint: |-
+      Playwright browser contexts handle this natively.
+    explanation: |-
+      Playwright's browser context model supports multiple tabs and cross-origin navigation natively. Selenium can handle this with driver switching. Cypress's iframe architecture makes multi-tab and cross-origin flows structurally difficult.
+
+  - id: scvp-006
+    type: single
+    difficulty: medium
+    q: "The correct question to ask when selecting a browser automation tool is:"
+    options:
+      - A) Which tool has the most stars on GitHub?
+      - B) Which architectural constraints match the project's constraints — team language, multi-tab needs, CI parallelism, dashboard requirements?
+      - C) Which tool is fastest on a benchmark?
+      - D) Which tool does the most popular tutorial use?
+    answer: 1
+    hint: |-
+      Architectural fit before feature comparison.
+    explanation: |-
+      Tool selection should start with constraints: Does the app use OAuth with cross-origin redirects? Do we need multi-tab? What languages does the team know? How does the CI parallelize? Feature lists become relevant only after constraints eliminate candidates.
+
+  - id: scvp-007
+    type: single
+    difficulty: medium
+    q: "Selenium's biggest weakness compared to Playwright and Cypress is:"
+    options:
+      - A) Lack of multi-browser support
+      - B) No TypeScript support
+      - C) Ergonomics — verbose setup, manual waits, less built-in auto-retry — leading to more flaky tests without careful discipline
+      - D) Cannot run in CI
+    answer: 2
+    hint: |-
+      The protocol is stable; the ergonomics require more discipline.
+    explanation: |-
+      Selenium's WebDriver protocol requires explicit waits and more setup boilerplate. Without disciplined use of explicit waits and proper synchronisation, Selenium suites are more prone to timing-based flakiness than Playwright or Cypress, which have built-in auto-wait/retry semantics.
+
+  - id: scvp-008
+    type: single
+    difficulty: hard
+    q: "Playwright's browser context differs from an incognito window because:"
+    options:
+      - A) Browser contexts cannot share cookies
+      - B) Browser contexts are lightweight OS-level processes, not just cookie/storage isolation — they share the browser process but are fully isolated
+      - C) Browser contexts only work in Chromium
+      - D) Browser contexts are the same as iframes
+    answer: 1
+    hint: |-
+      Cheap, isolated, parallel — not a full browser process.
+    explanation: |-
+      A Playwright browser context is an isolated environment within a browser instance — separate cookies, localStorage, auth state — without the overhead of a separate browser process. This makes parallel test isolation cheap enough to use per-test rather than per-suite.
+
+  - id: scvp-009
+    type: single
+    difficulty: medium
+    q: "For a team that needs to run browser automation in Java with long-term tool stability, the appropriate choice is:"
+    options:
+      - A) Cypress — it has the best ergonomics
+      - B) Playwright — it is the most modern
+      - C) Selenium — the W3C protocol and multi-language bindings make it the long-term stable choice
+      - D) All three support Java equally well
+    answer: 2
+    hint: |-
+      Java + long-term stability points to the tool with a W3C standard and mature Java bindings.
+    explanation: |-
+      Selenium has first-class Java bindings and is backed by the W3C WebDriver standard. For Java teams with a need for long-term test suite stability, Selenium is the architecturally correct choice even if Playwright or Cypress would be ergonomically superior in other contexts.
+
+  - id: scvp-010
+    type: single
+    difficulty: hard
+    q: "Why is 'which tool is best?' the wrong question when comparing Selenium, Cypress, and Playwright?"
+    options:
+      - A) All three tools are equivalent and the choice does not matter
+      - B) Because the three tools represent different architectural bets — the right choice depends on project constraints, not a universal ranking
+      - C) Because tool selection should be determined by popularity metrics
+      - D) Because all three will be deprecated within five years
+    answer: 1
+    hint: |-
+      Different architectural bets = no universal ranking.
+    explanation: |-
+      Selenium bets on protocol stability, Cypress bets on in-browser ergonomics, Playwright bets on out-of-process isolation. Each bet wins under different constraints. There is no universally superior tool — only the right tool for the specific combination of team, project, and architectural requirements.

@@ -1,0 +1,151 @@
+lesson: cicd-for-testing
+questions:
+  - id: cft-001
+    type: single
+    difficulty: easy
+    q: "The core framing principle for CI pipelines in testing is:"
+    options:
+      - A) CI is a deployment tool for operations teams
+      - B) Treat the CI pipeline as the production environment for your test suite
+      - C) CI should run only after manual QA sign-off
+      - D) CI pipelines replace exploratory testing
+    answer: 1
+    hint: |-
+      A test that does not run in CI is an aspiration, not a test.
+    explanation: |-
+      Treating CI as the production environment for tests means applying the same discipline — reliability, hermeticity, signal quality — that you would apply to production systems. A test that does not run in CI is an aspiration, not a test.
+
+  - id: cft-002
+    type: single
+    difficulty: medium
+    q: "A hermetic test is one that:"
+    options:
+      - A) Only runs on Linux
+      - B) Runs in complete isolation — it creates all its own dependencies and cleans up after itself
+      - C) Uses real production data
+      - D) Always takes less than one second
+    answer: 1
+    hint: |-
+      Self-contained — no shared mutable state with other tests.
+    explanation: |-
+      Hermeticity means the test controls all its inputs and produces no side effects that affect other tests. Hermetic tests are order-independent, parallel-safe, and reproducible in any environment.
+
+  - id: cft-003
+    type: single
+    difficulty: easy
+    q: "Test flakiness in a CI pipeline is most harmful because:"
+    options:
+      - A) It makes the pipeline slower
+      - B) Teams learn to ignore failures — 'probably nothing' — hiding real bugs
+      - C) It increases licence costs for CI tooling
+      - D) Flaky tests cannot be fixed without rewriting them
+    answer: 1
+    hint: |-
+      Trust is the pipeline's primary asset.
+    explanation: |-
+      A flaky pipeline trains engineers to dismiss failures. Once the habit of "just retry it" is established, real failures get dismissed along with flakes — eroding the pipeline's value as a signal.
+
+  - id: cft-004
+    type: single
+    difficulty: medium
+    q: "The test pyramid's guidance for CI pipeline structure is:"
+    options:
+      - A) Run E2E tests first for fastest feedback
+      - B) Run fastest, cheapest tests first — fail fast on unit/lint, reserve slow tests for later stages
+      - C) Run all tests in parallel with no ordering
+      - D) Run manual tests before automated ones
+    answer: 1
+    hint: |-
+      Fail fast — widest, cheapest signal first.
+    explanation: |-
+      Structure the pipeline from fastest feedback to slowest: lint → unit → integration → E2E. A linting failure costs seconds; failing an E2E suite after 10 minutes delays the same feedback. Early stages act as filters.
+
+  - id: cft-005
+    type: single
+    difficulty: medium
+    q: "A Docker-based test environment improves CI reliability primarily by:"
+    options:
+      - A) Making tests faster due to containerisation overhead
+      - B) Ensuring the test environment is identical across developer machines, CI, and staging
+      - C) Replacing the need for test data management
+      - D) Automatically parallelising test execution
+    answer: 1
+    hint: |-
+      Consistency eliminates 'works on my machine' failures.
+    explanation: |-
+      Docker containers pin the OS, runtime versions, and dependencies. This eliminates environment divergence — the same image runs on every developer's machine and in CI, removing a large class of "works on my machine" failures.
+
+  - id: cft-006
+    type: single
+    difficulty: hard
+    q: "Canary deployment in the context of CI/CD for testing means:"
+    options:
+      - A) Running tests on a canary build in CI before merge
+      - B) Routing a small percentage of real traffic to the new version to observe production behaviour before full rollout
+      - C) Using the fastest test subset as a pre-merge gate
+      - D) A colour-coded CI dashboard
+    answer: 1
+    hint: |-
+      Shift-right — testing in production with real traffic.
+    explanation: |-
+      Canary deployment routes a small fraction of real traffic to the new version. Any regressions visible only under real load, real data, or real user behaviour surface early and can be rolled back before full traffic is shifted.
+
+  - id: cft-007
+    type: single
+    difficulty: easy
+    q: "A failing CI build should cause the team to:"
+    options:
+      - A) Retry until it passes
+      - B) Stop, diagnose the root cause, and fix it before merging
+      - C) Merge anyway if the failure is in a non-critical test
+      - D) Disable the failing test temporarily
+    answer: 1
+    hint: |-
+      A broken build is a stop signal, not a suggestion.
+    explanation: |-
+      The CI pipeline's value is as a blocking signal. Bypassing it — retrying, skipping, or ignoring failures — defeats the purpose. Stop, diagnose, fix, and verify the fix before proceeding.
+
+  - id: cft-008
+    type: single
+    difficulty: medium
+    q: "JUnit XML is significant in CI/CD because:"
+    options:
+      - A) It is the only format that supports test retry logic
+      - B) It is the lingua franca — almost every CI tool parses it and produces test result dashboards from it
+      - C) It is required by GitHub Actions
+      - D) It includes screenshot attachments
+    answer: 1
+    hint: |-
+      Write once, parsed everywhere — the test report lingua franca.
+    explanation: |-
+      JUnit XML is the de facto standard for test result interchange. GitHub Actions, Jenkins, GitLab CI, and most CI systems parse it to produce pass/fail counts, test history, and flakiness detection — regardless of what test framework produced it.
+
+  - id: cft-009
+    type: single
+    difficulty: hard
+    q: "Test parallelisation in CI reduces wall-clock time but introduces which risk?"
+    options:
+      - A) Tests run less deterministically under parallelism
+      - B) Tests that share mutable state or produce side effects can interfere with each other, causing order-dependent failures
+      - C) Parallel tests use more CPU, increasing cost
+      - D) GitHub Actions does not support parallel test jobs
+    answer: 1
+    hint: |-
+      Shared mutable state + concurrency = non-determinism.
+    explanation: |-
+      Parallel test execution exposes hidden state sharing. Tests that look independent when run serially can fail non-deterministically when run simultaneously if they share a database, file, or other mutable resource. Hermeticity is the prerequisite for safe parallelisation.
+
+  - id: cft-010
+    type: single
+    difficulty: medium
+    q: "A pre-merge CI gate vs a post-merge CI check differ in:"
+    options:
+      - A) The types of tests they can run
+      - B) When feedback is available — pre-merge catches issues on the developer's branch before they reach the main branch
+      - C) The CI tool required
+      - D) Whether Docker can be used
+    answer: 1
+    hint: |-
+      Pre-merge = shift-left; post-merge = shift-right.
+    explanation: |-
+      Pre-merge gates (required status checks) block merges on failure — feedback before the change lands in main. Post-merge checks (e.g., scheduled integration or E2E suites) catch issues visible only after integration but too slow for every PR. Both have a place; only one blocks the merge.

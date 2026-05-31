@@ -8,7 +8,7 @@ export const quizQuestionSchema = z.object({
   answer: z.union([z.number().int().nonnegative(), z.array(z.number().int().nonnegative())]),
   hint: z.string().optional(),
   explanation: z.string().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
   tags: z.array(z.string().min(1)).optional(),
 });
 

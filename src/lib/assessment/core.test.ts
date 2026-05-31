@@ -6,6 +6,7 @@ function makeQuestion(answer: number | number[]): QuizQuestion {
   return {
     id: 'q-001',
     type: Array.isArray(answer) ? 'multi' : 'single',
+    difficulty: 'medium' as const,
     q: 'Test question',
     options: ['A) A', 'B) B', 'C) C', 'D) D'],
     answer,

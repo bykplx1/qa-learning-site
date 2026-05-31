@@ -2,6 +2,7 @@ lesson: accessibility-testing
 questions:
   - id: at-001
     type: single
+    difficulty: easy
     q: WCAG POUR =
     options:
       - A) Perceivable, Operable, Understandable, Robust
@@ -10,10 +11,10 @@ questions:
       - D) None
     answer: 0
     hint: Four principles.
-    explanation: POUR is mnemonic for the WCAG 4 principles. See [[#WCAG Principles
-      (POUR)]].
+    explanation: POUR is mnemonic for the WCAG 4 principles.
   - id: at-002
     type: single
+    difficulty: easy
     q: "Common legal target conformance level:"
     options:
       - A) A
@@ -22,9 +23,10 @@ questions:
       - D) AAAA
     answer: 1
     hint: Middle.
-    explanation: AA is widely required (ADA, EAA). See [[#Conformance Levels]].
+    explanation: AA is widely required (ADA, EAA).
   - id: at-003
     type: single
+    difficulty: easy
     q: "Min contrast ratio for normal text:"
     options:
       - A) 2:1
@@ -33,10 +35,10 @@ questions:
       - D) 7:1
     answer: 2
     hint: WCAG 1.4.3.
-    explanation: Normal text needs 4.5:1; large text 3:1. See [[#Key WCAG Criteria
-      (AA highlights)]].
+    explanation: Normal text needs 4.5:1; large text 3:1.
   - id: at-004
     type: single
+    difficulty: easy
     q: "Best practice for clickable element:"
     options:
       - A) `<div onclick>`
@@ -45,10 +47,10 @@ questions:
       - D) `<a href="#">`
     answer: 1
     hint: Native semantics.
-    explanation: "`<button>` is keyboard + screen reader accessible by default. See
-      [[#ARIA Rules]]."
+    explanation: "`<button>` is keyboard + screen reader accessible by default."
   - id: at-005
     type: single
+    difficulty: easy
     q: "ARIA first rule:"
     options:
       - A) Always add ARIA
@@ -57,9 +59,10 @@ questions:
       - D) ARIA needed on every element
     answer: 1
     hint: No ARIA is best ARIA.
-    explanation: Native elements ship correct semantics + behavior. See [[#ARIA Rules]].
+    explanation: Native elements ship correct semantics + behavior.
   - id: at-006
     type: single
+    difficulty: easy
     q: "Screen reader for Mac:"
     options:
       - A) NVDA
@@ -68,9 +71,10 @@ questions:
       - D) TalkBack
     answer: 2
     hint: Built into macOS/iOS.
-    explanation: VoiceOver is Apple's built-in SR. See [[#Testing Methods]].
+    explanation: VoiceOver is Apple's built-in SR.
   - id: at-007
     type: single
+    difficulty: easy
     q: "axe-core covers what % of issues:"
     options:
       - A) 100%
@@ -79,10 +83,10 @@ questions:
       - D) None
     answer: 1
     hint: Automation limit.
-    explanation: Many issues need human judgment (alt quality, focus order). See
-      [[#Testing Methods]].
+    explanation: Many issues need human judgment (alt quality, focus order).
   - id: at-008
     type: single
+    difficulty: medium
     q: "Tab key purpose:"
     options:
       - A) Insert tab character
@@ -91,10 +95,10 @@ questions:
       - D) Close modal
     answer: 1
     hint: Focus traversal.
-    explanation: Tab moves focus forward through interactive elements. See [[#Manual
-      Test Checklist]].
+    explanation: Tab moves focus forward through interactive elements.
   - id: at-009
     type: single
+    difficulty: medium
     q: "Decorative image alt:"
     options:
       - A) Description
@@ -103,10 +107,10 @@ questions:
       - D) Filename
     answer: 1
     hint: Empty alt.
-    explanation: Empty alt tells SR to skip purely decorative images. See [[#Manual
-      Test Checklist]].
+    explanation: Empty alt tells SR to skip purely decorative images.
   - id: at-010
     type: single
+    difficulty: medium
     q: "Modal accessibility need:"
     options:
       - A) Auto-close after 2s
@@ -115,9 +119,10 @@ questions:
       - D) Always full screen
     answer: 1
     hint: Focus management.
-    explanation: Trap inside modal, restore on close. See [[#Manual Test Checklist]].
+    explanation: Trap inside modal, restore on close.
   - id: at-011
     type: single
+    difficulty: medium
     q: "WCAG 2.1.1 (Keyboard) requires:"
     options:
       - A) Touch only
@@ -126,10 +131,10 @@ questions:
       - D) Voice only
     answer: 1
     hint: Keyboard access.
-    explanation: All UI must be keyboard-operable. See [[#Key WCAG Criteria (AA
-      highlights)]].
+    explanation: All UI must be keyboard-operable.
   - id: at-012
     type: single
+    difficulty: medium
     q: "Color alone for meaning:"
     options:
       - A) Allowed
@@ -138,10 +143,10 @@ questions:
       - D) AAA only
     answer: 1
     hint: Color blind users.
-    explanation: Color cannot be sole signal — pair with text/shape. See [[#Manual
-      Test Checklist]].
+    explanation: Color cannot be sole signal — pair with text/shape.
   - id: at-013
     type: single
+    difficulty: medium
     q: "Heading order rule:"
     options:
       - A) Random
@@ -150,9 +155,10 @@ questions:
       - D) h6 first
     answer: 1
     hint: Logical hierarchy.
-    explanation: Skipping levels breaks SR navigation. See [[#Common Issues]].
+    explanation: Skipping levels breaks SR navigation.
   - id: at-014
     type: single
+    difficulty: medium
     q: "ARIA live region used for:"
     options:
       - A) Static text
@@ -161,10 +167,10 @@ questions:
       - D) Color
     answer: 1
     hint: SR announce.
-    explanation: "`aria-live` regions notify SR of changes (e.g., toasts). See
-      [[#Manual Test Checklist]]."
+    explanation: "`aria-live` regions notify SR of changes (e.g., toasts)."
   - id: at-015
     type: single
+    difficulty: medium
     q: "Focus visible requirement:"
     options:
       - A) Optional
@@ -173,10 +179,10 @@ questions:
       - D) Never
     answer: 1
     hint: Outline/ring.
-    explanation: Sighted keyboard users must see focus. See [[#Key WCAG Criteria (AA
-      highlights)]].
+    explanation: Sighted keyboard users must see focus.
   - id: at-016
     type: single
+    difficulty: hard
     q: "Animations + accessibility:"
     options:
       - A) Always required
@@ -185,9 +191,10 @@ questions:
       - D) Faster better
     answer: 1
     hint: Vestibular disorders.
-    explanation: Reduce motion when user has set preference. See [[#Common Issues]].
+    explanation: Reduce motion when user has set preference.
   - id: at-017
     type: single
+    difficulty: hard
     q: "Lighthouse a11y score is:"
     options:
       - A) Definitive
@@ -196,9 +203,10 @@ questions:
       - D) Manual replacement
     answer: 1
     hint: Automation limit.
-    explanation: Lighthouse spots subset; manual still needed. See [[#Testing Methods]].
+    explanation: Lighthouse spots subset; manual still needed.
   - id: at-018
     type: single
+    difficulty: hard
     q: "WCAG R = Robust means:"
     options:
       - A) Works with assistive tech / parsers
@@ -207,10 +215,10 @@ questions:
       - D) Mobile
     answer: 0
     hint: Compatible.
-    explanation: Robust = compatible with current/future assistive tech. See [[#WCAG
-      Principles (POUR)]].
+    explanation: Robust = compatible with current/future assistive tech.
   - id: at-019
     type: single
+    difficulty: hard
     q: "Form input must have:"
     options:
       - A) Border
@@ -219,9 +227,10 @@ questions:
       - D) Auto-focus
     answer: 1
     hint: Name, Role, Value.
-    explanation: Label associates name to field for SR. See [[#Manual Test Checklist]].
+    explanation: Label associates name to field for SR.
   - id: at-020
     type: single
+    difficulty: hard
     q: "Section 508 is:"
     options:
       - A) US federal accessibility law
@@ -230,9 +239,4 @@ questions:
       - D) Browser
     answer: 0
     hint: US gov.
-    explanation: >-
-      US federal regulation requiring accessible IT. See [[#Accessibility
-      Testing]].
-
-
-      ---
+    explanation: US federal regulation requiring accessible IT.
