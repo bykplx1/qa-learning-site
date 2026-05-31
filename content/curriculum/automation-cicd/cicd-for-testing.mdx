@@ -1,8 +1,17 @@
 ---
 slug: cicd-for-testing
-title: CI/CD for Testing
+title: CI/CD for Testing — GitHub Actions from Zero to Green
 cluster: automation-cicd
 layer: systems
+kind: tool
+verified:
+  tool: GitHub Actions
+  versions:
+    "actions/checkout": "v4"
+    "actions/setup-node": "v4"
+    "actions/upload-artifact": "v4"
+    node: ">=22.12.0"
+  date: "2026-05-31"
 prerequisites:
   - unit-integration-e2e-boundaries
   - mocking-stubbing-test-doubles
@@ -12,10 +21,8 @@ related:
   - api-testing
   - defect-lifecycle-and-bug-reporting
   - test-management-tools
-  - functional-execution/test-planning-cases-and-scenarios
-  - functional-execution/unit-integration-e2e-boundaries
-  - functional-execution/test-types-smoke-sanity-regression-uat
-tags: [ci-cd, github-actions, jenkins, docker, hermeticity, flakiness, test-reporting]
+  - test-planning-cases-and-scenarios
+tags: [ci-cd, github-actions, docker, hermeticity, flakiness, test-reporting]
 estimatedEncodingMinutes: 25
 ---
 
@@ -23,6 +30,7 @@ import Diagram from '../../../src/components/mdx/Diagram.astro';
 import Prompt from '../../../src/components/mdx/Prompt.astro';
 import PracticeTask from '../../../src/components/mdx/PracticeTask.astro';
 import Feynman from '../../../src/components/mdx/Feynman.astro';
+import Maintain from '../../../src/components/mdx/Maintain.astro';
 
 ## Core Idea
 
@@ -34,7 +42,102 @@ The companion truth: retries hide flakes; quarantine surfaces them. A pipeline w
 
 > CI is the production environment for tests. A test suite without hermeticity, artefacts, reporting, and a flakiness budget is not a safety net — it is a suggestion.
 
-## Diagram
+## 1. Set up
+
+Everything from an empty repository to a first green CI run with a real test suite.
+
+**Prerequisites:** A GitHub repository, Node ≥ 22.12.0, a terminal.
+
+### Create the project and test suite
+
+```bash
+mkdir ci-runbook && cd ci-runbook
+npm init -y
+npm install --save-dev vitest
+```
+
+Create `src/add.ts`:
+
+```ts
+export function add(a: number, b: number): number {
+  return a + b;
+}
+```
+
+Create `src/add.test.ts`:
+
+```ts
+import { expect, test } from 'vitest';
+import { add } from './add';
+
+test('add returns the sum', () => {
+  expect(add(2, 3)).toBe(5);
+});
+```
+
+Verify it passes locally:
+
+```bash
+npx vitest run
+```
+
+Expected output:
+
+```
+ ✓ src/add.test.ts (1)
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Duration  ~300ms
+```
+
+### Create the GitHub Actions workflow
+
+Create `.github/workflows/ci.yml` in the repository root:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Unit tests
+        run: npx vitest run
+```
+
+Push this to GitHub. The workflow triggers on the next push or pull request and the `unit` job turns green.
+
+### Folder tree
+
+```
+ci-runbook/
+├── .github/
+│   └── workflows/
+│       └── ci.yml          ← the workflow
+├── src/
+│   ├── add.ts
+│   └── add.test.ts
+└── package.json
+```
+
+> Pin `actions/checkout` and `actions/setup-node` to a major version tag (`@v4`). Floating to `@main` exposes your workflow to supply-chain compromise — the action runs inside your repo's context with access to your secrets. Major-version tags are the practical minimum; commit-hash pinning is the high-assurance alternative.
 
 <Diagram caption="CI pipeline gate topology: three stages, five jobs, and the disciplines each job enforces — based on this site's actual ci.yml">
 ```
@@ -71,9 +174,9 @@ FLAKINESS POLICY (healthy pipeline):
 ```
 </Diagram>
 
-## Worked Example
+## 2. Implement + best practice
 
-The following is drawn from this repository's `.github/workflows/ci.yml`. Walk through each structural decision.
+The following patterns are drawn from this repository's `.github/workflows/ci.yml`. Walk through each structural decision.
 
 ### Stage 1: The fast-feedback loop
 
@@ -82,14 +185,11 @@ unit:
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        token: ${{ secrets.VAULT_PAT }}
     - uses: actions/setup-node@v4
       with:
         node-version: '22'
         cache: 'npm'          # built-in cache: cold install → minutes; warm → seconds
-    - run: npm ci --legacy-peer-deps
+    - run: npm ci
     - name: Unit tests
       run: npm test
 ```
@@ -159,7 +259,7 @@ visual:
       if: ${{ inputs.update_visual_baselines == true }}
       run: npm run test:visual:update
 
-    - name: Upload regenerated baselines artifact
+    - name: Upload regenerated baselines artefact
       if: ${{ always() && inputs.update_visual_baselines == true }}
       uses: actions/upload-artifact@v4
       with:
@@ -186,7 +286,7 @@ lhci:
 
 The Lighthouse-CI job audits against score budgets (perf ≥ 70 mobile / 85 desktop · a11y ≥ 95 · SEO ≥ 95). If a PR pushes LCP above the budgeted threshold, the job fails and the PR cannot merge. This is the perf-test mechanism most teams claim to want and never actually wire up — configuring the tool without enforcing it produces advisory output that no one acts on.
 
-## Common Pitfalls
+## 3. Common pitfalls
 
 - **No artefact upload on failure.** The report that uploads `if: success()` is useless. The failure is the only time you need the traces, screenshots, and logs. Fix: always upload on `if: always()` for every test report. This happens because the default in most pipelines is success-only, and teams don't notice the gap until the first hard-to-reproduce failure.
 
@@ -201,6 +301,50 @@ The Lighthouse-CI job audits against score budgets (perf ≥ 70 mobile / 85 desk
 - **Lighthouse-CI configured but not enforced.** A Lighthouse budget that is "informational only" is worse than no budget — it trains the team to ignore the output. Fix: wire Lighthouse-CI as a required status check on the branch protection rule. An advisory gate that is never acted on is noise, and noise degrades the signal value of the whole CI run.
 
 - **Floating action versions.** `actions/checkout@main` means a supply-chain compromise of that action runs in your repo's context — with access to your secrets. Fix: pin to a major version tag (`@v4`) as a minimum; pin to a commit hash for highest-assurance repositories. Floating is a quiet security risk, not a convenience.
+
+## 4. Maintain
+
+<div role="list" aria-label="Maintenance triggers and responses">
+<Maintain trigger="A pinned action version (e.g. actions/checkout@v4) releases a new major version">
+  1. Read the migration guide — major bumps often add required input changes or deprecate runner options.
+  2. Update the `uses:` reference in every workflow file that references the action.
+  3. Run the pipeline end-to-end on a draft PR before merging to main.
+  4. Update the `verified.versions` block and `verified.date` in frontmatter.
+  5. Do not float to `@main` even temporarily — use the new pinned tag from the first commit.
+</Maintain>
+
+<Maintain trigger="A flaky test starts blocking merges (retries exhausted in CI)">
+  1. Check the uploaded Playwright report artefact from the failing run — open the trace to find the exact millisecond of failure.
+  2. If the flake is environmental (runner jitter, cold DB start), confirm `retries: 1` is set and the service health-check options are present.
+  3. If the flake is test-code (race condition, shared state), diagnose root cause from the trace before touching retry counts.
+  4. Move the test to a quarantine job (`continue-on-error: true`, runs but doesn't block merge) while the fix is in progress.
+  5. Set a calendar reminder: quarantine tests that are not fixed within 30 days must be deleted or replaced.
+  6. Never raise the retry count above 2 as a "fix" — it masks the root cause and slows the pipeline.
+</Maintain>
+
+<Maintain trigger="Visual baselines consistently fail in CI after a Playwright version bump">
+  1. Confirm the Playwright version changed — this always invalidates baselines regardless of code changes.
+  2. Trigger a baseline regeneration via `workflow_dispatch` with `update_visual_baselines=true` on the same PR as the version bump.
+  3. Download the regenerated baselines artefact and commit it to the repo.
+  4. Never regenerate baselines from a local machine — cross-OS font rendering produces diffs that are artefacts of the environment, not the code.
+  5. This repo pins `@playwright/test` at `1.59.1` specifically to freeze the Chromium bundle and prevent baseline drift between runs.
+</Maintain>
+
+<Maintain trigger="The integration job fails with database connection errors on a fresh runner">
+  1. Check the `services:` health-check options — `--health-interval` and `--health-retries` control how long the runner waits for Postgres to be ready.
+  2. If the DB container is slow to start (common on cold runners), increase `--health-retries` from 5 to 10.
+  3. Confirm the `DATABASE_URL` env var matches the `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and port values in the `services:` block exactly.
+  4. Do not fall back to a shared dev database — the hermeticity of the per-job container is the point.
+</Maintain>
+
+<Maintain trigger="A Lighthouse-CI budget gate starts failing after a dependency upgrade">
+  1. Run Lighthouse locally against the production build (`npm run build && npx lhci autorun`) to reproduce.
+  2. Open the HTML report — identify which audit is failing and by how much.
+  3. If the regression is real (a genuine perf or a11y regression introduced by the upgrade), fix the root cause before merging.
+  4. If the budget is now unreachably strict (e.g. a new framework version adds unavoidable JS weight), adjust the budget values in `lighthouserc.json` in the same PR — with a comment explaining why.
+  5. Never mark the gate advisory to work around a failure — advisory gates are noise.
+</Maintain>
+</div>
 
 ## Retrieval Prompts
 
