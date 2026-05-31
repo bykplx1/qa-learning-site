@@ -488,6 +488,164 @@ export const rubrics = {
     ],
   },
 
+  // ---------------------------------------------------------------------------
+  // perf track rubrics (starter / mid / capstone)
+  // ---------------------------------------------------------------------------
+
+  /** perf track — Starter: first k6 load test against QuickPizza */
+  'perf-starter': {
+    id: 'perf-starter',
+    label: 'Perf Starter: First k6 Load Test',
+    rows: [
+      {
+        id: 'thresholds',
+        criterion: 'Threshold definition',
+        band: [
+          'No thresholds defined — script runs but never fails.',
+          'One threshold present (e.g. error rate only) with no percentile budget.',
+          'At least two thresholds defined: one on `http_req_failed` and one on a duration percentile.',
+          'Two or more thresholds with values justified in the README (explains what p(95) means and why that budget was chosen).',
+        ],
+      },
+      {
+        id: 'endpoint_coverage',
+        criterion: 'Endpoint coverage',
+        band: [
+          'Only one endpoint called — no variety in the load pattern.',
+          'Two endpoints called but both use identical request options.',
+          'Two distinct endpoints with appropriate HTTP methods and request bodies where required.',
+          'Two or more endpoints with realistic request bodies, headers, and a `sleep` think-time between iterations.',
+        ],
+      },
+      {
+        id: 'runability',
+        criterion: 'Single-command runability',
+        band: [
+          'Cannot run — missing install step or k6 not mentioned.',
+          'Runs after undocumented manual setup steps.',
+          'Runs with `k6 run script.js`; README lists prerequisites and k6 version.',
+          'Runs with one command from a clean clone; README includes expected summary output and threshold pass/fail indicators.',
+        ],
+      },
+      {
+        id: 'analysis',
+        criterion: 'Results interpretation',
+        band: [
+          'No explanation of results — raw k6 output pasted without comment.',
+          'README notes whether thresholds passed or failed but nothing more.',
+          'README explains what the key metrics mean (p(95), error rate) in plain language.',
+          'README explains metrics, identifies the slowest endpoint, and states what a threshold breach would mean for users.',
+        ],
+      },
+    ],
+  },
+
+  /** perf track — Mid: scenario-based suite with thresholds in CI */
+  'perf-mid': {
+    id: 'perf-mid',
+    label: 'Perf Mid: Scenario Suite with CI Gate',
+    rows: [
+      {
+        id: 'scenarios',
+        criterion: 'Scenario modelling',
+        band: [
+          'No scenarios — single default function with one VU count.',
+          'Two named scenarios defined but both use the same executor type.',
+          'Two named scenarios using distinct executors (e.g. constant-vus + ramping-vus) reflecting different traffic shapes.',
+          'Two or more scenarios with distinct executors, per-scenario tags, and a README explanation of what traffic pattern each models.',
+        ],
+      },
+      {
+        id: 'per_scenario_thresholds',
+        criterion: 'Per-scenario threshold scoping',
+        band: [
+          'Thresholds are global only — not scoped to individual scenarios.',
+          'Thresholds reference scenario names but the tag filter is missing or incorrect.',
+          'At least one threshold correctly scoped per scenario using the tag filter.',
+          'Each scenario has its own duration percentile and error-rate threshold, correctly scoped and verified to trigger on a synthetic breach.',
+        ],
+      },
+      {
+        id: 'ci_gate',
+        criterion: 'CI threshold enforcement',
+        band: [
+          'No CI configuration.',
+          'CI runs k6 but does not fail the job on threshold breach.',
+          'CI runs k6 and fails the job when k6 exits non-zero (i.e. threshold breached).',
+          'CI fails on breach + uploads summary artifact + README documents a test confirming the gate works (e.g. deliberate threshold tightening).',
+        ],
+      },
+      {
+        id: 'repo_url',
+        criterion: 'Public repo as artifact',
+        band: [
+          'No public repo submitted.',
+          'Repo exists but README is missing or empty.',
+          'Repo with README explaining how to run locally and what each scenario covers.',
+          'Repo with README + green CI badge + commit history showing iterative threshold tuning.',
+        ],
+      },
+    ],
+  },
+
+  /** perf track — Capstone: performance budget gate with load/stress/soak analysis */
+  'perf-capstone': {
+    id: 'perf-capstone',
+    label: 'Perf Capstone: Performance Budget Gate',
+    rows: [
+      {
+        id: 'test_type_coverage',
+        criterion: 'Load pattern variety',
+        band: [
+          'Only one load pattern (e.g. load only) — stress and soak absent.',
+          'Two load patterns present but findings not distinguished in the writeup.',
+          'All three patterns (load, stress, soak) present with separate scripts and distinct findings per pattern.',
+          'All three patterns with a per-pattern analysis documenting the specific failure mode each revealed and its production implication.',
+        ],
+      },
+      {
+        id: 'centralised_budget',
+        criterion: 'Centralised performance budget',
+        band: [
+          'Thresholds duplicated across scripts — no single source of truth.',
+          'Thresholds partially extracted but some scripts still have inline values.',
+          'All thresholds imported from a shared budget module; one change propagates everywhere.',
+          'Shared budget module with inline comments explaining each threshold value and the data that justified it.',
+        ],
+      },
+      {
+        id: 'ci_green',
+        criterion: 'Green CI budget gate on submitted repo',
+        band: [
+          'No CI or CI is red.',
+          'CI exists but green status not verifiable (private repo or broken badge).',
+          'Public repo with green CI badge confirmed at submission time; pipeline fails on threshold breach.',
+          'Public repo + green CI badge + HTML report artifact uploaded + pipeline verified to fail on a synthetic threshold breach.',
+        ],
+      },
+      {
+        id: 'perf_analysis',
+        criterion: 'Performance analysis writeup',
+        band: [
+          'No analysis — raw k6 output only.',
+          'Baseline metrics listed but no interpretation or SLO discussion.',
+          'Baseline table + stress ceiling + soak findings documented; at least one threshold relaxation justified with data.',
+          'Full analysis: baseline, stress ceiling, soak findings, at least one data-justified threshold change, and a concrete SLO recommendation with rationale.',
+        ],
+      },
+      {
+        id: 'engineering_decisions',
+        criterion: 'Engineering decision documentation',
+        band: [
+          'No design decisions recorded.',
+          'README describes how to run tests but not why design choices were made.',
+          'README covers one key decision (e.g. why Docker vs live site, which executor for which scenario).',
+          'README covers multiple decisions + identifies one thing the author would do differently on a second pass, and why.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',

@@ -1,0 +1,67 @@
+---
+slug: perf-starter-quickpizza
+title: "Perf Starter: First k6 Load Test on QuickPizza"
+tier: starter
+track: perf
+target:
+  name: "QuickPizza (Grafana Labs)"
+  ref: "https://quickpizza.grafana.com — purpose-built k6 demo API; see drift note below"
+estimate: 2–3 hr
+rubric: perf-starter
+requiredConcepts:
+  - performance-testing
+acceptanceCriteria:
+  - You install k6 and run `k6 run script.js` to get a passing result with no threshold failures.
+  - Your script sends load to at least two distinct endpoints (e.g. GET /api/pizza and POST /api/pizza/recommendations).
+  - You define at least two thresholds — one on `http_req_failed` and one on a percentile of `http_req_duration`.
+  - Your README explains how to run the script from a clean clone in one command and what the thresholds mean.
+---
+
+## Brief
+
+Install k6 from scratch and run your first real load test against
+[QuickPizza](https://quickpizza.grafana.com) — Grafana Labs' purpose-built
+practice API for k6. You'll exercise a REST API under simulated concurrent load
+without any tutorial scaffolding.
+
+The lesson teaches you how k6 works. This project makes you use it on a target
+that doesn't accommodate guessing.
+
+> **Drift notice.** QuickPizza is maintained by Grafana Labs as an official k6
+> demo target. It has been stable, but it is an externally hosted service. If
+> an endpoint changes between now and when you run this, update your script and
+> note the change in your README — that investigation is part of the exercise.
+> Alternatively, you can run QuickPizza locally:
+> `docker run -p 3333:3333 grafana/quickpizza-local` and point `baseURL` at
+> `http://localhost:3333`.
+
+## Suggested approach
+
+1. Install k6: `brew install k6` (macOS), `choco install k6` (Windows), or via the [official install docs](https://k6.io/docs/get-started/installation/).
+2. Create `script.js` (or `script.ts` with k6's TypeScript bundle) with a `baseURL` pointing at `https://quickpizza.grafana.com`.
+3. Write a `default` function that calls at least two endpoints. Suggested pair:
+   - `GET /api/pizza` — retrieves a random pizza recommendation
+   - `POST /api/pizza/recommendations` with a JSON body — generates a recommendation with preferences
+4. Add a `sleep(1)` between iterations (k6 best practice — simulates real user think-time).
+5. Define an `options` block with:
+   - `vus: 5` and `duration: '30s'` for the load profile
+   - A threshold: `http_req_failed: ['rate<0.01']` (less than 1% error rate)
+   - A threshold: `http_req_duration: ['p(95)<500']` (95th percentile under 500 ms)
+6. Run `k6 run script.js` and paste the summary table into your README.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- contains a `package.json` or `README.md` listing the k6 version used
+- has a script that passes consistently against the live site
+- has a README with a one-command run instruction, the threshold definitions, and a brief explanation of what p(95) means
+
+## Why this matters
+
+Every k6 script you'll ever write starts exactly here: an options block, a
+default function, and the question "what threshold makes sense for this
+endpoint?" Getting this right once — choosing a meaningful percentile, picking
+an error-rate budget — saves you a week of debates with your team about what
+"fast enough" means.
+
+The lesson covers the API. This brief covers the judgment.
