@@ -16,6 +16,7 @@ interface PagefindResult {
 interface PagefindInstance {
   search: (query: string) => Promise<{ results: PagefindResult[] }>;
   init?: () => Promise<void>;
+  __devStub?: boolean;
 }
 
 function SearchModalInner() {
@@ -38,9 +39,13 @@ function SearchModalInner() {
     try {
       const path = '/pagefind/' + 'pagefind.js';
       const pf = (await import(/* @vite-ignore */ path)) as PagefindInstance;
-      if (pf.init) await pf.init();
-      pagefindRef.current = pf;
-      setReady(true);
+      if (pf.__devStub) {
+        // Dev stub: index not built — leave ready=false so the UI shows the dev notice
+      } else {
+        if (pf.init) await pf.init();
+        pagefindRef.current = pf;
+        setReady(true);
+      }
     } catch {
       // Not available in dev mode — index is generated at build time
     } finally {

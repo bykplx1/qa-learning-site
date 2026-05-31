@@ -32,6 +32,8 @@ const baseFrontmatterSchema = z.object({
   estimatedEncodingMinutes: z.number().int().positive(),
   kind: z.literal('tool').optional(),
   verified: verifiedBlockSchema.optional(),
+  updatedAt: z.coerce.date().optional(),
+  reviewedAt: z.coerce.date().optional(),
 });
 
 export const curriculumFrontmatterSchema = baseFrontmatterSchema

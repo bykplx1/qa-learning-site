@@ -54,6 +54,9 @@ const showBlock = needsMoreReviews && !override;
 
 const cluster = clusterRows[0]?.cluster ?? null;
 const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : '/review';
+
+// Pass as a plain boolean prop — never expose the key itself to the island.
+const showGapPrompt = process.env.FEATURE_AI_GAP_PROMPT === '1';
 ---
 
 <BaseLayout title={`Explain: ${topicTitle} — QA Learning`} description="Feynman self-explanation exercise." noindex>
@@ -104,6 +107,7 @@ const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : 
           client:load
           conceptSlug={slug}
           wordTarget={150}
+          showGapPrompt={showGapPrompt}
         />
       </div>
     )}

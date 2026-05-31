@@ -7,10 +7,14 @@ interface Heading {
 
 interface Props {
   headings: Heading[];
+  appendHeadings?: Heading[];
 }
 
-const { headings } = Astro.props;
-const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const { headings, appendHeadings = [] } = Astro.props;
+const tocHeadings = [
+  ...headings.filter((h) => h.depth === 2 || h.depth === 3),
+  ...appendHeadings,
+];
 ---
 
 {tocHeadings.length > 0 && (

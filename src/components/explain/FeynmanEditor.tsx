@@ -326,7 +326,7 @@ function FeynmanEditorInner({
           className="block mb-1.5"
           style={{ fontSize: 13, color: 'var(--ink-2)' }}
         >
-          Write your explanation below. Aim for ~{wordTarget} words.
+          Write your explanation below. {wordTarget} words required to submit.
         </label>
         <textarea
           id="feynman-body"
@@ -352,7 +352,7 @@ function FeynmanEditorInner({
           <span>
             {wc} / {wordTarget} words
           </span>
-          {targetMet && <span>Target reached</span>}
+          {targetMet ? <span>Ready to submit</span> : <span>{wordTarget - wc} more to go</span>}
         </div>
       </div>
 
@@ -360,6 +360,8 @@ function FeynmanEditorInner({
         type="submit"
         className="btn btn--primary"
         disabled={!targetMet}
+        aria-disabled={!targetMet}
+        title={!targetMet ? `${wordTarget - wc} more word${wordTarget - wc === 1 ? '' : 's'} needed` : undefined}
         data-testid="feynman-submit"
       >
         Submit explanation
