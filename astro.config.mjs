@@ -77,7 +77,29 @@ export default defineConfig({
       rehypePlugins: [...REHYPE_PLUGINS],
     }),
     react(),
-    sitemap({ filter: (page) => !page.includes('/api/') && !page.includes('/dev/') }),
+    sitemap({
+      filter: (page) => {
+        const url = new URL(page);
+        const p = url.pathname;
+        if (p.startsWith('/api/')) return false;
+        if (p.startsWith('/dev/')) return false;
+        if (p.startsWith('/fixtures/')) return false;
+        if (p === '/profile' || p === '/profile/') return false;
+        if (p.startsWith('/me/')) return false;
+        if (p === '/review' || p === '/review/') return false;
+        if (p.startsWith('/explain')) return false;
+        return true;
+      },
+      customPages: [
+        'https://qa-learning-site.vercel.app/projects/api-contract-suite/',
+        'https://qa-learning-site.vercel.app/projects/e2e-capstone-saucedemo/',
+        'https://qa-learning-site.vercel.app/projects/e2e-mid-restful-booker/',
+        'https://qa-learning-site.vercel.app/projects/e2e-starter-the-internet/',
+        'https://qa-learning-site.vercel.app/projects/flaky-test-hunter/',
+        'https://qa-learning-site.vercel.app/projects/full-stack-qa-pipeline/',
+        'https://qa-learning-site.vercel.app/projects/qa-foundations-field-report/',
+      ],
+    }),
     sitemapAliasIntegration(),
     wikilinksIntegration(),
     ogImagesIntegration(),

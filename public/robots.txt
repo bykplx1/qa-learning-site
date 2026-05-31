@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /dev/
+Disallow: /fixtures/
 
 Sitemap: https://qa-learning-site.vercel.app/sitemap-index.xml

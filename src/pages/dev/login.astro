@@ -14,7 +14,7 @@ const current = getTestSession(Astro.request.headers);
 const secretConfigured = Boolean(import.meta.env.TEST_LOGIN_SECRET ?? process.env.TEST_LOGIN_SECRET);
 ---
 
-<BaseLayout title="Test login (dev/preview only)">
+<BaseLayout title="Test login (dev/preview only)" noindex>
   <main class="prose" style="max-width: 720px; margin: 0 auto; padding: 2rem 1rem;">
     <h1>Test login</h1>
     <p style="color: var(--ink-3);">

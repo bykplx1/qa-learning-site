@@ -19,6 +19,8 @@ interface Props {
   ogType?: 'website' | 'article';
   /** Path or absolute URL of the OG/Twitter image. Resolved against Astro.site. */
   image?: string;
+  /** Emit noindex,nofollow robots meta (private/dev/auth-gated pages). */
+  noindex?: boolean;
 }
 
 const {
@@ -27,6 +29,7 @@ const {
   canonicalUrl = Astro.url.href,
   ogType = 'website',
   image = '/og/default.png',
+  noindex = false,
 } = Astro.props;
 
 const imageUrl = new URL(image, Astro.site ?? Astro.url).href;
@@ -58,6 +61,7 @@ const navLinks = [
 
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonicalUrl} />
 
     <!-- Open Graph -->

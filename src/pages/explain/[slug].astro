@@ -56,7 +56,7 @@ const cluster = clusterRows[0]?.cluster ?? null;
 const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : '/review';
 ---
 
-<BaseLayout title={`Explain: ${topicTitle} — QA Learning`} description="Feynman self-explanation exercise.">
+<BaseLayout title={`Explain: ${topicTitle} — QA Learning`} description="Feynman self-explanation exercise." noindex>
   <main class="explain-page">
     <header class="explain-page__head">
       <span class="eyebrow">feynman · self-explanation</span>
