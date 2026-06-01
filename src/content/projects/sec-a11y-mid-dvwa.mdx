@@ -1,0 +1,104 @@
+---
+slug: sec-a11y-mid-dvwa
+title: "Sec+A11y Mid: Authenticated CI Scan on DVWA"
+tier: mid
+track: sec-a11y
+target:
+  name: "Damn Vulnerable Web Application (DVWA)"
+  ref: "Docker image vulnerables/web-dvwa pinned at tag latest-2024 — github.com/digininja/DVWA; see drift note"
+estimate: 1 day
+rubric: sec-a11y-mid
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - You run DVWA locally from a pinned Docker image tag and your README records the exact tag used.
+  - Your CI workflow starts DVWA, performs an authenticated login before scanning (Playwright or ZAP context), and runs both an axe scan and a ZAP baseline (passive) scan against authenticated pages.
+  - The CI job fails on new findings above a threshold and passes when only baselined findings are present; the allowlist has a per-entry justification.
+  - You demonstrate that the scan covers at least one authenticated page not reachable without a logged-in session.
+  - You submit a public repo URL with README, CI pipeline explanation, and green CI badge.
+---
+
+## Brief
+
+Build an **authenticated** combined accessibility and security CI scan against
+[DVWA](https://github.com/digininja/DVWA). The mid tier adds two new
+challenges beyond the starter: first, CI automation with a baseline gate;
+second, scanning pages that sit *behind authentication* — the bulk of most
+real web apps.
+
+DVWA's authenticated pages (the SQL Injection, XSS, CSRF, and File Upload
+exercises) have forms with varying accessibility: some have labels, some rely
+on placeholder text, some have no label at all. Getting axe to scan them
+requires a real login session, which means your Playwright script (or your ZAP
+context definition) must handle the login flow before any scan begins. That
+authenticated-context setup is the transferable skill: almost every production
+security and accessibility audit needs it.
+
+> **Drift notice.** Use the pinned tag `vulnerables/web-dvwa:latest-2024`.
+> Start the container: `docker run --rm -d -p 8080:80 vulnerables/web-dvwa:latest-2024`.
+> Log in with `admin` / `password`; set DVWA Security to **Low** via
+> `http://localhost:8080/security.php` before running scans. Record the exact
+> tag and security level in your README. If the tag is unavailable, use the
+> most recent dated tag from Docker Hub and note the substitution.
+
+## Suggested approach
+
+1. **Start and configure DVWA.** Run the Docker command above, wait for the
+   login page at `http://localhost:8080/login.php`, then set the security
+   level to Low. In CI, automate this setup step: DVWA provides a
+   `setup.php` page (`/setup.php`, click "Create / Reset Database") that
+   initialises the DB and returns to the login page.
+
+2. **Authenticated axe scan.** Write a Playwright spec that:
+   - Navigates to `/login.php` and submits the `admin`/`password` credentials.
+   - Scans at least three post-login pages with `AxeBuilder.analyze()`:
+     `/index.php` (dashboard), `/vulnerabilities/sqli/`, `/vulnerabilities/xss_r/`.
+   - Writes violations to a JSON file committed as a CI artifact.
+
+3. **Authenticated ZAP baseline.** Provide ZAP a logged-in context by
+   either replaying session cookies or using ZAP's context XML. A minimal
+   approach: capture the session cookie from the Playwright login step and
+   pass it to ZAP via the `-z "-config replacer.full_list(0).description=session ..."` flag.
+   Then run the baseline:
+   ```
+   docker run --rm --network host \
+     -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-baseline.py -t http://localhost:8080/index.php \
+     -c zap-baseline.conf -r zap-report.html -J zap-report.json
+   ```
+
+4. **Gate the build.** Fail the CI job on axe violations not in the axe
+   baseline JSON, and on ZAP FAIL-level findings not in `zap-baseline.conf`.
+   Upload both reports with `if: always()`.
+
+5. **Build the baseline.** Run the scans once against the pinned image.
+   Commit the known findings into the allowlist with per-entry justifications,
+   e.g. `# DVWA intentionally uses unsafe-inline script for training purpose`.
+
+6. **Verify authenticated coverage.** Your README must describe how you
+   confirmed the scan reached authenticated pages — for example, by checking
+   ZAP's site tree for URLs behind the login, or by confirming the axe report
+   references `/vulnerabilities/` paths.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- DVWA pinned to a specific image tag, started and configured (Low security) in CI
+- authenticated axe and ZAP baseline scans running on every push
+- a versioned baseline/allowlist with per-entry justification
+- evidence that the scan reached at least one authenticated page
+- reports uploaded as artifacts; README covering local run, pipeline, gate policy, and baseline refresh procedure
+- a green CI badge
+
+## Why this matters
+
+Most real applications are almost entirely behind authentication. A CI scan
+that only covers the login page and the landing screen protects very little.
+Getting a scanner into an authenticated context — handling session cookies,
+replaying credentials, or providing a ZAP context definition — is a necessary
+operational skill. DVWA is a safe, fully-controlled target for learning this:
+the credentials are public, the app is designed to be probed, and the
+deliberate vulnerabilities give you a realistic density of ZAP findings to
+baseline against.

@@ -1,0 +1,104 @@
+---
+slug: sec-a11y-starter-dvwa
+title: "Sec+A11y Starter: Accessibility & Security Baseline on DVWA"
+tier: starter
+track: sec-a11y
+target:
+  name: "Damn Vulnerable Web Application (DVWA)"
+  ref: "Docker image vulnerables/web-dvwa pinned at tag latest-2024 — github.com/digininja/DVWA; see drift note"
+estimate: 2–3 hr
+rubric: sec-a11y-starter
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - You run DVWA locally from the pinned Docker image and your README records the exact tag used.
+  - You run an automated accessibility scan (axe-core via @axe-core/cli or a Playwright script) against at least three distinct DVWA pages (e.g. login, the dashboard, and at least one feature page such as SQL Injection or XSS Reflected).
+  - You run an OWASP ZAP passive baseline scan against the same pages and export a report.
+  - You build a combined triage table grouping findings by severity and mapping each high/serious item to its WCAG success criterion or OWASP category.
+  - You identify at least one finding that is a likely false-positive or needs manual confirmation and explain why.
+  - Your README documents the exact commands (with tool versions) to reproduce both scans from a clean setup.
+---
+
+## Brief
+
+Run a combined accessibility and security baseline against
+[DVWA](https://github.com/digininja/DVWA) — the Damn Vulnerable Web
+Application, a PHP/MySQL app purpose-built for security training. It runs
+entirely in Docker, so you get a fully controlled target with no risk of
+accidentally testing a real system.
+
+DVWA is interesting for this brief not because of its security story (you will
+not be exploiting it — only running a passive scanner) but because its
+login form, navigation, and feature pages give you a realistic HTML surface to
+axe-scan: placeholder-only labels, unlabelled form controls, and low-contrast
+status text are common findings. Pairing that accessibility surface with a ZAP
+passive scan on the same pages teaches you to manage *two separate tool outputs
+at once* — which is always how audits work in practice.
+
+> **Drift notice.** DVWA is hosted on Docker Hub as `vulnerables/web-dvwa`.
+> The `:latest-2024` tag has been stable; tag dates are printed in the image
+> labels. If that tag is unavailable, use the most recent dated tag from
+> [Docker Hub](https://hub.docker.com/r/vulnerables/web-dvwa/tags) and record
+> the exact tag in your README. Start the container with:
+> `docker run --rm -d -p 8080:80 vulnerables/web-dvwa:latest-2024`
+> Log in with `admin` / `password` and set the security level to **Low** via
+> the DVWA Security menu before scanning — the low-security pages expose more
+> HTML surface.
+
+## Suggested approach
+
+1. **Start the target.** Run the Docker command above. Confirm the login page
+   loads at `http://localhost:8080/login.php`.
+
+2. **Pick three pages to scan.** Good candidates:
+   - `/login.php` — form with labels, error state
+   - `/index.php` — authenticated dashboard (you may need to run axe after
+     logging in via Playwright to scan authenticated pages)
+   - `/vulnerabilities/sqli/` or `/vulnerabilities/xss_r/` — a feature page
+     with a form
+
+3. **Accessibility scan (axe-core).** For unauthenticated pages, the CLI
+   works:
+   ```
+   npx @axe-core/cli http://localhost:8080/login.php
+   ```
+   For authenticated pages, write a short Playwright script that logs in
+   first, then calls `new AxeBuilder({ page }).analyze()` on each page.
+
+4. **ZAP passive baseline.** Run the passive scan — it observes traffic but
+   does not send attack payloads:
+   ```
+   docker run --rm -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-baseline.py -t http://localhost:8080/login.php -r zap-report.html
+   ```
+   Point it at each of your three pages in turn, or let it spider from the
+   root (add `-d` for debug output).
+
+5. **Combine and triage.** Build one table with columns: tool, finding,
+   severity, page, WCAG SC or OWASP category, suggested fix. Then flag at
+   least one finding you believe is a false positive or needs a human to
+   confirm — axe's `incomplete` category is a reliable source.
+
+6. **Document everything.** A `README.md` with the exact Docker commands,
+   tool versions, and one-command reproduction steps for each scan.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- starts DVWA from a pinned Docker tag and records it in the README
+- runs axe and ZAP passive scans against at least three pages
+- contains a combined triage table with WCAG/OWASP mapping per finding
+- flags at least one false-positive or needs-review finding with justification
+- has a README with pinned tool versions and reproduction steps
+
+## Why this matters
+
+DVWA's deliberate insecurity makes it a valuable teaching target, but that
+same characteristic means its pages are also full of accessibility problems
+(inaccessible error messages, unlabelled inputs, poor colour contrast on status
+indicators). Scanning both dimensions on the same pages — and then having to
+decide which findings are real, which are false positives, and which need a
+human to check — is exactly the judgment a triage step requires. The tool
+output is not the deliverable; the prioritised, explained findings table is.

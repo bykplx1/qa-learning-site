@@ -1,0 +1,103 @@
+---
+slug: sec-a11y-mid-webgoat
+title: "Sec+A11y Mid: CI Baseline Scan on OWASP WebGoat"
+tier: mid
+track: sec-a11y
+target:
+  name: "OWASP WebGoat"
+  ref: "Docker image webgoat/webgoat pinned at tag v2023.8 — github.com/WebGoat/WebGoat; see drift note"
+estimate: 1 day
+rubric: sec-a11y-mid
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - You run WebGoat locally from a pinned Docker image tag (not a live shared instance) and your README records the tag.
+  - Your CI workflow starts the target from the pinned image, health-checks it before scanning, then runs both an axe accessibility scan and an OWASP ZAP baseline (passive) scan.
+  - The CI job fails when new findings appear above a chosen severity threshold and passes when only baselined findings are present.
+  - A version-controlled baseline or allowlist captures the app's known pre-existing findings, with a short justification per entry.
+  - You submit a public repo URL with a README covering local run, the CI pipeline, and what the gate enforces.
+---
+
+## Brief
+
+Wire a combined accessibility + security CI scan against
+[OWASP WebGoat](https://github.com/WebGoat/WebGoat) — a deliberately insecure
+Spring Boot application maintained by OWASP to teach web-application security
+concepts. Unlike Juice Shop (a polished e-commerce SPA), WebGoat is a
+lesson-based app with dozens of small exercise pages, each targeting a
+different vulnerability category. That breadth makes it an interesting axe
+target: many lesson pages contain forms, tables, and inputs with varying
+degrees of accessibility.
+
+The mid project adds CI to what you did in the starter. The new challenge is
+the **baseline**: WebGoat has intentional security problems by design, so your
+scan will surface a long list of real findings that you do not want to block
+every build. Getting the allowlist right — known issues suppressed with a
+justification, new issues blocking — is the engineering judgment this project
+develops.
+
+> **Drift notice.** Pin the Docker image to a specific tag:
+> `docker run --rm -p 8080:8080 -p 9090:9090 webgoat/webgoat:v2023.8`.
+> WebGoat listens on port 8080 and the WebWolf companion on 9090 — you only
+> need to scan 8080. Use the `/login` page to register a test account.
+> `:latest` drifts; if you use a different tag, record it in your README and
+> expect finding counts in the baseline to differ.
+
+## Suggested approach
+
+1. **Run locally and pin.** Start the container with the pinned tag above.
+   Wait for the app: poll `http://localhost:8080/WebGoat/login` until it
+   returns 200 before proceeding. Register a test account via the UI.
+
+2. **Accessibility scan in CI.** Write a Playwright spec with
+   `@axe-core/playwright` that visits at least the login page,
+   the main lessons index (`/WebGoat/welcome`), and one lesson page. Output
+   violations to a JSON file.
+
+3. **ZAP passive baseline in CI.**
+   ```
+   docker run --rm --network host \
+     -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-baseline.py -t http://localhost:8080/WebGoat \
+     -c zap-baseline.conf -r zap-report.html -J zap-report.json
+   ```
+   The `-c zap-baseline.conf` file is your allowlist: mark known intentional
+   vulnerabilities as `IGNORE` or `WARN` (not `FAIL`) with a one-line comment
+   explaining each, e.g. `# WebGoat intentionally disables CSP for training`.
+
+4. **Gate the build.** Your CI job should:
+   - Fail if axe reports a violation not present in the committed axe baseline.
+   - Fail if ZAP reports a FAIL-level finding not in the allowlist.
+   - Upload both reports as artifacts with `if: always()`.
+
+5. **Build the baseline deliberately.** Run the scans once against the pinned
+   image, capture all findings, then commit only the ones that are *inherent to
+   WebGoat's deliberate design* into the allowlist with per-entry justifications.
+   Anything that looks like a real regression candidate should stay as a gate.
+
+6. **Prove the gate works.** Add a commit (or document a run) where you
+   inject a finding the baseline does not cover — for example, by adding a
+   deliberately unlabelled `<input>` to a fixture page or tightening one ZAP
+   rule — and confirm the build goes red.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- WebGoat pinned to a specific image tag, started and health-checked in CI
+- a CI workflow running axe and ZAP baseline scans on every push
+- a versioned baseline/allowlist with per-entry justification
+- reports uploaded as artifacts on success and failure
+- a README covering local run, the pipeline, the gate policy, and how to refresh the baseline
+- a green CI badge
+
+## Why this matters
+
+WebGoat's sheer number of lesson pages — each with its own form or table —
+makes it harder to write a tight axe baseline than a single-page app. You will
+need to decide which pages to cover, what axe violations are genuinely pre-
+existing and owned by the training app, and which ones would indicate a real
+regression if they appeared in a production codebase. That decision-making is
+the transferable skill: the same baseline judgment you practise here applies
+whenever a CI scan runs against an app that has some accepted technical debt.

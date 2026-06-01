@@ -1,0 +1,144 @@
+---
+slug: sec-a11y-capstone-dvwa
+title: "Sec+A11y Capstone: Full Audit with CI Gate on DVWA"
+tier: capstone
+track: sec-a11y
+target:
+  name: "Damn Vulnerable Web Application (DVWA)"
+  ref: "Docker image vulnerables/web-dvwa pinned at tag latest-2024 — github.com/digininja/DVWA; see drift note"
+estimate: 4–5 days
+rubric: sec-a11y-capstone
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - Your audit combines automated scans (ZAP full/active scan + axe) with a manual WCAG 2.2 AA pass (keyboard navigation, focus order, and a screen-reader smoke test) across the primary DVWA flows at Security level Low.
+  - You scan in an authenticated context — the session is programmatically obtained and all flows behind the login are covered by both security and accessibility scans.
+  - Every finding is labelled automated-caught vs manual-caught, mapped to its WCAG success criterion or OWASP category, and given a concrete code-level remediation recommendation.
+  - At least one finding is traced to its root cause and a proposed fix is verified by a re-scan (before/after evidence).
+  - CI runs the full audit (active ZAP scan + axe), gates on a versioned baseline, uploads reports as artifacts, and is demonstrated to fail on an injected high-severity regression.
+  - You submit a public repo URL with a green CI badge confirmed at submission time and attest CI is green.
+---
+
+## Brief
+
+Produce a portfolio-grade security and accessibility audit of
+[DVWA](https://github.com/digininja/DVWA) at Security level Low, gated in CI.
+DVWA is purpose-built to have real, exploitable vulnerabilities — SQL
+injection, XSS, CSRF, file upload, command injection — which means an active
+ZAP scan will surface genuine findings. Its sparse PHP UI also has a mix of
+accessibility quality: some pages have correctly labelled forms, others use
+placeholder-only labels or rely entirely on positional context.
+
+The challenge of auditing DVWA is prioritisation. An active scanner against
+a deliberately-broken app generates a lot of noise. The capstone deliverable
+should demonstrate that you can separate the signal — genuine findings with
+concrete remediations — from the expected training-app baseline, and that you
+can keep the whole thing reproducible behind a green CI gate.
+
+> **Drift notice.** Pin the image: `docker run --rm -d -p 8080:80 vulnerables/web-dvwa:latest-2024`.
+> Log in with `admin` / `password`; set Security to **Low** via
+> `http://localhost:8080/security.php`. Active ZAP scanning sends real attack
+> payloads — **only run it against a local container you control**. Record the
+> exact tag, security level, and target URL in your README. If the tag is
+> unavailable, substitute the most recent dated tag from Docker Hub and note
+> the change.
+
+## Suggested approach
+
+### Phase 1 — Scope & authenticated context (Day 1)
+
+1. Start the pinned container and configure it (Security = Low, database
+   initialised via `setup.php`). Define the audit scope:
+   - Login (`/login.php`)
+   - Dashboard (`/index.php`)
+   - At least four feature pages: SQL Injection (`/vulnerabilities/sqli/`),
+     XSS Reflected (`/vulnerabilities/xss_r/`), CSRF (`/vulnerabilities/csrf/`),
+     File Upload (`/vulnerabilities/upload/`)
+   Record what is **out of scope** (e.g. DVWA Admin panel pages, the brute-
+   force module if you choose not to include it) and why.
+
+2. Capture the authenticated context for ZAP: log in with Playwright, extract
+   the `PHPSESSID` and `security` cookies, and pass them to ZAP via the
+   replacer add-on or a ZAP context XML so authenticated pages are fully
+   covered.
+
+### Phase 2 — Automated security scan, active (Days 1–2)
+
+3. Run a ZAP **full/active** scan against the in-scope flows with the
+   authenticated context:
+   ```
+   docker run --rm --network host \
+     -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-full-scan.py -t http://localhost:8080 \
+     -r zap-full.html -J zap-full.json
+   ```
+   Expect ZAP to find SQL injection, reflected XSS, CSRF, and path traversal
+   — DVWA is designed for this. Triage the output by OWASP category and risk.
+
+4. Run `@axe-core/playwright` across all in-scope pages in an authenticated
+   session — every page behind the login, including feature pages after
+   interaction (e.g. a submitted SQL form showing results).
+
+### Phase 3 — Manual WCAG 2.2 AA pass (Days 2–3)
+
+5. Manual pass on the primary flows:
+   - **Keyboard only:** navigate from login through the dashboard to at least
+     two feature pages using only the keyboard. Record every trap and
+     unreachable control.
+   - **Focus order & visibility:** confirm focus indicators are visible
+     (SC 2.4.7) and focus order is logical when forms submit and errors appear.
+   - **Screen-reader smoke test:** with NVDA or VoiceOver, confirm form fields
+     are announced with their labels and error messages are associated with
+     their inputs. Note any cases where the screen reader reads the placeholder
+     text instead of a label.
+   - Map each manual finding to its WCAG SC.
+
+### Phase 4 — Triage, remediation & verification (Days 3–4)
+
+6. Build the consolidated findings register: source (automated-caught vs
+   manual-caught), severity, WCAG SC or OWASP category, evidence, and a
+   **concrete code-level remediation** (e.g. for an unlabelled input: the
+   exact `<label for="…">` addition; for reflected XSS: the `htmlspecialchars`
+   call in the PHP handler).
+
+7. Pick at least one finding, trace it to its root cause in the DVWA source
+   code (it is open source — you can read the PHP), propose a fix, apply it
+   to a local copy or fixture, and **re-scan to verify**. Include before/after
+   evidence.
+
+### Phase 5 — CI gate & packaging (Days 4–5)
+
+8. Wire the full audit into GitHub Actions: active ZAP scan + axe against the
+   pinned, health-checked container (set Security = Low in CI via the DVWA
+   setup endpoint), gated on a versioned baseline, reports uploaded as
+   artifacts (`if: always()`).
+
+9. Demonstrate the gate failing on an injected regression (commit history or
+   screenshots).
+
+10. Confirm CI is green before submitting. The `ci_green` rubric row is binary:
+    public repo + verifiable green badge, or it scores 0.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- automated (active ZAP + axe) **and** manual WCAG 2.2 AA findings, each labelled by source
+- an authenticated session used for all in-scope scans
+- a findings register with WCAG/OWASP mapping and code-level remediations
+- one finding root-caused, fixed in a local copy, and verified by before/after re-scan
+- a CI pipeline gating on a versioned baseline, uploading reports, and demonstrated to fail on a regression
+- a README covering scope, the pipeline, the triage policy, which image tag and security level was audited, and one thing you would do differently next time
+- a green CI badge confirmed at submission time
+
+## Why this matters
+
+DVWA is one of the few deliberately-vulnerable apps where you can read the
+source code of the vulnerabilities you find. That transparency makes it
+uniquely suited for capstone-level remediation work: instead of
+hypothesising what a fix would look like, you can inspect the actual PHP,
+understand why the input is unsanitised, write the fix, and verify it removes
+the finding. That closed loop — find, root-cause, fix, verify — is the
+core deliverable of a security and accessibility audit that a development
+team can actually act on.
