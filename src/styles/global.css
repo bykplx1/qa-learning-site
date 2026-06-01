@@ -1009,6 +1009,87 @@ mark {
 }
 
 /* ====================================================================
+   Overlay scrollbars — code blocks & overflow-x:auto containers (#513)
+   Hidden by default; appear on hover/focus; draggable; keyboard/trackpad
+   scroll unaffected. WebKit pseudo-elements + standard scrollbar-width/color
+   for Chromium+Firefox coverage. Tokens only — no hardcoded hex.
+   ==================================================================== */
+
+/* Firefox: thin scrollbar with transparent thumb by default.
+   scrollbar-color takes two values: thumb track.
+   color-mix keeps the thumb using the token hue but alpha-transparent. */
+.prose pre,
+.overflow-x-auto,
+[class*="overflow-x"] {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 200ms ease;
+}
+
+.prose pre:hover,
+.prose pre:focus-within,
+.overflow-x-auto:hover,
+.overflow-x-auto:focus-within,
+[class*="overflow-x"]:hover,
+[class*="overflow-x"]:focus-within {
+  scrollbar-color: color-mix(in oklch, var(--ink-3) 55%, transparent)
+                   color-mix(in oklch, var(--paper-3) 60%, transparent);
+}
+
+/* WebKit (Chromium, Safari): overlay-style thin scrollbar.
+   Height 0 → track invisible by default; thumb transparent until hover.
+   Transition on the thumb background gives the fade-in on hover. */
+.prose pre::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+[class*="overflow-x"]::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+  background: transparent;
+}
+
+.prose pre::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track,
+[class*="overflow-x"]::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.prose pre::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb,
+[class*="overflow-x"]::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+  transition: background 200ms ease;
+}
+
+/* Thumb becomes visible on hover/focus-within of the container.
+   The :has() selector lets parent hover affect the pseudo-element. */
+.prose pre:hover::-webkit-scrollbar-thumb,
+.prose pre:focus-within::-webkit-scrollbar-thumb,
+.overflow-x-auto:hover::-webkit-scrollbar-thumb,
+.overflow-x-auto:focus-within::-webkit-scrollbar-thumb,
+[class*="overflow-x"]:hover::-webkit-scrollbar-thumb,
+[class*="overflow-x"]:focus-within::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--ink-3) 55%, transparent);
+}
+
+.prose pre:hover::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto:hover::-webkit-scrollbar-thumb:hover,
+[class*="overflow-x"]:hover::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--ink-2) 70%, transparent);
+}
+
+/* Track visible on hover to give a grabbable area affordance */
+.prose pre:hover::-webkit-scrollbar-track,
+.prose pre:focus-within::-webkit-scrollbar-track,
+.overflow-x-auto:hover::-webkit-scrollbar-track,
+.overflow-x-auto:focus-within::-webkit-scrollbar-track,
+[class*="overflow-x"]:hover::-webkit-scrollbar-track,
+[class*="overflow-x"]:focus-within::-webkit-scrollbar-track {
+  background: color-mix(in oklch, var(--paper-3) 60%, transparent);
+}
+
+/* ====================================================================
    Reduced motion (#364)
    ==================================================================== */
 
