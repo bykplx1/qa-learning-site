@@ -1,0 +1,120 @@
+---
+slug: e2e-capstone-trello-clone
+title: "E2E Capstone: Drag-Interaction Suite on Trello Demo"
+tier: capstone
+track: e2e
+target:
+  name: "Trello (demo board)"
+  ref: "https://trello.com — free account required; or run the open-source Focalboard: https://github.com/mattermost/focalboard (Docker: mattermost/focalboard)"
+estimate: 4–5 days
+rubric: e2e-capstone
+requiredConcepts:
+  - playwright
+acceptanceCriteria:
+  - Your suite runs against Chromium, Firefox, and WebKit in CI and passes on all three.
+  - Tests cover board management flows including create board, create card, move card between columns, and archive card.
+  - You implement drag-and-drop interactions using Playwright's mouse API or the `dragTo` helper, with at least one test verifying the resulting board state.
+  - You include at least one axe accessibility scan (`@axe-core/playwright`) on the main board view.
+  - You include at least two visual snapshots (e.g. empty board and populated board after card creation).
+  - You document a flake you encountered (or deliberately induced) and the fix in `docs/flake-postmortem.md` or the README.
+  - CI runs all three browsers in parallel and uploads the Playwright HTML report as an artifact.
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - "You attest that CI is green at submission time (ci_green: true in your submission)."
+---
+
+## Brief
+
+Build a resilient, cross-browser Playwright suite covering drag-and-drop
+board interactions. Use [Trello](https://trello.com) with a free account, or
+run [Focalboard](https://github.com/mattermost/focalboard) locally via Docker
+for a fully self-contained environment with no rate limits.
+
+Drag-and-drop is the most commonly skipped interaction in test suites because
+it is genuinely hard to get right across browser engines. This project makes
+you solve it — and verify the state change that follows — rather than wrap it
+in `test.skip`.
+
+This is a portfolio artifact. It should demonstrate that you can test rich
+UI interactions with the same rigour you would apply to a standard form flow.
+
+> **Drift notice.** If targeting the live Trello service, Atlassian may change
+> selectors, rate-limit automation, or introduce bot detection at any time. The
+> self-hosted Focalboard alternative eliminates this risk entirely and is the
+> recommended target for CI. Document in your README which target you used, the
+> Docker image tag if self-hosted, and any Trello-specific workarounds if live.
+> For live Trello, store credentials in GitHub Actions secrets — never
+> hard-code them.
+
+## Suggested approach
+
+### Phase 1 — Single-browser foundation (Day 1)
+
+1. Choose your target. Self-hosted Focalboard is recommended:
+   ```
+   docker run -d -p 8000:8000 mattermost/focalboard
+   ```
+   Access at `http://localhost:8000`. Create an initial board via the UI;
+   your tests will create their own boards programmatically.
+2. Map the primary flows: create board, add a column (list), add cards to
+   the column, move a card to a different column via drag, archive a card.
+3. Write page objects for `BoardPage` and `CardModal`. Keep `DragHelper` as
+   a separate utility that wraps `page.dragAndDrop()` and retries once on
+   failure (drag is the place where explicit retry is justified).
+4. Get the board CRUD and happy-path drag green on Chromium first.
+
+### Phase 2 — Cross-browser drag-and-drop (Day 2)
+
+5. Add Firefox and WebKit to `playwright.config.ts`.
+6. Drag-and-drop is the engine-specific nightmare. WebKit may require
+   `page.mouse.down()` / `move()` / `up()` rather than `dragTo()`. Document
+   every engine-specific workaround with an inline comment.
+7. Verify the post-drag state explicitly: after moving a card from "To Do"
+   to "In Progress," assert that the card appears in the correct column — not
+   just that no error was thrown.
+
+### Phase 3 — A11y + visual layers (Day 3)
+
+8. Add `@axe-core/playwright`. Run `checkA11y` on the main board view.
+   Drag-and-drop interfaces frequently have accessibility issues (missing
+   keyboard equivalents, aria-grabbed states) — document what you find.
+9. Add two visual snapshots: an empty board and a board after creating two
+   cards and one column. Set `maxDiffPixelRatio: 0.05` if committing
+   baselines from a non-Linux machine.
+
+### Phase 4 — CI + resilience (Days 4–5)
+
+10. Configure GitHub Actions to run all three browsers in parallel.
+11. Upload the HTML report as an artifact.
+12. Drag-and-drop is the likeliest flake source. Induce a flake deliberately
+    (remove the explicit post-drag wait). Document the symptom and fix in
+    `docs/flake-postmortem.md`.
+13. Add `retries: 1` only after the root cause is fixed.
+14. If targeting the live Trello service, add a test-user account credential
+    rotation strategy to your README (or switch to Focalboard).
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Green CI badge (all three browsers, all passing)
+- `pages/` directory with typed page objects
+- At least one drag-and-drop test that verifies the resulting board state,
+  not just that no error occurred
+- At least one axe scan and two visual snapshots
+- `docs/flake-postmortem.md` documenting drag-related flake: symptom,
+  root cause, fix, and rationale for `retries: 1` as safety net only
+- README covering: which target (live Trello vs Focalboard), how to run
+  locally, how CI is structured, and the drag implementation strategy
+  across browsers
+
+## Why this matters
+
+Most real product UIs include at least one drag-and-drop interaction —
+kanban boards, form builders, sortable lists. Teams that skip it in tests
+discover regressions in demos, not in CI. Learning to test drag reliably
+across three browser engines, verify state after the interaction, and debug
+engine-specific behaviour without reaching for `waitForTimeout` is the
+skill this project builds.
+
+The visual and accessibility layers are not extras here — drag-and-drop
+without a keyboard alternative is a WCAG failure, and visual regression
+is often the only reliable signal that a card actually moved.

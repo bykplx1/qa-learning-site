@@ -1,0 +1,88 @@
+---
+slug: e2e-mid-orangehrm
+title: "E2E Mid: Data-Driven Suite on OrangeHRM"
+tier: mid
+track: e2e
+target:
+  name: "OrangeHRM (demo instance)"
+  ref: "https://opensource-demo.orangehrmlive.com — hosted demo; credentials admin/admin123"
+estimate: 1 day
+rubric: e2e-mid
+requiredConcepts:
+  - playwright
+acceptanceCriteria:
+  - You implement page objects for at least two distinct modules (e.g. Login, Leave management, Employee directory).
+  - Tests cover at least one happy path and two distinct failure modes (e.g. invalid login, submitting a leave request with missing required fields).
+  - You use a data file or fixture (JSON, CSV, or TypeScript array) to drive at least one test with multiple input rows — no copy-pasted test blocks.
+  - You configure a GitHub Actions workflow that runs `npx playwright test` and fails the job on test failure.
+  - The Playwright HTML report is uploaded as a CI artifact.
+  - You submit a public repo URL with a green CI badge visible in the README.
+---
+
+## Brief
+
+Build a data-driven Playwright suite against
+[OrangeHRM](https://opensource-demo.orangehrmlive.com) — a publicly hosted
+HR management demo with authentication, employee records, leave requests, and
+an admin panel. It is a richer target than a checkout flow because state
+persists across modules and the same action (e.g. creating an employee) ripples
+through the rest of the system.
+
+The lesson shows you how to structure Playwright. This project adds the
+data-driven layer: driving the same test logic with multiple input sets so your
+suite grows without growing your code.
+
+> **Drift notice.** The OrangeHRM demo resets periodically (typically nightly).
+> Do not rely on data you created in a previous session; create all prerequisite
+> data in your test setup. The default credentials are `admin` / `admin123` —
+> check the login page banner if they change. If the hosted instance is
+> unavailable, run a local copy:
+> `docker run -d -p 80:80 orangehrm/orangehrm:latest`. Note in your README
+> which environment you targeted.
+
+## Suggested approach
+
+1. Explore the application manually first. Identify two modules with clear
+   happy paths and distinct failure modes. Recommended: **Login** + **Leave
+   management** (create a leave request, approve it as admin).
+2. Create a `pages/` directory. One page object per module:
+   - Accept `page: Page` in the constructor.
+   - Expose action methods (`login(user, pass)`, `submitLeaveRequest(details)`).
+   - Expose assertion helpers so test files read as intent, not mechanics.
+3. Create a `fixtures/` or `data/` directory with a typed data file. At
+   minimum, a list of login credentials (valid, locked-out, wrong-password) and
+   a list of leave request payloads (valid, missing required field, date in the
+   past).
+4. Write parameterised tests using Playwright's `test.each` (or a `forEach`
+   loop over your data). Each row should produce a distinct test name in the
+   report.
+5. Add a `.github/workflows/playwright.yml` that:
+   - Runs on every push to `main`
+   - Uses `npm ci` and `npx playwright install --with-deps chromium`
+   - Runs `npx playwright test`
+   - Uploads the HTML report with `actions/upload-artifact`
+6. Add the CI status badge to your README.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A `pages/` directory containing at least two page-object files
+- A `data/` or `fixtures/` directory with at least one data file driving
+  parameterised tests
+- Tests that pass reliably (no `waitForTimeout`; explicit waits only)
+- A green CI badge in the README
+- A short paragraph explaining your data-file design choice: why you chose this
+  format (JSON vs TypeScript array vs CSV) and what you'd change if the dataset
+  grew to 1 000 rows
+
+## Why this matters
+
+Real test suites always encounter the same pattern: the same user action with
+a dozen different inputs. Hard-coding each input as a separate test function is
+the mistake that makes suites unmaintainable. Learning to separate test logic
+from test data — and automate the parameterisation — is the step that turns a
+working suite into a scalable one.
+
+OrangeHRM is the right target here because its HR data model is rich enough
+that a careless test will corrupt state for the next test, forcing you to
+think about setup and teardown from the start.

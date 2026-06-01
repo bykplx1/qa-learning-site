@@ -1,0 +1,116 @@
+---
+slug: e2e-capstone-parabank
+title: "E2E Capstone: Resilient Cross-Browser Suite on ParaBank"
+tier: capstone
+track: e2e
+target:
+  name: "ParaBank (Parasoft)"
+  ref: "https://parabank.parasoft.com — hosted demo banking app; or run locally via Docker image parasoft/parabank"
+estimate: 4–5 days
+rubric: e2e-capstone
+requiredConcepts:
+  - playwright
+acceptanceCriteria:
+  - Your suite runs against Chromium, Firefox, and WebKit in CI and passes on all three.
+  - Tests cover at least three banking flows (e.g. open account, transfer funds, request loan, pay bill).
+  - You include at least one axe accessibility scan (`@axe-core/playwright`) on a primary authenticated flow.
+  - You include at least two visual snapshots (e.g. account overview and transaction history pages).
+  - You document a flake you encountered (or deliberately induced) and the fix — in the README or a `docs/flake-postmortem.md`.
+  - CI runs all three browsers in parallel and uploads the Playwright HTML report as an artifact.
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - "You attest that CI is green at submission time (ci_green: true in your submission)."
+---
+
+## Brief
+
+Build a resilient, cross-browser Playwright suite against
+[ParaBank](https://parabank.parasoft.com) — Parasoft's publicly hosted demo
+banking application. It models a real online banking portal with account
+management, fund transfers, loan requests, and a full transaction history.
+Unlike simpler e-commerce demos, ParaBank has genuine state dependencies
+(you must open an account before transferring funds) that force you to design
+test fixtures carefully.
+
+This is a portfolio artifact. It should read like something a senior QA
+engineer would ship on a real project, not a tutorial exercise.
+
+> **Drift notice.** The hosted ParaBank instance is maintained by Parasoft.
+> The application resets daily, so do not rely on data created in a previous
+> session — all required accounts and seed data must be created in test setup.
+> The default login credentials are `john` / `demo`. If the hosted instance is
+> unavailable, run a local copy:
+> `docker run -d -p 8080:8080 parasoft/parabank`. Update your README with
+> which environment you targeted and the Docker tag you used.
+
+## Suggested approach
+
+### Phase 1 — Single-browser foundation (Day 1)
+
+1. Set up a clean Playwright project with TypeScript config.
+2. Map the primary journeys that have state dependencies:
+   - **Register + open account** (prerequisite for every other journey)
+   - **Transfer funds** (requires two existing accounts)
+   - **Request loan** (has an async approval decision to wait for)
+   - **Pay bill** (requires a payee to be registered first)
+3. Write a shared fixture that registers a fresh user and opens a savings
+   account before each test file, then tears down via the admin endpoint or
+   just lets the nightly reset handle it.
+4. Get the happy-path flows green on Chromium before touching multi-browser.
+
+### Phase 2 — Cross-browser (Day 2)
+
+5. Add Firefox and WebKit to `playwright.config.ts`.
+6. Run locally. Identify and fix engine-specific selector or timing issues.
+   For each fix, add an inline comment explaining *why* the engine behaved
+   differently — this is your postmortem material.
+7. If a test is legitimately engine-specific (e.g. a Safari input quirk),
+   use `test.skip('reason')` with an explanation — not `.only` or deletion.
+
+### Phase 3 — A11y + visual layers (Day 3)
+
+8. Add `@axe-core/playwright`. Run `checkA11y` on the account overview page
+   and the transfer confirmation page. Capture any violations — you do not
+   need to fix ParaBank's a11y bugs, but document them.
+9. Add two visual snapshots: the account summary page (after opening an
+   account) and the transaction history page. Commit baselines on Linux/CI
+   if possible; document the OS you used.
+10. Set `maxDiffPixelRatio: 0.05` if you commit baselines locally to absorb
+    rendering noise across environments.
+
+### Phase 4 — CI + resilience (Days 4–5)
+
+11. Configure GitHub Actions to run all three browsers in parallel (matrix
+    strategy or Playwright's built-in project sharding).
+12. Upload the HTML report as an artifact.
+13. Address the state-dependency risk: if account creation fails in setup,
+    what happens to downstream tests? Document how your fixture handles this
+    and whether you chose `beforeAll` or `beforeEach` — and why.
+14. Induce one flake deliberately (e.g. remove a `waitFor` around the loan
+    approval state change). Document the symptom and fix in
+    `docs/flake-postmortem.md` or the README.
+15. Set `retries: 1` in config only after you have fixed the real flake.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Green CI badge (all three browsers, all passing)
+- `pages/` directory with typed page objects
+- A shared fixture handling user registration and account seeding
+- At least one axe scan and two visual snapshots
+- `docs/flake-postmortem.md` or README section documenting: symptom, root
+  cause, fix, and why `retries` is not the answer
+- README covering: how to run locally, how CI is structured, how state
+  dependencies are managed, and one design decision you'd make differently
+  on a second pass
+
+## Why this matters
+
+Banking applications expose the hardest class of E2E problems: tests that
+cannot be written in isolation because creating data is itself a multi-step
+user flow. Designing fixtures that make each test self-sufficient — without
+making setup so expensive that the suite takes 20 minutes — is the skill that
+distinguishes architects from practitioners.
+
+ParaBank forces you to solve this for real, not in a sanitised to-do app.
+Adding cross-browser coverage, accessibility scanning, and visual regression
+on top of it is what makes this a portfolio piece rather than a practice exercise.

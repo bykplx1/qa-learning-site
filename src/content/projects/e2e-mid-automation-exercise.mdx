@@ -1,0 +1,86 @@
+---
+slug: e2e-mid-automation-exercise
+title: "E2E Mid: Full-Journey Suite on Automation Exercise"
+tier: mid
+track: e2e
+target:
+  name: "Automation Exercise"
+  ref: "https://automationexercise.com — public practice e-commerce site"
+estimate: 1 day
+rubric: e2e-mid
+requiredConcepts:
+  - playwright
+acceptanceCriteria:
+  - You implement page objects for at least three distinct pages (e.g. Home/Signup, Login, Product detail, Cart).
+  - Tests cover the end-to-end purchase journey (register → browse → add to cart → checkout) as a single coherent scenario.
+  - Tests cover at least two distinct failure modes (e.g. checkout with empty cart, login with unregistered email).
+  - You configure a GitHub Actions workflow that runs `npx playwright test` and fails the job on test failure.
+  - The Playwright HTML report is uploaded as a CI artifact.
+  - You submit a public repo URL with a green CI badge visible in the README.
+---
+
+## Brief
+
+Build a multi-page Playwright suite against
+[Automation Exercise](https://automationexercise.com) — a publicly hosted
+practice e-commerce application designed for test automation. It covers
+registration, login, product browsing, cart management, and checkout, giving
+you a realistic end-to-end journey with authentication state carried across
+multiple pages.
+
+This project focuses on a journey that spans the full application rather than
+a single module. Getting page-object boundaries right across a multi-step flow
+— so that a test reads as a story, not a sequence of locator calls — is the
+skill this project develops.
+
+> **Drift notice.** Automation Exercise is maintained as a practice site and
+> has been available for several years. However, it is externally hosted and
+> may receive UI updates without notice. If a selector breaks between sessions,
+> treat the investigation and fix as part of the exercise and document it in
+> your README. Tests should use accessibility-first locators (`getByRole`,
+> `getByLabel`) where possible to reduce selector brittleness.
+
+## Suggested approach
+
+1. Map the purchase journey manually before writing a line of code:
+   - Register a new account → log in → browse to a product → add to cart →
+     proceed to checkout → place order.
+   Note which pages you transition through and what state must carry over.
+2. Design your page objects around user intent, not page URL:
+   - `AccountPage` — register and login actions
+   - `ProductsPage` — search and select a product
+   - `CartPage` — review and proceed to checkout
+   - `CheckoutPage` — fill shipping details and confirm
+3. Write the happy-path test first as a single `test()` that reads like a
+   user story. Get it green before writing any negatives.
+4. Add failure-mode tests: attempt checkout with an empty cart; attempt login
+   with an email that has never registered. Each should assert the specific
+   error state, not just "the form didn't submit."
+5. Add a `.github/workflows/playwright.yml` that:
+   - Runs on every push to `main`
+   - Uses `npm ci` and `npx playwright install --with-deps chromium`
+   - Runs `npx playwright test`
+   - Uploads the HTML report with `actions/upload-artifact`
+6. Add the CI badge to your README.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A `pages/` directory with at least three page-object files
+- A single coherent test covering the full purchase journey
+- At least two failure-mode tests with specific error assertions
+- Tests that pass reliably without `waitForTimeout`
+- A green CI badge in the README
+- A short paragraph in the README explaining where you drew the page-object
+  boundaries and why — particularly, how you handled state that needed to
+  cross from one page object to the next
+
+## Why this matters
+
+Most real applications are not single-page interactions. The moment a
+user journey spans three or more pages, naive test structure falls apart:
+helpers leak between objects, the test setup becomes a 40-line ritual, and
+a single navigation change breaks six tests. Getting the boundary right
+once — designing page objects that hand state off cleanly — is the
+architectural habit that separates a senior test engineer from a
+test-script writer.
