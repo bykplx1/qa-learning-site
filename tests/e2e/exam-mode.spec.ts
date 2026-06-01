@@ -13,9 +13,14 @@ test.describe('exam mode wrapper', () => {
     await expect(page.getByTestId('hero-exam-cta')).toBeVisible();
     await page.getByTestId('hero-exam-cta').click();
 
-    // 2. Exam page loads — Start gate is shown, timer not yet visible.
+    // 2. Certificate selector loads — pick the CTFL mock exam.
     await expect(page).toHaveURL('/exam');
-    await expect(page.locator('h1')).toContainText('Mock exam');
+    await expect(page.locator('h1')).toContainText('Choose a certification');
+    await page.getByTestId('cert-card-ctfl').click();
+
+    // 3. CTFL exam page loads — Start gate is shown, timer not yet visible.
+    await expect(page).toHaveURL('/exam/ctfl');
+    await expect(page.locator('h1')).toContainText('CTFL');
     await expect(page.getByTestId('exam-start-gate')).toBeVisible();
     await expect(page.getByTestId('exam-timer')).toHaveCount(0);
 
@@ -78,12 +83,12 @@ test.describe('exam mode wrapper', () => {
 
     // 10. Confirm pending attempt landed in sessionStorage with mode=exam.
     const stored = await page.evaluate(() =>
-      sessionStorage.getItem('quiz_attempt_mock-exam'),
+      sessionStorage.getItem('quiz_attempt_mock-exam-ctfl'),
     );
     expect(stored).not.toBeNull();
     const parsed = JSON.parse(stored as string);
     expect(parsed.mode).toBe('exam');
-    expect(parsed.quizSlug).toBe('mock-exam');
+    expect(parsed.quizSlug).toBe('mock-exam-ctfl');
     expect(parsed.total).toBeGreaterThan(0);
     expect(Array.isArray(parsed.answers)).toBe(true);
   });
@@ -93,8 +98,8 @@ test.describe('exam mode wrapper', () => {
       await el.locator('button').first().click();
     });
 
-    // Navigate to exam page.
-    await page.goto('/exam');
+    // Navigate directly to a certificate exam page.
+    await page.goto('/exam/ctfl');
 
     // Start the exam.
     await expect(page.getByTestId('exam-start-gate')).toBeVisible();

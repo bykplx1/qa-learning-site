@@ -1,0 +1,446 @@
+certificate: ctfl
+# Certified Tester Foundation Level (CTFL v4.0) — mock exam bank.
+# Original questions modelled on the public CTFL v4.0 syllabus learning
+# objectives and sample-exam style (K1–K3). Not reproduced from any
+# copyrighted ISTQB question set.
+questions:
+  - id: ctfl-001
+    type: single
+    difficulty: medium
+    q: "A team runs the identical automated regression suite every night and finds no new defects for several months, yet users still report bugs. Which testing principle best explains this?"
+    options:
+      - "A) Tests can show the presence of defects, but not their absence"
+      - "B) The pesticide paradox"
+      - "C) Defects cluster together"
+      - "D) Testing is context dependent"
+    answer: 1
+    explanation: "Repeating the same tests eventually stops finding new defects (the pesticide paradox); tests must be reviewed and revised to find new ones."
+  - id: ctfl-002
+    type: single
+    difficulty: easy
+    q: "Because exhaustive testing is impossible, a tester should:"
+    options:
+      - "A) Test every possible input combination anyway"
+      - "B) Use risk analysis and priorities to focus the test effort"
+      - "C) Restrict testing to valid inputs only"
+      - "D) Rely solely on automated tests"
+    answer: 1
+    explanation: "Exhaustive testing is impractical, so effort is focused using risk and priorities."
+  - id: ctfl-003
+    type: single
+    difficulty: medium
+    q: "A requirements defect is found by a customer in production and costs far more to fix than it would have during a requirements review. Which principle does this illustrate?"
+    options:
+      - "A) Defects cluster together"
+      - "B) Early testing saves time and money"
+      - "C) Tests show the presence of defects"
+      - "D) The absence-of-errors fallacy"
+    answer: 1
+    explanation: "Defects found early (e.g. static testing of requirements) are much cheaper to fix — early testing saves time and money."
+  - id: ctfl-004
+    type: single
+    difficulty: medium
+    q: "Test logs show that 80% of failures come from 3 of 15 modules. The best use of this information is to:"
+    options:
+      - "A) Stop testing the other 12 modules"
+      - "B) Concentrate extra test effort on those 3 modules while keeping some coverage elsewhere"
+      - "C) Rewrite all 15 modules"
+      - "D) Conclude that testing is complete"
+    answer: 1
+    explanation: "Defects cluster: focus additional effort where defects concentrate, without abandoning the rest."
+  - id: ctfl-005
+    type: single
+    difficulty: medium
+    q: "A system meets its specification and passes all tests, yet users reject it because it does not meet their actual needs. This is an example of:"
+    options:
+      - "A) The pesticide paradox"
+      - "B) The absence-of-errors fallacy"
+      - "C) Defect clustering"
+      - "D) Exhaustive testing"
+    answer: 1
+    explanation: "Finding and fixing defects does not help if the system is unusable or fails to meet user needs — the absence-of-errors fallacy."
+  - id: ctfl-006
+    type: single
+    difficulty: medium
+    q: "Which test activity identifies the test conditions ('what to test') by analysing the test basis?"
+    options:
+      - "A) Test planning"
+      - "B) Test analysis"
+      - "C) Test design"
+      - "D) Test implementation"
+    answer: 1
+    explanation: "Test analysis evaluates the test basis to determine testable features and define test conditions."
+  - id: ctfl-007
+    type: single
+    difficulty: medium
+    q: "Producing test cases from previously identified test conditions is part of:"
+    options:
+      - "A) Test analysis"
+      - "B) Test design"
+      - "C) Test execution"
+      - "D) Test completion"
+    answer: 1
+    explanation: "Test design elaborates test conditions into test cases and other testware."
+  - id: ctfl-008
+    type: single
+    difficulty: medium
+    q: "Developers react defensively when a tester logs defects. The most constructive approach is to:"
+    options:
+      - "A) Report fewer defects to avoid conflict"
+      - "B) Communicate findings objectively and without blame, emphasising the shared goal of quality"
+      - "C) Escalate every defect to management"
+      - "D) Only report defects verbally"
+    answer: 1
+    explanation: "Effective tester psychology: communicate neutrally and factually, focusing on the product and shared goals, not on people."
+  - id: ctfl-009
+    type: single
+    difficulty: easy
+    q: "The question 'Are we building the product right?' relates most directly to:"
+    options:
+      - "A) Validation"
+      - "B) Verification"
+      - "C) Acceptance testing"
+      - "D) Exploratory testing"
+    answer: 1
+    explanation: "Verification checks the product is built correctly against its specification; validation checks it meets user needs."
+  - id: ctfl-010
+    type: single
+    difficulty: easy
+    q: "In the V-model, each development phase is associated with a corresponding:"
+    options:
+      - "A) Programming language"
+      - "B) Test level"
+      - "C) Defect report"
+      - "D) Review tool"
+    answer: 1
+    explanation: "The V-model pairs each development level with a corresponding test level (e.g. requirements with acceptance testing)."
+  - id: ctfl-011
+    type: single
+    difficulty: easy
+    q: "Component (unit) testing is most commonly performed by:"
+    options:
+      - "A) End users"
+      - "B) Developers"
+      - "C) Business analysts"
+      - "D) An independent acceptance team"
+    answer: 1
+    explanation: "Component testing is typically done by developers, often with unit-test frameworks, close to the code."
+  - id: ctfl-012
+    type: single
+    difficulty: medium
+    q: "Integration testing primarily aims to find defects in:"
+    options:
+      - "A) Individual statements within one component"
+      - "B) The interfaces and interactions between components or systems"
+      - "C) The user's business processes"
+      - "D) Production hardware only"
+    answer: 1
+    explanation: "Integration testing targets interfaces and interactions between integrated components/systems."
+  - id: ctfl-013
+    type: single
+    difficulty: medium
+    q: "System testing should be carried out in an environment that:"
+    options:
+      - "A) Is the developer's local machine"
+      - "B) Resembles the production environment as closely as possible"
+      - "C) Has no test data"
+      - "D) Disables all logging"
+    answer: 1
+    explanation: "System testing evaluates the whole system; a production-like environment gives representative results."
+  - id: ctfl-014
+    type: single
+    difficulty: medium
+    q: "Beta testing is typically performed:"
+    options:
+      - "A) By developers in the development environment"
+      - "B) By potential or existing customers at their own locations"
+      - "C) By the test team before alpha testing"
+      - "D) Only by automated tools"
+    answer: 1
+    explanation: "Beta testing is operational acceptance-style testing by customers in their own environment; alpha testing happens at the developer's site."
+  - id: ctfl-015
+    type: single
+    difficulty: easy
+    q: "A test that measures whether the system responds within 2 seconds under expected load is a:"
+    options:
+      - "A) Functional test"
+      - "B) Non-functional test"
+      - "C) Structural test"
+      - "D) Confirmation test"
+    answer: 1
+    explanation: "Response time/performance is a quality characteristic, so this is non-functional testing."
+  - id: ctfl-016
+    type: single
+    difficulty: medium
+    q: "After a developer fixes a defect, the tester re-runs the test that originally failed to check the fix works. This is:"
+    options:
+      - "A) Regression testing"
+      - "B) Confirmation (re-)testing"
+      - "C) Smoke testing"
+      - "D) Exploratory testing"
+    answer: 1
+    explanation: "Confirmation testing re-runs the failed test; regression testing checks that the change has not broken anything else."
+  - id: ctfl-017
+    type: single
+    difficulty: medium
+    q: "Maintenance testing is triggered by all of the following EXCEPT:"
+    options:
+      - "A) Modification of the operational system"
+      - "B) Migration to a new platform"
+      - "C) Retirement of the system"
+      - "D) Initial development of a brand-new system"
+    answer: 3
+    explanation: "Maintenance testing applies to changes, migration, or retirement of an existing system — not the initial development."
+  - id: ctfl-018
+    type: single
+    difficulty: medium
+    q: "An advantage of static testing over dynamic testing is that it can:"
+    options:
+      - "A) Measure performance under load"
+      - "B) Find defects (e.g. ambiguous requirements, unreachable code) earlier and without executing the software"
+      - "C) Confirm the system works end to end"
+      - "D) Replace all dynamic testing"
+    answer: 1
+    explanation: "Static testing examines work products without execution, finding defects (and ambiguities) earlier and more cheaply."
+  - id: ctfl-019
+    type: single
+    difficulty: medium
+    q: "A review meeting led by the author, who guides participants through the work product, is a:"
+    options:
+      - "A) Inspection"
+      - "B) Walkthrough"
+      - "C) Audit"
+      - "D) Management review"
+    answer: 1
+    explanation: "A walkthrough is led by the author; an inspection is the most formal review led by a trained moderator."
+  - id: ctfl-020
+    type: single
+    difficulty: medium
+    q: "Which review type is the most formal, led by a trained moderator and using defined entry/exit criteria and metrics?"
+    options:
+      - "A) Informal review"
+      - "B) Walkthrough"
+      - "C) Technical review"
+      - "D) Inspection"
+    answer: 3
+    explanation: "Inspection is the most formal review type, with defined roles, entry/exit criteria, and metrics."
+  - id: ctfl-021
+    type: single
+    difficulty: easy
+    q: "In a formal review, the person who created the work product under review plays the role of:"
+    options:
+      - "A) Moderator"
+      - "B) Author"
+      - "C) Scribe"
+      - "D) Review leader"
+    answer: 1
+    explanation: "The author is the creator/owner of the work product being reviewed."
+  - id: ctfl-022
+    type: single
+    difficulty: medium
+    q: "A field accepts ages from 18 to 65 inclusive. Using equivalence partitioning, the minimum number of partitions (valid and invalid combined) is:"
+    options:
+      - "A) One"
+      - "B) Two"
+      - "C) Three"
+      - "D) Five"
+    answer: 2
+    explanation: "Valid (18–65), invalid below (<18) and invalid above (>65) gives three partitions at minimum."
+  - id: ctfl-023
+    type: single
+    difficulty: hard
+    q: "A numeric field is valid for 1 to 100. Using 2-value boundary value analysis, the boundary values for the lower boundary are:"
+    options:
+      - "A) 1 and 2"
+      - "B) 0 and 1"
+      - "C) 1 and 100"
+      - "D) -1 and 0"
+    answer: 1
+    explanation: "2-value BVA tests the boundary and its nearest neighbour outside the partition: 0 (just outside) and 1 (boundary)."
+  - id: ctfl-024
+    type: single
+    difficulty: hard
+    q: "Using 3-value boundary value analysis on the lower boundary of the valid range 1–100, the values tested are:"
+    options:
+      - "A) 1, 2, 3"
+      - "B) 0, 1, 2"
+      - "C) -1, 0, 1"
+      - "D) 0, 1, 100"
+    answer: 1
+    explanation: "3-value BVA tests the boundary plus the value on each side: 0 (outside), 1 (boundary), 2 (inside)."
+  - id: ctfl-025
+    type: single
+    difficulty: medium
+    q: "A decision table has 4 independent binary (true/false) conditions. The maximum number of rules (columns) is:"
+    options:
+      - "A) 4"
+      - "B) 8"
+      - "C) 16"
+      - "D) 24"
+    answer: 2
+    explanation: "Each binary condition doubles the combinations: 2^4 = 16 rules before collapsing infeasible ones."
+  - id: ctfl-026
+    type: single
+    difficulty: medium
+    q: "Shipping cost depends on whether the customer is a member, the order value, and the destination region. Which technique systematically covers the combinations of these business rules?"
+    options:
+      - "A) Boundary value analysis"
+      - "B) Decision table testing"
+      - "C) Statement coverage"
+      - "D) Use case testing"
+    answer: 1
+    explanation: "Decision tables enumerate combinations of conditions and their resulting actions — ideal for combined business rules."
+  - id: ctfl-027
+    type: single
+    difficulty: hard
+    q: "In state transition testing, achieving '0-switch' coverage means exercising:"
+    options:
+      - "A) Every valid single transition at least once"
+      - "B) Every state at least once"
+      - "C) Every pair of consecutive transitions"
+      - "D) Every invalid transition"
+    answer: 0
+    explanation: "0-switch (single transition) coverage exercises each valid transition once; 1-switch covers sequences of two transitions."
+  - id: ctfl-028
+    type: single
+    difficulty: medium
+    q: "Use case testing derives test cases primarily from:"
+    options:
+      - "A) The source code structure"
+      - "B) The interactions between actors and the system, including alternative and exception flows"
+      - "C) Equivalence partitions of a single field"
+      - "D) The defect database"
+    answer: 1
+    explanation: "Use case testing is based on actor–system interactions, covering main, alternative and exception flows."
+  - id: ctfl-029
+    type: single
+    difficulty: hard
+    q: "Achieving 100% branch (decision) coverage guarantees:"
+    options:
+      - "A) 100% statement coverage"
+      - "B) 100% path coverage"
+      - "C) That no defects remain"
+      - "D) 100% condition coverage"
+    answer: 0
+    explanation: "Decision coverage subsumes statement coverage (every branch executed means every statement executed), but not path or condition coverage."
+  - id: ctfl-030
+    type: single
+    difficulty: medium
+    q: "Which coverage measure is the weakest, only requiring each executable statement to be run at least once?"
+    options:
+      - "A) Branch coverage"
+      - "B) Statement coverage"
+      - "C) Path coverage"
+      - "D) Decision coverage"
+    answer: 1
+    explanation: "Statement coverage is the weakest white-box criterion; it can miss untaken branches."
+  - id: ctfl-031
+    type: single
+    difficulty: easy
+    q: "Error guessing is a technique that relies on:"
+    options:
+      - "A) Automated random input generation"
+      - "B) The tester's experience to anticipate likely defects"
+      - "C) Full path coverage"
+      - "D) The requirements specification only"
+    answer: 1
+    explanation: "Error guessing is experience-based: the tester anticipates likely mistakes and weak spots."
+  - id: ctfl-032
+    type: single
+    difficulty: medium
+    q: "Exploratory testing is MOST appropriate when:"
+    options:
+      - "A) Specifications are complete and stable"
+      - "B) There is little documentation or limited time and the tester's skill can be leveraged"
+      - "C) Only automated regression is needed"
+      - "D) The system is safety-critical and requires MC/DC"
+    answer: 1
+    explanation: "Exploratory testing suits sparse specs or time pressure; learning, design and execution happen together, often charter-guided."
+  - id: ctfl-033
+    type: single
+    difficulty: medium
+    q: "Acceptance Test-Driven Development (ATDD) creates tests from:"
+    options:
+      - "A) The code after it is written"
+      - "B) Collaboratively agreed examples and acceptance criteria, before development"
+      - "C) Production incident reports"
+      - "D) The tester's intuition alone"
+    answer: 1
+    explanation: "ATDD is collaboration-based: stakeholders agree concrete examples/acceptance criteria up front, which become tests."
+  - id: ctfl-034
+    type: single
+    difficulty: easy
+    q: "In risk-based testing, the level of a risk is generally assessed as a combination of:"
+    options:
+      - "A) Cost and schedule"
+      - "B) Likelihood of occurrence and impact of the failure"
+      - "C) Number of testers and tools"
+      - "D) Lines of code only"
+    answer: 1
+    explanation: "Risk level = likelihood × impact; higher-risk items get more, earlier testing."
+  - id: ctfl-035
+    type: single
+    difficulty: medium
+    q: "'The project may be delivered late because a key tester resigned' is best classified as a:"
+    options:
+      - "A) Product risk"
+      - "B) Project risk"
+      - "C) Defect"
+      - "D) Failure"
+    answer: 1
+    explanation: "Project risks relate to managing/controlling the project (staffing, schedule); product risks relate to the quality of the product itself."
+  - id: ctfl-036
+    type: single
+    difficulty: medium
+    q: "Which best supports an objective decision to stop testing?"
+    options:
+      - "A) The test manager feels confident"
+      - "B) Planned coverage and the defined exit/acceptance criteria have been met"
+      - "C) The deadline has simply arrived"
+      - "D) No more test ideas come to mind"
+    answer: 1
+    explanation: "Exit criteria (e.g. coverage achieved, defect levels acceptable) give an objective basis for the stopping decision."
+  - id: ctfl-037
+    type: single
+    difficulty: easy
+    q: "Which of the following is essential content of a good defect report?"
+    options:
+      - "A) Steps to reproduce, expected vs actual result, and severity/priority"
+      - "B) The developer's name and salary"
+      - "C) The number of testers on the team"
+      - "D) A guess at the root cause only"
+    answer: 0
+    explanation: "A useful defect report enables reproduction and assessment: steps, expected/actual results, and severity/priority."
+  - id: ctfl-038
+    type: multi
+    difficulty: medium
+    q: "Which of the following are test types? (Select all that apply.)"
+    options:
+      - "A) Functional testing"
+      - "B) Non-functional testing"
+      - "C) White-box (structural) testing"
+      - "D) Walkthrough"
+    answer: [0, 1, 2]
+    explanation: "Functional, non-functional, white-box (structural) and change-related are the test types; a walkthrough is a static review technique, not a test type."
+  - id: ctfl-039
+    type: single
+    difficulty: medium
+    q: "Metrics-based test estimation differs from expert-based estimation because it:"
+    options:
+      - "A) Relies on the judgement of experienced people"
+      - "B) Uses data from previous or similar projects to forecast effort"
+      - "C) Ignores historical data"
+      - "D) Is always more accurate"
+    answer: 1
+    explanation: "Metrics-based estimation extrapolates from historical/project data; expert-based estimation uses the judgement of experienced staff."
+  - id: ctfl-040
+    type: single
+    difficulty: medium
+    q: "Capture/playback (record-and-replay) test execution tools are prone to high maintenance cost mainly because:"
+    options:
+      - "A) They cannot run unattended"
+      - "B) Recorded scripts break easily when the GUI or interface changes"
+      - "C) They require no scripting at all"
+      - "D) They only test performance"
+    answer: 1
+    explanation: "Recorded scripts are tightly bound to the captured UI, so they are fragile and costly to maintain when the interface changes."

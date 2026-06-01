@@ -3,7 +3,8 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ExamSummary from '../../../components/exam/ExamSummary';
 import { getSession } from '../../../lib/auth';
 import { getQuizAttemptById } from '../../../db/queries';
-import { buildExamPool } from '../../../lib/exam/pool';
+import { buildCertExamPool } from '../../../lib/exam/pool';
+import { getCertificate } from '../../../lib/exam/certificates';
 
 export const prerender = false;
 
@@ -21,8 +22,13 @@ if (!attempt || attempt.mode !== 'exam') {
   return new Response('Not found', { status: 404 });
 }
 
-const pool = buildExamPool();
+// Saved exam slugs are `mock-exam-<certId>`; rebuild that certificate's
+// (deterministic) bank so the per-question review lines up with the attempt.
+const certId = attempt.quizSlug.replace(/^mock-exam-/, '');
+const cert = getCertificate(certId);
+const pool = buildCertExamPool(certId);
 const questions = pool.slice(0, attempt.total);
+const reviewTitle = cert ? `${cert.code} · review` : 'Mock exam · review';
 
 const attemptedAtIso = attempt.attemptedAt.toISOString();
 ---
@@ -31,7 +37,7 @@ const attemptedAtIso = attempt.attemptedAt.toISOString();
   <div class="exam-page">
     <header class="exam-page__head">
       <span class="eyebrow">exam attempt · saved review</span>
-      <h1>Mock exam · review</h1>
+      <h1>{reviewTitle}</h1>
       <p class="lead">
         Submitted <time datetime={attemptedAtIso}>{attempt.attemptedAt.toLocaleString()}</time>.
       </p>
