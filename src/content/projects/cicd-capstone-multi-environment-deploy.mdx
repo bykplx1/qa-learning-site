@@ -1,0 +1,161 @@
+---
+slug: cicd-capstone-multi-environment-deploy
+title: "CI/CD Capstone: Multi-Environment Deployment Pipeline"
+tier: capstone
+track: cicd
+target:
+  name: "netlify/netlify-action (Netlify)"
+  ref: "https://github.com/netlify/actions — pinned at nunjucks-deploy@v1.1.0; see drift note below"
+estimate: 4–5 days
+rubric: cicd-capstone
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - "Your pipeline deploys to a staging environment on every push to `main`, and to production only after a manual approval step (an `environment: production` job with a required reviewer configured in GitHub repository settings)."
+  - The staging deployment runs a smoke-test job after deploy; a failing smoke test blocks the production promotion job.
+  - "Each deployment job references its environment URL via `environment.url`, making the deployed URL visible directly from the GitHub Actions run summary."
+  - You implement at least one environment-specific secret (e.g. different API keys per environment) consumed via GitHub environment secrets — not repo-level secrets.
+  - CI is configured with concurrency cancellation scoped to the ref so a new push cancels an in-flight staging deploy on the same branch.
+  - You submit a public repo URL with a green CI badge and a README that documents the full promotion flow.
+  - You attest that CI is green at submission time by checking the ci_green field true in your submission.
+---
+
+## Brief
+
+Design and ship a production-grade multi-environment deployment pipeline using
+GitHub Actions and Netlify's free tier as the deployment target. The core
+challenge is gating production promotion behind both automated smoke tests and
+a human approval step — the pattern used by teams that deploy continuously
+without shipping every commit straight to production users.
+
+You will configure GitHub Environments (staging and production), deploy
+automatically to staging on every push, run a smoke-test job against the
+staging URL, and require a manual approval before the same build reaches
+production.
+
+> **Drift notice.** The Netlify Actions are pinned at `nunjucks-deploy@v1.1.0`.
+> Netlify's free tier hosting and deploy-preview model have been stable, but
+> the CLI flags for `netlify deploy` evolve. Fork the target project and deploy
+> your own copy — do not deploy to shared Netlify sites. If the action syntax
+> changes materially, adapt and note the diff in your README; working through
+> upstream changes is an intentional part of a capstone exercise.
+
+## Suggested approach
+
+### Phase 1 — Baseline deploy to staging (Day 1)
+
+1. Create a free [Netlify](https://netlify.com) account. Create two sites
+   manually from the Netlify dashboard (one for staging, one for production).
+   Note both site IDs.
+2. Fork or create a small static or Node.js app with a build step. A Vite or
+   Astro starter is a good fit.
+3. Configure GitHub Environments in **Settings → Environments**: create
+   `staging` and `production`. Add Netlify credentials as environment secrets
+   in each environment:
+   - `NETLIFY_AUTH_TOKEN`
+   - `NETLIFY_SITE_ID` (different value per environment)
+4. Write a workflow with a single `deploy-staging` job:
+   ```yaml
+   deploy-staging:
+     runs-on: ubuntu-latest
+     environment:
+       name: staging
+       url: ${{ steps.deploy.outputs.deploy-url }}
+     steps:
+       - uses: actions/checkout@v4
+       - run: npm ci && npm run build
+       - id: deploy
+         uses: netlify/actions/cli@master
+         with:
+           args: deploy --dir=dist --site=${{ secrets.NETLIFY_SITE_ID }}
+         env:
+           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+   ```
+5. Push to `main`. Confirm a staging URL appears on the Actions run summary.
+
+### Phase 2 — Smoke-test gate (Day 2)
+
+6. Add a `smoke-test` job with `needs: deploy-staging`:
+   ```yaml
+   smoke-test:
+     needs: deploy-staging
+     runs-on: ubuntu-latest
+     steps:
+       - name: Check staging health
+         run: |
+           STATUS=$(curl -o /dev/null -s -w "%{http_code}" "${{ needs.deploy-staging.outputs.deploy-url }}")
+           if [ "$STATUS" != "200" ]; then
+             echo "Smoke test failed: HTTP $STATUS"
+             exit 1
+           fi
+   ```
+7. Add `outputs` to the `deploy-staging` job so the URL is accessible by
+   downstream jobs.
+8. Deliberately break the build (e.g. introduce a syntax error) and confirm
+   `smoke-test` is skipped when `deploy-staging` fails.
+
+### Phase 3 — Manual approval gate + production deploy (Days 3–4)
+
+9. In GitHub **Settings → Environments → production**, add yourself as a
+   required reviewer.
+10. Add a `deploy-production` job with `needs: smoke-test` and
+    `environment: production`:
+    ```yaml
+    deploy-production:
+      needs: smoke-test
+      environment:
+        name: production
+        url: ${{ steps.deploy.outputs.deploy-url }}
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - run: npm ci && npm run build
+        - id: deploy
+          uses: netlify/actions/cli@master
+          with:
+            args: deploy --prod --dir=dist --site=${{ secrets.NETLIFY_SITE_ID }}
+          env:
+            NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+    ```
+11. Push to `main`. After `smoke-test` passes, the `deploy-production` job
+    should pause at the approval gate. Approve it and confirm the production
+    URL is deployed.
+
+### Phase 4 — Concurrency cancellation + documentation (Day 5)
+
+12. Add concurrency cancellation at the workflow level:
+    ```yaml
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: true
+    ```
+13. Push twice in quick succession. Confirm the first staging deploy is
+    cancelled. Screenshot for your README.
+14. Document in your README:
+    - A text diagram of the full job dependency graph
+    - How staging and production environment secrets differ
+    - One risk you identified in the approval model and how you would mitigate
+      it on a team with multiple reviewers
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Green CI badge confirming the full pipeline (deploy-staging → smoke-test →
+  deploy-production with approval) passes
+- A live staging URL and a live production URL visible from the Actions run
+  summary
+- Evidence of the approval gate pausing `deploy-production` (screenshot or
+  commit history)
+- Evidence of concurrency cancellation (screenshot of a cancelled staging run)
+- A README covering: the full promotion flow, environment secret strategy, and
+  one design decision you would revisit
+
+## Why this matters
+
+The gap between "deploy to one environment" and "gate production behind
+automated smoke tests and human approval" is where most deployment incidents
+originate. This pipeline pattern — staging-first, smoke-gated, human-approved
+production — is the baseline for any team practising continuous delivery
+without continuous deployment. Understanding how GitHub Environments thread
+secrets and approvals into job dependencies is a portable skill across most
+cloud delivery platforms.
