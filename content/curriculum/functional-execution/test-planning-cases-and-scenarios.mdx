@@ -33,28 +33,19 @@ Every artefact carries a maintenance cost paid forever after it is written. The 
 ## Diagram
 
 <Diagram caption="Four artefact altitudes, their primary audience, and the cost signal at each level">
-```
-Altitude         Artefact         Primary audience         Maintenance cost signal
-────────────────────────────────────────────────────────────────────────────────────
-  Project /      Test Plan        Business, regulator,     Grows with scope;
-  Release                         stakeholders             stale plans are worse
-                                                           than no plan
-  ─────────────────────────────────────────────────────────────────────────────────
-  Feature /      Test Scenario    Testers, PO, sprint      Low — survives UI
-  Journey                         review                   redesigns
-  ─────────────────────────────────────────────────────────────────────────────────
-  Operational    Test Case        Next tester to run it,   High — breaks with UI,
-                                  automation pipeline      precondition drift
-  ─────────────────────────────────────────────────────────────────────────────────
-  Session        Test Charter     Tester in the moment     Near-zero — consumed
-                                                           on execution
-────────────────────────────────────────────────────────────────────────────────────
 
-Good-case smell test (apply to every case before committing it):
-  ✓ One objective            ✓ No branching ("if X then...")
-  ✓ Deterministic preconditions  ✓ Specific, observable expected result
-  ✓ Runnable by a new tester without the author in the room
+```mermaid
+flowchart TD
+    TP["Test Plan\nAltitude: Project / Release\nAudience: Business, regulator, stakeholders\nCost: Grows with scope; stale plans worse than none"]
+    TS["Test Scenario\nAltitude: Feature / Journey\nAudience: Testers, PO, sprint review\nCost: Low — survives UI redesigns"]
+    TC["Test Case\nAltitude: Operational\nAudience: Next tester to run it, automation pipeline\nCost: High — breaks with UI, precondition drift"]
+    CH["Test Charter\nAltitude: Session\nAudience: Tester in the moment\nCost: Near-zero — consumed on execution"]
+    TP --> TS --> TC --> CH
+    subgraph SMELL["Good-case smell test"]
+        S1["✓ One objective\n✓ No branching\n✓ Deterministic preconditions\n✓ Specific, observable expected result\n✓ Runnable by a new tester without author present"]
+    end
 ```
+
 </Diagram>
 
 ## Worked Example

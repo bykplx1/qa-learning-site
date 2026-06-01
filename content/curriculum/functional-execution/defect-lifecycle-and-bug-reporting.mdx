@@ -34,41 +34,24 @@ Two facts anchor the whole topic. First: **Steps to Reproduce is the most-skippe
 ## Diagram
 
 <Diagram caption="Defect lifecycle state machine, including the four off-happy-path transitions that reveal team culture">
+
+```mermaid
+stateDiagram-v2
+    [*] --> New
+    New --> Triaged: assigned + scored
+    Triaged --> InProgress: developer picks up
+    InProgress --> Fixed: code merged
+    Fixed --> Verified: QA verifies in test env
+    Verified --> Closed
+    Closed --> Triaged: regression found (Reopened)
+    Triaged --> CannotReproduce: missing context
+    Triaged --> Duplicate: link primary bug
+    Triaged --> WontFix: documented tradeoff
+    Triaged --> ByDesign: spec-clarity gap
+    CannotReproduce --> Triaged: reopen with evidence triple
+    ByDesign --> Triaged: escalate
 ```
-                         ┌──────────────┐
-                         │   New/Open   │
-                         └──────┬───────┘
-                                │ assigned + scored
-                         ┌──────▼───────┐
-                   ┌────►│   Triaged    │◄──────────────────┐
-                   │     └──────┬───────┘                   │
-                   │            │ developer picks up         │
-                   │     ┌──────▼───────┐                   │
-                   │     │  In Progress │                    │
-                   │     └──────┬───────┘                   │
-                   │            │ code merged                │
-                   │     ┌──────▼───────┐                   │
-                   │     │    Fixed /   │                    │
-                   │     │   Resolved   │                    │
-                   │     └──────┬───────┘                   │
-                   │            │ QA verifies in test env    │
-                   │     ┌──────▼───────┐                   │
-                   │     │   Verified   │                    │
-                   │     └──────┬───────┘                   │
-                   │            │                            │
-                   │     ┌──────▼───────┐                   │
-                   │     │    Closed    │                    │
-                   │     └──────┬───────┘                   │
-                   │            │ regression found           │
-                   │            └───────────────────────────►│ (Reopened)
-                   │
-      Off-happy-path states (each is a conversation, not a termination):
-      ─────────────────────────────────────────────────────────────────
-      Cannot Reproduce  →  missing context; reopen with evidence triple
-      Duplicate         →  link primary; close secondary; track recurrence
-      Won't Fix         →  documented tradeoff; not silence
-      By Design         →  spec-clarity gap; escalate, don't dismiss
-```
+
 </Diagram>
 
 ## Worked Example

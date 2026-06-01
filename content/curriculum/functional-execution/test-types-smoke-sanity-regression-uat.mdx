@@ -33,33 +33,15 @@ Each name labels a question and a moment: Smoke asks "does it start?" (wide-shal
 ## Diagram
 
 <Diagram caption="Four test-type roles mapped to CI pipeline stages, run shape, and primary audience">
-```
-CI PIPELINE
-──────────────────────────────────────────────────────────────────────────────
-  PR PUSH          HOTFIX BRANCH      NIGHTLY              PRE-RELEASE STAGING
-      │                  │                │                        │
-      ▼                  ▼                ▼                        ▼
-  ┌────────┐       ┌──────────┐     ┌───────────┐          ┌───────────┐
-  │ SMOKE  │       │ SANITY   │     │ REGRESSION│          │   UAT     │
-  │        │       │          │     │           │          │           │
-  │ Wide   │       │ Narrow   │     │ Wide      │          │ User-led  │
-  │ Shallow│       │ Deep     │     │ Deep      │          │ Ad-hoc    │
-  │ ≤ 5min │       │ Targeted │     │ Full suite│          │ Scenarios │
-  └────────┘       └──────────┘     └───────────┘          └───────────┘
-  Audience:        Audience:        Audience:              Audience:
-  Engineering      Engineering      Engineering            Business /
-                                    + Release              Customer
-  Question:        Question:        Question:              Question:
-  "Does it         "Did the fix     "Has prior             "Does the
-  deploy/start?"   work + hold?"    behaviour held?"       user accept?"
-──────────────────────────────────────────────────────────────────────────────
 
-Layer (per test-pyramid-and-trophy):
-  Smoke      → thin E2E slice hitting real infra
-  Sanity     → integration or E2E, narrow scope
-  Regression → predominantly unit/integration + targeted E2E
-  UAT        → exploratory, charter-led, user-operated
+```mermaid
+flowchart LR
+    PR["PR PUSH"] --> SMOKE["SMOKE\nWide / Shallow / ≤5min\nAudience: Engineering\nQuestion: Does it deploy/start?\nLayer: thin E2E slice hitting real infra"]
+    HF["HOTFIX BRANCH"] --> SANITY["SANITY\nNarrow / Deep / Targeted\nAudience: Engineering\nQuestion: Did the fix work + hold?\nLayer: integration or E2E, narrow scope"]
+    NI["NIGHTLY"] --> REGR["REGRESSION\nWide / Deep / Full suite\nAudience: Engineering + Release\nQuestion: Has prior behaviour held?\nLayer: unit/integration + targeted E2E"]
+    PRS["PRE-RELEASE STAGING"] --> UAT["UAT\nUser-led / Ad-hoc / Scenarios\nAudience: Business / Customer\nQuestion: Does the user accept?\nLayer: exploratory, charter-led, user-operated"]
 ```
+
 </Diagram>
 
 ## Worked Example
