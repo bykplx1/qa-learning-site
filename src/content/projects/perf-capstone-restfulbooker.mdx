@@ -1,0 +1,111 @@
+---
+slug: perf-capstone-restfulbooker
+title: "Perf Capstone: Load/Stress/Soak Suite on restful-booker"
+tier: capstone
+track: perf
+target:
+  name: "restful-booker (Mark Winteringham)"
+  ref: "https://restful-booker.herokuapp.com — purpose-built REST API for testing practice; Docker image mwinteringham/restfulbooker used as pinned CI target"
+estimate: 4–5 days
+rubric: perf-capstone
+requiredConcepts:
+  - performance-testing
+acceptanceCriteria:
+  - You run at least three load test types (load, stress, soak) against distinct booking-domain scenarios and document the failure mode each reveals.
+  - You define a performance budget as a shared k6 options module and import it in all test scripts — changing the budget in one place updates all thresholds.
+  - CI enforces the performance budget as a blocking gate — the workflow fails when any threshold is breached and uploads a k6 HTML report as an artifact.
+  - You include a written analysis (README or docs/perf-analysis.md) covering at least one threshold you had to relax and your justification for the new value.
+  - You submit a public repo URL with green CI confirmed at submission time.
+  - "You attest that CI is green at submission time (ci_green: true in your submission)."
+---
+
+## Brief
+
+Build a production-grade k6 performance testing suite against
+[restful-booker](https://restful-booker.herokuapp.com) that covers three
+distinct load patterns for a booking API, enforces a centralised performance
+budget as a CI gate, and produces a documented analysis of the system's
+behaviour under each pattern.
+
+This is a portfolio artifact. It should read like something a senior performance
+engineer would ship before a major release of a booking platform — not a demo.
+
+> **Drift notice.** For reproducible CI runs, use the local Docker image:
+> `docker run -p 3001:3001 mwinteringham/restfulbooker` and point your scripts
+> at `http://localhost:3001`. The Heroku-hosted instance is suitable for
+> exploratory runs but the free tier may have cold-start latency that skews your
+> baseline. Either target is valid; document which you chose and why in your
+> analysis.
+
+## Suggested approach
+
+### Phase 1 — Auth flow & load baseline (Day 1)
+
+1. Set up a k6 project with `src/` for scripts and `config/` for shared options.
+2. Write a `setup()` function that authenticates against `POST /auth` and returns
+   the token. All mutating scripts will import this setup function.
+3. Create `config/budget.js` exporting your baseline thresholds:
+   ```js
+   export const budget = {
+     'http_req_failed': ['rate<0.05'],
+     'http_req_duration': ['p(95)<2000', 'p(99)<5000'],
+   };
+   ```
+4. Write `src/load.js` — a `ramping-vus` scenario that ramps from 0 to 20 VUs
+   over 3 minutes, holds for 5 minutes, then ramps down. Cover both read
+   (`GET /booking/:id`) and write (`POST /booking`, `PUT /booking/:id`) paths.
+   Import and spread `budget` in `options.thresholds`.
+5. Run against the Docker image. Document your baseline p(95) and error rate
+   in `docs/perf-analysis.md`.
+
+### Phase 2 — Stress and soak tests (Days 2–3)
+
+6. Write `src/stress.js` — ramp to 3× your baseline VU count until thresholds
+   breach. For a booking API under stress, watch for authentication failures
+   (401s) as token issuance becomes a bottleneck. Document the VU count at which
+   the system degraded and which metric crossed first.
+7. Write `src/soak.js` — hold 10 VUs for 20 minutes. Add a custom Trend metric
+   (`new Trend('booking_create_duration')`) to track POST /booking iteration
+   duration across the soak window — look for latency drift as the server
+   accumulates in-memory state.
+8. For each test type, add a section to `docs/perf-analysis.md` answering:
+   *What failure mode did this reveal? What would you monitor in production to
+   catch this earlier?*
+
+### Phase 3 — CI performance budget gate (Days 3–4)
+
+9. Add a `.github/workflows/perf-gate.yml` that:
+   - Spins up the restful-booker Docker container as a service
+   - Runs `k6 run src/load.js` with `--out json=results.json`
+   - Generates an HTML report using `handleSummary` or `k6 report`
+   - Uploads the HTML report as a CI artifact
+   - Exits non-zero and fails the job when any threshold is breached
+10. Confirm the gate works: temporarily tighten one threshold to trigger failure.
+    Document this in your README.
+
+### Phase 4 — Analysis and writeup (Day 5)
+
+11. Finalise `docs/perf-analysis.md` with:
+    - A baseline table (p(50), p(95), p(99), error rate) per load pattern
+    - The stress test VU ceiling and which metric breached first
+    - Soak findings: did latency drift? Did error rate climb?
+    - At least one threshold you relaxed after measuring, with data-driven justification
+    - A recommendation: if restful-booker were a real booking platform,
+      what SLO would you propose for reservation creation and why?
+
+## What "done" looks like
+
+A public GitHub repo with:
+- `src/load.js`, `src/stress.js`, `src/soak.js` all importing from `config/budget.js`
+- A `.github/workflows/perf-gate.yml` that fails on threshold breach and uploads an HTML report
+- Green CI badge confirmed at submission time
+- `docs/perf-analysis.md` with baseline data, stress ceiling, soak findings, and SLO recommendation
+
+## Why this matters
+
+A booking API is a safety-critical write path. An unanswered `POST /booking`
+means a guest has no confirmed reservation — the user impact of a latency
+regression here is categorically different from a slow content feed. Building
+a suite that tests load, stress, and soak — and writing the analysis that
+explains what each pattern revealed — is how you demonstrate to an engineering
+team that you understand not just how to run k6, but why each test type exists.

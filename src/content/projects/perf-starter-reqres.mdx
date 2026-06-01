@@ -1,0 +1,66 @@
+---
+slug: perf-starter-reqres
+title: "Perf Starter: First Load Test on ReqRes"
+tier: starter
+track: perf
+target:
+  name: "ReqRes (reqres.in)"
+  ref: "https://reqres.in — hosted REST API simulator for testing; see drift note below"
+estimate: 2–3 hr
+rubric: perf-starter
+requiredConcepts:
+  - performance-testing
+acceptanceCriteria:
+  - You install k6 and run `k6 run script.js` to get a passing result with no threshold failures.
+  - Your script sends load to at least two distinct endpoints (e.g. GET /api/users and POST /api/users).
+  - You define at least two thresholds — one on `http_req_failed` and one on a percentile of `http_req_duration`.
+  - Your README explains how to run the script from a clean clone in one command and what the thresholds mean.
+---
+
+## Brief
+
+Install k6 from scratch and run your first real load test against
+[ReqRes](https://reqres.in) — a hosted API simulator that returns realistic
+JSON responses for user management operations. You'll measure how a
+read-heavy versus a write-heavy endpoint behaves under the same load profile.
+
+The lesson teaches you how k6 works. This project makes you use it on a real
+HTTP target and compare the latency characteristics of a GET versus a POST.
+
+> **Drift notice.** ReqRes is a public hosted service. Response times may vary
+> depending on server load at the time you run your test. If the service is
+> unavailable or significantly slower than the thresholds suggested below, note
+> the observed behaviour in your README and adjust your threshold values with a
+> written justification. ReqRes does not have an official local Docker image;
+> if you prefer a fully offline target, substitute QuickPizza
+> (`docker run -p 3333:3333 grafana/quickpizza-local`) and update the endpoints
+> accordingly.
+
+## Suggested approach
+
+1. Install k6: `brew install k6` (macOS), `choco install k6` (Windows), or via the [official install docs](https://k6.io/docs/get-started/installation/).
+2. Create `script.js` with a `baseURL` of `https://reqres.in`.
+3. Write a `default` function that calls at least two endpoints. Suggested pair:
+   - `GET /api/users?page=1` — retrieves a paginated list of users
+   - `POST /api/users` with a JSON body (name, job) — creates a new user record
+4. Add a `sleep(1)` between iterations.
+5. Define an `options` block with:
+   - `vus: 5` and `duration: '30s'`
+   - A threshold: `http_req_failed: ['rate<0.01']`
+   - A threshold: `http_req_duration: ['p(95)<800']` (ReqRes is fast but shared — 800 ms gives you headroom)
+6. Run `k6 run script.js` and paste the summary table into your README.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- contains a `README.md` listing the k6 version used
+- has a script that passes its thresholds consistently
+- has a README with a one-command run instruction, the threshold definitions, and a note on whether the GET or POST endpoint was slower and what you think caused the difference
+
+## Why this matters
+
+Comparing GET versus POST latency under the same VU load is the first time you
+will see that different verbs hit different code paths — and that your threshold
+needs to account for that. Setting `p(95)<800` is a starting point; explaining
+in your README whether the GET or POST drove that number is the reasoning skill
+that underpins every SLO conversation you'll have in production.
