@@ -149,8 +149,7 @@ function SearchModalInner() {
         setSelected((s) => Math.max(s - 1, 0));
       } else if (e.key === 'Enter' && results[selected]) {
         const r = results[selected];
-        const href = (r.meta?.type ?? (r.filters?.section?.includes('quiz') ? 'quiz' : 'lesson')) === 'quiz' ? `${r.url}#quiz` : r.url;
-        navigate(href);
+        navigate(r.url);
       } else if (e.key === 'Tab') {
         const focusable = (e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>(
           'input, a, button, [tabindex]:not([tabindex="-1"])',
@@ -187,6 +186,7 @@ function SearchModalInner() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         paddingTop: '12vh',
+        paddingBottom: '5vh',
         background: 'rgba(20, 20, 18, 0.45)',
         backdropFilter: 'blur(2px)',
       }}
@@ -200,17 +200,22 @@ function SearchModalInner() {
         style={{
           width: 720,
           maxWidth: '95%',
+          maxHeight: '100%',
           background: 'var(--paper)',
           border: '1px solid var(--rule)',
           borderRadius: 14,
           boxShadow: '0 30px 80px -20px rgba(0,0,0,0.4)',
+          display: 'flex',
+          flexDirection: 'column',
           overflow: 'hidden',
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Search input — always visible, never scrolls away */}
         <div
           className="flex items-center gap-3.5"
           style={{
+            flexShrink: 0,
             padding: '18px 22px',
             borderBottom: '1px solid var(--rule)',
           }}
@@ -244,8 +249,9 @@ function SearchModalInner() {
           </button>
         </div>
 
+        {/* Results area — grows to fill available space between input and footer */}
         {results.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 60%) minmax(0, 1fr)', maxHeight: 460 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 60%) minmax(0, 1fr)', flex: 1, minHeight: 0 }}>
             <ul
               ref={listRef}
               id="search-results"
@@ -260,12 +266,8 @@ function SearchModalInner() {
               )}
               {results.map((r, i) => {
                 const type = getType(r);
-                const isQuiz = type === 'quiz';
-                const href = isQuiz ? `${r.url}#quiz` : r.url;
+                const href = r.url;
                 const isSelected = i === selected;
-                if (isQuiz && i === lessonResults.length) {
-                  // section break before first quiz
-                }
                 return (
                   <li key={r.url + i} id={`result-${i}`} role="option" aria-selected={isSelected}>
                     <a
@@ -277,7 +279,6 @@ function SearchModalInner() {
                         padding: '10px 14px',
                         borderRadius: 8,
                         marginBottom: 2,
-                        // dynamic: background and border driven by isSelected state
                         background: isSelected ? 'var(--paper-2)' : 'transparent',
                         borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
                         textDecoration: 'none',
@@ -315,7 +316,7 @@ function SearchModalInner() {
               )}
             </ul>
 
-            <div style={{ padding: 22 }}>
+            <div style={{ padding: 22, overflowY: 'auto' }}>
               {selectedResult && (
                 <>
                   <span className="eyebrow">preview</span>
@@ -356,9 +357,11 @@ function SearchModalInner() {
           </p>
         )}
 
+        {/* Footer — always pinned at the bottom, never overlaps results */}
         <div
           className="flex justify-between py-2.5 px-4"
           style={{
+            flexShrink: 0,
             borderTop: '1px solid var(--rule)',
             background: 'var(--paper-2)',
             fontFamily: 'var(--mono)',
