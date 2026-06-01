@@ -1,0 +1,120 @@
+---
+slug: sec-a11y-starter-aria-apg
+title: "Sec+A11y Starter: axe Scan of ARIA Authoring Practices & badssl.com Headers"
+tier: starter
+track: sec-a11y
+target:
+  name: "W3C ARIA Authoring Practices Guide (APG) + badssl.com"
+  ref: "https://www.w3.org/WAI/ARIA/apg/patterns/ and https://badssl.com — both externally hosted public sites; see drift note"
+estimate: 2–3 hr
+rubric: sec-a11y-starter
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - You run an axe-core scan against at least three ARIA APG pattern pages (e.g. accordion, dialog, tabs) and produce a findings report.
+  - You run an OWASP ZAP passive baseline scan against the same APG pages and export a report.
+  - You separately examine badssl.com subdomain responses (e.g. expired.badssl.com, no-subject.badssl.com, http.badssl.com) and record which security-header findings a passive scanner would flag, even if ZAP cannot follow through TLS errors.
+  - You build a combined triage table covering both the APG axe/ZAP findings and the badssl.com observations, with each item mapped to its WCAG success criterion or OWASP / security-header category.
+  - Your README explains the tool versions used and documents how to reproduce both scans.
+---
+
+## Brief
+
+This brief splits into two complementary halves that, together, cover the full
+accessibility + security baseline scope.
+
+**Half 1 — Accessibility scan against ARIA APG.**
+The [W3C ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/)
+is the authoritative reference for accessible widget patterns. Each pattern
+page contains a working example. Those examples are *supposed* to be
+accessible, but running axe against them teaches you two things: what a
+well-structured accessible widget looks like in axe output (few or zero
+violations, clear roles), and how to interpret the `incomplete` / needs-review
+items that axe flags even on intentionally correct markup.
+
+**Half 2 — Security-header review against badssl.com.**
+[badssl.com](https://badssl.com) is a public test playground maintained by
+Chrome Security. Its subdomains demonstrate every kind of TLS misconfiguration
+— expired certificates, wrong hostnames, revoked certs, missing HSTS,
+HTTP-only — in a safe, explicitly-permitted environment. Use it to practise
+reading response headers and mapping header-absence findings (missing
+`Strict-Transport-Security`, `Content-Security-Policy`, etc.) to OWASP
+categories without needing to run a full active scan.
+
+> **Drift notice.** Both targets are live public sites not under your control.
+> The ARIA APG is maintained by the W3C and updated regularly — pattern pages
+> do occasionally change. badssl.com has been stable for years but is a
+> community-maintained project; record the date you ran the scans in your
+> README and note any pages that were unavailable.
+
+## Suggested approach
+
+### Part 1 — ARIA APG axe scan
+
+1. **Pick three APG pattern pages.** Good choices with varied interaction
+   models:
+   - `https://www.w3.org/WAI/ARIA/apg/patterns/accordion/examples/accordion/`
+   - `https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/dialog/`
+   - `https://www.w3.org/WAI/ARIA/apg/patterns/tabs/examples/tabs-manual/`
+
+2. **Run axe.** Either CLI or a Playwright script:
+   ```
+   npx @axe-core/cli \
+     https://www.w3.org/WAI/ARIA/apg/patterns/accordion/examples/accordion/
+   ```
+   Note: the APG examples rely on JavaScript for interactivity. If the CLI
+   does not trigger the JS, use a Playwright + `@axe-core/playwright` script
+   so the browser fully renders the widget before scanning.
+
+3. **Run ZAP passive baseline** against the same pages:
+   ```
+   docker run --rm -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-baseline.py -t https://www.w3.org/WAI/ARIA/apg/patterns/ \
+     -r zap-apg.html
+   ```
+   The ZAP baseline on a W3C domain will surface standard header findings
+   (likely CORS, cache, referrer policy items).
+
+### Part 2 — badssl.com header review
+
+4. **Choose four subdomains** that represent distinct security failure modes:
+   - `http://http.badssl.com/` — no TLS at all
+   - `https://expired.badssl.com/` — expired certificate
+   - `https://no-subject.badssl.com/` — missing Subject CN
+   - `https://mixed.badssl.com/` — mixed content
+
+5. **Inspect headers manually** (curl or browser DevTools) and record for each
+   subdomain: which security headers are absent, which OWASP category applies,
+   and the potential user/business impact. ZAP may refuse to proxy TLS-error
+   subdomains — that is fine; document that observation and record the headers
+   manually via `curl -I https://expired.badssl.com/`.
+
+### Part 3 — Triage table
+
+6. Merge both sets of findings into one table: tool / source, finding,
+   severity, page, WCAG SC or OWASP category, suggested fix. Distinguish APG
+   axe findings from APG ZAP findings from badssl.com header observations.
+   Flag at least one item as a likely false-positive or
+   needs-manual-confirmation and explain why.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- runs axe and ZAP passive scans against at least three ARIA APG pattern pages
+- records badssl.com header observations for at least four subdomains
+- contains a combined triage table with WCAG/OWASP mapping per finding
+- flags at least one false-positive or needs-review item with justification
+- has a README with tool versions and the date the scans were run
+
+## Why this matters
+
+Most accessibility scanners run against apps that *aren't* trying to be
+accessible. Running axe against the W3C's own reference examples shows you
+what *correct* markup looks like in tool output — which gives you a mental
+calibration point for every audit you run later. The badssl.com half trains the
+corresponding skill on the security side: reading response headers to identify
+missing controls, without needing to run an active attack. Both halves are
+exercising the same underlying judgment — learn the tool's signal, separate
+noise from real findings, and explain the impact.

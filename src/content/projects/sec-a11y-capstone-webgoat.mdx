@@ -1,0 +1,142 @@
+---
+slug: sec-a11y-capstone-webgoat
+title: "Sec+A11y Capstone: Full Audit with CI Gate on OWASP WebGoat"
+tier: capstone
+track: sec-a11y
+target:
+  name: "OWASP WebGoat"
+  ref: "Docker image webgoat/webgoat pinned at tag v2023.8 — github.com/WebGoat/WebGoat; see drift note"
+estimate: 4–5 days
+rubric: sec-a11y-capstone
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - Your audit combines automated scans (ZAP full/active scan + axe) with a manual WCAG 2.2 AA pass (keyboard navigation, focus order, and a screen-reader smoke test) across at least four distinct lesson flows.
+  - You scan in an authenticated context — at least two flows accessible only after login are covered by both the security and accessibility scans.
+  - Every finding is labelled automated-caught vs manual-caught, mapped to its WCAG success criterion or OWASP category, and given a concrete code-level or configuration-level remediation recommendation.
+  - At least one finding is traced to its root cause and a proposed fix is verified by a re-scan (before/after evidence).
+  - CI runs the full audit (active ZAP scan + axe), gates on a versioned baseline, uploads reports as artifacts, and is demonstrated to fail on an injected high-severity regression.
+  - You submit a public repo URL with a green CI badge confirmed at submission time and attest CI is green.
+---
+
+## Brief
+
+Produce a portfolio-grade security and accessibility audit of
+[OWASP WebGoat](https://github.com/WebGoat/WebGoat), gated in CI. WebGoat is
+a Spring Boot app designed by OWASP for security training: it has dozens of
+lesson pages each demonstrating a specific vulnerability class (SQL injection,
+path traversal, XXE, JWT attacks, IDOR, and many more). Its lesson structure
+also makes it a rich accessibility target — every lesson page contains forms,
+tables, or interactive widgets with a wide range of accessibility quality.
+
+The capstone goes beyond automated scanning: an active ZAP scan in an
+authenticated context, a manual WCAG 2.2 AA pass across the primary flows,
+root-cause analysis on at least one finding, and verified remediation. The
+deliverable should read like an audit report you could hand to a development
+team.
+
+> **Drift notice.** Pin the image to `webgoat/webgoat:v2023.8`. Start with:
+> `docker run --rm -p 8080:8080 -p 9090:9090 webgoat/webgoat:v2023.8`.
+> Register a test account before scanning. Active ZAP scanning sends real
+> attack payloads — **only point it at a local container you control**, never
+> at a shared or production system. Record the exact tag and target URL in
+> your README and note any divergence.
+
+## Suggested approach
+
+### Phase 1 — Scope & authenticated context (Day 1)
+
+1. Start the pinned container and register a test account. Map the primary
+   flows you will audit:
+   - Login / registration
+   - Lessons index (`/WebGoat/welcome`)
+   - At least two lesson pages from different vulnerability categories
+     (e.g. SQL Injection (`/WebGoat/SqlInjection`), Path Traversal
+     (`/WebGoat/PathTraversal`))
+   - One page accessible only after login (e.g. the profile or a lesson
+     requiring a prior step)
+   Record what is **out of scope** and why (e.g. WebWolf companion on port
+   9090 is out of scope for this audit).
+
+2. Capture the authentication flow for ZAP. Either record a ZAP context
+   (login request + logged-in indicator) or save a session cookie from a
+   Playwright login step and pass it to ZAP via the replacer add-on.
+
+### Phase 2 — Automated security scan, active (Days 1–2)
+
+3. Run a ZAP **full/active** scan against the in-scope flows using the
+   authenticated context:
+   ```
+   docker run --rm --network host \
+     -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-full-scan.py -t http://localhost:8080/WebGoat \
+     -r zap-full.html -J zap-full.json
+   ```
+   An active scan against WebGoat will find real injection and auth-bypass
+   vulnerabilities — that is the point. Expect a long report; triage it by
+   OWASP category and risk level.
+
+4. Run `@axe-core/playwright` across every in-scope flow, including
+   authenticated states and any dialogs or expandable sections that only
+   render after interaction.
+
+### Phase 3 — Manual WCAG 2.2 AA pass (Days 2–3)
+
+5. Manual pass on the primary flows:
+   - **Keyboard only:** can you navigate to the lesson input, type an answer,
+     and submit using only the keyboard? Record every keyboard trap and
+     unreachable control.
+   - **Focus order & visibility:** is the focus indicator visible (2.4.7)?
+     Does focus move correctly when lesson modals open or close?
+   - **Screen-reader smoke test:** with NVDA or VoiceOver, are lesson
+     instructions announced? Are form fields labeled? Are error messages
+     associated with their inputs?
+   - Map each manual finding to its WCAG SC (2.1.1, 2.4.3, 4.1.2, etc.).
+
+### Phase 4 — Triage, remediation & verification (Days 3–4)
+
+6. Consolidate findings into a register. For each: source
+   (automated-caught vs manual-caught), severity, WCAG SC or OWASP category,
+   evidence, and a **concrete remediation** (not "add a label" but the actual
+   HTML change, e.g. `<label for="answer">Answer</label>`).
+
+7. Pick at least one finding, trace it to root cause, propose the fix, apply
+   it to a local patched build or fixture, and **re-scan to verify** —
+   include before/after evidence in the README.
+
+### Phase 5 — CI gate & packaging (Days 4–5)
+
+8. Wire the full audit into GitHub Actions: active ZAP scan + axe against
+   the pinned, health-checked container, gated on a versioned baseline,
+   reports uploaded as artifacts (`if: always()`).
+
+9. Demonstrate the gate failing on an injected high-severity regression
+   (commit history or screenshots).
+
+10. Confirm CI is green before submitting. The `ci_green` rubric row is
+    binary: public repo + verifiable green badge, or it scores 0.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- automated (active ZAP + axe) **and** manual WCAG 2.2 AA findings, each labelled by source
+- at least two authenticated flows covered by the security scan
+- a findings register with WCAG/OWASP mapping and code-level remediations
+- one finding root-caused and a fix verified by before/after re-scan evidence
+- a CI pipeline gating on a versioned baseline, uploading reports, and demonstrated to fail on a regression
+- a README covering scope, the pipeline, the triage and release policy, which image tag was audited, and one thing you would do differently next time
+- a green CI badge confirmed at submission time
+
+## Why this matters
+
+WebGoat's lesson structure makes it a harder audit target than Juice Shop:
+instead of one coherent application flow, you have fifty small exercises each
+with different HTML, different form patterns, and different security intentions.
+Deciding what to include in scope, how to baseline the intentional
+vulnerabilities without suppressing real regressions, and how to write
+remediations that a Spring developer could actually implement — that is the
+full stack of judgment a mid-level security and accessibility engineer needs.
+This capstone is the most demanding brief in the track; treat the deliverable
+as a work sample.
