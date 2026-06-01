@@ -1,0 +1,144 @@
+---
+slug: api-capstone-dummyjson
+title: "API Capstone: Mutation Coverage Suite on DummyJSON"
+tier: capstone
+track: api
+target:
+  name: "DummyJSON (Ovi Coman)"
+  ref: "https://dummyjson.com — OpenAPI spec at https://dummyjson.com/docs; see drift note below"
+estimate: 4–5 days
+rubric: api-capstone
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - Your suite derives all request and response schemas from the DummyJSON OpenAPI documentation — not from observation of live responses.
+  - Contract tests cover at least three resource domains (e.g. products, carts, users); each endpoint has a test for its documented error shape.
+  - You cover all mutation verbs (POST/PUT/PATCH/DELETE) with valid payloads, boundary values, and invalid payloads — using payload factories to avoid duplication.
+  - You document a breaking-change scenario — name one field rename or type change that would cause a specific assertion to fire, and explain why contract tests catch it before status-code-only smoke tests.
+  - CI runs the full suite and fails the job on any test failure; a JUnit XML or HTML report artifact is uploaded.
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - You attest that CI is green at submission time (set ci_green to true in your submission).
+---
+
+## Brief
+
+Build a contract-tested, mutation-coverage API suite against
+[DummyJSON](https://dummyjson.com) — Ovi Coman's richly documented REST API
+covering products, carts, users, posts, comments, todos, and more. DummyJSON
+ships an OpenAPI specification you can use as the source of truth for schemas,
+and it exposes a full JWT authentication flow alongside CRUD across multiple
+resource domains.
+
+This is a portfolio artifact. It must demonstrate three things: schemas derived
+from a specification (not observation), full mutation coverage with payload
+factories, and a CI pipeline that catches regressions automatically.
+
+> **Drift notice.** `dummyjson.com` is the live hosted reference implementation.
+> The API documentation is at `https://dummyjson.com/docs`. Write operations
+> return realistic responses but most do not persist to a real datastore —
+> treat each test run as starting from a clean slate. If the spec diverges from
+> the live server, treat the spec as the source of truth and document the
+> discrepancy in your README. A local mock can be substituted if you note it
+> clearly.
+
+## Suggested approach
+
+### Phase 1 — Spec-first schema extraction (Day 1)
+
+1. Read the [DummyJSON docs](https://dummyjson.com/docs) end-to-end before
+   writing a test. Identify the primary resource domains and their documented
+   response shapes.
+2. Choose your schema library (Zod, ajv, or equivalent) and define typed schemas
+   for the resources you'll test — derived from the documentation, not from
+   pasting live responses into a schema generator. This constraint is the entire
+   point: your schemas should describe what the API *promises*, not what it
+   currently *returns*.
+3. Document any discrepancy you find between the spec and the live server. These
+   are the exact bugs your suite is designed to surface.
+
+### Phase 2 — Authentication and contract tests (Days 2–3)
+
+4. **Auth flow.** `POST /auth/login` returns `{ token, refreshToken, ... }`.
+   Write a shared helper that obtains the token and injects it as
+   `Authorization: Bearer <token>`. Test:
+   - Happy path: token returned and matches expected schema
+   - Invalid credentials: 400 or 401 with documented error shape
+   - Expired/missing token on a protected endpoint: 401
+
+5. **Contract tests for three resource domains.** Recommended: `products`,
+   `carts`, and `users` (most complete, most distinct schemas). For each:
+   - GET list: verify array schema and pagination metadata
+   - GET single: verify record schema; non-existent id → 404 + error schema
+   - POST: valid payload → verify response schema; missing required field → error schema
+   - PUT/PATCH: update → verify changed field; invalid id → 404
+   - DELETE: verify status + id in response
+
+6. For every endpoint, assert both the happy-path response schema **and** at
+   least one documented error response schema.
+
+### Phase 3 — Payload factories and mutation coverage (Day 3)
+
+7. Create payload factory functions for each resource:
+   ```ts
+   function buildProduct(overrides = {}) {
+     return { title: 'Test Product', price: 9.99, stock: 10, ...overrides };
+   }
+   ```
+   Every POST/PUT/PATCH test must use a factory rather than an inline literal.
+   This means boundary and invalid-input tests are one-liner overrides:
+   ```ts
+   buildProduct({ price: -1 })  // boundary: negative price
+   buildProduct({ title: '' })  // invalid: empty required field
+   ```
+
+8. Boundary and invalid-payload tests to include (at minimum):
+   - Negative numeric value where the spec requires positive
+   - Empty string where the spec requires min-length
+   - Wrong type (e.g. string where number expected) — document the actual status
+     code returned (may differ from the spec)
+   - Missing required field
+
+### Phase 4 — Breaking-change scenario and CI (Days 4–5)
+
+9. In your README or `docs/contract-analysis.md`, document a concrete
+   breaking-change scenario:
+   - Pick one field in a response schema (e.g. `Product.discountPercentage`
+     renamed to `Product.discount`).
+   - Name the exact assertion that would fire.
+   - Explain why a contract test catches this at test time while a
+     status-code-only smoke test would miss it.
+
+10. Configure GitHub Actions:
+    - Trigger on push and pull_request to `main`
+    - Install with `npm ci` (or equivalent); pin the Node.js version
+    - Run the full test suite; fail the job on any failure
+    - Upload a JUnit XML or HTML report as an artifact with `if: always()`
+    - Add the CI badge to your README
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Schemas derived from documentation (not from live-response observation)
+- Contract tests for at least three resource domains, including error shapes
+- Payload factories used for all POST/PUT/PATCH tests
+- `docs/contract-analysis.md` or equivalent with the breaking-change scenario
+- Green CI badge confirmed at submission time
+- README covering: run instructions, which schema library was used, which spec
+  version was targeted, any spec/live discrepancies found, and the pipeline
+  structure
+
+## Why this matters
+
+The gap between a functional test and a contract test is the gap between
+"the endpoint answered" and "the endpoint answered with the shape it promised."
+The first passes when a rename breaks your consumer; the second fails immediately.
+
+Payload factories eliminate the worst form of test duplication in API suites:
+ten POST tests each with a slightly different inline object literal. A factory
+makes the variation explicit, makes the invariant invisible, and makes the
+boundary case a one-liner.
+
+DummyJSON is the right capstone target because its documentation is detailed
+enough to derive real schemas from, its multiple resource domains force you to
+organise a suite across modules, and its authentication flow is representative
+of production JWTs without requiring account registration.

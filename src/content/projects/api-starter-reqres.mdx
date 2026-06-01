@@ -1,0 +1,75 @@
+---
+slug: api-starter-reqres
+title: "API Starter: CRUD Assertions on ReqRes"
+tier: starter
+track: api
+target:
+  name: "ReqRes (Ben Howdle)"
+  ref: "https://reqres.in — simulated REST API; see drift note below"
+estimate: 2–3 hr
+rubric: api-starter
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - You write tests covering GET (list + single), POST (create), PUT (update), and DELETE on the /users resource.
+  - Every test asserts the HTTP status code, the Content-Type response header, and the relevant fields in the response body.
+  - You include at least one negative test per mutation verb (e.g. GET a non-existent user, POST with an empty body).
+  - The base URL and any shared headers are extracted into a single helper or config file — not repeated per test.
+  - Your README explains how to run the suite from a clean clone in one command.
+---
+
+## Brief
+
+Write a REST API test collection against
+[ReqRes](https://reqres.in) — a purpose-built practice API that mirrors the
+shape of a real user-management service, including paginated list endpoints,
+single-resource lookups, mutations, and authentication stubs.
+
+The api-testing lesson teaches you what layers to assert at. This project makes
+you apply that judgment on a resource that returns realistic pagination metadata
+and per-record field shapes — patterns you'll meet constantly in production APIs.
+
+> **Drift notice.** ReqRes is a publicly hosted service. The API surface has
+> been stable for years, but it is externally hosted and not pinned to a commit.
+> Write operations (POST/PUT/PATCH/DELETE) return realistic responses but the
+> server does not persist data — this is by design and worth noting in your
+> README. If the service is unavailable you can stand up a local equivalent with
+> [json-server](https://github.com/typicode/json-server) seeded with similar
+> user records. Note any divergence in your README.
+
+## Suggested approach
+
+1. Pick your tooling. Common choices:
+   - **Node.js**: native `fetch` with Vitest/Jest, or [supertest](https://github.com/ladjs/supertest) if you wrap a server
+   - **Python**: `requests` + pytest
+   - **Other**: any HTTP client + test runner combination works
+2. Focus on the `/users` resource — it supports all four CRUD verbs and returns
+   a consistent shape with `id`, `email`, `first_name`, `last_name`, and `avatar`.
+3. Write tests in this order:
+   - `GET /users` — verify status 200, `Content-Type: application/json`, array under `data` key with ≥1 item, pagination fields (`page`, `total`) present
+   - `GET /users/2` — verify status 200, `data.id === 2`, email and name fields present
+   - `GET /users/9999` — verify status 404
+   - `POST /users` — body `{ "name": "...", "job": "..." }`, verify status 201, response echoes name + job plus `id` and `createdAt` fields
+   - `PUT /users/2` — body `{ "name": "...", "job": "..." }`, verify status 200, `updatedAt` field present in response
+   - `DELETE /users/2` — verify status 204, empty response body
+4. Extract base URL into a shared config constant. If your framework supports it, configure it as an environment variable with a default.
+5. Add a single entry-point run command (e.g. `npm test`) and verify it works from a clean `npm ci`.
+
+## What "done" looks like
+
+A folder containing:
+- A `package.json` (or equivalent) listing test runner and HTTP client as `devDependencies`
+- Tests covering GET list, GET single, GET 404, POST, PUT, and DELETE with assertion depth on status + headers + body
+- A README with a one-command run instruction and a sample of the expected output
+
+## Why this matters
+
+Pagination metadata is the first thing developers forget to test. An API that
+returns the right records but a wrong `total_pages` count will silently break
+your UI pagination component. Testing the envelope — not just the record array
+— is the habit this project builds.
+
+ReqRes is the right second target because its response shapes are richer than
+JSONPlaceholder's: paginated lists, nested `data` objects, and a separate
+`support` block teach you to navigate the response tree rather than assuming
+the payload is a flat record.
