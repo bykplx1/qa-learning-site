@@ -804,6 +804,164 @@ export const rubrics = {
     ],
   },
 
+  // ---------------------------------------------------------------------------
+  // sec-a11y track rubrics (starter / mid / capstone) — added for #340
+  // ---------------------------------------------------------------------------
+
+  /** sec-a11y track — Starter: first axe + ZAP baseline scan against the-internet */
+  'sec-a11y-starter': {
+    id: 'sec-a11y-starter',
+    label: 'Sec+A11y Starter: First Automated Baseline Scan',
+    rows: [
+      {
+        id: 'scan_coverage',
+        criterion: 'Scan coverage',
+        band: [
+          'Only one tool run (axe or ZAP, not both), or a single page scanned.',
+          'Both tools run but against a single page each — no flow coverage.',
+          'Both axe and a ZAP baseline (passive) scan run against at least three distinct pages.',
+          'Both tools run across three or more pages including an interactive flow (e.g. login form), with the page list and rationale recorded.',
+        ],
+      },
+      {
+        id: 'triage',
+        criterion: 'Finding triage',
+        band: [
+          'Raw tool output pasted with no triage.',
+          'Findings counted but not categorised by severity or impact.',
+          'Findings grouped by severity; each high/serious finding has a one-line user-impact note.',
+          'Findings grouped by severity, mapped to the WCAG success criterion or OWASP category, and at least one likely false-positive is identified and justified.',
+        ],
+      },
+      {
+        id: 'reproduction',
+        criterion: 'Reproducibility',
+        band: [
+          'Scans were run manually with no recorded commands — not reproducible.',
+          'Commands recorded in prose but tool versions not pinned.',
+          'A script or documented one-command invocation reproduces both scans; tool versions recorded.',
+          'A single command reproduces both scans from a clean clone; tool and ruleset versions pinned, expected output documented.',
+        ],
+      },
+      {
+        id: 'write_up',
+        criterion: 'Write-up clarity',
+        band: [
+          'No write-up, or unreadable dump.',
+          'Readable but missing context — a developer could not act on the findings.',
+          'Structured findings another engineer could act on: location, evidence, and suggested fix per finding.',
+          'Structured findings plus a one-paragraph summary distinguishing accessibility from security risk and ranking what to fix first.',
+        ],
+      },
+    ],
+  },
+
+  /** sec-a11y track — Mid: CI baseline scan on OWASP Juice Shop */
+  'sec-a11y-mid': {
+    id: 'sec-a11y-mid',
+    label: 'Sec+A11y Mid: CI Baseline Scan',
+    rows: [
+      {
+        id: 'target_setup',
+        criterion: 'Target setup & pinning',
+        band: [
+          'Target run against a live shared instance — not reproducible or pinned.',
+          'Target run locally but the image/version is not pinned.',
+          'Target run locally from a pinned Docker image tag; README records the tag.',
+          'Pinned target plus a documented health-check step that waits for the app before scanning (no race on startup).',
+        ],
+      },
+      {
+        id: 'ci_scan',
+        criterion: 'CI scan integration',
+        band: [
+          'No CI configuration.',
+          'CI runs one scanner but does not gate the build on findings.',
+          'CI runs both axe and a ZAP baseline scan and fails the job on new findings above a threshold.',
+          'CI runs both scans, gates on severity, and uploads the HTML/JSON reports as artifacts on every run.',
+        ],
+      },
+      {
+        id: 'baseline_allowlist',
+        criterion: 'Baseline / known-issue handling',
+        band: [
+          'No baseline — every pre-existing finding fails the build, so the gate is unusable.',
+          'Findings suppressed globally (gate effectively disabled) rather than baselined.',
+          'A documented baseline/allowlist captures known issues so only new findings fail the build.',
+          'Baseline is version-controlled, each entry has a justification or ticket reference, and the README explains how to refresh it.',
+        ],
+      },
+      {
+        id: 'repo_url',
+        criterion: 'Public repo as artifact',
+        band: [
+          'No public repo submitted.',
+          'Repo exists but README is missing or does not explain the scan pipeline.',
+          'Repo with README covering setup, how to run scans locally, and what the gate enforces.',
+          'Repo with README + green CI badge + a commit showing the gate catching an injected finding.',
+        ],
+      },
+    ],
+  },
+
+  /** sec-a11y track — Capstone: full security + accessibility audit with CI gate */
+  'sec-a11y-capstone': {
+    id: 'sec-a11y-capstone',
+    label: 'Sec+A11y Capstone: Full Audit with CI Gate',
+    rows: [
+      {
+        id: 'audit_depth',
+        criterion: 'Audit depth (automated + manual)',
+        band: [
+          'Automated scans only — no manual testing.',
+          'Automated scans plus a token manual check on one page.',
+          'ZAP full (active) scan plus a manual WCAG 2.2 AA pass (keyboard, focus order, screen-reader smoke) across the primary flows.',
+          'Active scan + manual a11y pass + authenticated/role-based scanning; each finding labelled automated-caught vs manual-caught.',
+        ],
+      },
+      {
+        id: 'remediation',
+        criterion: 'Remediation analysis',
+        band: [
+          'Findings listed with no remediation guidance.',
+          'Generic remediation advice not tied to specific findings.',
+          'Each high/serious finding has a concrete, code-level remediation recommendation.',
+          'Remediations prioritised by risk, with at least one finding traced to its root cause and a fix verified by a re-scan.',
+        ],
+      },
+      {
+        id: 'ci_gate',
+        criterion: 'CI audit gate',
+        band: [
+          'No CI configuration.',
+          'CI runs the audit but does not fail on regressions.',
+          'CI runs the full audit, gates on a versioned baseline, and uploads reports as artifacts.',
+          'CI gates on baseline, uploads reports, and is demonstrated to fail on an injected high-severity regression (commit history or screenshot).',
+        ],
+      },
+      {
+        id: 'ci_green',
+        criterion: 'Green CI on submitted repo',
+        band: [
+          'No CI or CI is red.',
+          'CI exists but green status not verifiable (private repo or broken badge).',
+          'Public repo with green CI badge confirmed at submission time.',
+          'Public repo + green CI badge + audit reports downloadable as artifacts and the pipeline structure documented in the README.',
+        ],
+      },
+      {
+        id: 'engineering_writeup',
+        criterion: 'Engineering writeup',
+        band: [
+          'No writeup.',
+          'README describes how to run the audit but not design decisions.',
+          'README covers setup + one key decision (e.g. baseline strategy, why active vs passive scan).',
+          'README covers setup + decisions + a triage policy (what blocks a release vs what is logged) and one thing the author would do differently next time.',
+        ],
+      },
+    ],
+  },
+
   /** Placeholder sentinel — kept for validation smoke tests in schema.test.ts */
   placeholder: {
     id: 'placeholder',

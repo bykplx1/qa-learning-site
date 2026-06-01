@@ -1,0 +1,116 @@
+---
+slug: sec-a11y-capstone-juice-shop
+title: "Sec+A11y Capstone: Full Audit with CI Gate on OWASP Juice Shop"
+tier: capstone
+track: sec-a11y
+target:
+  name: "OWASP Juice Shop"
+  ref: "Docker image bkimminich/juice-shop pinned at tag v17.1.1 — github.com/juice-shop/juice-shop; see drift note"
+estimate: 4–5 days
+rubric: sec-a11y-capstone
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - Your audit combines automated scans (ZAP full/active scan + axe) with a manual WCAG 2.2 AA pass (keyboard navigation, focus order, and a screen-reader smoke test) across the primary flows.
+  - You scan in an authenticated context, not just anonymously — at least one flow behind login is covered.
+  - Every finding is labelled automated-caught vs manual-caught, mapped to its WCAG success criterion or OWASP category, and given a concrete code-level remediation recommendation.
+  - At least one finding is traced to its root cause and a proposed fix is verified by a re-scan (before/after evidence).
+  - CI runs the full audit, gates on a versioned baseline, uploads reports as artifacts, and is demonstrated to fail on an injected high-severity regression.
+  - You submit a public repo URL with a green CI badge confirmed at submission time, and attest CI is green (set ci_green to true in your submission).
+---
+
+## Brief
+
+Produce a portfolio-grade security and accessibility audit of
+[OWASP Juice Shop](https://github.com/juice-shop/juice-shop), gated in CI. This is
+the capstone for the track: it should read like an audit you could hand to a
+client. It goes beyond automated scanning to the work tools cannot do — an active
+security scan in an authenticated context, a manual WCAG 2.2 AA pass, root-cause
+analysis, and verified remediation.
+
+The mid project proved you can gate a baseline scan in CI. This project proves you
+can run a *full* audit — active scanning, manual testing, authenticated coverage —
+turn findings into prioritised, verified remediations, and still keep the whole
+thing reproducible behind a green pipeline.
+
+> **Drift notice.** Pin the image tag (`bkimminich/juice-shop:v17.1.1`) so your
+> active-scan and audit results are reproducible — Juice Shop releases often and
+> `:latest` will drift. Run only against a target you control (a local container or
+> your own deployment): an **active** ZAP scan sends real attack payloads and must
+> never be pointed at a system you are not authorised to test. Record the exact tag
+> and target URL in your README and note any divergence.
+
+## Suggested approach
+
+### Phase 1 — Scope & authenticated context (Day 1)
+
+1. Stand up the pinned target locally. Register a test account and capture the
+   auth flow (Juice Shop uses a bearer token in `Authorization`).
+2. Define scope: list the primary flows you will audit (landing/search, login,
+   product detail, basket, checkout, and at least one authenticated page such as
+   the user profile/order history). Record what is **out** of scope and why.
+
+### Phase 2 — Automated security scan, active (Days 1–2)
+
+3. Run a ZAP **full/active** scan, not just the baseline. Provide it the
+   authenticated context so it scans logged-in pages:
+   - Define a ZAP context with the login request and a logged-in/logged-out
+     indicator, or replay a captured token.
+   - `zap-full-scan.py -t http://localhost:3000 -r zap-full.html -J zap-full.json`
+     (active scan; expect it to find real injection/auth issues — that's the point).
+4. Run axe across every in-scope flow (Playwright + `@axe-core/playwright`),
+   including states that only exist after interaction (dialogs, expanded menus).
+
+### Phase 3 — Manual WCAG 2.2 AA pass (Days 2–3)
+
+5. The audit isn't done when the scanners stop. Do a manual pass on the primary
+   flows:
+   - **Keyboard only:** can you complete login → add to basket → checkout without a
+     mouse? Record every keyboard trap and unreachable control.
+   - **Focus order & visibility:** is focus order logical, is the focus indicator
+     visible (2.4.7), does focus move sensibly when dialogs open/close?
+   - **Screen-reader smoke test:** with NVDA/VoiceOver, are form fields announced
+     with their labels, are errors announced, are images meaningfully described?
+   - Map each manual finding to its WCAG SC (e.g. 2.1.1, 2.4.3, 4.1.2).
+
+### Phase 4 — Triage, remediation & verification (Days 3–4)
+
+6. Build the consolidated findings register. For each finding: source
+   (**automated-caught** vs **manual-caught**), severity, WCAG SC / OWASP category,
+   evidence, and a **concrete code-level remediation** (not "add a CSP" but the
+   actual header/value or the actual ARIA/markup change).
+7. Pick at least one finding, trace it to root cause, propose the fix, apply it to
+   a local patched build, and **re-scan to verify** — include before/after evidence.
+
+### Phase 5 — CI gate & packaging (Days 4–5)
+
+8. Wire the full audit into GitHub Actions against the pinned, health-checked
+   target: active ZAP scan + axe, gated against a versioned baseline, reports
+   uploaded as artifacts (`if: always()`).
+9. Document and demonstrate the gate failing on an injected high-severity
+   regression (commit history or screenshots).
+10. Confirm CI is green before submitting. The `ci_green` rubric row is binary:
+    public repo + verifiable green badge, or it scores 0.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- automated (active ZAP + axe) **and** manual WCAG 2.2 AA findings, each labelled by source
+- at least one authenticated flow covered by the security scan
+- a findings register with WCAG/OWASP mapping and code-level remediations
+- one finding root-caused and a fix verified by a before/after re-scan
+- a CI pipeline that gates on a versioned baseline, uploads reports, and is shown to fail on a regression
+- a README covering scope, the pipeline, the triage/release policy, which image tag was audited, and one thing you'd do differently next time
+- a green CI badge confirmed at submission time
+
+## Why this matters
+
+Automated scanners find a fraction of real accessibility and security problems —
+they cannot tell you whether a keyboard user can actually complete checkout, or
+whether an authenticated endpoint leaks another user's order. A credible audit
+pairs the tools with manual testing, covers the logged-in surface, and turns raw
+findings into prioritised, root-caused, *verified* remediations. Doing all of that
+behind a reproducible CI gate is the difference between "I ran a scanner once" and
+"I can own the security and accessibility quality of a real product" — which is
+exactly the artifact this capstone is meant to be.
