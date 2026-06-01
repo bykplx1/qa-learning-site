@@ -71,36 +71,31 @@ test.describe('auth provider chooser — #257', () => {
     await page.goto('/login');
     await expect(page.locator('h1')).toBeVisible();
 
-    const githubBtn = page.getByRole('link', { name: /continue with github/i });
-    const googleBtn = page.getByRole('link', { name: /continue with google/i });
+    // Buttons POST to /api/auth/sign-in/social (not GET links) — see #521 fix.
+    const githubBtn = page.getByRole('button', { name: /continue with github/i });
+    const googleBtn = page.getByRole('button', { name: /continue with google/i });
 
     await expect(githubBtn).toBeVisible();
     await expect(googleBtn).toBeVisible();
 
-    // GitHub button points to the real provider endpoint.
-    const githubHref = await githubBtn.getAttribute('href');
-    expect(githubHref).toMatch(/\/api\/auth\/sign-in\/github/);
-
-    // Google button points to the real provider endpoint.
-    const googleHref = await googleBtn.getAttribute('href');
-    expect(googleHref).toMatch(/\/api\/auth\/sign-in\/google/);
+    // Each button carries its provider in a data attribute.
+    expect(await githubBtn.getAttribute('data-provider')).toBe('github');
+    expect(await googleBtn.getAttribute('data-provider')).toBe('google');
   });
 
-  test('/login page preserves next param in provider hrefs', async ({ page }) => {
+  test('/login page preserves next param in provider data-callback', async ({ page }) => {
     await page.goto('/login?next=%2Fprojects%2Fflaky-test-hunter');
     await expect(page.locator('h1')).toBeVisible();
 
-    const githubBtn = page.getByRole('link', { name: /continue with github/i });
-    const googleBtn = page.getByRole('link', { name: /continue with google/i });
+    const githubBtn = page.getByRole('button', { name: /continue with github/i });
+    const googleBtn = page.getByRole('button', { name: /continue with google/i });
 
-    const githubHref = await githubBtn.getAttribute('href');
-    const googleHref = await googleBtn.getAttribute('href');
+    // callbackURL is stored in data-callback and passed as POST body on click.
+    const githubCallback = await githubBtn.getAttribute('data-callback');
+    const googleCallback = await googleBtn.getAttribute('data-callback');
 
-    // callbackURL must carry the next destination.
-    expect(githubHref).toContain('callbackURL=');
-    expect(googleHref).toContain('callbackURL=');
-    expect(decodeURIComponent(githubHref ?? '')).toContain('/projects/flaky-test-hunter');
-    expect(decodeURIComponent(googleHref ?? '')).toContain('/projects/flaky-test-hunter');
+    expect(githubCallback).toContain('/projects/flaky-test-hunter');
+    expect(googleCallback).toContain('/projects/flaky-test-hunter');
   });
 
   test('/login chooser buttons are keyboard accessible (a11y)', async ({ page }) => {
@@ -108,8 +103,8 @@ test.describe('auth provider chooser — #257', () => {
     await expect(page.locator('h1')).toBeVisible();
 
     // Both buttons must be reachable by Tab and have accessible names.
-    const githubBtn = page.getByRole('link', { name: /continue with github/i });
-    const googleBtn = page.getByRole('link', { name: /continue with google/i });
+    const githubBtn = page.getByRole('button', { name: /continue with github/i });
+    const googleBtn = page.getByRole('button', { name: /continue with google/i });
     await expect(githubBtn).toBeVisible();
     await expect(googleBtn).toBeVisible();
 
