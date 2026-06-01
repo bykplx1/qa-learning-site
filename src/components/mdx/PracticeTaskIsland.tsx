@@ -133,12 +133,14 @@ function PracticeTaskIslandInner({ id, rubricId, children }: Props) {
       )}
 
       {submitted && !rubricDef && (
-        <p
-          style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 12, fontFamily: 'var(--mono)' }}
-          data-testid={`practice-task-rubric-missing-${id}`}
+        <div
+          style={{ marginTop: 20, borderTop: '1px solid var(--rule)', paddingTop: 14 }}
+          data-testid={`practice-task-complete-${id}`}
         >
-          Rubric &quot;{rubricId}&quot; not found in the registry.
-        </p>
+          <p style={{ fontSize: 13, color: 'var(--pass-strong)', fontFamily: 'var(--mono)', margin: 0 }}>
+            Task marked complete — evaluate yourself against the rubric above.
+          </p>
+        </div>
       )}
     </div>
   );
