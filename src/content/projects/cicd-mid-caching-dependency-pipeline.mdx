@@ -1,0 +1,100 @@
+---
+slug: cicd-mid-caching-dependency-pipeline
+title: "CI/CD Mid: Dependency Caching & Pipeline Speed"
+tier: mid
+track: cicd
+target:
+  name: "actions/cache (GitHub)"
+  ref: "https://github.com/actions/cache — pinned at tag v4.2.3; see drift note below"
+estimate: 1 day
+rubric: cicd-mid
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - Your GitHub Actions workflow caches `node_modules` (or the npm cache directory) using `actions/cache@v4`, producing a measurable speedup on cache-hit runs versus cold runs.
+  - "You record timing evidence — at least one cold-run duration and one cache-hit-run duration — in your README, demonstrating the improvement."
+  - The cache key is scoped to the OS and a hash of `package-lock.json` so a lockfile change invalidates the cache automatically.
+  - The workflow runs tests on both a matrix of two Node.js versions and the cache is shared across matrix legs where appropriate.
+  - Your README explains the cache key strategy, when the cache is invalidated, and one scenario where a stale cache could silently break a build.
+---
+
+## Brief
+
+Slow CI feedback loops kill developer productivity. In this project you will
+measure your pipeline's cold-install time, add dependency caching with
+[actions/cache](https://github.com/actions/cache), and prove the speedup with
+timing evidence.
+
+Understanding caching strategy — specifically why cache keys include a lockfile
+hash — is as important as the implementation. A misconfigured cache key can
+silently serve stale dependencies for weeks.
+
+> **Drift notice.** `actions/cache` is pinned at tag `v4.2.3`. The cache
+> action's API has been stable across v3 and v4, but the key hash function and
+> restore-keys semantics are worth reviewing in the release notes if you use a
+> later tag. The npm cache directory path also varies by OS; the approach below
+> uses `actions/setup-node`'s built-in `cache: npm` as a simpler alternative
+> to manual `actions/cache` configuration — both are valid starting points.
+
+## Suggested approach
+
+1. Start from your starter-tier repo, or create a fresh Node.js project with
+   at least 10–20 dependencies so the install step takes several seconds.
+2. Add a baseline run with **no caching**. Note the wall-clock time for
+   `npm ci` in the job log. This is your cold baseline.
+
+3. Add caching using `actions/setup-node`'s built-in shorthand (recommended
+   starting point):
+   ```yaml
+   - uses: actions/setup-node@v4
+     with:
+       node-version: ${{ matrix.node-version }}
+       cache: 'npm'
+   ```
+   Or, to see the full `actions/cache` API directly:
+   ```yaml
+   - name: Cache npm dependencies
+     uses: actions/cache@v4
+     with:
+       path: ~/.npm
+       key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+       restore-keys: |
+         ${{ runner.os }}-node-${{ matrix.node-version }}-
+   ```
+
+4. Add a matrix strategy for two Node.js versions (e.g. 20 and 22):
+   ```yaml
+   strategy:
+     matrix:
+       node-version: ['20', '22']
+   ```
+
+5. Push. After the first run (cold), note the `npm ci` duration. Push again
+   without changing `package-lock.json`. Note the cache-hit duration. Record
+   both numbers in your README.
+
+6. Deliberately invalidate the cache: bump a dependency in `package.json` and
+   run `npm install` to update `package-lock.json`. Push. Confirm that a fresh
+   install runs (the cache miss is expected and correct).
+
+7. Write a short README section explaining:
+   - The cache key formula and what each part (`runner.os`, `node-version`,
+     `hashFiles`) guards against
+   - One scenario where a wrong cache key could silently serve stale packages
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A workflow using `actions/cache@v4` (or `setup-node` built-in caching) with
+  a lockfile-scoped cache key
+- A matrix running across two Node.js versions
+- Timing evidence in the README (cold run vs cache-hit run durations)
+- A README section explaining the cache key strategy and one invalidation gotcha
+
+## Why this matters
+
+Caching is the most accessible CI optimisation available. A pipeline that takes
+four minutes without caching and forty seconds with it is one that developers
+actually run on every commit instead of skipping to save time. Understanding
+the key strategy also teaches you why "just cache everything" can mask
+dependency drift — a subtler skill than the implementation itself.

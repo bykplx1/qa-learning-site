@@ -1,0 +1,90 @@
+---
+slug: cicd-starter-circleci-hello
+title: "CI/CD Starter: First CircleCI Pipeline"
+tier: starter
+track: cicd
+target:
+  name: "CircleCI sample-node-project (CircleCI)"
+  ref: "https://github.com/CircleCI-Public/sample-node-project — pinned at commit 5a0e5c3; see drift note below"
+estimate: 2–3 hr
+rubric: cicd-starter
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - You fork the CircleCI sample Node.js project and connect it to a free CircleCI account.
+  - You add or modify `.circleci/config.yml` to install dependencies with `npm ci` and run at least one test command.
+  - A failing test causes the CircleCI workflow to fail and show a red status; a passing test shows green.
+  - You pin the executor image to a specific CircleCI Node.js convenience image tag (e.g. `cimg/node:22.12`).
+  - Your README explains what the workflow does, how to navigate the CircleCI dashboard, and what a "workflow" versus a "job" means in CircleCI terms.
+---
+
+## Brief
+
+Wire your first CircleCI pipeline using
+[CircleCI's sample Node.js project](https://github.com/CircleCI-Public/sample-node-project)
+as a starting point. CircleCI has a distinct vocabulary — workflows, jobs,
+steps, orbs — that is worth learning on a small project so you are not
+deciphering it for the first time on a critical delivery pipeline.
+
+> **Drift notice.** The sample project is pinned at commit `5a0e5c3`. Fork it
+> before making changes — do not push to the upstream repo. CircleCI
+> convenience image tags (e.g. `cimg/node:22.12`) are updated regularly; if a
+> pinned tag is no longer available, use the nearest stable equivalent and note
+> the substitution in your README.
+
+## Suggested approach
+
+1. Fork [CircleCI-Public/sample-node-project](https://github.com/CircleCI-Public/sample-node-project)
+   to your GitHub account.
+2. Sign up for a free [CircleCI](https://circleci.com) account and connect your
+   GitHub account. Add your fork as a project.
+3. Open `.circleci/config.yml`. You will see an existing workflow. Read it —
+   note the `executor`, `steps`, and `workflows` keys.
+4. Modify or replace `config.yml` so it:
+   - Uses the `cimg/node:22.12` executor image
+   - Runs `npm ci` to install dependencies
+   - Runs `npm test` to execute the test suite
+
+   Minimal example:
+   ```yaml
+   version: 2.1
+   jobs:
+     test:
+       docker:
+         - image: cimg/node:22.12
+       steps:
+         - checkout
+         - run:
+             name: Install dependencies
+             command: npm ci
+         - run:
+             name: Run tests
+             command: npm test
+   workflows:
+     ci:
+       jobs:
+         - test
+   ```
+
+5. Push to your fork's `main` branch. Navigate to the CircleCI dashboard and
+   confirm the workflow goes green.
+6. Deliberately break a test, push again, confirm the workflow goes red and the
+   step log shows the failure.
+7. Fix the test. Confirm green. Screenshot both states for your README.
+
+## What "done" looks like
+
+A public GitHub fork with:
+- A `.circleci/config.yml` that runs `npm test` on every push
+- Evidence of at least one red run followed by a green run (CircleCI dashboard
+  screenshots or README images)
+- A README paragraph explaining: the difference between a CircleCI workflow and
+  a job, how to view step logs, and why you pin the convenience image tag
+
+## Why this matters
+
+CircleCI is used by teams that need more pipeline configurability than the free
+tier of GitHub Actions provides, and by organisations that predate GitHub Actions.
+Knowing the CircleCI config model — and how it maps to concepts you know from
+other CI systems — means you can contribute to a wider range of delivery
+pipelines without a steep learning curve.

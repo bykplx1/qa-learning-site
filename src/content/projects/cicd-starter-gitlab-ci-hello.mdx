@@ -1,0 +1,83 @@
+---
+slug: cicd-starter-gitlab-ci-hello
+title: "CI/CD Starter: First GitLab CI Pipeline"
+tier: starter
+track: cicd
+target:
+  name: "GitLab CI/CD Quick Start (GitLab.com)"
+  ref: "https://docs.gitlab.com/ee/ci/quick_start/ — documentation current as of GitLab 17.x; see drift note below"
+estimate: 2–3 hr
+rubric: cicd-starter
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - You create a public project on GitLab.com and add a `.gitlab-ci.yml` that runs on every push to the default branch.
+  - The pipeline installs Node.js dependencies with `npm ci` and executes at least one test command.
+  - A failing test causes the pipeline to report a failing status on the commit; a passing test reports success.
+  - You pin the runner image to a specific Node.js Docker tag (e.g. `node:22-alpine`) rather than using `latest`.
+  - Your README explains what the pipeline does, how to view the job log, and what "pinning the image tag" prevents.
+---
+
+## Brief
+
+Wire your first GitLab CI pipeline: a `.gitlab-ci.yml` that installs
+dependencies and runs tests on every push. GitLab CI uses a different mental
+model from GitHub Actions — a YAML-defined list of jobs grouped into stages,
+running inside Docker containers on shared runners.
+
+You'll work directly from the
+[GitLab CI Quick Start](https://docs.gitlab.com/ee/ci/quick_start/) and then
+build your own pipeline from scratch so you understand every directive.
+
+> **Drift notice.** The GitLab CI documentation is updated with each GitLab
+> release (currently 17.x at time of writing). Pipeline syntax keywords (`script`,
+> `stages`, `image`) are stable, but runner image tags evolve. If a referenced
+> image tag is no longer available, substitute the nearest stable equivalent and
+> note it in your README — understanding why images go stale is part of the
+> exercise.
+
+## Suggested approach
+
+1. Create a free public project on [GitLab.com](https://gitlab.com). You can
+   push a minimal Node.js project or use an existing one.
+2. Add a test runner if you have none. `npm init -y` and install Vitest:
+   ```bash
+   npm install -D vitest
+   ```
+   Write one trivial passing test and one that fails when you break the code.
+3. Create `.gitlab-ci.yml` at the repo root:
+
+   ```yaml
+   image: node:22-alpine
+
+   stages:
+     - test
+
+   test:
+     stage: test
+     script:
+       - npm ci
+       - npm test
+   ```
+
+4. Push to the default branch. Open **CI/CD → Pipelines** in the GitLab UI.
+   Confirm the pipeline goes green.
+5. Deliberately break a test, push again, confirm the pipeline goes red and the
+   job log shows the failing assertion.
+6. Fix the test. Confirm green again. Screenshot both outcomes for your README.
+
+## What "done" looks like
+
+A public GitLab project with:
+- A `.gitlab-ci.yml` that runs `npm test` on every push
+- Evidence of at least one red run followed by a green run (pipeline history or
+  README screenshots)
+- A README paragraph explaining: what the pipeline does, how to view the job
+  log, and why pinning `node:22-alpine` is safer than `node:latest`
+
+## Why this matters
+
+GitLab CI is the default pipeline system for many organisations that self-host
+their source control. Understanding how `.gitlab-ci.yml` stages and jobs map to
+the concepts you know from GitHub Actions makes you portable across the two most
+common CI platforms — a practical advantage when joining a new team.

@@ -1,0 +1,110 @@
+---
+slug: cicd-mid-docker-build-push
+title: "CI/CD Mid: Docker Build & Push Pipeline"
+tier: mid
+track: cicd
+target:
+  name: "docker/build-push-action (Docker)"
+  ref: "https://github.com/docker/build-push-action — pinned at tag v6.16.0; see drift note below"
+estimate: 1 day
+rubric: cicd-mid
+requiredConcepts:
+  - cicd-for-testing
+acceptanceCriteria:
+  - Your GitHub Actions workflow builds a Docker image from a `Dockerfile` in your repo, runs tests inside the image, and pushes a tagged image to Docker Hub only when tests pass.
+  - The workflow uses `docker/build-push-action@v6` and authenticates to Docker Hub via GitHub Actions secrets (not hardcoded credentials).
+  - The image is tagged with both `latest` and the Git commit SHA (e.g. `yourname/myapp:abc1234`).
+  - A failing test step prevents the push step from executing — the push is conditional on test success.
+  - Your README explains the `build → test → push` gate, how to pull and run the published image locally, and why credentials must be stored as secrets rather than environment variables in the workflow YAML.
+---
+
+## Brief
+
+Extend a basic CI pipeline to build a Docker image, run your test suite inside
+the built container, and push a tagged image to Docker Hub — but only after the
+tests pass. The push is the quality gate: a failing test must block the publish
+step entirely.
+
+You'll use [docker/build-push-action](https://github.com/docker/build-push-action),
+the canonical GitHub Action for Docker image builds, and connect it to a free
+Docker Hub account.
+
+> **Drift notice.** `docker/build-push-action` is pinned at tag `v6.16.0`.
+> The Docker Hub free tier and the action's API have been stable, but the
+> action releases minor versions regularly. If you use a later tag, note it in
+> your README and check the release notes for any breaking changes — adapting
+> to upstream changes is part of working with CI ecosystems.
+
+## Suggested approach
+
+1. Create a Docker Hub account if you do not have one. Create a public
+   repository there (e.g. `yourname/cicd-mid-demo`).
+2. In your GitHub repo, add secrets under **Settings → Secrets and variables
+   → Actions**:
+   - `DOCKERHUB_USERNAME` — your Docker Hub username
+   - `DOCKERHUB_TOKEN` — a Docker Hub access token (not your password)
+3. Write a minimal `Dockerfile`:
+   ```dockerfile
+   FROM node:22-alpine
+   WORKDIR /app
+   COPY package*.json ./
+   RUN npm ci
+   COPY . .
+   CMD ["npm", "test"]
+   ```
+4. Create or update `.github/workflows/ci.yml`:
+
+   ```yaml
+   name: CI + Docker Push
+   on:
+     push:
+       branches: [main]
+
+   jobs:
+     test-and-push:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - name: Set up Docker Buildx
+           uses: docker/setup-buildx-action@v3
+         - name: Log in to Docker Hub
+           uses: docker/login-action@v3
+           with:
+             username: ${{ secrets.DOCKERHUB_USERNAME }}
+             password: ${{ secrets.DOCKERHUB_TOKEN }}
+         - name: Build image and run tests
+           run: docker build --target test -t cicd-mid-test .
+         - name: Push image
+           uses: docker/build-push-action@v6
+           with:
+             push: true
+             tags: |
+               ${{ secrets.DOCKERHUB_USERNAME }}/cicd-mid-demo:latest
+               ${{ secrets.DOCKERHUB_USERNAME }}/cicd-mid-demo:${{ github.sha }}
+   ```
+
+   Note: the `build image and run tests` step must run before `Push image`. If
+   the test step exits non-zero, the job fails and the push step never runs.
+5. Push to `main`. Confirm the workflow goes green and the image appears on
+   Docker Hub with both `latest` and the SHA tag.
+6. Deliberately break a test, push again. Confirm the push step is skipped
+   (the job fails at the test step).
+7. Pull the published image locally: `docker pull yourname/cicd-mid-demo:latest`
+   and run it to confirm the image works.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A `Dockerfile` and `.github/workflows/ci.yml` implementing a build–test–push gate
+- A Docker Hub repository with a `latest` tag and at least one SHA-tagged image
+- Evidence of a failing run that blocked the push step (job log or README screenshot)
+- A README covering: how the gate works, how to pull and run the image, and why
+  credentials are secrets
+
+## Why this matters
+
+Pushing an untested image is a fast path to a broken deployment. Gating the
+Docker push behind a CI test step is the most common pattern for containerised
+delivery pipelines. Understanding how to thread Docker Hub credentials through
+GitHub Actions secrets — rather than hardcoding them — is a prerequisite for
+working on any team that uses containers in CI.
