@@ -423,9 +423,37 @@ export interface ProfileRawData {
 }
 
 /**
- * Derive per-day activity counts from the source tables (lesson_views + quiz_attempts)
- * rather than from the denormalized daily_activity counter.
- * This is the canonical fix for #351 (counter drift).
+ * Derive per-day activity counts from already-fetched rows rather than firing
+ * extra DB queries.  Called by loadProfileRaw after fetching lessonViewRows and
+ * quizAttemptRows, eliminating two redundant round-trips.
+ */
+export function computeDailyActivityFromRows(
+  lessonViewRows: { completedAt: Date | null }[],
+  quizAttemptRows: { attemptedAt: Date }[],
+): { day: string; attemptsCount: number; lessonsCount: number }[] {
+  const dayMap = new Map<string, { attemptsCount: number; lessonsCount: number }>();
+
+  for (const r of quizAttemptRows) {
+    const day = r.attemptedAt.toISOString().slice(0, 10);
+    const entry = dayMap.get(day) ?? { attemptsCount: 0, lessonsCount: 0 };
+    entry.attemptsCount += 1;
+    dayMap.set(day, entry);
+  }
+
+  for (const r of lessonViewRows) {
+    if (!r.completedAt) continue;
+    const day = r.completedAt.toISOString().slice(0, 10);
+    const entry = dayMap.get(day) ?? { attemptsCount: 0, lessonsCount: 0 };
+    entry.lessonsCount += 1;
+    dayMap.set(day, entry);
+  }
+
+  return Array.from(dayMap.entries()).map(([day, counts]) => ({ day, ...counts }));
+}
+
+/**
+ * @deprecated Use computeDailyActivityFromRows when rows are already available.
+ * Kept for callers that only need daily activity without the full profile load.
  */
 export async function computeDailyActivityFromSource(
   userId: string,
@@ -466,7 +494,6 @@ export async function computeDailyActivityFromSource(
 
 export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
   const [
-    dailyActivityRows,
     lessonViewRows,
     quizAttemptRows,
     submissionRows,
@@ -475,7 +502,6 @@ export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
     cardsPerSessionRows,
     dueCountRows,
   ] = await Promise.all([
-    computeDailyActivityFromSource(userId),
     db
       .select({ lessonSlug: lessonViews.lessonSlug, completedAt: lessonViews.completedAt })
       .from(lessonViews)
@@ -550,6 +576,10 @@ export async function loadProfileRaw(userId: string): Promise<ProfileRawData> {
         ),
       ),
   ]);
+
+  // Derive daily activity counts in-memory from already-fetched rows.
+  // Avoids the 2 extra DB round-trips that computeDailyActivityFromSource would fire.
+  const dailyActivityRows = computeDailyActivityFromRows(lessonViewRows, quizAttemptRows);
 
   const retRow = retentionRows[0];
   const retentionPct =
