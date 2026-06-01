@@ -14,7 +14,7 @@ const showGapPrompt = import.meta.env.FEATURE_AI_GAP_PROMPT === '1';
   <p class="eyebrow mdx-feynman__label">
     feynman prompt · {id} · ~{wordTarget} words
   </p>
-  <div class="mdx-feynman__prompt">
+  <div class="mdx-feynman__prompt prose">
     <slot />
   </div>
   <div class="mdx-feynman__editor">
@@ -37,6 +37,7 @@ const showGapPrompt = import.meta.env.FEATURE_AI_GAP_PROMPT === '1';
     margin-bottom: 20px;
     padding-bottom: 18px;
     border-bottom: 1px solid var(--rule);
+    max-width: none;
   }
   .mdx-feynman__editor { margin-top: 4px; }
 </style>
