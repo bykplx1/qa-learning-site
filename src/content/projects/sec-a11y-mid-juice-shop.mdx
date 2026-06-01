@@ -1,0 +1,99 @@
+---
+slug: sec-a11y-mid-juice-shop
+title: "Sec+A11y Mid: CI Baseline Scan on OWASP Juice Shop"
+tier: mid
+track: sec-a11y
+target:
+  name: "OWASP Juice Shop"
+  ref: "Docker image bkimminich/juice-shop pinned at tag v17.1.1 — github.com/juice-shop/juice-shop; see drift note"
+estimate: 1 day
+rubric: sec-a11y-mid
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - You run the target locally from a pinned Docker image tag (not a live shared instance) and your README records the tag.
+  - Your CI workflow runs both an axe accessibility scan and an OWASP ZAP baseline scan against the running app.
+  - The job fails on new findings above a chosen severity threshold and passes when only baselined (known) findings are present.
+  - A version-controlled baseline / allowlist captures the app's known pre-existing findings, with a short justification per entry.
+  - You submit a public repo URL with a README covering local run, the CI pipeline, and what the gate enforces.
+---
+
+## Brief
+
+Wire a combined accessibility + security scan into CI against
+[OWASP Juice Shop](https://github.com/juice-shop/juice-shop) — the most popular
+deliberately-insecure web application, purpose-built for security training. It is
+a real single-page Angular app with a login, product catalogue, basket, and
+checkout, so it has genuine accessibility surface area too.
+
+The starter project proved you can run the tools and triage their output by hand.
+This project proves you can make those scans *run automatically and gate a build*
+— the difference between a one-off audit and a regression guard.
+
+> **Drift notice.** Juice Shop ships frequent releases. Pin a specific image tag
+> (this brief baselines against `bkimminich/juice-shop:v17.1.1`) so your scan
+> results are reproducible — `:latest` will drift and break your baseline. Run it
+> with `docker run --rm -p 3000:3000 bkimminich/juice-shop:v17.1.1` and target
+> `http://localhost:3000`. If you choose a different tag, record it in your README;
+> the exact finding counts in your baseline will differ.
+
+## Suggested approach
+
+1. **Run the target locally and pin it.** Use the pinned image tag above. In CI,
+   start it as a service container or a backgrounded `docker run`, then **wait for
+   readiness** before scanning — poll `http://localhost:3000/rest/admin/application-version`
+   (or just the root) until it returns 200. Do not scan during startup or you'll
+   get a flaky race.
+
+2. **Accessibility scan in CI.** A Playwright spec with `@axe-core/playwright` that
+   visits the landing page, the search results, and the login dialog, then calls
+   `.analyze()` on each. Write the violations to a JSON file.
+
+3. **Security baseline scan in CI.** Run the ZAP baseline (passive) action or image:
+   ```
+   docker run --rm -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-baseline.py -t http://localhost:3000 \
+     -c zap-baseline.conf -r zap-report.html -J zap-report.json
+   ```
+   The `-c zap-baseline.conf` file is your **allowlist**: it marks known rules as
+   IGNORE/WARN so the build only fails on *new* findings. (For axe, keep an
+   equivalent committed `axe-baseline.json` and diff against it in your script.)
+
+4. **Gate the build.** Your pipeline should:
+   - Fail the job if axe reports a violation that isn't in the axe baseline.
+   - Fail the job if ZAP reports a FAIL-level finding not in the baseline config.
+   - Upload `zap-report.html` and the axe JSON as artifacts with `if: always()` so
+     a failing run is still inspectable.
+
+5. **Build the baseline deliberately.** Run the scans once against the pinned
+   target, then commit the known findings into the baseline/allowlist *with a
+   one-line justification per entry* (e.g. "Juice Shop intentionally omits CSP —
+   tracked, not fixing in this fork"). The README should explain how to refresh it
+   when you bump the image tag.
+
+6. **Prove the gate works.** Add a commit (or document a run) where an injected
+   finding — e.g. removing a label from a page object, or adding a header the
+   baseline doesn't expect — causes the build to go red.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- the target pinned to a specific image tag, started and health-checked in CI
+- a CI workflow running both axe and ZAP baseline scans on every push
+- a versioned baseline/allowlist with per-entry justification
+- reports uploaded as artifacts on success and failure
+- a README covering local run, the pipeline, the gate policy, and how to refresh the baseline
+- a green CI badge
+
+## Why this matters
+
+A scan you run by hand catches problems once; a scan in CI catches them every
+time someone changes the code. The hard part isn't running the tools — it's the
+**baseline**. Without one, every pre-existing finding fails the build and the team
+disables the gate within a week. With a sloppy global suppression, the gate passes
+everything and protects nothing. Getting the baseline right — known issues
+allow-listed and justified, new issues blocking — is exactly the engineering
+judgment that makes automated security and accessibility gates survive in a real
+pipeline.

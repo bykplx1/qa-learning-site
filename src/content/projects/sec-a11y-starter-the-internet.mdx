@@ -1,0 +1,87 @@
+---
+slug: sec-a11y-starter-the-internet
+title: "Sec+A11y Starter: First Automated Baseline on the-internet"
+tier: starter
+track: sec-a11y
+target:
+  name: "the-internet (SeleniumHQ)"
+  ref: "https://the-internet.herokuapp.com — hosted; pinnable locally via the gprestes/the-internet Docker image, see drift note"
+estimate: 2–3 hr
+rubric: sec-a11y-starter
+requiredConcepts:
+  - accessibility-testing
+  - security-testing
+acceptanceCriteria:
+  - You run an automated accessibility scan (axe-core, via @axe-core/cli or a Playwright + @axe-core/playwright script) against at least three distinct pages.
+  - You run an OWASP ZAP baseline (passive) scan against the same pages.
+  - You triage the combined findings by severity and map each high/serious item to the relevant WCAG success criterion or OWASP category.
+  - You identify at least one likely false-positive or needs-manual-review finding and explain why.
+  - Your README documents the exact commands (with tool versions) so both scans reproduce from a clean clone.
+---
+
+## Brief
+
+Run your first combined accessibility + security baseline against
+[the-internet](https://the-internet.herokuapp.com) — SeleniumHQ's collection of
+small, stable practice pages (login forms, dynamic content, dropdowns, file
+upload, and more). It is a deliberately simple target so you can focus on
+*running the tools and reading their output*, not on fighting a complex app.
+
+The accessibility-testing and security-testing lessons teach you what axe and a
+passive scanner look for. This project makes you actually run them, then do the
+part the tools can't: decide which findings matter.
+
+> **Drift notice.** `the-internet.herokuapp.com` is externally hosted and not
+> pinned to a commit. Its pages have been stable for years, but if it is slow or
+> unavailable you can run it locally and scan a fixed version:
+> `docker run -d -p 7080:5000 gprestes/the-internet`, then target
+> `http://localhost:7080`. Record which URL you scanned in your README and note
+> any divergence.
+
+## Suggested approach
+
+1. **Pick your three pages.** Good candidates with real surface area:
+   - `/login` — a form (labels, error messaging, autocomplete)
+   - `/dynamic_content` — repeated content / images
+   - `/checkboxes` or `/dropdown` — interactive controls
+
+2. **Accessibility scan (axe-core).** Pick one:
+   - **CLI:** `npx @axe-core/cli https://the-internet.herokuapp.com/login`
+   - **Scripted:** a Playwright spec using `@axe-core/playwright` that navigates to each page and calls `new AxeBuilder({ page }).analyze()`. The scripted route is preferable because you can scan pages that need interaction first.
+
+3. **Security baseline scan (OWASP ZAP).** Run the passive baseline — it crawls and observes, it does **not** attack:
+   ```
+   docker run --rm -v "$(pwd):/zap/wrk:rw" \
+     ghcr.io/zaproxy/zaproxy:stable \
+     zap-baseline.py -t https://the-internet.herokuapp.com/login -r zap-report.html
+   ```
+   The baseline reports passive findings such as missing security headers
+   (Content-Security-Policy, X-Content-Type-Options), cookie flags, and
+   information disclosure.
+
+4. **Triage.** Build one table combining both tools. For each finding record:
+   severity, the page, the WCAG SC (e.g. 1.3.1, 4.1.2) or OWASP/ZAP category, the
+   evidence, and a suggested fix. Then flag at least one finding you believe is a
+   false positive or needs manual confirmation (axe's `incomplete`/needs-review
+   results are a good source) and say why.
+
+5. **Make it reproducible.** Add a `README.md` (or a tiny `npm test` / shell
+   script) so the scans rerun with one command. Pin the tool versions you used
+   (axe-core version, ZAP image tag).
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- runs an axe scan and a ZAP baseline scan against at least three pages
+- contains a triage table grouping findings by severity with WCAG/OWASP mapping
+- flags at least one false-positive / needs-review item with a justification
+- has a README with pinned tool versions and one-command reproduction steps
+
+## Why this matters
+
+Scanners are loud. A raw axe or ZAP report mixes genuine blockers with noise and
+context-dependent "review this" items. The skill that separates a useful audit
+from a wall of red is *triage* — grouping by severity, mapping to a standard, and
+knowing which findings a human still has to confirm. Learning to read these two
+tools side by side, on a target simple enough to reason about end to end, is the
+foundation every later security and accessibility audit builds on.
