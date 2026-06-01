@@ -89,16 +89,60 @@ function AuthNavInner() {
 
   if (!user) {
     return (
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ position: 'relative' }}>
         <button
+          ref={triggerRef}
           type="button"
-          onClick={() =>
-            authClient.signIn.social({ provider: 'github', callbackURL: window.location.href })
-          }
           className="btn btn--ghost btn--sm"
+          aria-expanded={open}
+          aria-haspopup="true"
+          onClick={() => setOpen((v) => !v)}
         >
           Sign in
         </button>
+        {open && (
+          <div
+            ref={menuRef}
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 'calc(100% + 8px)',
+              minWidth: 200,
+              background: 'var(--paper)',
+              border: '1px solid var(--rule)',
+              borderRadius: 10,
+              boxShadow: '0 12px 30px -10px rgba(0,0,0,0.18)',
+              padding: 14,
+              zIndex: 10,
+            }}
+          >
+            <div style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--ink-3)', marginBottom: 10 }}>
+              Choose provider
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                void authClient.signIn.social({ provider: 'github', callbackURL: window.location.href });
+              }}
+              className="btn btn--ghost btn--sm"
+              style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }}
+            >
+              GitHub
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                void authClient.signIn.social({ provider: 'google', callbackURL: window.location.href });
+              }}
+              className="btn btn--ghost btn--sm"
+              style={{ width: '100%', justifyContent: 'flex-start' }}
+            >
+              Google
+            </button>
+          </div>
+        )}
       </div>
     );
   }
