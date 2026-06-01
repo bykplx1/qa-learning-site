@@ -1,0 +1,68 @@
+---
+slug: perf-starter-restfulbooker
+title: "Perf Starter: Baseline Load Test on restful-booker"
+tier: starter
+track: perf
+target:
+  name: "restful-booker (Mark Winteringham)"
+  ref: "https://restful-booker.herokuapp.com — purpose-built REST API for testing practice; see drift note below"
+estimate: 2–3 hr
+rubric: perf-starter
+requiredConcepts:
+  - performance-testing
+acceptanceCriteria:
+  - You install k6 and run `k6 run script.js` to get a passing result with no threshold failures.
+  - Your script sends load to at least two distinct endpoints (e.g. GET /booking and POST /booking).
+  - You define at least two thresholds — one on `http_req_failed` and one on a percentile of `http_req_duration`.
+  - Your README explains how to run the script from a clean clone in one command and what the thresholds mean.
+---
+
+## Brief
+
+Install k6 from scratch and run your first real load test against
+[restful-booker](https://restful-booker.herokuapp.com) — a purpose-built booking
+API that is widely used for testing practice. You'll exercise a REST API under
+simulated concurrent load without any tutorial scaffolding.
+
+The lesson teaches you how k6 works. This project makes you use it on a target
+with realistic booking-domain semantics: authentication tokens, resource creation,
+and retrieval.
+
+> **Drift notice.** restful-booker is maintained by Mark Winteringham and hosted
+> on Heroku. The API has been stable, but it is an externally hosted service. If
+> an endpoint changes or the service is slow to respond between now and when you
+> run this, note the behaviour in your README. Alternatively, you can run
+> restful-booker locally:
+> `docker run -p 3001:3001 mwinteringham/restfulbooker` and point `baseURL` at
+> `http://localhost:3001`.
+
+## Suggested approach
+
+1. Install k6: `brew install k6` (macOS), `choco install k6` (Windows), or via the [official install docs](https://k6.io/docs/get-started/installation/).
+2. Create `script.js` with a `baseURL` pointing at `https://restful-booker.herokuapp.com`.
+3. Write a `default` function that calls at least two endpoints. Suggested pair:
+   - `GET /booking` — retrieves a list of all booking IDs
+   - `POST /booking` — creates a new booking with a JSON body (name, dates, price)
+4. Add a `sleep(1)` between iterations (simulates real user think-time).
+5. Define an `options` block with:
+   - `vus: 5` and `duration: '30s'` for the load profile
+   - A threshold: `http_req_failed: ['rate<0.05']` (restful-booker is a shared demo API; use a slightly relaxed error budget)
+   - A threshold: `http_req_duration: ['p(95)<2000']` (95th percentile under 2 seconds — realistic for a shared Heroku instance)
+6. Run `k6 run script.js` and paste the summary table into your README.
+
+## What "done" looks like
+
+A folder (no public repo required at this tier) that:
+- contains a `README.md` listing the k6 version used
+- has a script that passes consistently against the live API
+- has a README with a one-command run instruction, the threshold definitions, and a brief explanation of what p(95) means in this context
+
+## Why this matters
+
+Choosing appropriate threshold values is a judgment call, not a formula. A shared
+demo API on a free Heroku dyno has very different baseline latency from a
+co-located microservice. Deciding that `p(95)<2000` is the right budget here —
+not `p(95)<200` — is the same decision you'll make when agreeing on SLOs with an
+engineering team: what does "acceptable" actually mean for this service and its users?
+
+The lesson covers the k6 API. This brief covers the judgment behind the numbers.
