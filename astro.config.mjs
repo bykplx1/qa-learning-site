@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 import tailwindcss from '@tailwindcss/vite';
@@ -54,6 +55,16 @@ export default defineConfig({
     plugins: [tailwindcss(), pagefindDevStub],
     resolve: {
       dedupe: ['react', 'react-dom'],
+    },
+    server: {
+      fs: {
+        // Allow git worktrees to serve node_modules resolved from the main repo root.
+        // In a worktree the config file lives 3 dirs below the repo root, so `../../..`
+        // resolves to the actual repo where node_modules is installed.
+        // In the main repo the same path reaches the parent of the repo — harmless in
+        // dev-only server mode.
+        allow: ['.', resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..')],
+      },
     },
     ssr: {
       optimizeDeps: {
