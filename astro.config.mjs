@@ -73,6 +73,10 @@ export default defineConfig({
     // ordering. extendMarkdownConfig:false isolates MDX from the base markdown config.
     mdx({
       extendMarkdownConfig: false,
+      // Exclude mermaid from Shiki syntax highlighting so that ```mermaid
+      // code fences reach rehypeMermaid as raw <code class="language-mermaid">
+      // nodes, which the plugin converts to inline SVG at build time.
+      syntaxHighlight: { type: 'shiki', excludeLangs: ['math', 'mermaid'] },
       remarkPlugins: [...REMARK_PLUGINS],
       rehypePlugins: [...REHYPE_PLUGINS],
     }),

@@ -10,6 +10,9 @@
  *   remarkSectionOrder puts "Core Idea" first; rehypeTakeawayBlockquote then
  *   scans from the top and attaches the `.lesson-takeaway` class to the first
  *   blockquote inside that section.
+ *
+ *   rehypeMermaidCached MUST run before rehypeTakeawayBlockquote so that mermaid
+ *   code fences are resolved to SVG nodes before the blockquote pass.
  */
 
 import { remarkRepairMojibake } from '../encoding/remarkRepairMojibake.js';
@@ -17,6 +20,8 @@ import { remarkStripQuizSections } from '../quiz/remarkStripQuizSections.js';
 import { remarkDemoteH1 } from '../lessons/remarkDemoteH1.js';
 import { remarkSectionOrder } from '../lessons/remarkSectionOrder.js';
 import { rehypeTakeawayBlockquote } from '../lessons/rehypeTakeawayBlockquote.js';
+import { rehypeMermaidCached } from './rehypeMermaidCached.js';
+import type { PluggableList } from 'unified';
 
 export {
   remarkRepairMojibake,
@@ -24,6 +29,7 @@ export {
   remarkDemoteH1,
   remarkSectionOrder,
   rehypeTakeawayBlockquote,
+  rehypeMermaidCached,
 };
 
 /**
@@ -45,7 +51,19 @@ export const REMARK_PLUGINS = [
 /**
  * The ordered rehype plugin list for MDX curriculum files.
  *
+ * rehypeMermaidCached swaps ```mermaid code fences for their PRE-RENDERED inline
+ * SVG (committed under src/generated/mermaid/, produced by `npm run mermaid:render`).
+ * It reads files only and never launches a browser, so it is safe on Vercel and
+ * in every CI build job. Result: zero client-side Mermaid JS and zero CLS (the
+ * inline SVG carries its own viewBox). See ./mermaidCache.ts for the rationale.
+ *
+ * rehypeMermaidCached MUST run before rehypeTakeawayBlockquote so mermaid fences
+ * are resolved to SVG nodes before the blockquote pass.
+ *
  * rehypeTakeawayBlockquote depends on remarkSectionOrder having already run
  * (it expects "Core Idea" to be the first h2 in the hast tree).
  */
-export const REHYPE_PLUGINS = [rehypeTakeawayBlockquote] as const;
+export const REHYPE_PLUGINS: PluggableList = [
+  rehypeMermaidCached,
+  rehypeTakeawayBlockquote,
+];
