@@ -160,43 +160,24 @@ Expected output:
 If the run is green, the setup is complete. Move on.
 
 <Diagram caption="Four canonical workload shapes for one endpoint, showing what each shape reveals and the bug class each catches">
+
+```mermaid
+flowchart TD
+    subgraph WS["Four Workload Shapes — POST /checkout"]
+        LT["LOAD TEST — Steady-state at expected peak\n500 VU, 30 min hold\nAnswers: Does the system meet SLOs under planned load?\nCatches: SLO breach, connection-pool saturation"]
+        ST["STRESS TEST — Ramp beyond peak until break\n0 → 5000 VU over 30 min\nAnswers: Where does the system break, how does it fail?\nCatches: capacity ceiling, graceful-vs-cliff failure, cascades"]
+        SO["SOAK TEST — Moderate load for hours/days\n200 VU, 8 hours\nAnswers: Are there leaks, accumulating queues, GC pauses?\nCatches: memory leaks, pool exhaustion, log-volume blow-up"]
+        SP["SPIKE TEST — Instantaneous step-up\n50 VU → 2000 VU at t=5 min, back at t=10 min\nAnswers: Does autoscaling react in time?\nCatches: autoscaling lag, connection-pool pre-warming gaps"]
+    end
+    subgraph PR["Reading Results — always p50/p95/p99, never averages"]
+        P["990 req @ 50ms + 10 req @ 5000ms\nAverage: ~100ms (hides the pain)\np50: 50ms · p95: 50ms · p99: 5000ms (truth)"]
+    end
+    subgraph WM["Workload Model"]
+        WM1["Closed (constant-vus): N VUs wait for response → send next\n→ under-reports tail latency (coordinated omission)"]
+        WM2["Open (constant-arrival-rate): requests arrive at fixed rate\n→ models real traffic; exposes true tail latency"]
+    end
 ```
-ENDPOINT: POST /checkout
 
-LOAD TEST — Steady-state at expected peak
-  VUs: ████████████████████████ (500 VU, 30 min hold)
-  Answers: "Does the system meet SLOs under the load it was sized for?"
-  Catches: SLO breach, connection-pool saturation at planned capacity
-
-STRESS TEST — Ramp beyond peak until something breaks
-  VUs: ▁▂▄▆████▆▄▂▁ (0 → 5000 VU over 30 min, hold 5 min, ramp down)
-  Answers: "Where does the system break, and how does it fail?"
-  Catches: capacity ceiling, graceful-vs-cliff failure mode, cascades
-
-SOAK TEST — Moderate load sustained for hours to days
-  VUs: ████████████████████████████████████ (200 VU, 8 hours)
-  Answers: "Are there leaks, accumulating queues, GC pauses?"
-  Catches: memory leaks, pool exhaustion, log-volume blow-up
-
-SPIKE TEST — Instantaneous step-up from baseline to high load
-  VUs: ░░░░████░░░░████░░░░ (50 VU → 2000 VU at t=5 min, back at t=10 min)
-  Answers: "Does autoscaling react in time? Does cold-start tax matter?"
-  Catches: autoscaling lag, connection-pool pre-warming gaps
-
-─────────────────────────────────────────────────────────────────────
-READING RESULTS: always p50 / p95 / p99 — never averages
-
-  990 requests @ 50 ms  +  10 requests @ 5000 ms
-  Average: ~100 ms  ← hides the pain
-  p50:  50 ms   p95:  50 ms   p99:  5000 ms  ← truth
-─────────────────────────────────────────────────────────────────────
-WORKLOAD MODEL: closed vs open
-
-  Closed (constant-vus): N VUs wait for response → send next
-    → under-reports tail latency under saturation (coordinated omission)
-  Open (constant-arrival-rate): requests arrive at fixed rate
-    → models real traffic; exposes true tail latency
-```
 </Diagram>
 
 ## 2. Implement + best practice

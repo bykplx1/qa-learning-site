@@ -256,67 +256,26 @@ db-runbook/
 ```
 
 <Diagram caption="Testcontainers lifecycle and the expand-contract migration pattern — how the two interact to validate safe schema changes">
+
+```mermaid
+flowchart TD
+    subgraph TC["Testcontainers Lifecycle (per test suite)"]
+        T1["beforeAll: PostgreSqlContainer.start()\npulls image → starts container → exposes random port"]
+        T2["runMigrations(url) — drizzle migrate()\napplies every SQL file in order\nschema identical to production"]
+        T3["TESTS RUN\nisolated, real Postgres constraints"]
+        T4["afterAll: container.stop()\ncontainer + data removed"]
+        T1 --> T2 --> T3 --> T4
+    end
+    subgraph EC["Expand-Contract Migration: rename email_address → email"]
+        P1["Phase 1 EXPAND: ADD COLUMN email TEXT (nullable)\nReversible: DROP COLUMN email"]
+        P2["Phase 2 EXPAND: Dual-write (email_address AND email)\nReversible: stop writing email column"]
+        P3["Phase 3 EXPAND: Backfill existing rows\nUPDATE users SET email = email_address WHERE email IS NULL\nReversible: rows still have email_address"]
+        P4["Phase 4 CONTRACT: Read new column, add NOT NULL\nALTER COLUMN email SET NOT NULL\nReversible: revert app + DROP NOT NULL"]
+        P5["Phase 5 CONTRACT: Drop old column\nDROP COLUMN email_address\nNOT reversible without backup"]
+        P1 -->|"deploy"| P2 -->|"deploy"| P3 -->|"deploy"| P4 -->|"deploy"| P5
+    end
 ```
-TESTCONTAINERS LIFECYCLE (per test suite)
-  ┌─────────────────────────────────────────────────────────┐
-  │ beforeAll: PostgreSqlContainer('postgres:16').start()   │
-  │   → pulls image (first run only) → starts container    │
-  │   → exposes random host port → returns connectionUri   │
-  ├─────────────────────────────────────────────────────────┤
-  │ runMigrations(url)  — drizzle migrate()                 │
-  │   → applies every SQL file in drizzle/ in order        │
-  │   → schema is identical to production schema            │
-  ├─────────────────────────────────────────────────────────┤
-  │ TESTS RUN  (isolated, real Postgres constraints)        │
-  ├─────────────────────────────────────────────────────────┤
-  │ afterAll: container.stop()  → container + data removed  │
-  └─────────────────────────────────────────────────────────┘
-  Key property: each test suite starts from a clean schema.
-  Shared dev DB → tests develop ordering dependencies.
-  Testcontainers → each suite is fully isolated.
 
-EXPAND-CONTRACT MIGRATION (safe column rename)
-GOAL: rename users.email_address → users.email
-
-  EXPAND PHASE
-  ┌─────────────────────────────────────────────────────────┐
-  │ Phase 1 — Add new column (nullable)                     │
-  │   ALTER TABLE users ADD COLUMN email TEXT;              │
-  │   Reversible: DROP COLUMN email                         │
-  └──────────────────────────┬──────────────────────────────┘
-                             │ deploy
-  ┌──────────────────────────▼──────────────────────────────┐
-  │ Phase 2 — Dual-write in application code                │
-  │   App writes both email_address AND email on every save │
-  │   Reversible: stop writing email column                 │
-  └──────────────────────────┬──────────────────────────────┘
-                             │ deploy
-  ┌──────────────────────────▼──────────────────────────────┐
-  │ Phase 3 — Backfill existing rows                        │
-  │   UPDATE users SET email = email_address                │
-  │   WHERE email IS NULL;   (batch; 1 000 rows at a time)  │
-  │   Reversible: rows still have email_address             │
-  └──────────────────────────┬──────────────────────────────┘
-                             │ deploy
-  CONTRACT PHASE
-  ┌──────────────────────────▼──────────────────────────────┐
-  │ Phase 4 — Read from new column; add NOT NULL constraint │
-  │   ALTER TABLE users ALTER COLUMN email SET NOT NULL;    │
-  │   Reversible: revert app + DROP NOT NULL                │
-  └──────────────────────────┬──────────────────────────────┘
-                             │ deploy
-  ┌──────────────────────────▼──────────────────────────────┐
-  │ Phase 5 — Drop old column (contract)                    │
-  │   ALTER TABLE users DROP COLUMN email_address;          │
-  │   NOT reversible without a backup                       │
-  └─────────────────────────────────────────────────────────┘
-
-  Anti-pattern (single-step rename):
-    ALTER TABLE users RENAME COLUMN email_address TO email;
-    → table-lock for entire operation (hours on 100 M rows)
-    → breaks running app reading email_address mid-deploy
-    → irreversible mid-deploy
-```
 </Diagram>
 
 ## 2. Implement + best practice

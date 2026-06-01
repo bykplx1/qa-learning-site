@@ -225,70 +225,34 @@ chaos-runbook/
 ```
 
 <Diagram caption="Toxiproxy sits between the application and its dependency — toxics modify traffic without changing either endpoint">
+
+```mermaid
+flowchart TD
+    APP["Application (your code)\nconnects to localhost:5433"]
+    TP["Toxiproxy (localhost:5433 → :5555)\ntoxics: timeout · latency · bandwidth · slow_close · reset_peer"]
+    DEP["Downstream dependency (DB, OAuth, cache)\nunaware of proxy"]
+    CLI["toxiproxy-cli / toxiproxy-node-client\ncontrol API :8474"]
+    APP --> TP --> DEP
+    CLI -->|"control API"| TP
+    subgraph EXP["Chaos Experiment Lifecycle"]
+        E1["1. DEFINE STEADY STATE\nobservable metrics before you start"]
+        E2["2. FORM HYPOTHESIS\nfalsifiable prediction"]
+        E3["3. MINIMUM VIABLE EXPERIMENT\ninject toxic; blast radius: localhost only"]
+        E4["4. OBSERVE\ndoes metric deviate from steady state?"]
+        E5["5. HARDEN\ncode fix, runbook entry, new test\n(backlog — not a Slack thread)"]
+        E1 --> E2 --> E3 --> E4 --> E5
+    end
+    subgraph CB["Circuit Breaker (retry storm mitigation)"]
+        CLOSED["CLOSED → calls pass through normally"]
+        OPEN["OPEN → threshold failures reached → fast-fail"]
+        HALF["HALF-OPEN → probe one request\nsuccess → CLOSED · fail → OPEN"]
+        CLOSED -->|"threshold failures"| OPEN
+        OPEN -->|"probe"| HALF
+        HALF -->|"success"| CLOSED
+        HALF -->|"fail"| OPEN
+    end
 ```
-TOXIPROXY ARCHITECTURE
-──────────────────────
 
-  Application                    Downstream dependency
-  (your code)                    (DB, OAuth provider, cache)
-
-      │  connects to              │  unaware of proxy
-      │  localhost:5433           │
-      ▼                           ▼
-  ┌─────────────────────────────────────┐
-  │  Toxiproxy  (localhost:5433 → :5555)│
-  │  ─────────────────────────────────  │
-  │  toxics applied to this connection: │
-  │    timeout   — kill conn after N ms │
-  │    latency   — add delay + jitter   │
-  │    bandwidth — throttle bytes/s     │
-  │    slow_close — delay FIN           │
-  │    reset_peer — inject TCP RST      │
-  └─────────────────────────────────────┘
-       ▲
-       │  control API  :8474
-       │
-  toxiproxy-cli  /  toxiproxy-node-client
-
-
-CHAOS EXPERIMENT LIFECYCLE
-──────────────────────────
-
-1. DEFINE STEADY STATE   (observable metrics before you start)
-   "toy-server responds in < 100 ms; no connection errors"
-
-2. FORM HYPOTHESIS       (falsifiable prediction)
-   "If the upstream times out, the caller returns { ok: false }
-    within 3 s and does not crash"
-
-3. MINIMUM VIABLE EXPERIMENT
-   inject: timeout toxic, 100% toxicity, 2 s threshold
-   blast radius: localhost only — 0 real users
-
-4. OBSERVE               (does the metric deviate from steady state?)
-   caller receives { ok: false, error: 'timeout' }
-   hypothesis holds → proceed to harden
-
-5. HARDEN                (code fix, runbook entry, new test)
-   Finding goes in the backlog — not in a Slack thread that nobody acts on
-
-
-RETRY STORM — MOST COMMON CHAOS FINDING
-────────────────────────────────────────
-
-  Service A → Service B (no backoff, 3 retries, 1000 concurrent callers)
-
-  B fails once: 1000 × 3 retries = 3,000 requests while B is saturated
-  → B falls further; A retries faster → amplification spiral
-
-  MITIGATIONS:
-  ① Exponential backoff:  1 s → 2 s → 4 s → 8 s  (not 1 s, 1 s, 1 s)
-  ② Full jitter:          randomise the wait to spread the herd
-  ③ Circuit breaker:
-       CLOSED    → calls pass through normally
-       OPEN      → threshold failures reached → fast-fail, do not call B
-       HALF-OPEN → probe one request; success → CLOSED; fail → OPEN
-```
 </Diagram>
 
 ## 2. Implement + best practice
