@@ -1,0 +1,89 @@
+---
+slug: api-starter-gorest
+title: "API Starter: Token-Auth First Steps on GoRest"
+tier: starter
+track: api
+target:
+  name: "GoRest (Ajay Kumar)"
+  ref: "https://gorest.co.in — live REST API; see drift note below"
+estimate: 2–3 hr
+rubric: api-starter
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - You obtain a personal access token from gorest.co.in and store it in an environment variable — never hardcoded in a test file.
+  - You write tests covering GET (list + single), POST (create), PATCH (partial update), and DELETE on the /users resource.
+  - Every test asserts the HTTP status code and at least two body fields relevant to the operation.
+  - You include at least one negative test (e.g. attempt to create a user without the Authorization header and verify a 401 response).
+  - Your README explains how to set the token environment variable and run the suite from a clean clone in one command.
+---
+
+## Brief
+
+Write a REST API test collection against
+[GoRest](https://gorest.co.in) — a live practice REST API backed by a real
+database. Unlike fully-simulated APIs, GoRest actually persists the data you
+create, which means authentication is required for mutations and your tests must
+clean up after themselves.
+
+This is a deliberate step up from a fully-simulated API: you'll handle a real
+Bearer token, deal with a live datastore, and write tests that teardown the
+records they create.
+
+> **Drift notice.** GoRest is a live hosted service maintained by Ajay Kumar.
+> Registered users receive a free personal access token for testing. The API
+> surface has been stable, but because it is a real datastore, records you
+> create will persist until deleted. Always clean up in your test teardown.
+> If response shapes or status codes change from what is documented here, note
+> the divergence in your README. Local mocking (e.g. with MSW or a json-server
+> fixture) is acceptable if you note the substitution.
+
+## Suggested approach
+
+1. **Register and get a token.** Go to [gorest.co.in](https://gorest.co.in),
+   sign in with GitHub or Google, and copy your personal access token. Store it
+   in an `.env` file (gitignored) and read it via `process.env.GOREST_TOKEN`.
+
+2. **Configure a shared client.** Create a single helper that sets:
+   ```
+   Authorization: Bearer <token>
+   Content-Type: application/json
+   ```
+   Every test that mutates data must use this helper.
+
+3. Write tests in this order:
+   - `GET /public/v2/users` — no auth required, verify status 200, array of user
+     objects with `id`, `name`, `email`, `gender`, `status` fields
+   - `GET /public/v2/users/:id` — single user, verify status 200, id matches
+   - `POST /public/v2/users` — create a user (unique email required), verify
+     status 201, response contains `id`
+   - `PATCH /public/v2/users/:id` — update the user you created, verify status
+     200, changed field is reflected
+   - `DELETE /public/v2/users/:id` — delete your created user, verify status 204
+   - `POST /public/v2/users` **without auth** — verify status 401
+
+4. **Teardown.** Your `POST` test must record the returned `id` and delete it
+   in an `afterEach` or equivalent. Never leave test records in the live DB.
+
+5. Add a single `npm test` (or equivalent) entry point and document the
+   `GOREST_TOKEN` env var in the README.
+
+## What "done" looks like
+
+A folder containing:
+- A `package.json` (or equivalent) with test runner and HTTP client as dependencies
+- Tests covering GET list, GET single, POST (create + 401), PATCH, and DELETE
+- Test teardown that deletes any records created during the run
+- A README with token-setup instructions and a one-command run instruction
+
+## Why this matters
+
+Most real APIs require authentication. Handling a Bearer token correctly from
+the start — reading from environment variables, setting a shared `Authorization`
+header, never hardcoding — is the habit that prevents the single most common API
+test maintenance problem: credentials committed to source control or baked into
+test files.
+
+GoRest also gives you your first taste of test isolation on a live datastore.
+Creating resources you then must delete in teardown is a pattern you'll use on
+every stateful API you ever test.

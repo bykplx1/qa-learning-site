@@ -1,0 +1,129 @@
+---
+slug: api-capstone-openweather
+title: "API Capstone: Spec-Driven Suite on OpenWeatherMap"
+tier: capstone
+track: api
+target:
+  name: "OpenWeatherMap (OpenWeather Ltd)"
+  ref: "https://openweathermap.org/api — free-tier API key required; OpenAPI spec at https://openweathermap.org/api/one-call-3; see drift note below"
+estimate: 4–5 days
+rubric: api-capstone
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - Your suite derives all response schemas from the OpenWeatherMap API documentation — not from observation of live responses alone.
+  - Contract tests cover the Current Weather, 5-day Forecast, and Geocoding endpoints; each has a test for its documented error shape (401, 404, 429).
+  - You store the API key in an environment variable; the repo contains no hardcoded key and the CI workflow uses a repository secret.
+  - You document a breaking-change scenario — name one field rename or unit change that would cause a specific assertion to fire, and explain why contract tests catch it before smoke tests.
+  - CI runs the full suite on every push, fails the job on any test failure, and uploads a test report artifact.
+  - You submit a public repo URL with a green CI badge confirmed at submission time.
+  - You attest that CI is green at submission time (set ci_green to true in your submission).
+---
+
+## Brief
+
+Build a spec-driven, contract-tested API suite against
+[OpenWeatherMap](https://openweathermap.org/api) — one of the most widely used
+third-party APIs in production systems. The free tier gives you access to
+Current Weather, 5-day / 3-hour Forecast, and Geocoding endpoints, each with
+a published API specification you can use as the source of truth for schemas.
+
+This is a portfolio artifact. It proves you can test a real-world, keyed
+third-party API: managing a credential securely, deriving schemas from a spec
+rather than live responses, and running the suite automatically in CI with a
+repository secret.
+
+> **Drift notice.** OpenWeatherMap is a commercial API operated by OpenWeather
+> Ltd. The free tier (API v2.5 and Geocoding v1) is stable and widely used.
+> The One Call API 3.0 requires a separate subscription plan — use the free-tier
+> endpoints (Current Weather: `/data/2.5/weather`, Forecast: `/data/2.5/forecast`,
+> Geocoding: `/geo/1.0/direct`) for this project. If the API returns fields not
+> documented in the spec, note them in your README but do not add them to your
+> schemas. API key registration is free at
+> [openweathermap.org/appid](https://openweathermap.org/appid); keys activate
+> within 2 hours of registration.
+
+## Suggested approach
+
+### Phase 1 — Spec study and schema extraction (Day 1)
+
+1. Register for a free API key. Store it in `.env` as `OPENWEATHER_API_KEY`.
+   Add `.env` to `.gitignore` immediately.
+2. Read the documentation for the three endpoints you'll cover:
+   - [Current Weather](https://openweathermap.org/current) — `GET /data/2.5/weather`
+   - [5-day Forecast](https://openweathermap.org/forecast5) — `GET /data/2.5/forecast`
+   - [Geocoding](https://openweathermap.org/api/geocoding-api) — `GET /geo/1.0/direct`
+3. For each endpoint, transcribe the documented response shape into your schema
+   library **before** calling the live API. Key schemas to define:
+   - `WeatherCondition`: `{ id: number, main: string, description: string, icon: string }`
+   - `MainMetrics`: `{ temp: number, feels_like: number, humidity: number, pressure: number, ... }`
+   - `CurrentWeatherResponse`: the top-level object including `weather[]`, `main`, `wind`, `sys`, `name`, `cod`
+   - `ForecastItem` and `ForecastResponse` (`list[]` of items + `city` object)
+   - `GeoLocation`: `{ name: string, lat: number, lon: number, country: string, ... }`
+
+### Phase 2 — Contract tests (Days 2–3)
+
+4. Write tests for **Current Weather** (`GET /data/2.5/weather`):
+   - Valid city name (`q=London`) → 200, validate `CurrentWeatherResponse` schema
+   - Valid coordinates (`lat=51.5&lon=-0.12`) → 200, same schema
+   - Invalid city name (`q=NotACity12345`) → 404 + error body: `{ cod: "404", message: string }`
+   - Missing API key → 401 + error body: `{ cod: 401, message: string }`
+   - Invalid API key → 401 + error body schema
+
+5. Write tests for **5-day Forecast** (`GET /data/2.5/forecast`):
+   - Valid city → 200, validate `ForecastResponse` schema; verify `list` array length is ≥ 1 and each item matches `ForecastItem`
+   - `cnt` parameter: verify that `?cnt=3` returns exactly 3 list entries
+   - Invalid city → 404 + error schema
+
+6. Write tests for **Geocoding** (`GET /geo/1.0/direct`):
+   - Valid city + country code (`q=London,GB&limit=3`) → 200, array of `GeoLocation`; verify at least one result has `lat` and `lon` as numbers
+   - Unknown location → 200 with empty array (document this: the geocoding API returns 200 with `[]` rather than 404)
+
+### Phase 3 — Breaking-change scenario (Day 3)
+
+7. In your README or `docs/contract-analysis.md`, document a concrete
+   breaking-change scenario:
+   - Pick one field (e.g. `main.temp` renamed to `main.temperature` in a hypothetical v3).
+   - Identify the exact schema assertion that would fire.
+   - Explain why a contract test catches this at test time while a smoke test
+     that only checks `cod === 200` would miss it.
+   - Explain why temperature unit bugs (kelvin vs celsius vs fahrenheit — a real
+     class of OpenWeatherMap bug) are a type-change-equivalent: the field exists
+     but the value's meaning changes.
+
+### Phase 4 — CI with repository secret (Days 4–5)
+
+8. Configure GitHub Actions:
+   - Trigger on push and pull_request to `main`
+   - Add `OPENWEATHER_API_KEY` as a repository secret (Settings → Secrets → Actions)
+   - In the workflow, expose it as `env: OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}`
+   - Install with `npm ci`; pin the Node.js version
+   - Run the full test suite; fail the job on any failure
+   - Upload a JUnit XML or HTML report as an artifact with `if: always()`
+9. Add the CI badge to your README.
+10. Confirm CI is green before submitting. The `ci_green` rubric row is binary.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- Schemas defined from documentation (not from `console.log`-ing live responses)
+- Contract tests for Current Weather, Forecast, and Geocoding including error shapes
+- API key read from environment variable; CI uses a repository secret
+- `docs/contract-analysis.md` or README section with the breaking-change scenario
+- Green CI badge confirmed at submission time
+- README covering: setup, run instructions, which endpoints are covered, any
+  spec/live discrepancy found, and the unit-ambiguity note for temperature
+
+## Why this matters
+
+OpenWeatherMap is used in production by thousands of applications. Its error
+shapes are documented but often ignored by tests that only assert `status === 200`.
+Writing contract tests against a real third-party API — with a real credential
+managed through environment variables and CI secrets — is the exact workflow you
+will use on every external API integration you ever test professionally.
+
+The unit-ambiguity problem (kelvin vs celsius) is a real class of breaking change
+that status-code checks will never catch. A schema that asserts
+`temp` is a number in the expected range will catch a unit regression; a smoke
+test will not. This is the core argument for contract testing made concrete with
+a real-world example.

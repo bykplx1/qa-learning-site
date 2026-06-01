@@ -1,0 +1,108 @@
+---
+slug: api-mid-fakestoreapi
+title: "API Mid: Schema-Validated E-Commerce Suite on FakeStoreAPI"
+tier: mid
+track: api
+target:
+  name: "FakeStoreAPI (Mohammad Keshtkar)"
+  ref: "https://fakestoreapi.com — simulated e-commerce REST API; see drift note below"
+estimate: 1 day
+rubric: api-mid
+requiredConcepts:
+  - api-testing
+acceptanceCriteria:
+  - All response bodies are validated with a formal schema library (Zod, ajv, Joi, or equivalent) — no ad-hoc field checks.
+  - You implement login via POST /auth/login, extract the token from the response, and use it for mutation requests.
+  - You verify that a request with an invalid or missing token is rejected (status 401 or 403).
+  - Tests are independent — any product or cart created in a test is deleted in that test's teardown.
+  - You submit a public repo URL with a README covering setup, the run command, and the full suite scope.
+---
+
+## Brief
+
+Build a schema-validated REST API test suite against
+[FakeStoreAPI](https://fakestoreapi.com) — a simulated e-commerce API exposing
+products, carts, and users with JWT authentication. It mirrors the shape of a
+real store back-end: nested schemas (product categories, cart items, user
+address objects) and a login flow that returns a token you must include on
+subsequent requests.
+
+The starter project proved you can cover CRUD with correct assertion depth. This
+project proves you can formalise those assertions as schemas, handle an
+authentication flow correctly, and keep tests isolated from each other.
+
+> **Drift notice.** FakeStoreAPI is a publicly hosted service. Write operations
+> are accepted and return realistic responses, but the database resets
+> periodically — do not depend on pre-seeded record IDs surviving between test
+> runs. Always create the data you need in test setup. If the live service is
+> unavailable you can find unofficial mirrors; note which URL you targeted in
+> your README.
+
+## Suggested approach
+
+1. **Read the docs first.** Browse [fakestoreapi.com/docs](https://fakestoreapi.com/docs)
+   and identify the three resource domains: `products`, `carts`, and `users`.
+   For each, note the request shape and the documented response shape before
+   writing a single test.
+
+2. **Define schemas before writing assertions.** Using your chosen schema
+   library, define the shapes for the resources you'll test. For example, a
+   product schema:
+   ```
+   {
+     id: number,
+     title: string,
+     price: number,
+     description: string,
+     category: string,
+     image: string (url),
+     rating: { rate: number, count: number }
+   }
+   ```
+   Define each schema once and reuse it across every assertion that touches that
+   resource.
+
+3. **Auth flow.** Write a shared helper that calls `POST /auth/login` and
+   returns the `token` string. No test file should contain a token literal.
+
+4. Write tests in this order:
+   - `GET /products` — list (verify schema for each item in array), check `Content-Type`
+   - `GET /products/:id` — single product schema; non-existent id → 404
+   - `POST /products` — create, verify schema of response (note: FakeStoreAPI
+     returns the created object with a synthetic `id`; the item is not
+     actually persisted, but the response shape must match)
+   - `PUT /products/:id` — full update, verify schema
+   - `DELETE /products/:id` — verify status 200 and `id` field in response
+   - `POST /auth/login` — happy path (token returned) + invalid credentials (401)
+   - At least one request using the token that proves it is read from your helper, not hardcoded
+   - One request without an `Authorization` header on a mutation endpoint → verify rejection
+
+5. **Test isolation.** Each test that creates a resource must clean it up in
+   teardown (or rely on FakeStoreAPI's no-persist behaviour and document this
+   clearly in the README).
+
+6. Write a `README.md` covering: how to run locally, what endpoints are tested,
+   which schema library you chose and why, and one quirk of the API you
+   discovered during development.
+
+## What "done" looks like
+
+A public GitHub repo with:
+- A schema library used for all non-error response assertions
+- Auth token obtained programmatically (helper function, not literal)
+- Auth rejection verified (missing or invalid token)
+- Test isolation: no test depends on another test's side effects
+- A README covering setup, run command, schema library choice, and one API quirk
+
+## Why this matters
+
+E-commerce APIs have nested schemas — a product has a rating sub-object, a cart
+has an array of item sub-objects each with their own shape. Ad-hoc field checks
+(`expect(res.rating).toBeTruthy()`) let the shape collapse silently; a formal
+schema assertion (`ProductSchema.parse(res)`) fails immediately when any nested
+field changes type or is removed.
+
+FakeStoreAPI is the right target at this tier because it introduces nested
+schemas and a realistic (if simulated) JWT authentication flow without requiring
+account registration. It forces you to write schemas for real-world data
+structures before you encounter them on a paid or proprietary API.
