@@ -20,8 +20,14 @@ export const auth = betterAuth({
   }),
   rateLimit: {
     enabled: true,
-    storage: 'database',
-    // Auth endpoints: 20 attempts per 60-second window (generous for legit use; blocks brute-force).
+    // In-memory storage (better-auth default). We do NOT use 'database' here:
+    // better-auth's rate-limit model requires an `id` column, but our
+    // `rate_limits` table is keyed by `key` (shared with the custom write-endpoint
+    // limiter in src/lib/rate-limit/). Pointing better-auth at it threw
+    // "field 'id' does not exist in the 'rateLimits' schema" on every auth call,
+    // adding latency and log spam. Auth here is OAuth-only (email/password is
+    // disabled), so per-instance in-memory limiting is sufficient.
+    // Auth endpoints: 20 attempts per 60-second window.
     window: 60,
     max: 20,
   },

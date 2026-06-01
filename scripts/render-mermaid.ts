@@ -68,14 +68,27 @@ async function main() {
     results.forEach((res, i) => {
       const [hash, source] = entries[i];
       if (res.status === 'fulfilled') {
-        // Each diagram renders in its own call, so the root SVG id is always
-        // "mermaid-0". Rewrite it to be hash-unique so pages with multiple
-        // diagrams don't emit duplicate element ids. (Internal ids already use
-        // the `m<hash>` render prefix and are unique.)
-        const svg = res.value.svg.replace(
+        // Force the root <svg> id to `m<hash>-0` — the EXACT id Mermaid scopes
+        // its entire embedded <style> to (`#m<hash>-0 .node rect{…}`, etc.).
+        // mermaid-isomorphic renders `[source]` so the diagram index is 0 and
+        // the scope prefix is the `m<hash>` we pass below → `m<hash>-0`. The
+        // root id must equal that scope or every style rule selects nothing and
+        // shapes fall back to the SVG default fill (#000 → black boxes). It is
+        // also hash-unique, so pages hosting multiple diagrams stay collision-free.
+        const withId = res.value.svg.replace(
           /(<svg\b[^>]*\bid=")[^"]*(")/,
-          `$1mermaid-${hash}$2`,
+          `$1m${hash}-0$2`,
         );
+        // Mermaid emits `width="100%"`, which makes the browser scale the whole
+        // diagram to the column width — wide flowcharts (e.g. the 2034px
+        // ISO-25010 tree) then shrink until labels are unreadable. Pin the
+        // intrinsic pixel width from the viewBox instead so the diagram renders
+        // at its authored size and the wrapper scrolls horizontally when needed.
+        const vb = withId.match(/\bviewBox="0 0 ([\d.]+) [\d.]+"/);
+        const intrinsicW = vb ? Math.round(parseFloat(vb[1])) : null;
+        const svg = intrinsicW
+          ? withId.replace(/(<svg\b[^>]*?)\swidth="[^"]*"/, `$1 width="${intrinsicW}"`)
+          : withId;
         writeFileSync(`${CACHE_DIR}${hash}.svg`, svg, 'utf8');
         console.log(`  ✓ ${hash}.svg`);
       } else {

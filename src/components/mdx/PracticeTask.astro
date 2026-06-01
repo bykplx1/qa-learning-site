@@ -3,13 +3,16 @@ import PracticeTaskIsland from './PracticeTaskIsland';
 
 interface Props {
   id: string;
-  rubric: string;
+  // `rubric` is still accepted for content/lint compatibility but no longer
+  // used: lesson practice tasks embed their assessment criteria inline, and the
+  // `<slug>-rubric-v1` ids never existed in the projects rubric registry.
+  rubric?: string;
 }
 
-const { id, rubric } = Astro.props;
+const { id } = Astro.props;
 ---
 
-<PracticeTaskIsland client:load id={id} rubricId={rubric}>
+<PracticeTaskIsland client:load id={id}>
   <slot />
 </PracticeTaskIsland>
 

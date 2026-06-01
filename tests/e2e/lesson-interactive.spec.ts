@@ -44,79 +44,56 @@ test.describe('lesson interactive components', () => {
       await textarea.fill('hello world testing one two three');
 
       // Word count indicator must update — this requires React to be hydrated.
+      // The count is informational only (no target gate, per product decision).
       const wordcount = page.getByTestId('feynman-wordcount');
       await expect(wordcount).toContainText('6');
-      await expect(wordcount).toContainText('144 more to go');
+      await expect(wordcount).toContainText('words written');
     });
 
-    test('submit button stays disabled until word target is met', async ({ page }) => {
+    test('submit is disabled only while empty, then enabled once anything is written', async ({
+      page,
+    }) => {
       await page.goto(LESSON);
       await page.waitForLoadState('networkidle');
 
       const submitBtn = page.getByTestId('feynman-submit');
+      // Empty textarea → disabled (the only gate is non-empty, not a word target).
       await expect(submitBtn).toBeDisabled();
 
       const textarea = page.getByTestId('feynman-textarea');
-      // Empty textarea → still disabled.
-      await textarea.click();
-      await expect(submitBtn).toBeDisabled();
+      // A few words — well under the ~150 target — must already enable submit.
+      await textarea.fill('just a few words');
+      await expect(submitBtn).toBeEnabled();
     });
   });
 
   // ------------------------------------------------------------------
-  // #516 — Retrieval Prompt "Reveal answer" works (mouse + keyboard)
+  // Retrieval Prompt — closed-book (no answer reveal by design)
   // ------------------------------------------------------------------
-  test.describe('Retrieval Prompt reveal (#516)', () => {
-    test('clicking summary toggles answer visible (mouse)', async ({ page }) => {
+  test.describe('Retrieval Prompt (closed-book)', () => {
+    test('prompt renders its question and a self-check hint, with no answer-reveal control', async ({
+      page,
+    }) => {
       await page.goto(LESSON);
+      await page.waitForLoadState('networkidle');
 
-      const details = page.locator('.mdx-prompt__reveal').first();
-      await expect(details).toBeVisible();
+      const prompt = page.locator('.mdx-prompt').first();
+      await expect(prompt).toBeVisible();
 
-      const summary = details.locator('summary');
-      const answer = details.locator('.mdx-prompt__answer');
+      // The question body (authored as the component's children) is visible.
+      await expect(prompt.locator('.mdx-prompt__body')).not.toBeEmpty();
 
-      // Answer hidden before interaction.
-      await expect(answer).not.toBeVisible();
-
-      await summary.click();
-
-      // Answer must appear after click.
-      await expect(answer).toBeVisible();
-    });
-
-    test('Enter key on summary reveals answer (keyboard)', async ({ page }) => {
-      await page.goto(LESSON);
-
-      const details = page.locator('.mdx-prompt__reveal').first();
-      const summary = details.locator('summary');
-      const answer = details.locator('.mdx-prompt__answer');
-
-      await summary.focus();
-      await page.keyboard.press('Enter');
-
-      await expect(answer).toBeVisible();
-    });
-
-    test('Space key on summary reveals answer (keyboard)', async ({ page }) => {
-      await page.goto(LESSON);
-
-      const details = page.locator('.mdx-prompt__reveal').first();
-      const summary = details.locator('summary');
-      const answer = details.locator('.mdx-prompt__answer');
-
-      await summary.focus();
-      await page.keyboard.press('Space');
-
-      await expect(answer).toBeVisible();
+      // Closed-book retrieval: there is deliberately no "Reveal answer" affordance.
+      await expect(prompt.locator('.mdx-prompt__reveal')).toHaveCount(0);
+      await expect(prompt.locator('.mdx-prompt__hint')).toBeVisible();
     });
   });
 
   // ------------------------------------------------------------------
-  // #517 — Practice Task "reveal rubric" button is interactive
+  // #517 — Practice Task completion button is interactive
   // ------------------------------------------------------------------
-  test.describe('Practice Task reveal rubric (#517)', () => {
-    test('clicking reveal button removes button and shows completion state', async ({ page }) => {
+  test.describe('Practice Task completion (#517)', () => {
+    test('clicking the button removes it and shows the completion state', async ({ page }) => {
       await page.goto(LESSON);
       await page.waitForLoadState('networkidle');
 
@@ -128,8 +105,8 @@ test.describe('lesson interactive components', () => {
       // Button disappears — React state updated.
       await expect(button).not.toBeVisible({ timeout: 5_000 });
 
-      // Completion message appears (lesson tasks embed their rubric in the
-      // task body; the registry fallback shows a self-evaluation prompt).
+      // Completion message appears. Lesson tasks embed their assessment criteria
+      // inline, so completion simply confirms and points back to the task body.
       const complete = page.locator('[data-testid^="practice-task-complete-"]').first();
       await expect(complete).toBeVisible({ timeout: 3_000 });
       await expect(complete).toContainText('complete');

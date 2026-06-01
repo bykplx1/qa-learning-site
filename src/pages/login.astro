@@ -3,7 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 export const prerender = false;
 
-const next = (Astro.url.searchParams.get('next') ?? '/').replace(/[^\w\-/?.=&#%+]/, '');
+// `next` is where we send the user after a successful sign-in. Only accept a
+// local path (single leading slash, no protocol-relative "//host") to prevent
+// open-redirects; anything else falls back to the home page.
+const rawNext = Astro.url.searchParams.get('next') ?? '/';
+const next = /^\/(?!\/)[\w\-/?.=&#%+]*$/.test(rawNext) ? rawNext : '/';
 ---
 
 <BaseLayout title="Sign in — QA Learning" description="Choose how you want to sign in to QA Learning.">

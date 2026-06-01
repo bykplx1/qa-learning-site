@@ -2,12 +2,10 @@
 // `id` is the stable key. Renaming a prompt creates a new card and orphans history — see lint rule (P2).
 interface Props {
   id: string;
-  question: string;
-  answer: string;
   cluster?: string;
 }
 
-const { id, question, answer, cluster } = Astro.props;
+const { id, cluster } = Astro.props;
 ---
 
 <div
@@ -18,12 +16,8 @@ const { id, question, answer, cluster } = Astro.props;
   <p class="eyebrow mdx-prompt__label">retrieval prompt · {id}</p>
   <div class="mdx-prompt__body">
     <slot />
-    <p class="mdx-prompt__question">{question}</p>
   </div>
-  <details class="mdx-prompt__reveal">
-    <summary>Reveal answer</summary>
-    <div class="mdx-prompt__answer">{answer}</div>
-  </details>
+  <p class="mdx-prompt__hint">Recall from memory first, then check yourself against the lesson above.</p>
 </div>
 
 <style>
@@ -36,22 +30,10 @@ const { id, question, answer, cluster } = Astro.props;
   }
   .mdx-prompt__label { margin: 0 0 6px; }
   .mdx-prompt__body { font-size: 15px; color: var(--ink); }
-  .mdx-prompt__question { font-weight: 600; margin: 8px 0 0; }
-  .mdx-prompt__reveal {
-    margin-top: 10px;
-    font-size: 14px;
-  }
-  .mdx-prompt__reveal summary {
-    cursor: pointer;
-    /* --accent (4.07:1 on --paper-2) fails WCAG 1.4.3 at 14px; --accent-strong clears 4.5:1 */
-    color: var(--accent-strong);
-    user-select: none;
-  }
-  .mdx-prompt__answer {
-    margin-top: 8px;
-    padding: 10px 12px;
-    background: var(--paper-3, var(--paper-2));
-    border-radius: 6px;
-    color: var(--ink);
+  .mdx-prompt__hint {
+    margin: 10px 0 0;
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--ink-3);
   }
 </style>
