@@ -63,8 +63,8 @@ test.describe('Feynman explain — submission + rubric reveal', () => {
     await expect(textarea).toBeVisible();
     await textarea.fill(LONG_EXPLANATION);
 
-    // Word count indicator should show ready to submit.
-    await expect(page.getByTestId('feynman-wordcount')).toContainText('Ready to submit');
+    // Word count is informational only; submit is enabled as soon as there's text.
+    await expect(page.getByTestId('feynman-wordcount')).toContainText('words written');
 
     // Submit the explanation.
     const submitBtn = page.getByTestId('feynman-submit');

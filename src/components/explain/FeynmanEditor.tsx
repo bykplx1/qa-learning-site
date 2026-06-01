@@ -59,15 +59,18 @@ function FeynmanEditorInner({
   const [gapRefused, setGapRefused] = useState(false);
 
   const wc = wordCount(body);
-  const targetMet = wc >= wordTarget;
+  const hasContent = body.trim().length > 0;
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!targetMet) return;
+      // Word count is informational only — we never gate on it. The single
+      // guard is "did the learner write anything at all" so self-scoring an
+      // empty explanation is impossible.
+      if (!hasContent) return;
       setPhase('scoring');
     },
-    [targetMet],
+    [hasContent],
   );
 
   const handleGapPrompt = useCallback(async () => {
@@ -326,7 +329,7 @@ function FeynmanEditorInner({
           className="block mb-1.5"
           style={{ fontSize: 13, color: 'var(--ink-2)' }}
         >
-          Write your explanation below. {wordTarget} words required to submit.
+          Write your explanation below — aim for ~{wordTarget} words, but submit whenever you're ready.
         </label>
         <textarea
           id="feynman-body"
@@ -343,25 +346,24 @@ function FeynmanEditorInner({
           style={{
             fontSize: 12,
             fontFamily: 'var(--mono)',
-            // dynamic: color driven by targetMet state
-            color: targetMet ? 'var(--pass-strong)' : 'var(--ink-3)',
+            color: 'var(--ink-3)',
           }}
           aria-live="polite"
           data-testid="feynman-wordcount"
         >
           <span>
-            {wc} / {wordTarget} words
+            {wc} {wc === 1 ? 'word' : 'words'} written
           </span>
-          {targetMet ? <span>Ready to submit</span> : <span>{wordTarget - wc} more to go</span>}
+          {wc >= wordTarget && <span style={{ color: 'var(--pass-strong)' }}>~{wordTarget}+ — nicely done</span>}
         </div>
       </div>
 
       <button
         type="submit"
         className="btn btn--primary"
-        disabled={!targetMet}
-        aria-disabled={!targetMet}
-        title={!targetMet ? `${wordTarget - wc} more word${wordTarget - wc === 1 ? '' : 's'} needed` : undefined}
+        disabled={!hasContent}
+        aria-disabled={!hasContent}
+        title={!hasContent ? 'Write something to submit' : undefined}
         data-testid="feynman-submit"
       >
         Submit explanation

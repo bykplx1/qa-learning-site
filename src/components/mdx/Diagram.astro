@@ -56,8 +56,13 @@ const { caption, skip } = Astro.props;
     width: 100%;
     overflow-x: auto;
   }
+  /* Render at the diagram's intrinsic size and let the wrapper scroll
+     horizontally when it is wider than the column. Forcing `max-width:100%`
+     onto a wide flowchart (e.g. the 2034px ISO-25010 tree) shrank it to fit
+     the column and crushed the labels to ~5px — illegible. Natural size keeps
+     text readable; narrow diagrams still centre via `margin: … auto`. */
   :global(.mermaid-svg svg) {
-    max-width: 100%;
+    max-width: none;
     height: auto;
     display: block;
     margin: 24px auto;
