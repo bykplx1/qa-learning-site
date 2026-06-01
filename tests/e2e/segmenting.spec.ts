@@ -1,136 +1,67 @@
 /**
- * E2E tests for long-lesson segmenting (Issue #149).
+ * Regression guard: full-page lesson render (Issue #535).
  *
- * Uses /lessons/test-design/exploratory-testing which has 7 h2 sections — well above the
- * LONG_LESSON_H2_THRESHOLD of 3 — so segmenting is guaranteed to activate.
+ * Now that SegmentedLesson is removed, every lesson section must be
+ * visible on first load with no hidden/inert/aria-hidden segments.
+ * The right-side TOC provides in-page navigation.
  *
- * Assertions:
- *   - "Continue to segment 2" button is visible and focusable after page load.
- *   - Content beyond segment 1 is hidden (aria-hidden / inert).
- *   - Clicking the button reveals segment 2 and hides the "Continue" button until
- *     all remaining segments are progressively unlocked.
- *   - No auto-advance: waiting after page load does NOT reveal more content.
- *   - A11y: Continue button has a descriptive aria-label; axe sees no
- *     serious/critical violations on the segmented state.
+ * Uses /lessons/test-design/exploratory-testing — 7 h2 sections,
+ * previously the canonical "long lesson" used by the old segmenting tests.
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const LONG_LESSON = '/lessons/test-design/exploratory-testing';
+const LESSON = '/lessons/test-design/exploratory-testing';
 
-async function dismissDevOverlay(page: Page) {
-  await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
-    await el.locator('button').first().click();
-  });
-}
-
-test.describe('long-lesson segmenting', () => {
-  test.beforeEach(async ({ page }) => {
-    await dismissDevOverlay(page);
-  });
-
-  test('Continue button is visible on a long lesson', async ({ page }) => {
-    await page.goto(LONG_LESSON);
+test.describe('full-page lesson render', () => {
+  test('all h2 sections are visible on first load (no segmenting)', async ({ page }) => {
+    await page.goto(LESSON);
     await expect(page.locator('h1').first()).toBeVisible();
 
-    // SegmentedLesson is client:load; wait for hydration.
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
-  });
-
-  test('Continue button has descriptive aria-label', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
-
-    const label = await continueBtn.getAttribute('aria-label');
-    expect(label).toMatch(/segment 2/i);
-  });
-
-  test('content after first h2 is hidden before Continue is clicked', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
-
-    // All h2s after the first should be in hidden sections.
     const body = page.locator('[data-lesson-body]');
-    const allH2s = body.locator('h2');
-    const count = await allH2s.count();
+    const h2s = body.locator('h2');
+    const count = await h2s.count();
     expect(count).toBeGreaterThan(1);
 
-    // The 2nd h2 starts segment 2 and is rendered as a faded "preview" — it
-    // stays visually present so readers see what's coming, but the impl marks
-    // it inert + aria-hidden so it's out of tab order / SR tree. Assert that
-    // semantic-hiding contract rather than visual visibility.
-    const secondH2 = allH2s.nth(1);
-    await expect(secondH2).toHaveAttribute('inert', '');
-    await expect(secondH2).toHaveAttribute('aria-hidden', 'true');
+    // Every h2 must be visible — no inert or aria-hidden segments.
+    for (let i = 0; i < count; i++) {
+      const h2 = h2s.nth(i);
+      await expect(h2).toBeVisible();
+      await expect(h2).not.toHaveAttribute('inert', '');
+      await expect(h2).not.toHaveAttribute('aria-hidden', 'true');
+    }
   });
 
-  test('clicking Continue reveals next segment', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
-
-    const body = page.locator('[data-lesson-body]');
-    const secondH2 = body.locator('h2').nth(1);
-    // Before click, segment 2 is inert (see preview-heading note above).
-    await expect(secondH2).toHaveAttribute('inert', '');
-
-    await continueBtn.click();
-
-    // After click, inert is removed and the heading is interactive again.
-    await expect(secondH2).not.toHaveAttribute('inert', '', { timeout: 5_000 });
-    await expect(secondH2).not.toHaveAttribute('aria-hidden', 'true');
+  test('Continue-to-segment control is absent', async ({ page }) => {
+    await page.goto(LESSON);
+    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page.getByTestId('segment-continue-btn')).toHaveCount(0);
+    await expect(page.getByTestId('segment-continue')).toHaveCount(0);
   });
 
-  test('no auto-advance: waiting does not reveal hidden segments', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
+  test('TOC links are present and scroll to sections', async ({ page }) => {
+    await page.goto(LESSON);
+    await expect(page.locator('h1').first()).toBeVisible();
 
-    const body = page.locator('[data-lesson-body]');
-    const secondH2 = body.locator('h2').nth(1);
+    // The TOC sidebar should contain at least one anchor link.
+    const tocLinks = page.locator('.lesson-toc a[href^="#"]');
+    const tocCount = await tocLinks.count();
+    expect(tocCount).toBeGreaterThan(0);
 
-    // Wait 2 seconds without clicking — second segment must still be inert.
-    await page.waitForTimeout(2_000);
-    await expect(secondH2).toHaveAttribute('inert', '');
-    await expect(secondH2).toHaveAttribute('aria-hidden', 'true');
-    await expect(continueBtn).toBeVisible();
+    // Click the first TOC link and confirm it resolves to a heading.
+    const firstLink = tocLinks.first();
+    const href = await firstLink.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await firstLink.click();
+    // Use the href directly — Playwright's locator supports attribute selectors.
+    await expect(page.locator(`[id="${href!.slice(1)}"]`)).toBeVisible();
   });
 
-  test('Continue button is keyboard-focusable', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
-
-    await continueBtn.focus();
-    await expect(continueBtn).toBeFocused();
-  });
-
-  test('Enter key on Continue button reveals next segment', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
-
-    const body = page.locator('[data-lesson-body]');
-    const secondH2 = body.locator('h2').nth(1);
-    // Pre-condition: segment 2 is inert before the keypress.
-    await expect(secondH2).toHaveAttribute('inert', '');
-
-    await continueBtn.focus();
-    await page.keyboard.press('Enter');
-
-    // After Enter, inert/aria-hidden are cleared on segment 2.
-    await expect(secondH2).not.toHaveAttribute('inert', '', { timeout: 5_000 });
-    await expect(secondH2).not.toHaveAttribute('aria-hidden', 'true');
-  });
-
-  test('a11y: no serious/critical violations on segmented lesson', async ({ page }) => {
-    await page.goto(LONG_LESSON);
-    const continueBtn = page.getByTestId('segment-continue-btn');
-    await expect(continueBtn).toBeVisible({ timeout: 10_000 });
+  test('a11y: no serious/critical violations on full-render lesson', async ({ page }) => {
+    await page.goto(LESSON);
+    await expect(page.locator('h1').first()).toBeVisible();
 
     const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
     const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
@@ -150,6 +81,6 @@ test.describe('long-lesson segmenting', () => {
             })
             .join('\n');
 
-    expect(blocking, `Serious/critical a11y violations on segmented lesson:${detail}`).toEqual([]);
+    expect(blocking, `Serious/critical a11y violations on lesson:${detail}`).toEqual([]);
   });
 });

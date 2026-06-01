@@ -5,8 +5,6 @@ import TableOfContents from '../../../components/TableOfContents.astro';
 import { MarkComplete } from '../../../components/MarkComplete';
 import QuizRunner from '../../../components/quiz/QuizRunner';
 import WikiLink from '../../../components/WikiLink';
-import SegmentedLesson from '../../../components/lessons/SegmentedLesson';
-import { computeSegments, estimateWordCount } from '../../../lib/lessons/segmenter';
 import EndOfLessonCTA from '../../../components/lessons/EndOfLessonCTA.astro';
 import LessonPrevNext from '../../../components/lessons/LessonPrevNext.astro';
 import { resolveEndCta } from '../../../lib/lessons/end-cta';
@@ -91,10 +89,6 @@ const jsonLd = [
 ];
 
 const quizQuestions: QuizQuestion[] = loadQuizBySlug(topic.data.slug)?.questions ?? [];
-
-// Long-lesson segmenting: derived purely from rendered headings + body length.
-const wordCount = estimateWordCount(topic.body);
-const lessonSegments = computeSegments(headings, wordCount);
 
 // End-of-lesson CTA. This route is statically prerendered (getStaticPaths), so
 // there is no per-request session — resolve anonymously (signedIn: false). That
@@ -201,10 +195,6 @@ const { options: endCtaOptions } = resolveEndCta({
           <WikiLink client:idle />
           <Content />
         </div>
-
-        {lessonSegments.length > 0 && (
-          <SegmentedLesson client:load segments={lessonSegments} />
-        )}
 
         <div style="margin-top: 28px;">
           <MarkComplete client:idle slug={topic.data.slug} />
