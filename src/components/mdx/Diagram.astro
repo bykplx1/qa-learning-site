@@ -47,12 +47,16 @@ const { caption, skip } = Astro.props;
     margin: 0 auto;
   }
 
-  /* Mermaid inline-SVG — rendered at build time, themed via CSS filter.
+  /* Mermaid inline-SVG — pre-rendered at author time, themed via CSS filter.
      The neutral Mermaid theme is light-optimised; dark mode inverts it with
      a hue-preserving filter so diagrams remain readable without re-rendering.
-     rehypeMermaid replaces ```mermaid fences with bare <svg id="mermaid-N">
-     elements in the rendered prose. */
-  :global(.prose svg[id^="mermaid-"]) {
+     rehypeMermaidCached replaces ```mermaid fences with a
+     <div class="mermaid-svg"> wrapping the committed inline <svg>. */
+  :global(.mermaid-svg) {
+    width: 100%;
+    overflow-x: auto;
+  }
+  :global(.mermaid-svg svg) {
     max-width: 100%;
     height: auto;
     display: block;
@@ -62,7 +66,7 @@ const { caption, skip } = Astro.props;
     padding: 16px;
     background: var(--paper-2);
   }
-  :global([data-theme="dark"] .prose svg[id^="mermaid-"]) {
+  :global([data-theme="dark"] .mermaid-svg svg) {
     filter: invert(0.88) hue-rotate(180deg);
   }
 

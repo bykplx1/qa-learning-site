@@ -5,7 +5,7 @@ import { remarkStripQuizSections } from '../quiz/remarkStripQuizSections.js';
 import { remarkDemoteH1 } from '../lessons/remarkDemoteH1.js';
 import { remarkSectionOrder } from '../lessons/remarkSectionOrder.js';
 import { rehypeTakeawayBlockquote } from '../lessons/rehypeTakeawayBlockquote.js';
-import rehypeMermaid from 'rehype-mermaid';
+import { rehypeMermaidCached } from './rehypeMermaidCached.js';
 
 describe('MDX pipeline contract', () => {
   it('has remarkRepairMojibake as the first remark plugin', () => {
@@ -30,11 +30,10 @@ describe('MDX pipeline contract', () => {
     expect(REMARK_PLUGINS[REMARK_PLUGINS.length - 1]).toBe(remarkSectionOrder);
   });
 
-  it('has rehypeMermaid as the first rehype plugin (must precede rehypeTakeawayBlockquote)', () => {
+  it('has rehypeMermaidCached as the first rehype plugin (must precede rehypeTakeawayBlockquote)', () => {
     const first = REHYPE_PLUGINS[0];
-    // rehypeMermaid is registered as [plugin, options] tuple
     const plugin = Array.isArray(first) ? first[0] : first;
-    expect(plugin).toBe(rehypeMermaid);
+    expect(plugin).toBe(rehypeMermaidCached);
   });
 
   it('has rehypeTakeawayBlockquote as the last rehype plugin', () => {
