@@ -100,13 +100,27 @@ function layerIndicator(layer: CurriculumEntry['data']['layer']): string {
     </div>
     <div class="cat-grid" data-testid="curated-tracks">
       {clusterRows.map((c) => (
-        <a class="cat" href={`/lessons/${c.topics[0].data.cluster}/${c.topics[0].data.slug}`}>
+        <a
+          class="cat"
+          href={`/lessons/${c.topics[0].data.cluster}/${c.topics[0].data.slug}`}
+          data-cluster={c.cluster}
+          data-cluster-slugs={c.topics.map((t) => t.data.slug).join(',')}
+        >
           <div class="cat__num">{c.cluster.toUpperCase()}</div>
           <div class="cat__title">{c.title}</div>
           <div class="cat__blurb">
             Start with <em style="font-style: italic;">{c.topics[0].data.title}</em>.
           </div>
-          <div class="cat__bar"><i style="width: 100%"></i></div>
+          <div class="cat__bar">
+            <div
+              role="progressbar"
+              aria-valuenow={0}
+              aria-valuemin={0}
+              aria-valuemax={c.count}
+              aria-label={`${c.title} track progress`}
+              style="width: 0%"
+            ></div>
+          </div>
           <div class="cat__meta">
             <span>{c.count} topic{c.count === 1 ? '' : 's'}</span>
             <span>{c.minutes}m read</span>

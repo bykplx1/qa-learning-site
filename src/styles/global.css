@@ -568,10 +568,11 @@ a { color: inherit; }
   border-radius: 2px;
   overflow: hidden;
 }
-.cat__bar > i {
+.cat__bar > [role="progressbar"] {
   display: block;
   height: 100%;
   background: var(--accent);
+  transition: width 400ms ease;
 }
 
 /* ====================================================================
