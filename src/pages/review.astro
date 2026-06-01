@@ -64,7 +64,7 @@ const persistedTimezone = nudgeRow?.timezone ?? null;
     <SleepGateNotice client:idle persistedTimezone={persistedTimezone} />
     <FirstTimeDisclaimer client:idle seenOnServer={seenReviewDisclaimer} />
     <ReviewQueue client:load initialCard={initialCard} />
-    <SessionCapOverlay client:visible />
+    <SessionCapOverlay client:idle />
   </main>
 </BaseLayout>
 
