@@ -33,36 +33,27 @@ Two facts are load-bearing. First: **the DOM and the source HTML diverge** — `
 ## Diagram
 
 <Diagram caption="The three browser trees, four rendering strategies, and which DevTools panel exposes each — with the hydration window where flaky clicks live">
+
+```mermaid
+flowchart TD
+    subgraph TREES["Three Browser Trees (maintained simultaneously)"]
+        DOM["DOM tree\nparser output + JS mutations\nDevTools: Elements\nLocators: css / xpath"]
+        RENDER["Render tree\nDOM + CSS layout + paint info\nDevTools: Layers / Performance\nnot directly queryable"]
+        A11Y["Accessibility tree\nsemantic role layer; consumed by AT + getByRole\nDevTools: Accessibility panel\nLocators: getByRole / getByLabel / getByText"]
+    end
+    subgraph RS["Four Rendering Strategies"]
+        CSR["CSR — Empty div at first byte\nJS required — wait for hydration\nview-source is useless"]
+        SSR["SSR — Full content at first byte\nJS required — hydration binds UX\nvisible ≠ interactive"]
+        SSG["SSG — Full content at first byte\nJS required — same as SSR at runtime"]
+        ISR["ISR — Full content at first byte\nJS required — stale-while-revalidate\ncache state matters"]
+    end
+    subgraph HW["Hydration Window (SSR/SSG/ISR) — FLAKE ZONE"]
+        H1["First byte → HTML painted (VISIBLE)"]
+        H2["JS bundle loads → hydration → interactive (INTERACTIVE)"]
+        H1 -->|"clicks here silently do nothing"| H2
+    end
 ```
-THREE TREES (maintained simultaneously)
-──────────────────────────────────────────────────────────────────────
-  DOM tree              Render tree           Accessibility tree
-  (parser output +      (DOM + CSS layout +   (semantic role layer;
-   JS mutations)         paint info)           consumed by AT + getByRole)
 
-  DevTools: Elements    DevTools: Layers/      DevTools: Accessibility
-                        Performance            panel (Computed Properties)
-
-  Locator family:       not directly           getByRole / getByLabel /
-  css / xpath           queryable              getByText (role-first)
-
-FOUR RENDERING STRATEGIES
-──────────────────────────────────────────────────────────────────────
-  Strategy   HTML at first byte?   JS required for content?   Tester implication
-  ────────   ───────────────────   ────────────────────────   ──────────────────
-  CSR        Empty <div id="root"> Yes — wait for hydration   view-source is useless
-  SSR        Full content          Yes — hydration binds UX   visible ≠ interactive
-  SSG        Full content          Yes — hydration binds UX   same as SSR at runtime
-  ISR        Full content          Yes — stale-while-revalidate  cache state matters
-
-HYDRATION WINDOW (SSR / SSG / ISR)
-──────────────────────────────────────────────────────────────────────
-  First byte arrives ──► HTML painted ──► JS bundle loads ──► hydration ──► interactive
-                         │                                      │
-                  VISIBLE (test can read DOM)           INTERACTIVE (onClick bound)
-                         │◄────── FLAKE ZONE ──────────────────►│
-                  clicks here silently do nothing — test assertion times out later
-```
 </Diagram>
 
 ## Worked Example

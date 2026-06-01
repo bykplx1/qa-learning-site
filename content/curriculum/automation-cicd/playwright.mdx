@@ -110,35 +110,35 @@ Running 1 test using 1 worker
 If the run is green, the setup is complete. Move on.
 
 <Diagram caption="Playwright primitive lifecycle — from test authoring to trace-driven flake diagnosis">
+
+```mermaid
+flowchart TD
+    subgraph AL["Authoring Loop"]
+        FI["Fixture injection: { page, context } (scoped)"]
+        LO["Locator created: getByRole('button', { name: 'Save' })\n(lazy — no DOM query yet)"]
+        AW["btn.click() → auto-wait: 5 conditions checked before action"]
+        WF["expect(btn).toBeDisabled() → web-first assertion: retries until timeout"]
+        FI --> LO --> AW --> WF
+    end
+    subgraph AW2["Auto-wait Conditions (checked on every action)"]
+        C1["attached (in DOM)"]
+        C2["visible (not hidden)"]
+        C3["stable (no animation)"]
+        C4["enabled (not disabled)"]
+        C5["receives events (not covered)"]
+    end
+    subgraph FS["Fixture Scopes"]
+        WS["worker scope — runs ONCE per worker\nauth state, expensive DB seed"]
+        TS["test scope — runs ONCE per test\nper-test isolated data, page setup"]
+    end
+    subgraph LH["Locator Hierarchy (most → least preferred)"]
+        L["getByRole → getByLabel → getByPlaceholder → getByText → getByTestId → CSS → XPath"]
+    end
+    subgraph TT["Trace Timeline (on-first-retry)"]
+        TR["Action log → DOM snapshots → Network requests → Console → Source viewer\nUnzip trace.zip → trace viewer → identify exact action + millisecond"]
+    end
 ```
-AUTHORING LOOP
 
-  test('...', async ({ page, context }) => {   ← fixture injection (scoped)
-    const btn = page.getByRole('button',         ← Locator created (lazy — no DOM query yet)
-                               { name: 'Save' });
-    await btn.click();                           ← auto-wait: 5 conditions checked before click
-    await expect(btn).toBeDisabled();            ← web-first assertion: retries until timeout
-  });
-
-AUTO-WAIT CONDITIONS (checked on every action)
-  ┌──────────────┬──────────────┬─────────────┬──────────────┬──────────────────┐
-  │  attached    │   visible    │   stable    │   enabled   │  receives events  │
-  │ (in DOM)     │ (not hidden) │ (no anim.)  │ (not disabled)│ (not covered)   │
-  └──────────────┴──────────────┴─────────────┴──────────────┴──────────────────┘
-  A timeout names WHICH condition failed — read it before rerunning.
-
-FIXTURE SCOPES
-  worker scope ──── runs ONCE per worker ───► auth state, expensive DB seed
-  test scope   ──── runs ONCE per test   ───► per-test isolated data, page setup
-
-LOCATOR HIERARCHY (most → least preferred)
-  getByRole ► getByLabel ► getByPlaceholder ► getByText ► getByTestId ► CSS ► XPath
-  Role-based locators query the accessibility tree; they are durability + a11y signal in one.
-
-TRACE TIMELINE (on-first-retry)
-  Action log ──► DOM snapshots ──► Network requests ──► Console ──► Source viewer
-  Unzip trace.zip ──► open in trace viewer ──► identify the exact action + millisecond
-```
 </Diagram>
 
 ## 2. Implement + best practice

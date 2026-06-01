@@ -34,59 +34,34 @@ Selenium, Cypress, and Playwright are three different architectural bets, not th
 ## Diagram
 
 <Diagram caption="Three browser-automation architectures: where the test process runs, how commands cross the browser boundary, and what trace artefact (if any) is produced">
+
+```mermaid
+flowchart TD
+    subgraph SE["Selenium (WebDriver / W3C protocol)"]
+        S1["Test process (Java/Python/JS/C#/Ruby)"]
+        S2["Browser driver (chromedriver/geckodriver/safaridriver)"]
+        S3["Browser (Chrome/Firefox/Edge/IE)"]
+        S1 -->|"HTTP/REST"| S2 -->|"driver protocol"| S3
+        S_NOTE["Out-of-process. W3C standard. Protocol-stable.\nNo built-in trace. Parallel: Grid or cloud."]
+    end
+    subgraph CY["Cypress (in-browser / same JS context)"]
+        C1["Node proxy (cy.intercept, webpack bundle)"]
+        C2["Iframe: Cypress test JS + App JS\nsame tab · same origin · cy.intercept via XHR hook"]
+        C1 -->|"injects"| C2
+        C_NOTE["Trace: Cypress App time-travel replay.\nMulti-tab: limited. Cross-origin: cy.origin (v12+).\nParallel: Cypress Cloud (paid)."]
+    end
+    subgraph PW["Playwright (CDP/BiDi · out-of-process, in-context)"]
+        P1["Test process (JS/TS/Python/Java/.NET)"]
+        P2["Playwright server (out-of-process)\npage.route() · storageState"]
+        P3["Browser contexts A/B/C (cheap, isolated, parallel)"]
+        P1 -->|"WebSocket"| P2 -->|"CDP / BiDi"| P3
+        P_NOTE["Trace: trace.zip (action-by-action time travel, built-in).\nMulti-tab: yes. Cross-origin: yes. Parallel: free, default."]
+    end
+    subgraph DA["Decision Axes"]
+        D["Java/Ruby/C#/Python team? → Selenium or Playwright\nMulti-tab / OAuth popup? → Playwright or Selenium\nMobile-web real device? → Selenium + Appium\nLong-lived enterprise suite (10+ yrs)? → Selenium\nGreenfield JS/TS E2E (2023+)? → Playwright (default)\nTurnkey dashboard/reporting? → Cypress Cloud or BrowserStack\nFree parallel in CI? → Playwright"]
+    end
 ```
-SELENIUM (WebDriver / W3C protocol)
-──────────────────────────────────────────────────────────────────
-  Test process              Browser driver          Browser
-  (Java / Python /          (chromedriver /         (Chrome /
-  JS / C# / Ruby)           geckodriver /           Firefox /
-       │                    safaridriver)           Edge / IE)
-       │── HTTP/REST ──────►│─── driver protocol──►│
-       │◄── response ───────│◄─────────────────────│
-  Out-of-process.  W3C standard.  Protocol-stable.
-  No built-in trace. Screenshot / log via driver.
-  Parallel: requires Grid or cloud provider.
 
-CYPRESS (in-browser / same JS context)
-──────────────────────────────────────────────────────────────────
-  Node proxy             Iframe: test runner + app in same origin
-  (cy.intercept,    ──── injects ─────────────────────────────►
-  webpack bundle)                  │
-                           ┌───────┴───────────────────────┐
-                           │  Cypress test JS + App JS     │
-                           │  same tab · same origin       │
-                           │  cy.intercept via XHR hook    │
-                           └───────────────────────────────┘
-  Trace: Cypress App time-travel replay (screenshots per command).
-  Multi-tab: limited. Cross-origin: cy.origin (v12+, with caveats).
-  Parallel: Cypress Cloud (paid) or self-orchestrated.
-
-PLAYWRIGHT (CDP/BiDi · out-of-process, in-context)
-──────────────────────────────────────────────────────────────────
-  Test process            Playwright server           Browser
-  (JS/TS / Python /       (out-of-process)           contexts
-  Java / .NET)                                       (cheap, isolated)
-       │── WebSocket ────►│─── CDP / BiDi ──────────►│  context A
-       │                  │                          │  context B  ← parallel
-       │                  │  page.route()            │  context C
-       │                  │  storageState            │
-       │                  └──────────────────────────┘
-  Trace: trace.zip — action-by-action time travel (built-in).
-  Multi-tab: yes (waitForEvent('page') on popup).
-  Cross-origin: yes (separate browser contexts).
-  Parallel: free, default.
-
-DECISION AXES AT A GLANCE
-──────────────────────────────────────────────────────────────────
-  Team language     Java/Ruby/C#/Python? → Selenium or Playwright
-                    JS/TS only?          → any, Cypress included
-  Multi-tab / OAuth popup?               → Playwright or Selenium
-  Mobile-web real device?                → Selenium + Appium
-  Long-lived enterprise suite (10+ yrs)? → Selenium (protocol stability)
-  Greenfield JS/TS E2E (~2023+)?         → default Playwright
-  Dashboard / turnkey reporting?         → Cypress Cloud or BrowserStack
-  Parallel in CI at no extra cost?       → Playwright
-```
 </Diagram>
 
 ## Worked Example
