@@ -37,54 +37,31 @@ Three sub-disciplines compose the whole:
 ## Diagram
 
 <Diagram caption="The full prompt assembly — the layers that reach the model — and the three regression gates (schema validation, CI eval, model-pair eval) that defend each layer change">
+
+```mermaid
+flowchart TD
+    subgraph PA["What 'The Prompt' Actually Is — all five layers change behaviour"]
+        P1["SYSTEM PROMPT (tone, role, safety rules) ← most-versioned"]
+        P2["FEW-SHOT EXAMPLES (format + style anchors) ← often unversioned"]
+        P3["MESSAGE TEMPLATE (slots for dynamic content) ← often unversioned"]
+        P4["TOOL / FUNCTION SCHEMAS (JSON shape contract) ← rarely versioned"]
+        P5["USER CONTENT (user-controlled input) ← never static"]
+    end
+    subgraph G1["GATE 1 — Structured Output Validation"]
+        G1A["Before: freeform text → 12% parse failure rate\nAfter: JSON mode + Zod schema → ~0% parse failure rate\nSchema: { priority: P0|P1|P2|P3, summary: string }\nStill needed: content tests (schema ≠ correctness)"]
+    end
+    subgraph G2["GATE 2 — Eval-in-CI (on every PR touching a prompt layer)"]
+        G2A["run eval → compare to baseline\nscore drops > threshold → merge blocked\nPR smoke: 20–50 rows, minutes\nRelease: 200–500 rows, ~30 min\nWeekly deep: 1000+ rows"]
+    end
+    subgraph G3["GATE 3 — Model-Pair Eval (upgrade regression)"]
+        G3A["(prompt_v2, model_old) vs (prompt_v2, model_new)\nscore diverges > noise floor → re-tune before upgrading\nModel upgrade without model-pair eval = untested deploy"]
+    end
+    subgraph TB["Token Budget Gate (CI)"]
+        G4A["CI tracks input-token count per build\nFail build if token count exceeds baseline + 20%\n1800 tokens @ 1M req/month = $27/month vs $7.50 (3.6× creep, silent)"]
+    end
+    G1 --> G2 --> G3 --> TB
 ```
-WHAT "THE PROMPT" ACTUALLY IS
-─────────────────────────────
-┌─────────────────────────────────────────────────────┐
-│  SYSTEM PROMPT          (tone, role, safety rules)  │  ← most-versioned
-│  FEW-SHOT EXAMPLES      (format + style anchors)    │  ← often unversioned
-│  MESSAGE TEMPLATE       (slots for dynamic content) │  ← often unversioned
-│  TOOL / FUNCTION SCHEMAS (JSON shape contract)      │  ← rarely versioned
-│  USER CONTENT           (user-controlled input)     │  ← never static
-└─────────────────────────────────────────────────────┘
-         All five layers change behaviour.
-         Version only the system prompt = partial reproducibility.
 
-
-THREE REGRESSION GATES
-──────────────────────
-GATE 1 — STRUCTURED OUTPUT VALIDATION
-  Before: "Issue priority: P1. Summary: ..."  ← 12% parse failure rate
-  After:  JSON mode + Zod schema              ← ~0% parse failure rate
-  Schema: { priority: "P0"|"P1"|"P2"|"P3", summary: string }
-  Enforcement: provider JSON mode + runtime schema parse
-  Still needed: content tests (schema ≠ correctness)
-
-GATE 2 — EVAL-IN-CI (prompt regression suite)
-  On every PR that touches any prompt layer:
-    run eval → compare score to baseline
-    score drops > threshold → merge blocked
-  Tiered costs:
-    PR smoke eval:    20–50 rows, model calls, minutes
-    Release eval:     200–500 rows, stratified, ~30 min
-    Weekly deep eval: 1000+ rows, full distribution check
-
-GATE 3 — MODEL-PAIR EVAL (upgrade regression)
-  (prompt_v2, model_old) vs (prompt_v2, model_new)
-  Run same eval dataset against both model versions
-  If score diverges > noise floor → prompt needs re-tuning
-  before model upgrade goes to production
-  Model upgrade without model-pair eval = untested deploy
-
-
-PROMPT TOKEN BUDGET (CI gate)
-  CI tracks input-token count per build
-  Week 1: 500 tokens  →  Week 8: 1800 tokens
-  At 1M req/month × $0.015/1k tokens:
-    500 tokens  = $7.50/month
-    1800 tokens = $27.00/month  (3.6× cost creep, silent)
-  Gate: fail build if token count exceeds baseline + 20%
-```
 </Diagram>
 
 ## Worked Example

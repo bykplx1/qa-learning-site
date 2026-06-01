@@ -32,35 +32,36 @@ Neither shape is universally correct. The right shape is a function of *where bu
 ## Diagram
 
 <Diagram caption="Four test shapes and when each fits">
-```
-PYRAMID (Cohn)          TROPHY (Dodds)
-  /\                      ___
- /E2E\                   /E2E \
-/-----\                 /------\
-/ Integ \              / Integr. \
-/---------\            /----------\
-/  Unit    \          /   Unit     \
-/___________\        /  Static     \
-                     /______________\
 
-When: backend-heavy    When: frontend/API —
-systems, deep logic,   logic lives in
-clean module seams.    module composition.
-
-ICE CREAM CONE          INVERTED (data)
-(anti-pattern)
-   _____                /____________\
-  /E2E  \              /  Integration \
- /-------\            /--------------\
-/ Manual  \          /     Unit        \
-/-----------\        /__________________\
-/  Integ     \
-/_____________\       When: data pipelines —
-     Unit             bugs live at seams
-                      and production data
-When: legacy/          shapes, not pure fns.
-untested systems.
+```mermaid
+flowchart TD
+    subgraph PY["PYRAMID (Cohn) — backend-heavy systems, deep logic"]
+        PE2E["E2E (few)"]
+        PI["Integration"]
+        PU["Unit (many)"]
+        PE2E --> PI --> PU
+    end
+    subgraph TR["TROPHY (Dodds) — frontend/API, logic lives in module composition"]
+        TE2E["E2E (few)"]
+        TI["Integration (bulge)"]
+        TU["Unit"]
+        TS["Static (base)"]
+        TE2E --> TI --> TU --> TS
+    end
+    subgraph IC["ICE CREAM CONE (anti-pattern) — legacy/untested systems"]
+        IE2E["E2E (many)"]
+        IM["Manual"]
+        II["Integration"]
+        IU["Unit (few)"]
+        IE2E --> IM --> II --> IU
+    end
+    subgraph INV["INVERTED (data pipelines) — bugs live at seams and production data shapes"]
+        NI["Integration (many)"]
+        NU["Unit (few)"]
+        NI --> NU
+    end
 ```
+
 </Diagram>
 
 ## Worked Example

@@ -40,59 +40,20 @@ The five disciplines: **threat modelling** (STRIDE — convert threats to test c
 > Security tests are functional tests with adversarial oracles. The tester's value lies in the attack classes they hold in their head — the tools are scaffolding around that knowledge.
 
 <Diagram caption="Security testing layers: five overlapping disciplines, their primary tooling, and the OWASP categories each targets — plus the STRIDE threat-model cycle that feeds them all">
-```
-THREAT MODEL (STRIDE)
-  Spoofing · Tampering · Repudiation · Info Disclosure · DoS · Elevation of Privilege
-  → each threat becomes a test case in the plan
-         │
-         ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│  SHIFT-LEFT (static / pre-run)                                             │
-│                                                                            │
-│  SAST        CodeQL, Semgrep       — code-level: injection, hardcoded keys │
-│  SCA         Snyk, npm audit       — dependencies: known CVEs, supply chain│
-│  Secrets     gitleaks, trufflehog  — commit history + pre-commit hook      │
-└────────────────────────────────────────────────────────────────────────────┘
-         │  feeds findings into
-         ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│  FUNCTIONAL TESTS with adversarial oracles                                 │
-│                                                                            │
-│  AuthN tests    rate-limit · session rotation · timing-leak · JWT pitfalls │
-│  AuthZ tests    role × endpoint × resource matrix (BOLA / IDOR focus)      │
-│  OWASP tests    XSS · SQLi · SSRF · CORS · headers · CSRF                  │
-│  Tooling        Playwright (header assertions, multi-role fixtures)        │
-│                 Burp Suite Repeater, OWASP ZAP                             │
-└────────────────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌────────────────────────────────────────────────────────────────────────────┐
-│  SHIFT-RIGHT (dynamic / running app)                                       │
-│                                                                            │
-│  DAST   OWASP ZAP 2.15.0          — reflected XSS, SQLi, missing headers  │
-│  Catch  business logic, complex auth flows, chained exploits               │
-│         (scanner blind spots — manual exploration fills the gap)           │
-└────────────────────────────────────────────────────────────────────────────┘
 
-OWASP Top 10 (2021) — memorise the categories, not just the numbers
-  A01 Broken Access Control   ← highest-ROI testing target for QA
-  A02 Cryptographic Failures  (sensitive data exposure, TLS, hashing)
-  A03 Injection               (SQLi, command injection, XSS)
-  A04 Insecure Design         (can't be patched — only redesigned)
-  A05 Security Misconfiguration (headers, defaults, verbose errors)
-  A06 Vulnerable Components   (dependency CVEs — SCA covers this)
-  A07 AuthN Failures          (brute force, session, JWT bugs)
-  A08 Software Integrity Failures (supply chain, CI/CD tampering)
-  A09 Logging/Monitoring Failures (audit gaps — STRIDE repudiation)
-  A10 SSRF                    (URL-accepting features → metadata endpoints)
-
-ZAP BASELINE SCAN FLOW (what this runbook sets up)
-  docker run zaproxy/zap-stable:2.15.0 zap-baseline.py -t <target>
-    Spider   — discovers paths via passive crawl
-    Passive  — flags headers, cookies, info disclosure (no active attacks)
-    Report   — HTML + JSON artefact with PASS/WARN/FAIL per rule
-  Juice Shop (local) used as scan target — deliberately vulnerable, legal to probe
+```mermaid
+flowchart TD
+    STRIDE["THREAT MODEL (STRIDE)\nSpoofing · Tampering · Repudiation\nInfo Disclosure · DoS · Elevation of Privilege\n→ each threat becomes a test case"]
+    SL["SHIFT-LEFT (static / pre-run)\nSAST: CodeQL, Semgrep — code-level injection, hardcoded keys\nSCA: Snyk, npm audit — dependencies, known CVEs, supply chain\nSecrets: gitleaks, trufflehog — commit history + pre-commit hook"]
+    FT["FUNCTIONAL TESTS with adversarial oracles\nAuthN: rate-limit · session rotation · timing-leak · JWT pitfalls\nAuthZ: role × endpoint × resource matrix (BOLA / IDOR focus)\nOWASP: XSS · SQLi · SSRF · CORS · headers · CSRF\nTooling: Playwright (header assertions, multi-role fixtures) · Burp Suite · ZAP"]
+    SR["SHIFT-RIGHT (dynamic / running app)\nDAST: OWASP ZAP 2.15.0 — reflected XSS, SQLi, missing headers\nManual exploration fills scanner blind spots\nZAP flow: Spider → Passive scan → HTML+JSON report"]
+    subgraph OW["OWASP Top 10 (2021)"]
+        O["A01 Broken Access Control (highest-ROI QA target)\nA02 Cryptographic Failures · A03 Injection\nA04 Insecure Design · A05 Security Misconfiguration\nA06 Vulnerable Components · A07 AuthN Failures\nA08 Software Integrity Failures · A09 Logging Failures · A10 SSRF"]
+    end
+    STRIDE --> SL --> FT --> SR
+    FT --> OW
 ```
+
 </Diagram>
 
 ## 1. Set up

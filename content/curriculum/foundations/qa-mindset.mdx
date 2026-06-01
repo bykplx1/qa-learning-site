@@ -27,11 +27,16 @@ This curriculum follows the **context-driven** school: no practice is universall
 ## Diagram
 
 <Diagram caption="QA as continuous evidence loop">
+
+```mermaid
+flowchart LR
+    H["Hypothesis"] --> TD["Test Design"]
+    TD --> E["Execution"]
+    E --> EV["Evidence"]
+    EV --> D["Decision"]
+    D --> |"Feedback"| H
 ```
-Hypothesis → Test Design → Execution → Evidence → Decision
-     ↑                                                ↓
-     └──────────────── Feedback ────────────────────┘
-```
+
 </Diagram>
 
 ## Worked Example

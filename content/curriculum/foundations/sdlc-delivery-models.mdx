@@ -27,16 +27,19 @@ A delivery model is the **shape in time** of a software project — when work is
 ## Diagram
 
 <Diagram caption="Feedback latency by delivery model — time from defect introduction to discovery">
+
+```mermaid
+flowchart LR
+    WF["Waterfall\nCoding → Test phase\nMonths"]
+    VM["V-Model\nCoding → Integration test\nWeeks–months"]
+    SC["Scrum\nSprint N → N or N+1 testing\nDays–weeks"]
+    KN["Kanban+CD\nIn progress → Canary release\nHours–days"]
+    XP["XP\nBefore code (TDD) → Never enters\nNear-zero"]
+    SA["SAFe\nTeam sprint → PI integration test\nDays / weeks (PI seam)"]
+    WF --> VM --> SC --> KN --> XP
+    SC --> SA
 ```
-Model       | Defect introduced → Discovered       | Typical latency
-------------|--------------------------------------|----------------
-Waterfall   | Coding phase → Separate test phase   | Months
-V-Model     | Coding phase → Integration test      | Weeks–months
-Scrum       | Sprint N → Sprint N or N+1 testing   | Days–weeks
-Kanban+CD   | Card in progress → Canary release    | Hours–days
-XP          | Before code (TDD) → Never enters     | Near-zero
-SAFe        | Team sprint → PI integration test    | Days (team) / weeks (PI seam)
-```
+
 </Diagram>
 
 ## Worked Example

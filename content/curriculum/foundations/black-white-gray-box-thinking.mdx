@@ -33,18 +33,22 @@ Crucially, the three terms describe a **per-test choice**, not a role or a test 
 ## Diagram
 
 <Diagram caption="Three lenses on the same system under test">
+
+```mermaid
+flowchart LR
+    BB["Black-box"]
+    GB["Gray-box"]
+    WB["White-box"]
+    subgraph SUT["System Under Test"]
+        L1["User-visible I/O"]
+        L2["Contract / API / Schema / Logs"]
+        L3["Source / Control Flow / State"]
+    end
+    BB --> L1
+    GB --> L2
+    WB --> L3
 ```
-                    ┌─────────────────────┐
-  Black-box ──────▶ │   User-visible I/O  │
-                    ├─────────────────────┤
-  Gray-box  ──────▶ │   Contract / API /  │
-                    │   Schema / Logs      │
-                    ├─────────────────────┤
-  White-box ──────▶ │   Source / Control  │
-                    │   Flow / State       │
-                    └─────────────────────┘
-                         System Under Test
-```
+
 </Diagram>
 
 ## Worked Example

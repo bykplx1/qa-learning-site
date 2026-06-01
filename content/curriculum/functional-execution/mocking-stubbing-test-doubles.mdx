@@ -33,33 +33,22 @@ As [[test-pyramid-and-trophy]] shows, isolation decisions shape the entire test 
 ## Diagram
 
 <Diagram caption="The five Meszaros test-double kinds: what each does and when to reach for it">
-```
-TEST DOUBLE DECISION TREE
-─────────────────────────────────────────────────────────────────────
-  "What is the test asking about the collaborator?"
-  │
-  ├─► "Nothing — I just need to satisfy the API signature"
-  │     └─► DUMMY  (never called; fills a required parameter slot)
-  │
-  ├─► "I need the collaborator to return realistic state"
-  │     ├─► Simple canned answer?  →  STUB  (returns fixed values;
-  │     │                                    ignores how it's called)
-  │     └─► Full honest impl?      →  FAKE  (in-memory DB, in-proc
-  │                                          queue — real logic, not prod-grade)
-  │
-  ├─► "I need to observe that a side-effect happened"
-  │     └─► SPY   (records calls received; test asserts on the log)
-  │
-  └─► "I need to enforce the exact call contract"
-        └─► MOCK  (pre-programmed expectations; FAILS the test if
-                   calls don't match — change-detector by design)
 
-"Don't mock what you don't own" rule
-─────────────────────────────────────────────────────────────────────
-  ✗  stub(axios.get).resolves(...)  ← you don't own axios
-  ✓  stub(httpClient.fetchUser)     ← you own the adapter
-       + contract-test the real axios call separately (e.g. MSW)
+```mermaid
+flowchart TD
+    Q["What is the test asking about the collaborator?"]
+    Q -->|"Nothing — just satisfy the API signature"| DUMMY["DUMMY\nnever called; fills a required parameter slot"]
+    Q -->|"Need realistic state returned"| STATE
+    STATE -->|"Simple canned answer?"| STUB["STUB\nreturns fixed values; ignores how it's called"]
+    STATE -->|"Full honest implementation?"| FAKE["FAKE\nin-memory DB, in-proc queue\nreal logic, not prod-grade"]
+    Q -->|"Need to observe a side-effect happened"| SPY["SPY\nrecords calls received; test asserts on the log"]
+    Q -->|"Need to enforce the exact call contract"| MOCK["MOCK\npre-programmed expectations\nFAILS the test if calls don't match\n(change-detector by design)"]
+    subgraph RULE["Don't mock what you don't own"]
+        BAD["✗ stub(axios.get) — you don't own axios"]
+        GOOD["✓ stub(httpClient.fetchUser) — you own the adapter\n+ contract-test the real axios call separately (e.g. MSW)"]
+    end
 ```
+
 </Diagram>
 
 ## Worked Example

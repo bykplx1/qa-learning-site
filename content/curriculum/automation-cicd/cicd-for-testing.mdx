@@ -140,38 +140,28 @@ ci-runbook/
 > Pin `actions/checkout` and `actions/setup-node` to a major version tag (`@v4`). Floating to `@main` exposes your workflow to supply-chain compromise — the action runs inside your repo's context with access to your secrets. Major-version tags are the practical minimum; commit-hash pinning is the high-assurance alternative.
 
 <Diagram caption="CI pipeline gate topology: three stages, five jobs, and the disciplines each job enforces — based on this site's actual ci.yml">
-```
-TRIGGER: push / pull_request → main  (or workflow_dispatch)
-│
-├── STAGE 1 — Fast checks (parallel, no DB, no browser)
-│   ├── lint-typecheck    astro check · type safety
-│   ├── lint-curriculum   depth-gate: ≥5 prompts, diagram, Feynman present
-│   └── unit              vitest unit suite (isolated, no network)
-│
-├── STAGE 2 — Integration (needs Stage 1 green)
-│   └── integration       vitest + real Postgres via services: container
-│                         ↑ HERMETIC ENV: per-job DB, never a shared dev instance
-│
-└── STAGE 3 — Heavy gates (parallel, all need Stage 2 green)
-    ├── e2e-a11y          Playwright + @axe-core/playwright
-    │                     ↑ ARTEFACTS: playwright-report/ uploaded on always()
-    │                     ↑ REPORTING: GHA annotations inline on PR diff
-    │
-    ├── visual            Playwright visual regression
-    │                     ↑ NON-BLOCKING: continue-on-error — UI still churning
-    │                     ↑ GATED BASELINE UPDATE: workflow_dispatch only
-    │                       (cross-OS font rendering → false diffs)
-    │
-    └── lhci              Lighthouse-CI budget gate (mobile + desktop)
-                          ↑ ENFORCED: job fails if perf/a11y/SEO budgets breached
-                          ↑ QUALITY GATE: not advisory — hard check
 
-
-FLAKINESS POLICY (healthy pipeline):
-  retries: 1  ←  absorbs runner provisioning jitter; caps at 1 to surface real bugs
-  quarantine  ←  tests flaking >2% go to quarantine queue (runs, doesn't block merge)
-  escape valve ← quarantine >30 days → delete or fix; no indefinite limbo
+```mermaid
+flowchart TD
+    TRIGGER["TRIGGER: push / pull_request → main"]
+    subgraph S1["STAGE 1 — Fast checks (parallel, no DB, no browser)"]
+        LT["lint-typecheck\nastro check · type safety"]
+        LC["lint-curriculum\ndepth-gate: ≥5 prompts, diagram, Feynman"]
+        UT["unit\nvitest suite (isolated, no network)"]
+    end
+    subgraph S2["STAGE 2 — Integration (needs Stage 1 green)"]
+        INT["integration\nvitest + real Postgres via services container\nHERMETIC: per-job DB, never shared dev instance"]
+    end
+    subgraph S3["STAGE 3 — Heavy gates (parallel, needs Stage 2 green)"]
+        E2E["e2e-a11y\nPlaywright + axe-core/playwright\nARTEFACTS: uploaded on always()\nREPORTING: GHA PR annotations"]
+        VIS["visual\nPlaywright visual regression\nNON-BLOCKING: continue-on-error\nGATED BASELINE UPDATE: workflow_dispatch only"]
+        LH["lhci\nLighthouse-CI budget gate (mobile + desktop)\nENFORCED: fails if perf/a11y/SEO budgets breached"]
+    end
+    FLAKE["FLAKINESS POLICY\nretries: 1 (absorbs runner jitter)\nquarantine: >2% flake → runs but doesn't block merge\nescape valve: >30 days → delete or fix"]
+    TRIGGER --> S1 --> S2 --> S3
+    S3 --> FLAKE
 ```
+
 </Diagram>
 
 ## 2. Implement + best practice

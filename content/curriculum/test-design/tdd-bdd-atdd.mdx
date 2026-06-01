@@ -32,42 +32,16 @@ TDD, BDD, and ATDD all write the test before the code. They look alike on a work
 ## Diagram
 
 <Diagram caption="Three test-first practices: audience, feedback loop, and primary artefact">
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│  ATDD / Specification by Example                                        │
-│  Audience: Business + Team          Artefact: Executable specification  │
-│                                                                         │
-│  "What does DONE look like? Give me an example."                        │
-│                                                                         │
-│  Rule + Examples → Automate → Living Documentation                      │
-│  e.g. decision table of discount rules, wired to CI                     │
-└─────────────────────────┬───────────────────────────────────────────────┘
-                          │ ATDD examples become BDD scenarios
-                          ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│  BDD — Behaviour-Driven Development                                     │
-│  Audience: Dev + QA + Business      Artefact: Three-amigos conversation │
-│                                                                         │
-│  "Walk me through a concrete example of this feature."                  │
-│                                                                         │
-│  Three-amigos meeting → Concrete examples → (optionally) .feature file  │
-│  The meeting is the practice; Gherkin/Cucumber is one tool for it       │
-└─────────────────────────┬───────────────────────────────────────────────┘
-                          │ BDD examples become TDD red tests
-                          ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│  TDD — Test-Driven Development                                          │
-│  Audience: Developer                Artefact: Red-green-refactor loop   │
-│                                                                         │
-│  "Write the test first, make it pass, then improve the design."         │
-│                                                                         │
-│  RED (write failing test) → GREEN (simplest code to pass) →            │
-│  REFACTOR (improve design without breaking the test) → repeat           │
-└─────────────────────────────────────────────────────────────────────────┘
 
-The three compose: SbE conversation → BDD examples → TDD red tests → code.
-Each artefact from the outer layer survives as a regression guard.
+```mermaid
+flowchart TD
+    ATDD["ATDD / Specification by Example\nAudience: Business + Team\nArtefact: Executable specification\n'What does DONE look like? Give me an example.'\nRule + Examples → Automate → Living Documentation"]
+    BDD["BDD — Behaviour-Driven Development\nAudience: Dev + QA + Business\nArtefact: Three-amigos conversation\n'Walk me through a concrete example.'\nThree-amigos meeting → Concrete examples → .feature file"]
+    TDD["TDD — Test-Driven Development\nAudience: Developer\nArtefact: Red-green-refactor loop\n'Write the test first, make it pass, improve the design.'\nRED → GREEN → REFACTOR → repeat"]
+    ATDD -->|"ATDD examples become BDD scenarios"| BDD
+    BDD -->|"BDD examples become TDD red tests"| TDD
 ```
+
 </Diagram>
 
 ## Worked Example

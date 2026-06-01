@@ -43,37 +43,16 @@ The load-bearing number: automated tools like axe-core catch **~30–40% of WCAG
 > Automated accessibility tools catch ~30–40% of WCAG violations. The other ~60% requires keyboard, screen-reader, and real-user passes. "Axe passes" is a floor, not a verdict.
 
 <Diagram caption="Four accessibility testing modalities layered by coverage and cost — automated tools cover the floor; human passes cover the ceiling.">
+
+```mermaid
+flowchart TD
+    L1["LAYER 1: Automated (axe-core / Lighthouse / pa11y)\nCoverage: ~30–40% of violations\nCatches: missing alt text · low contrast · missing form labels\n  ARIA misuse · empty buttons · missing page title\nMisses: keyboard traps · focus order logic · screen-reader narrative\nCost: near-zero per run once wired into CI"]
+    L2["LAYER 2: Keyboard-only manual pass\nCoverage: adds ~20–25%\nCatches: invisible focus · illogical tab order · keyboard trap\n  missing skip link · custom widget keyboard gaps\nMisses: screen-reader-only semantics · live-region announcements\nCost: 1–4 hrs for a primary user flow"]
+    L3["LAYER 3: Screen-reader manual pass (NVDA / VoiceOver / TalkBack)\nCoverage: adds ~20–25%\nCatches: broken reading order · silent dynamic updates · bad ARIA names\n  focus-management regressions after SPA route changes\nMisses: cognitive accessibility · complex workflow fatigue\nCost: 4–8 hrs; pair with a blind tester when possible"]
+    L4["LAYER 4: Real-user testing with disabled users\nCoverage: ground truth — catches what tools and proxies cannot\nCatches: cognitive load · real assistive-tech configurations\n  workflow paths no sighted QA engineer anticipates\nCost: recruiting + facilitation; limited frequency"]
+    L1 --> L2 --> L3 --> L4
 ```
-WCAG 2.2 AA CONFORMANCE TARGET
-│
-├── LAYER 1: Automated (axe-core / Lighthouse / pa11y)
-│   Coverage: ~30–40% of violations
-│   Catches:  missing alt text · low contrast · missing form labels
-│             ARIA misuse · empty buttons · missing page title
-│   Misses:   keyboard traps · focus order logic · screen-reader narrative
-│             live-region timing · modal focus management
-│   Cost:     near-zero per run once wired into CI
-│
-├── LAYER 2: Keyboard-only manual pass
-│   Coverage: adds ~20–25% (focus, order, traps, skip links)
-│   Catches:  invisible focus · illogical tab order · keyboard trap
-│             missing skip link · custom widget keyboard gaps
-│   Misses:   screen-reader-only semantics · live-region announcements
-│   Cost:     1–4 hrs for a primary user flow
-│
-├── LAYER 3: Screen-reader manual pass (NVDA / VoiceOver / TalkBack)
-│   Coverage: adds ~20–25% (name/role/value, reading order, ARIA announcements)
-│   Catches:  broken reading order · silent dynamic updates · bad ARIA names
-│             focus-management regressions after SPA route changes
-│   Misses:   cognitive accessibility · complex workflow fatigue
-│   Cost:     4–8 hrs; steep learning curve; pair with a blind tester when possible
-│
-└── LAYER 4: Real-user testing with disabled users
-    Coverage: ground truth — catches what tools and proxies cannot
-    Catches:  cognitive load · real assistive-tech configurations
-              workflow paths no sighted QA engineer anticipates
-    Cost:     recruiting + facilitation; limited frequency
-```
+
 </Diagram>
 
 ## 1. Set up properly

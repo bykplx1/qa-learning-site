@@ -145,45 +145,22 @@ Checkout complete — check Jaeger at http://localhost:16686
 Open http://localhost:16686, select `checkout-service` from the service dropdown, and click **Find Traces**. You should see one trace with two spans (`checkout` → `payment.charge`) and timing data. If the trace appears, the setup is complete. Move on.
 
 <Diagram caption="The three observability signals, the question each answers, and how OpenTelemetry wires them to any compliant backend">
+
+```mermaid
+flowchart TD
+    PROD["PRODUCTION SYSTEM\nreal users · real load · real failure modes\ninstrumented by OpenTelemetry SDK"]
+    LOGS["LOGS\n'What happened and why?'\nEvents with context\nBackends: Loki · Splunk · Datadog Logs · Sentry\nTester reads: investigating a specific user failure"]
+    METRICS["METRICS\n'How much is happening over time?'\nCounters · Gauges · Histograms\nBackends: Prometheus · Datadog · Grafana · Alerts/SLOs\nTester reads: detecting aggregate regressions"]
+    TRACES["TRACES\n'How did this one request flow across services?'\nSpans with timing\nBackends: Jaeger · Tempo · Honeycomb · DD APM\nTester reads: diagnosing latency across N services"]
+    OTEL["OTel SDK → OTLP exporter (port 4318) → Collector / Jaeger / Grafana Tempo → Query UI / Alerts"]
+    PROD --> LOGS
+    PROD --> METRICS
+    PROD --> TRACES
+    LOGS --> OTEL
+    METRICS --> OTEL
+    TRACES --> OTEL
 ```
-                    ┌─────────────────────────────────────────────────┐
-                    │            PRODUCTION SYSTEM                    │
-                    │  (real users · real load · real failure modes)  │
-                    └────────────┬────────────────────────────────────┘
-                                 │  instrumented by OpenTelemetry SDK
-             ┌───────────────────┼───────────────────┐
-             ▼                   ▼                   ▼
-        ┌─────────┐        ┌──────────┐        ┌──────────┐
-        │  LOGS   │        │ METRICS  │        │ TRACES   │
-        │ "What   │        │ "How     │        │ "How did │
-        │ happened│        │ much is  │        │ this one │
-        │ and     │        │ happening│        │ request  │
-        │ why?"   │        │ over     │        │ flow     │
-        │         │        │ time?"   │        │ across   │
-        │ Events  │        │ Counters │        │ services?│
-        │ with    │        │ Gauges   │        │ Spans    │
-        │ context │        │ Histogr. │        │ w/ timing│
-        └────┬────┘        └────┬─────┘        └────┬─────┘
-             │                  │                    │
-             ▼                  ▼                    ▼
-    Loki · Splunk       Prometheus · Datadog   Jaeger · Tempo
-    Datadog Logs        Grafana dashboards     Honeycomb · DD APM
-    Sentry (errors)     Alerts / SLOs          Distributed traces
 
-
-WHEN THE TESTER READS EACH:
-  Logs    → investigating a specific failure reported by a user
-  Metrics → detecting aggregate regressions; confirming SLO health post-deploy
-  Traces  → diagnosing latency; following one request across N services
-
-
-OTEL EXPORTER FLOW:
-  Application code
-    → OTel SDK (NodeSDK.start())
-      → OTLP exporter (HTTP/gRPC to port 4318)
-        → Collector / Jaeger / Grafana Tempo
-          → Query UI / Alerts
-```
 </Diagram>
 
 ## 2. Implement + best practice

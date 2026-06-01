@@ -31,41 +31,23 @@ The load-bearing claim: the "one Appium suite tests both platforms" promise stru
 ## Diagram
 
 <Diagram caption="Mobile test tooling landscape — three families × two execution targets × one cloud question">
+
+```mermaid
+flowchart TD
+    subgraph TF["Tooling Families"]
+        APP["Appium\nProtocol: WebDriver (UIAutomator2 / XCUITest)\nLanguages: JS · Java · Python · C# · Ruby\nSweet spot: cross-platform, QA-team-owned\nCross-platform: Yes — leaks on system UI"]
+        ESP["Espresso / XCUITest\nIn-process, native vendor\nAndroid: Espresso (Kotlin/Java)\niOS: XCUITest (Swift/Obj-C)\nSweet spot: speed + stability, dev-owned, single platform"]
+        DTX["Detox\nGray-box, JS-driven\nApp: React Native only\nLanguage: JS / TypeScript\nSweet spot: RN teams; sync-bridge awareness is the payoff"]
+    end
+    subgraph ET["Execution Target"]
+        EMU["Emulator / Simulator\nFast, cheap\nNo real sensors / hardware\nLossless network, perfect rendering\nMisses long-tail Android OEM quirks\n→ Use for fast PR feedback loops"]
+        DEV["Real Device\nSlow, expensive\nTrue hardware — sensors, haptics, camera\nOEM overlays (One UI, MIUI, EMUI)\nCatches what emulator hides\n→ Use for pre-deploy sanity + weekly sweep"]
+    end
+    subgraph DC["Device Cloud"]
+        CL["BrowserStack App Automate · Sauce Labs · AWS Device Farm\nFirebase Test Lab · LambdaTest\nCost: real but smaller than 'we ship and find out'"]
+    end
 ```
-TOOLING FAMILIES
 
-  Appium                      Espresso / XCUITest         Detox
-  ──────────────────────────  ──────────────────────────  ──────────────────────────
-  Protocol: WebDriver         In-process, native vendor   Gray-box, JS-driven
-  Under hood: UIAutomator2    Android → Espresso          App: React Native only
-              XCUITest        iOS    → XCUITest
-  Languages: JS · Java ·      Kotlin/Java (Espresso)      JS / TypeScript
-             Python · C# ·    Swift/Obj-C (XCUITest)
-             Ruby
-  Sweet spot: cross-platform  Speed + stability;          RN teams; sync-bridge
-              QA-team-owned   dev-owned; single platform  awareness is the payoff
-  Cross-platform promise:     No — single platform        iOS + Android (RN only)
-  Yes — leaks on system UI
-
-──────────────────────────────────────────────────────────────────────────────────
-
-EXECUTION TARGET AXIS
-
-  Emulator / Simulator                  Real Device
-  ─────────────────────────────────     ─────────────────────────────────────────
-  Fast, cheap                           Slow, expensive
-  No real sensors / hardware            True hardware — sensors, haptics, camera
-  Lossless network, perfect rendering   OEM overlays (One UI, MIUI, EMUI)
-  Misses long-tail Android OEM quirks   Misses nothing — catches what emulator hides
-
-  → Use for fast PR feedback loops      → Use for pre-deploy sanity + weekly sweep
-
-──────────────────────────────────────────────────────────────────────────────────
-
-DEVICE CLOUD (category — not a single vendor recommendation)
-  BrowserStack App Automate · Sauce Labs · AWS Device Farm · Firebase Test Lab · LambdaTest
-  Cost: real but smaller than the alternative ("we ship and find out")
-```
 </Diagram>
 
 ## Worked Example

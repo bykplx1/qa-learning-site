@@ -32,25 +32,23 @@ This matters because boundary choice is the most-leveraged architectural decisio
 ## Diagram
 
 <Diagram caption="Seams in a typical web request flow and which test type crosses each one">
-```
-Browser ──► CDN ──► App Server ──► Database ──► Cache ──► External API
-   │          │           │              │          │            │
-   │          │           │              │          │            │
-   ▼          ▼           ▼              ▼          ▼            ▼
- UI seam   Network     Process        DB seam    Cache       3rd-party
-           seam        boundary                  seam         seam
 
-Test type          │ Seams crossed (real)       │ Seams doubled
-───────────────────┼────────────────────────────┼──────────────────────────
-Solitary unit      │ none                       │ all non-trivial seams
-Sociable unit      │ cheap in-process seams     │ expensive / external seams
-DB integration     │ DB seam only               │ network, cache, 3rd-party
-Contract test      │ one HTTP seam (verified)   │ both services never co-run
-E2E                │ all seams real             │ none
-
-Seams crossed = flake opportunities + feedback latency
-Seams doubled = bugs missed at that boundary
+```mermaid
+flowchart LR
+    BR["Browser\nUI seam"] --> CDN["CDN\nNetwork seam"]
+    CDN --> APP["App Server\nProcess boundary"]
+    APP --> DB["Database\nDB seam"]
+    DB --> CA["Cache\nCache seam"]
+    CA --> EX["External API\n3rd-party seam"]
+    subgraph KEY["Test type vs seams"]
+        SU["Solitary unit\nCrosses: none → Doubles: all non-trivial"]
+        SO["Sociable unit\nCrosses: cheap in-process → Doubles: expensive/external"]
+        DBI["DB integration\nCrosses: DB seam only → Doubles: network, cache, 3rd-party"]
+        CT["Contract test\nCrosses: one HTTP seam (verified) → both services never co-run"]
+        E2E["E2E\nCrosses: all seams real → Doubles: none"]
+    end
 ```
+
 </Diagram>
 
 ## Worked Example

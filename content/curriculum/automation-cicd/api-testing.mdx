@@ -179,47 +179,16 @@ api-runbook/
 ```
 
 <Diagram caption="API test layers — each layer catches a distinct bug class; each requires the layer below">
+
+```mermaid
+flowchart TD
+    L1["LAYER 1 — STATUS ASSERTION (baseline)\nrequest(app).get('/users/42') → expect(status).toBe(200)\nCatches: server 500s, missing routes\nMisses: wrong shape, missing fields, null where string expected"]
+    L2["LAYER 2 — SCHEMA ASSERTION\najv.compile(userSchema) → validate(res.body)\nCatches: wrong types, missing required fields, extra fields\nMisses: shape drift between separately-deployed services"]
+    L3["LAYER 3 — CONTRACT ASSERTION (consumer-driven)\nConsumer publishes → Pact Broker → Provider verifies in CI\nCatches: provider change breaks downstream consumer\nMisses: nothing the other layers catch — this is the ceiling"]
+    L1 --> L2 --> L3
+    note["Key: escalate in order.\nSchema first, contract second,\non routes crossing service or team boundaries."]
 ```
-LAYER 1 — STATUS ASSERTION (baseline, almost everyone ships this)
 
-  request(app).get('/users/42')
-    → expect(status).toBe(200)
-
-  CATCHES: server 500s, missing routes
-  MISSES:  wrong shape, missing fields, null where string expected
-
-────────────────────────────────────────────────────────────────
-
-LAYER 2 — SCHEMA ASSERTION (adds shape validation)
-
-  const validate = ajv.compile(userSchema);
-    → expect(status).toBe(200)
-    → expect(validate(res.body)).toBe(true)   ← shape check
-
-  CATCHES: wrong types, missing required fields, extra unexpected fields
-  MISSES:  shape drift between separately-deployed services
-
-────────────────────────────────────────────────────────────────
-
-LAYER 3 — CONTRACT ASSERTION (consumer-driven, cross-service)
-
-  CONSUMER publishes → BROKER stores → PROVIDER verifies in CI
-
-  ┌──────────────┐   publishes   ┌──────────────┐   verifies   ┌──────────────┐
-  │   Consumer   │──────────────►│ Pact Broker  │─────────────►│   Provider   │
-  │   (narrow    │               │              │              │   CI job     │
-  │    contract) │               │  contract    │              │  PASS/FAIL   │
-  └──────────────┘               └──────────────┘              └──────────────┘
-
-  CATCHES: provider change breaks a downstream consumer's actual usage
-  MISSES:  nothing the other layers catch — this is the ceiling
-
-────────────────────────────────────────────────────────────────
-
-KEY INSIGHT: escalate in order. A contract test on a status-only suite
-amplifies nothing. Schema first, contract second, on routes that cross
-a service boundary or a team boundary.
-```
 </Diagram>
 
 ## 2. Implement + best practice

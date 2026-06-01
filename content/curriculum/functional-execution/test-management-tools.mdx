@@ -31,34 +31,23 @@ The spreadsheet hinge marks the tipping point: below roughly 200 maintained case
 ## Diagram
 
 <Diagram caption="Tool choice mapped to audience, case volume, and audit obligation — with data-flow in the modern hybrid pattern">
+
+```mermaid
+flowchart TD
+    subgraph DA["Decision Axis: Who reads the test results?"]
+        EO["Engineering only\nTests-as-code + CI reporter + Slack\nVolume: < 200 cases\nAudit: none"]
+        MA["Mixed audience\nHybrid: tests-as-code → CI → TMT API → dashboard\nVolume: 200–2,000 cases\nAudit: optional hygiene"]
+        NE["Non-engineering required\nFull TMT: TestRail / qTest / Zephyr / Xray\n+ manual case library + traceability matrix\nVolume: > 500 + multi-env\nAudit: regulatory / SOC 2"]
+    end
+    subgraph DF["Modern Hybrid Data Flow"]
+        SPECS[".spec.ts files\n@C12345 @C12346"]
+        CI["CI pipeline\nreporter plugin"]
+        TMT["TMT (e.g. TestRail)\nrun record\npass/fail/trend"]
+        DASH["Exec dashboard\n(PM / auditor view)"]
+        SPECS -->|"run"| CI -->|"API"| TMT --> DASH
+    end
 ```
-DECISION AXIS: Who reads the test results?
 
-  Engineering only          Mixed audience             Non-engineering required
-  ─────────────────         ─────────────────          ─────────────────────────
-  Tests-as-code +           Hybrid pattern:            Full TMT:
-  CI reporter +             tests-as-code              TestRail / qTest /
-  Slack summary             → CI → TMT API             Zephyr / Xray
-                            → dashboard                + manual case library
-                                                       + traceability matrix
-
-  Case volume: < 200        200 – 2 000                > 500 + multi-env
-  Audit: none               optional hygiene           regulatory / SOC 2
-
-──────────────────────────────────────────────────────────────────────────────
-
-MODERN HYBRID DATA FLOW
-
-  .spec.ts files            CI pipeline               TMT (e.g. TestRail)
-  ┌──────────────┐          ┌────────────┐            ┌───────────────────┐
-  │ @C12345      │──run──►  │ reporter   │──API───►   │ run record        │
-  │ @C12346      │          │ plugin     │            │ pass/fail/trend   │
-  └──────────────┘          └────────────┘            └─────────┬─────────┘
-                                                                │
-  Manual cases (pre-release non-automatable flows)             ▼
-  ────────────────────────────────────────────────    Exec dashboard
-                                                      (PM / auditor view)
-```
 </Diagram>
 
 ## Worked Example

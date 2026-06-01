@@ -33,59 +33,33 @@ The categories are codified in the **OWASP LLM Top 10**: Prompt Injection, Sensi
 ## Diagram
 
 <Diagram caption="The five primary AI attack surfaces and the layered-defence architecture that bounds each one — showing the lethal trifecta at the centre where untrusted content, private data, and external communication channels converge">
+
+```mermaid
+flowchart TD
+    subgraph FLOW["LLM Request Flow"]
+        IN["INPUT: User input · Retrieved docs · Tool results"]
+        MODEL["MODEL CORE: System Prompt · Injected chunks · Tool outputs · Chat history"]
+        OUT["OUTPUT: Text response · Tool calls · Rendered HTML/MD · External actions"]
+        IN --> MODEL --> OUT
+    end
+    subgraph ATK["Five Attack Surfaces"]
+        A1["① Direct prompt injection\nUser input overrides system instructions"]
+        A2["② Indirect prompt injection\nPoisoned retrieved content (web/emails/RAG)"]
+        A3["③ Data leakage\nSystem prompt extraction · PII echo · cross-tenant leak"]
+        A4["④ Output handling\nSQL/JS/shell in output · Markdown image exfiltration"]
+        A5["⑤ Excessive agency\nTools without authZ · broad permissions · no human-in-loop"]
+    end
+    subgraph LT["Lethal Trifecta (Simon Willison) — break one leg to defuse"]
+        T1["① Reads untrusted content"]
+        T2["② Accesses private data"]
+        T3["③ Can communicate externally"]
+        T1 --- T2 --- T3
+    end
+    subgraph LD["Layered Defence — no single layer is the boundary, the overlap is"]
+        D["INPUT VALIDATION (sanitise, delimit, scope)\nSYSTEM PROMPT (hardened, defence-in-depth)\nSPOTLIGHTING (delimit retrieved content)\nOUTPUT FILTERING (sanitise URLs, HTML, code)\nTOOL AuthZ (per-tool arg checks, least-priv)\nMONITORING (refusal/cost spikes, abnormal tool calls)"]
+    end
 ```
-AI ATTACK SURFACES & LAYERED DEFENCES
-═══════════════════════════════════════
 
-INPUT LAYER          MODEL CORE           OUTPUT LAYER
-───────────          ──────────           ────────────
-User input ──────→ [System Prompt]  ────→ Text response
-                   [Injected chunk]       Tool calls
-Retrieved docs ──→ [Tool outputs  ]  ────→ Rendered HTML/MD
-Tool results ────→ [Chat history  ]       External actions
-
-FIVE ATTACK SURFACES
-────────────────────
-① Direct prompt injection     ③ Data leakage
-  User input overrides           System prompt extraction
-  system instructions            PII echo, cross-tenant leak
-  "Ignore prior instructions…"   Training-data regurgitation
-
-② Indirect prompt injection   ④ Output handling
-  Poisoned retrieved content      SQL / JS / shell in model output
-  Web pages, emails, RAG chunks   Markdown image exfiltration
-  Any text the model reads        Rendered content → network calls
-
-                    ⑤ Excessive agency
-                       Tools without authZ checks
-                       Broad permissions, no human-in-loop
-                       Recursive/amplifying tool chains
-
-THE LETHAL TRIFECTA (Simon Willison)
-──────────────────────────────────────
-  If an agent has ALL THREE legs:
-    ① Reads untrusted content (web, docs, emails)
-    ② Accesses private data (user records, internal APIs)
-    ③ Can communicate externally (send email, POST to URL)
-  → One indirect injection = data exfiltration
-
-  Break one leg to defuse the trifecta:
-    Remove external-write tools   OR
-    Scope private-data access     OR
-    Sandbox / allowlist retrieval sources
-
-LAYERED DEFENCE
-───────────────
-  ┌─────────────────────────────────────────────┐
-  │  INPUT VALIDATION  (sanitise, delimit, scope) │
-  │  SYSTEM PROMPT     (hardened, defence-in-depth)│
-  │  SPOTLIGHTING      (delimit retrieved content) │
-  │  OUTPUT FILTERING  (sanitise URLs, HTML, code) │
-  │  TOOL AuthZ        (per-tool arg checks, least-priv) │
-  │  MONITORING        (refusal spikes, cost spikes, abnormal tool calls) │
-  └─────────────────────────────────────────────┘
-    No single layer is the boundary — the overlap is.
-```
 </Diagram>
 
 ## Worked Example

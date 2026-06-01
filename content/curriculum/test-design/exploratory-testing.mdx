@@ -34,48 +34,17 @@ ET is the discipline that addresses **unknown-unknowns**: bugs no spec anticipat
 ## Diagram
 
 <Diagram caption="SBTM session lifecycle — from charter assigned to next charter assigned">
-```
-  ┌─────────────────────────────────────────────────────────────────┐
-  │  Session-Based Test Management (SBTM) Lifecycle                 │
-  └─────────────────────────────────────────────────────────────────┘
 
-  ① CHARTER ASSIGNED
-       Mission + Target + Oracle hint + Time-box
-       e.g. "Explore registration's interaction with existing
-       accounts (same email / Google OAuth) to discover surprising
-       error messages or account-linking behaviour. 60 min."
-                │
-                ▼
-  ② SESSION (≤ 90 min — cognitive load reality)
-       ┌───────────────────────────────────┐
-       │  Test design ──► Execute          │
-       │       ▲               │           │
-       │       │    learn      ▼           │
-       │       └────────── Interpret       │
-       │  (activities are coupled, not     │
-       │   sequential)                     │
-       └───────────────────────────────────┘
-       Note: every path taken, surprise noticed,
-       question raised, bug filed
-                │
-                ▼
-  ③ TBS TIMING BREAKDOWN
-       T — Test design & execution   e.g. 65%
-       B — Bug investigation              20%
-       S — Setup & overhead              15%
-       (the split itself is information)
-                │
-                ▼
-  ④ DEBRIEF (5–15 min)
-       What did you do? What surprised you?
-       Where were you blocked? What charter next?
-       → written record: notes leave the tester's head
-         and enter the team's knowledge
-                │
-                ▼
-  ⑤ NEXT CHARTER ASSIGNED
-       Derived from session surprises — not the spec
+```mermaid
+flowchart TD
+    A["① CHARTER ASSIGNED\nMission + Target + Oracle hint + Time-box"]
+    B["② SESSION (≤ 90 min)\nTest design ↔ Execute ↔ Interpret\n(activities coupled, not sequential)\nNote every path, surprise, question, bug"]
+    C["③ TBS TIMING BREAKDOWN\nT — Test design & execution ~65%\nB — Bug investigation ~20%\nS — Setup & overhead ~15%\n(the split itself is information)"]
+    D["④ DEBRIEF (5–15 min)\nWhat did you do? What surprised you?\nWhere were you blocked? What charter next?\n→ notes leave tester's head, enter team knowledge"]
+    E["⑤ NEXT CHARTER ASSIGNED\nDerived from session surprises — not the spec"]
+    A --> B --> C --> D --> E --> A
 ```
+
 </Diagram>
 
 ## Worked Example

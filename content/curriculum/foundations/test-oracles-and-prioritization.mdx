@@ -29,24 +29,22 @@ A **test oracle** is anything that lets you decide whether an observed behaviour
 ## Diagram
 
 <Diagram caption="Oracle types and risk prioritization — the two axes of testing judgement">
-```
-Oracle Types (Barr et al. 2015)
-────────────────────────────────────────────────────────
-  Specified  │ Formal spec, contract, state machine
-  Derived    │ Snapshot, golden-master, regression baseline
-  Implicit   │ No crash, no 5xx, no unhandled exception
-  Pseudo     │ Separately-implemented reference (diff testing)
 
-Risk Priority Matrix (Likelihood × Impact)
-────────────────────────────────────────────────────────
-  Impact →        Low (1)    Medium (2)   High (3)
-  Likelihood ↓
-  High (3)          3           6         ★ 9
-  Medium (2)        2           4           6
-  Low (1)           1           2           3
-
-★ Critical — test first; document the oracle explicitly
+```mermaid
+flowchart TD
+    subgraph OT["Oracle Types (Barr et al. 2015)"]
+        SP["Specified\nFormal spec, contract, state machine"]
+        DV["Derived\nSnapshot, golden-master, regression baseline"]
+        IM["Implicit\nNo crash, no 5xx, no unhandled exception"]
+        PS["Pseudo\nSeparately-implemented reference (diff testing)"]
+    end
+    subgraph RM["Risk Priority: Likelihood × Impact"]
+        HH["High × High = 9 ★ CRITICAL\nTest first; document oracle explicitly"]
+        HM["High × Med = 6 / Med × High = 6"]
+        ML["Med × Med = 4 / Low-High combos = 1–3"]
+    end
 ```
+
 </Diagram>
 
 ## Worked Example

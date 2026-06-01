@@ -32,20 +32,23 @@ The operational frame that makes this actionable is the **merge boundary**. Ever
 ## Diagram
 
 <Diagram caption="SDLC timeline: pre-merge and post-merge test activities placed concretely">
-```
-IDEA ──► DESIGN ──► CODE ──► REVIEW ──► CI ──[MERGE]──► STAGING ──► CANARY ──► PROD
-  │         │         │         │         │                              │          │
-  ▼         ▼         ▼         ▼         ▼                              ▼          ▼
-Require-  Threat    TDD /     Contract  Static                        Canary     Synthetic
-ments     modelling  BDD       tests     analysis                     + SLO      monitoring
-review    (STRIDE)   loops     (pre-push) lint                        gates      (every 5 min)
-  │                                                                               │
-  └─────────────────── PRE-MERGE (shift-left moves) ───────────────────────────┘
-                                            └─── POST-MERGE (shift-right moves) ──┘
 
-Cheapest bug: requirements review         Most valuable bug: canary rollback
-Most commonly skipped: requirements       Most commonly skipped: synthetic alerts
+```mermaid
+flowchart LR
+    IDEA["IDEA\nRequirements\nreview"]
+    DESIGN["DESIGN\nThreat modelling\n(STRIDE)"]
+    CODE["CODE\nTDD / BDD\nloops"]
+    REVIEW["REVIEW\nContract tests\n(pre-push)"]
+    CI["CI\nStatic analysis\nlint"]
+    MERGE(["MERGE"])
+    STAGING["STAGING"]
+    CANARY["CANARY\nCanary + SLO\ngates"]
+    PROD["PROD\nSynthetic monitoring\n(every 5 min)"]
+    IDEA --> DESIGN --> CODE --> REVIEW --> CI --> MERGE --> STAGING --> CANARY --> PROD
+    MERGE -.->|"← PRE-MERGE (shift-left)"| IDEA
+    PROD -.->|"POST-MERGE (shift-right) →"| CANARY
 ```
+
 </Diagram>
 
 ## Worked Example
