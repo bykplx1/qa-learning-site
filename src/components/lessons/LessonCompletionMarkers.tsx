@@ -26,8 +26,9 @@ function LessonCompletionMarkersInner() {
   }, []);
 
   useEffect(() => {
-    if (!completedSlugs || completedSlugs.size === 0) return;
+    if (!completedSlugs) return;
 
+    // Mark individual lesson rows as complete.
     const rows = document.querySelectorAll<HTMLAnchorElement>('a.lrow[href]');
     for (const row of rows) {
       const href = row.getAttribute('href') ?? '';
@@ -40,6 +41,21 @@ function LessonCompletionMarkersInner() {
       marker.setAttribute('aria-label', 'Completed');
       marker.setAttribute('title', 'Completed');
       row.appendChild(marker);
+    }
+
+    // Update track-card progress bars.
+    const cards = document.querySelectorAll<HTMLElement>('a.cat[data-cluster-slugs]');
+    for (const card of cards) {
+      const slugList = (card.getAttribute('data-cluster-slugs') ?? '').split(',').filter(Boolean);
+      if (slugList.length === 0) continue;
+      const total = slugList.length;
+      const completed = slugList.filter((s) => completedSlugs.has(s)).length;
+      const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+      const bar = card.querySelector<HTMLElement>('[role="progressbar"]');
+      if (!bar) continue;
+      bar.style.width = `${pct}%`;
+      bar.setAttribute('aria-valuenow', String(completed));
     }
   }, [completedSlugs]);
 
