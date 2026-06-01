@@ -34,40 +34,26 @@ The load-bearing claim names three inseparable roles: **the eval is the contract
 ## Diagram
 
 <Diagram caption="The four signal layers of AI observability feeding the eval-in-prod loop, and the independent drift axes a tester must watch — showing where the trace, the prompt log, and the drift alarm each do their distinct job">
+
+```mermaid
+flowchart TD
+    subgraph SL["Four Signal Layers (one production LLM call)"]
+        T1["① TRACE\nend-to-end shape: prompt → retrieval → tool calls → model version → latency\n→ REPRODUCE bugs"]
+        T2["② PROMPT/RESP LOG\nfull assembled prompt (system+template+few-shot+user+context) + output\n→ EVIDENCE"]
+        T3["③ EVAL SIGNALS\nrubrics on sampled traffic + golden replay + feedback-derived\n→ CONTRACT"]
+        T4["④ DRIFT METRICS\ndistributions of in/out/judge-score, refusal%, cost, latency, fingerprint\n→ ALARM"]
+    end
+    subgraph LOOP["Eval-in-Prod Loop"]
+        L1["DEFINE STEADY STATE\nfaithfulness ≥ 0.9, refusal ≤ 3%, p95 TTFT < 1.2s"]
+        L2["OBSERVE\nsample 5–10% traffic, stratified by feature/language/model\nrun rubrics with cross-family judge model"]
+        L3["ALERT ON DEVIATION\ndrift > baseline noise → page on-call + open issue"]
+        L1 --> L2 --> L3 --> L1
+    end
+    subgraph DA["Drift Axes (each independent — conflating causes alarm fatigue)"]
+        D["input drift: users ask different things\noutput drift: same input, different answer (often model upgrade)\njudge drift: the judge model itself changed\nrefusal drift: cheap leading indicator of provider model change\ncost drift: quality signal in disguise\nfingerprint: system_fingerprint changed → provider new build"]
+    end
 ```
-FOUR SIGNAL LAYERS (one production LLM call)
-────────────────────────────────────────────
-① TRACE            end-to-end shape: prompt → retrieval → tool calls →
-                   model version → latency components   →  REPRODUCE bugs
-② PROMPT/RESP LOG  full ASSEMBLED prompt (system+template+few-shot+user+
-                   retrieved context) + full output     →  EVIDENCE
-③ EVAL SIGNALS     rubrics on sampled live traffic +
-                   golden replay + feedback-derived      →  CONTRACT
-④ DRIFT METRICS    distributions of in/out/judge-score,
-                   refusal %, cost, latency, fingerprint →  ALARM
 
-           the eval is the contract · the trace is the evidence
-                       · the drift metric is the alarm
-
-
-EVAL-IN-PROD LOOP  (= the chaos method, applied to quality)
-─────────────────────────────────────────────────────────────
-  DEFINE STEADY STATE   "faithfulness ≥ 0.9, refusal ≤ 3%, p95 TTFT < 1.2s"
-        ↓ sample 5–10% of traffic, stratified by feature/language/model
-  OBSERVE               run rubrics with a cross-family judge model
-        ↓
-  ALERT ON DEVIATION    drift > baseline noise → page on-call + open issue
-
-
-DRIFT IS MULTI-AXIS  (conflating axes → alarm fatigue + wrong fixes)
-─────────────────────────────────────────────────────────────────────
-  input drift     users ask different things
-  output drift    same input, different answer  ← often a model upgrade
-  judge drift     the judge model itself changed
-  refusal drift   cheap leading indicator of provider-side model change
-  cost drift      a quality signal in disguise (longer prompt? abuse? upgrade?)
-  fingerprint     `system_fingerprint` changed → provider shipped a new build
-```
 </Diagram>
 
 ## Worked Example

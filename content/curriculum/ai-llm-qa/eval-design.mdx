@@ -161,55 +161,30 @@ eval-runbook/
 ```
 
 <Diagram caption="The three eval modalities, their grading targets, and how the LLM-as-judge pipeline introduces position bias, length bias, and self-bias — with mitigations for each">
+
+```mermaid
+flowchart TD
+    subgraph EM["Eval Modality Selection"]
+        M1["Format compliance\n→ Rule-based\n→ javascript / not-contains / regex"]
+        M2["Classification / extraction / translation\n→ Reference-based\n→ similar-to / levenshtein / cost"]
+        M3["Open-ended generation / conversation / faithfulness\n→ Model-graded\n→ llm-rubric / model-graded"]
+    end
+    subgraph JP["LLM-as-Judge Pipeline"]
+        CAND["Candidate output"]
+        JUDGE["Judge model reads rubric + candidate output\n'reason then score' (chain-of-thought first)\nLikert / pairwise / binary rating"]
+        CAND --> JUDGE
+        subgraph BIAS["Judge Bias Mitigations"]
+            B1["Position bias (10–20% swing in pairwise)\nScore both A vs B AND B vs A\nTake consensus; flag disagreements"]
+            B2["Length bias (~5–10% toward longer text)\nInclude length as rubric covariate\nor use length-matched comparison"]
+            B3["Self-bias (~5% toward same model family)\nUse a DIFFERENT model family as judge\nor ensemble multiple judge families"]
+        end
+        JUDGE --> BIAS
+    end
+    subgraph WS["Wilson Score CI vs Sample Size"]
+        W["N=50: ±14pp — a 4pp gain is invisible\nN=200: ±7pp — a 4pp gain is marginal\nN=500: ±4pp — a 4pp gain is detectable\nN=2000: ±2pp — a 2pp gain is reliable\nRule: do not claim improvement until CIs do not overlap"]
+    end
 ```
-EVAL MODALITY SELECTION
-───────────────────────
-Output type             → Modality          → promptfoo assertion type
-────────────────────────────────────────────────────────────────────────
-Format compliance       → Rule-based        → javascript / not-contains / regex
-Classification /        → Reference-based   → similar-to / levenshtein / cost
-  extraction /
-  translation
-Open-ended generation / → Model-graded      → llm-rubric / model-graded
-  conversation /
-  faithfulness
 
-
-LLM-AS-JUDGE PIPELINE
-──────────────────────
-
-Candidate output ──────────────────────────────────┐
-                                                    ↓
-                         Judge model reads rubric + candidate output
-                         → "reason then score" (chain-of-thought first)
-                         → Likert / pairwise / binary rating
-                                                    ↓
-                    ┌── JUDGE BIAS MITIGATIONS ──────────────────┐
-                    │                                             │
-                    │  Position bias (10–20% swing in pairwise): │
-                    │    Score both (A vs B) and (B vs A)        │
-                    │    Take consensus; flag disagreements       │
-                    │                                             │
-                    │  Length bias (~5–10% toward longer text):  │
-                    │    Include length as a rubric covariate     │
-                    │    or use length-matched comparison         │
-                    │                                             │
-                    │  Self-bias (~5% toward same model family): │
-                    │    Use a DIFFERENT model family as judge    │
-                    │    or ensemble multiple judge families      │
-                    └─────────────────────────────────────────────┘
-
-
-WILSON SCORE CONFIDENCE INTERVAL vs SAMPLE SIZE
-─────────────────────────────────────────────────
-  N = 50 rows:   95% CI ≈ ±14 pp  (a 4 pp gain is invisible)
-  N = 200 rows:  95% CI ≈ ±7 pp   (a 4 pp gain is marginal)
-  N = 500 rows:  95% CI ≈ ±4 pp   (a 4 pp gain is detectable)
-  N = 2000 rows: 95% CI ≈ ±2 pp   (a 2 pp gain is reliable)
-
-  Rule: do not claim an improvement until CIs do not overlap.
-  At N=50, most LLM prompt-optimisation gains are inside the noise floor.
-```
 </Diagram>
 
 ## 2. Implement + best practice

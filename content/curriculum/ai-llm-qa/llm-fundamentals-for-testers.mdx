@@ -36,42 +36,25 @@ The load-bearing claim: **an LLM is a probability machine wrapped in a determini
 ## Diagram
 
 <Diagram caption="The five substrate facts — how tokens, sampling parameters, and context windows interact, and where each failure mode lives for a tester">
+
+```mermaid
+flowchart LR
+    TEXT["TEXT"] --> TOK["TOKENISER"]
+    TOK --> TOKENS["TOKENS"]
+    TOKENS --> MODEL["MODEL"]
+    MODEL --> PROB["PROBABILITY DISTRIBUTION"]
+    PROB --> SAMP["SAMPLER\ntemperature: 0=greedy, >0=stochastic\ntop_k: caps candidate pool\ntop_p: nucleus sampling\nseed: best-effort reproducibility"]
+    SAMP --> OUT["OUTPUT TOKEN"]
+    OUT -->|"autoregressive loop: appended to context"| MODEL
+    subgraph CW["Context Window (prompt_tokens + completion_tokens ≤ window)"]
+        CW1["system prompt │ history │ retrieved chunks │ user message"]
+        OF["Overflow failure modes:\n1. Framework silently truncates\n2. Model degrades middle content ('lost in the middle')\n3. API returns 400 context-limit error"]
+    end
+    subgraph COST["Cost Formula"]
+        CF["cost = (prompt_tokens + completion_tokens) × $/1M tokens\n'hello world' = 2 tokens · code and non-English tokenise 3–10× worse"]
+    end
 ```
-TEXT → TOKENISER → TOKENS → MODEL → PROBABILITY DISTRIBUTION → SAMPLER → OUTPUT TOKEN
-                                                                    ↑
-                              ┌─────────────────────────────────────┘
-                              │  Sampling parameters (test variables):
-                              │  temperature  — scales the distribution:
-                              │    = 0 → greedy (highest-prob token always)
-                              │    > 0 → samples across the distribution
-                              │            (still stochastic even at temp=0
-                              │             due to GPU batch effects)
-                              │  top_k       — caps the candidate pool to top K tokens
-                              │  top_p       — nucleus sampling: keeps tokens until
-                              │                cumulative probability ≥ p
-                              │  seed        — best-effort; same seed + same fingerprint
-                              │                usually (not always) same output
 
-AUTOREGRESSIVE LOOP:
-  output token → appended to context → next P(token | full_context)
-  → error in token N biases all tokens N+1, N+2, ...
-
-CONTEXT WINDOW (prompt_tokens + completion_tokens ≤ window):
-
-  ┌──────────────────────────────────────────────┐  ← nominal limit (e.g. 128k tokens)
-  │  system prompt │ history │ retrieved chunks  │  ← assembled by the application
-  │                          │ user message      │
-  └──────────────────────────────────────────────┘
-  OVERFLOW FAILURE MODES (three distinct cases to test):
-    1. Framework silently truncates (often drops system prompt or early messages)
-    2. Model degrades quality on middle content ("lost in the middle" U-curve)
-    3. API returns 400 / context-limit error — hard failure, easiest to detect
-
-COST FORMULA (tokens, not words):
-  cost = (prompt_tokens + completion_tokens) × $/1M tokens
-  "hello world" = 2 tokens    " strawberry" = 2 tokens    "안녕하세요" = 5–9 tokens
-  ← code and non-English text tokenise 3–10× worse than English prose
-```
 </Diagram>
 
 ## Worked Example

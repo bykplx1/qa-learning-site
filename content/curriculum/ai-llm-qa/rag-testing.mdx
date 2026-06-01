@@ -32,59 +32,20 @@ The eval must measure retrieval and generation **separately**, even though the u
 ## Diagram
 
 <Diagram caption="The five testable stages of a RAG pipeline — showing each stage's job, the failure modes it owns, and the metric used to test it">
+
+```mermaid
+flowchart TD
+    S1["1. INGESTION\nPull source documents into the system\nFailure modes: missed · corrupted · stale · duplicated · mis-attributed\nTest signal: document count before/after · diff against source manifest"]
+    S2["2. CHUNKING\nSplit documents into retrievable units\nFailure modes: too small/large · cut mid-thought · header lost · attribution dropped\nTest signal: chunk boundary review · coverage assertions on known phrases"]
+    S3["3. EMBEDDING\nConvert each chunk into a vector\nFailure modes: wrong model · mixed vectors after upgrade · query-doc asymmetry\nTest signal: embedding version logged · cosine sanity checks"]
+    S4["4. RETRIEVAL + optional RERANKER\nFind top-k chunks for a query\nRetriever: recall@k — did right chunk appear in top-k?\nReranker: precision@k — is right chunk at position 1-5?\nTest signal: recall@k · precision@k · MRR"]
+    S5["5. GENERATION\nModel produces answer grounded in retrieved chunks\nFaithfulness: did answer come FROM retrieved context?\nAnswer relevance: does answer address the question?\nCorrectness: is the answer factually right?\nRefusal: does system say 'I don't know' when corpus lacks answer?"]
+    S1 --> S2 --> S3 --> S4 --> S5
+    subgraph MET["Four Canonical RAG Metrics"]
+        M["context recall → retrieval: right chunk in top-k?\ncontext precision → retrieval: fraction of retrieved chunks relevant?\nfaithfulness → generation: answer grounded in retrieved chunks?\nanswer relevance → generation: answer addresses the question?\nFaithfulness ≠ Correctness: RAG quality ≤ corpus quality"]
+    end
 ```
-RAG PIPELINE — FIVE TESTABLE STAGES
-─────────────────────────────────────────────────────────────────────
 
-1. INGESTION
-   Pull source documents into the system.
-   Failure modes: documents missed · corrupted · stale · duplicated · mis-attributed
-   Test signal:  document count before/after · diff against source manifest
-
-2. CHUNKING
-   Split documents into retrievable units.
-   Failure modes: chunks too small (no context) · chunks too large (noise) ·
-                  cut mid-thought · header lost · source attribution dropped
-   Test signal:  chunk boundary review · coverage assertions on known phrases
-
-3. EMBEDDING
-   Convert each chunk into a vector.
-   Failure modes: wrong model for domain · mixed vectors after model upgrade ·
-                  query-vs-document embedding asymmetry
-   Test signal:  embedding version logged · cosine sanity checks
-
-4. RETRIEVAL  (+  optional RERANKER)
-   Find the top-k chunks for a query.
-   ─ Retriever job:  recall@k  — did the right chunk appear anywhere in top-k?
-   ─ Reranker job:   precision@k — is the right chunk at position 1-5?
-   Failure modes: wrong k · relevant chunk not in top-k · metadata filter
-                  silently drops correct chunks · reranker inverts relevance
-   Test signal:  recall@k · precision@k · MRR (mean reciprocal rank)
-
-5. GENERATION
-   Model produces an answer grounded in the retrieved chunks.
-   ─ Faithfulness:    did the answer come FROM the retrieved context?
-   ─ Answer relevance: does the answer address the question?
-   ─ Correctness:     is the answer factually right?
-   ─ Refusal:         does the system say "I don't know" when corpus lacks the answer?
-   Failure modes: hallucination despite grounding · ignoring chunks ·
-                  answering from priors · refusing valid questions
-
-
-FOUR CANONICAL RAG METRICS — AND WHICH STAGE EACH ISOLATES
-────────────────────────────────────────────────────────────
-  context recall      → measures retrieval:   did the right chunk appear in top-k?
-  context precision   → measures retrieval:   what fraction of retrieved chunks are relevant?
-  faithfulness        → measures generation:  is the answer grounded in retrieved chunks?
-  answer relevance    → measures generation:  does the answer address the actual question?
-
-FAITHFULNESS ≠ CORRECTNESS
-───────────────────────────
-  Faithful answer: "According to chunk #3, the price is $49."
-  Correct answer:  The price in the chunk IS actually $49.
-  A faithful answer from a wrong chunk is faithful AND incorrect.
-  RAG quality ≤ corpus quality — you cannot ground your way above a wrong source.
-```
 </Diagram>
 
 ## Worked Example
