@@ -27,23 +27,25 @@ A tester who can only say "it works / it doesn't work" is doing about 20% of the
 ## Diagram
 
 <Diagram caption="ISO/IEC 25010:2023 — nine product-quality characteristics">
+
+```mermaid
+flowchart TD
+    Q["ISO/IEC 25010:2023\nProduct Quality"]
+    Q --> F["Functional Suitability"]
+    Q --> P["Performance Efficiency"]
+    Q --> C["Compatibility"]
+    Q --> I["Interaction Capability\n(incl. Accessibility)"]
+    Q --> R["Reliability"]
+    Q --> S["Security"]
+    Q --> M["Maintainability"]
+    Q --> FL["Flexibility"]
+    Q --> SA["Safety ← new in 2023"]
+
+    F --> F1["completeness"]
+    F --> F2["correctness"]
+    F --> F3["appropriateness"]
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    ISO/IEC 25010:2023                           │
-│                                                                 │
-│  FUNCTIONAL                    NON-FUNCTIONAL (experiential)    │
-│  ─────────────────             ────────────────────────────     │
-│  Functional Suitability        Performance Efficiency           │
-│  · completeness                Compatibility                    │
-│  · correctness                 Interaction Capability           │
-│  · appropriateness               (incl. Accessibility)         │
-│                                Reliability                      │
-│                                Security                         │
-│                                Maintainability                  │
-│                                Flexibility                      │
-│                                Safety  ← new in 2023           │
-└─────────────────────────────────────────────────────────────────┘
-```
+
 </Diagram>
 
 ## Worked Example

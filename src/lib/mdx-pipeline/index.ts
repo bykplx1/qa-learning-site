@@ -10,6 +10,9 @@
  *   remarkSectionOrder puts "Core Idea" first; rehypeTakeawayBlockquote then
  *   scans from the top and attaches the `.lesson-takeaway` class to the first
  *   blockquote inside that section.
+ *
+ *   rehypeMermaid MUST run before rehypeTakeawayBlockquote so that mermaid
+ *   code fences are resolved to SVG nodes before the blockquote pass.
  */
 
 import { remarkRepairMojibake } from '../encoding/remarkRepairMojibake.js';
@@ -17,6 +20,9 @@ import { remarkStripQuizSections } from '../quiz/remarkStripQuizSections.js';
 import { remarkDemoteH1 } from '../lessons/remarkDemoteH1.js';
 import { remarkSectionOrder } from '../lessons/remarkSectionOrder.js';
 import { rehypeTakeawayBlockquote } from '../lessons/rehypeTakeawayBlockquote.js';
+import rehypeMermaid, { type RehypeMermaidOptions } from 'rehype-mermaid';
+import type { Element } from 'hast';
+import type { PluggableList } from 'unified';
 
 export {
   remarkRepairMojibake,
@@ -24,6 +30,7 @@ export {
   remarkDemoteH1,
   remarkSectionOrder,
   rehypeTakeawayBlockquote,
+  rehypeMermaid,
 };
 
 /**
@@ -45,7 +52,37 @@ export const REMARK_PLUGINS = [
 /**
  * The ordered rehype plugin list for MDX curriculum files.
  *
+ * rehypeMermaid converts ```mermaid code fences to inline SVG at build time
+ * via Playwright — zero client-side Mermaid JS is shipped.
+ *
+ * Rendering strategy: 'inline-svg'
+ *   SVG carries intrinsic viewBox dimensions → zero CLS.
+ *   Dark mode handled via CSS filter on .mdx-diagram--mermaid wrapper.
+ *
  * rehypeTakeawayBlockquote depends on remarkSectionOrder having already run
  * (it expects "Core Idea" to be the first h2 in the hast tree).
  */
-export const REHYPE_PLUGINS = [rehypeTakeawayBlockquote] as const;
+const mermaidOptions: RehypeMermaidOptions = {
+  strategy: 'inline-svg',
+  mermaidConfig: {
+    theme: 'neutral',
+    fontFamily: 'arial, sans-serif',
+    fontSize: 14,
+  },
+  errorFallback: (_element: Element, diagram: string, error: unknown) => ({
+    type: 'element',
+    tagName: 'pre',
+    properties: { className: ['mermaid-error'] },
+    children: [
+      {
+        type: 'text',
+        value: `Mermaid render error: ${error instanceof Error ? error.message : String(error)}\n\n${diagram}`,
+      },
+    ],
+  }),
+};
+
+export const REHYPE_PLUGINS: PluggableList = [
+  [rehypeMermaid, mermaidOptions],
+  rehypeTakeawayBlockquote,
+];

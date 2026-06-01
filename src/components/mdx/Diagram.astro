@@ -47,6 +47,25 @@ const { caption, skip } = Astro.props;
     margin: 0 auto;
   }
 
+  /* Mermaid inline-SVG — rendered at build time, themed via CSS filter.
+     The neutral Mermaid theme is light-optimised; dark mode inverts it with
+     a hue-preserving filter so diagrams remain readable without re-rendering.
+     rehypeMermaid replaces ```mermaid fences with bare <svg id="mermaid-N">
+     elements in the rendered prose. */
+  :global(.prose svg[id^="mermaid-"]) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 24px auto;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+    padding: 16px;
+    background: var(--paper-2);
+  }
+  :global([data-theme="dark"] .prose svg[id^="mermaid-"]) {
+    filter: invert(0.88) hue-rotate(180deg);
+  }
+
   .mdx-diagram__caption,
   :global(.mdx-diagram__caption) {
     margin-top: 8px;
