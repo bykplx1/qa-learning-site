@@ -34,28 +34,21 @@ The defining move: **read Impact before Likelihood**. A rare catastrophe outrank
 ## Diagram
 
 <Diagram caption="Risk register structure: the three-axis model and column order that prevents likelihood-first bias">
-```
-Risk Register — Required Columns (in reading order)
-────────────────────────────────────────────────────────────────────────
-  Stakeholder │ Risk Description       │ Impact │ Likelihood │ Detect. │ Outcome │ Age
-              │                        │ H/M/L  │ H/M/L      │ loud /  │ mitig./ │
-              │                        │        │            │ quiet / │ accept/ │
-              │                        │        │            │ silent  │ transfer│
-────────────────────────────────────────────────────────────────────────
-  learner     │ session expires        │  H     │   H        │ loud    │ mitigate│ 2024-01
-              │   mid-quiz             │        │            │         │ via test│
-  site owner  │ payment double-charge  │  H     │   L        │ silent  │ mitigate│ 2024-01
-              │                        │        │            │         │ via test│
-  learner     │ gift-wrap label        │  L     │   L        │ loud    │ accept  │ 2024-01
-              │   misspelled           │        │            │         │         │
 
-Coverage Budget (one engineer-week example)
-────────────────────────────────────────────────────────────────────────
-  HIGH impact + silent detect  →  exhaustive testing; exploratory charters
-  HIGH impact + loud detect    →  targeted integration tests
-  MED  impact + any detect     →  representative boundary cases only
-  LOW  impact + any detect     →  accept or monitor; no dedicated test time
+```mermaid
+flowchart TD
+    subgraph RR["Risk Register — Columns in reading order (Impact before Likelihood)"]
+        C1["Stakeholder → Risk Description → Impact H/M/L → Likelihood H/M/L → Detectability loud/quiet/silent → Outcome mitigate/accept/transfer → Age"]
+    end
+    subgraph CB["Coverage Budget (one engineer-week)"]
+        B1["HIGH impact + silent detect\n→ exhaustive testing; exploratory charters"]
+        B2["HIGH impact + loud detect\n→ targeted integration tests"]
+        B3["MED impact + any detect\n→ representative boundary cases only"]
+        B4["LOW impact + any detect\n→ accept or monitor; no dedicated test time"]
+    end
+    B1 --- B2 --- B3 --- B4
 ```
+
 </Diagram>
 
 ## Worked Example

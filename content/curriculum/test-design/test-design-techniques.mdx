@@ -31,22 +31,25 @@ A **test design technique** is a disciplined procedure for reducing an infinite 
 ## Diagram
 
 <Diagram caption="Six test design techniques mapped to the model each imposes on the system under test">
-```
-Technique                 Model it imposes               Assumption that can fail
-─────────────────────────────────────────────────────────────────────────────────
-Equivalence Partitioning  Input space → disjoint classes  All values in a class behave identically
-Boundary Value Analysis   Bugs cluster at class edges     The boundary is where the defect lives
-Decision Tables           Behaviour = f(conditions)       Condition set is complete and enumerable
-State Transition          Named states + transitions      All reachable states are known up front
-Pairwise / Combinatorial  Most bugs are ≤ 2-variable       3-way+ interactions do exist (rarer)
-Error Guessing            Past bugs predict future bugs   Catalogue is representative of this system
 
-Coverage by technique (illustrative, 10 binary inputs)
-──────────────────────────────────────────────────
-Exhaustive testing:          1,024 tests  (100% of combinations)
-Pairwise (2-way coverage):  ~  14 tests  (~60–90% of multi-variable bug finds)
-Boundary + EP:              ~   8 tests  (edges + one interior per class)
+```mermaid
+flowchart TD
+    subgraph T["Technique → Model → Assumption that can fail"]
+        EP["Equivalence Partitioning\nInput space → disjoint classes\nAll values in a class behave identically"]
+        BV["Boundary Value Analysis\nBugs cluster at class edges\nThe boundary is where the defect lives"]
+        DT["Decision Tables\nBehaviour = f(conditions)\nCondition set is complete and enumerable"]
+        ST["State Transition\nNamed states + transitions\nAll reachable states are known up front"]
+        PW["Pairwise / Combinatorial\nMost bugs are ≤ 2-variable\n3-way+ interactions do exist (rarer)"]
+        EG["Error Guessing\nPast bugs predict future bugs\nCatalogue is representative of this system"]
+    end
+    subgraph C["Coverage by technique (10 binary inputs)"]
+        C1["Exhaustive: 1,024 tests (100%)"]
+        C2["Pairwise: ~14 tests (~60–90% of multi-variable bug finds)"]
+        C3["Boundary + EP: ~8 tests (edges + one interior per class)"]
+    end
+    C1 --> C2 --> C3
 ```
+
 </Diagram>
 
 ## Worked Example
