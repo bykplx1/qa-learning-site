@@ -33,6 +33,8 @@ interface Props {
   questions: QuizQuestion[];
   examSlug: string;
   durationMs?: number;
+  /** Heading shown on the start gate and question screen, e.g. "CTFL — Foundation Level". */
+  examTitle?: string;
 }
 
 const DEFAULT_DURATION_MS = 60 * 60 * 1000;
@@ -201,10 +203,11 @@ function effectiveDuration(base: number, option: TimingOption): number {
 interface StartGateProps {
   questionCount: number;
   durationMs: number;
+  examTitle: string;
   onStart: (resolvedDurationMs: number) => void;
 }
 
-function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
+function StartGate({ questionCount, durationMs, examTitle, onStart }: StartGateProps) {
   const [timing, setTiming] = useState<TimingOption>('standard');
   const durationMin = Math.round(durationMs / 60_000);
 
@@ -216,7 +219,7 @@ function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
 
   return (
     <div className="card my-12 mx-auto" style={{ maxWidth: 540, padding: 36 }} data-testid="exam-start-gate">
-      <span className="eyebrow">mock exam</span>
+      <span className="eyebrow">{examTitle}</span>
       <h2
         className="mt-3 mb-4"
         style={{
@@ -320,6 +323,7 @@ function StartGate({ questionCount, durationMs, onStart }: StartGateProps) {
 interface QuestionScreenProps {
   state: ExamState;
   remainingMs: number;
+  examTitle: string;
   politeAnnouncement: string;
   assertiveAnnouncement: string;
   onAnswer: (value: number | number[] | null) => void;
@@ -330,7 +334,7 @@ interface QuestionScreenProps {
   submitBtnRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-function QuestionScreen({ state, remainingMs, politeAnnouncement, assertiveAnnouncement, onAnswer, onPrev, onNext, onSubmit, onGoto, submitBtnRef }: QuestionScreenProps) {
+function QuestionScreen({ state, remainingMs, examTitle, politeAnnouncement, assertiveAnnouncement, onAnswer, onPrev, onNext, onSubmit, onGoto, submitBtnRef }: QuestionScreenProps) {
   const q = state.questions[state.currentIndex];
   const answer = state.answers[state.currentIndex];
   const isMulti = q.type === 'multi';
@@ -402,7 +406,7 @@ function QuestionScreen({ state, remainingMs, politeAnnouncement, assertiveAnnou
 
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <span className="eyebrow">exam mode · 60-minute</span>
+          <span className="eyebrow">exam mode</span>
           <h2
             className="mt-2"
             style={{
@@ -415,7 +419,7 @@ function QuestionScreen({ state, remainingMs, politeAnnouncement, assertiveAnnou
               lineHeight: 1.15,
             }}
           >
-            Mock exam
+            {examTitle}
           </h2>
         </div>
         <div
@@ -556,7 +560,7 @@ function QuestionScreen({ state, remainingMs, politeAnnouncement, assertiveAnnou
 
 // ── Root component ───────────────────────────────────────────────────────────
 
-function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS }: Props) {
+function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS, examTitle = 'Mock exam' }: Props) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [state, setState] = useState<ExamState>(() => ({
@@ -843,6 +847,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
         <StartGate
           questionCount={questions.length}
           durationMs={durationMs}
+          examTitle={examTitle}
           onStart={handleStart}
         />
       )}
@@ -851,6 +856,7 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
           <QuestionScreen
             state={state}
             remainingMs={remainingMs}
+            examTitle={examTitle}
             politeAnnouncement={politeAnnouncement}
             assertiveAnnouncement={assertiveAnnouncement}
             onAnswer={handleAnswer}
@@ -888,10 +894,10 @@ function ExamRunnerInner({ questions, examSlug, durationMs = DEFAULT_DURATION_MS
   );
 }
 
-export default function ExamRunner({ questions, examSlug, durationMs }: Props) {
+export default function ExamRunner({ questions, examSlug, durationMs, examTitle }: Props) {
   return (
     <ErrorBoundary label="ExamRunner">
-      <ExamRunnerInner questions={questions} examSlug={examSlug} durationMs={durationMs} />
+      <ExamRunnerInner questions={questions} examSlug={examSlug} durationMs={durationMs} examTitle={examTitle} />
     </ErrorBoundary>
   );
 }

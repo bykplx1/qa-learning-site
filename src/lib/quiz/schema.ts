@@ -26,6 +26,13 @@ export const quizFileSchema = z.object({
   questions: z.array(quizQuestionSchema),
 });
 
+// Dedicated ISTQB certificate exam bank — same question shape as a quiz, but
+// keyed by certificate id rather than a lesson slug.
+export const examBankSchema = z.object({
+  certificate: z.string().min(1),
+  questions: z.array(quizQuestionSchema).min(1),
+});
+
 export const tasksFileSchema = z.object({
   lesson: z.string().min(1),
   tasks: z.array(taskQuestionSchema),
@@ -35,3 +42,4 @@ export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
 export type TaskQuestion = z.infer<typeof taskQuestionSchema>;
 export type QuizFile = z.infer<typeof quizFileSchema>;
 export type TasksFile = z.infer<typeof tasksFileSchema>;
+export type ExamBank = z.infer<typeof examBankSchema>;

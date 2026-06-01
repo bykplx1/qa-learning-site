@@ -1,0 +1,445 @@
+certificate: ct-ai
+# Certified Tester AI Testing (CT-AI v1.0) — mock exam bank.
+# Original questions modelled on the public CT-AI syllabus learning objectives
+# and on this site's AI/LLM-QA cluster. Not reproduced from any copyrighted set.
+questions:
+  - id: ctai-001
+    type: single
+    difficulty: easy
+    q: "A model is trained on thousands of emails, each labelled 'spam' or 'not spam'. This is an example of:"
+    options:
+      - "A) Supervised learning"
+      - "B) Unsupervised learning"
+      - "C) Reinforcement learning"
+      - "D) A rule-based expert system"
+    answer: 0
+    explanation: "Learning from labelled examples (input + known output) is supervised learning."
+  - id: ctai-002
+    type: single
+    difficulty: easy
+    q: "Grouping customers into segments without any predefined labels is typically done with:"
+    options:
+      - "A) Supervised learning"
+      - "B) Unsupervised learning"
+      - "C) Reinforcement learning"
+      - "D) Regression testing"
+    answer: 1
+    explanation: "Finding structure (clusters) in unlabelled data is unsupervised learning."
+  - id: ctai-003
+    type: single
+    difficulty: easy
+    q: "An agent that learns optimal behaviour by receiving rewards and penalties from its environment uses:"
+    options:
+      - "A) Supervised learning"
+      - "B) Unsupervised learning"
+      - "C) Reinforcement learning"
+      - "D) Static analysis"
+    answer: 2
+    explanation: "Reinforcement learning optimises behaviour through reward/penalty feedback from the environment."
+  - id: ctai-004
+    type: single
+    difficulty: medium
+    q: "A model scores 99% on its training data but only 70% on new data. This is most likely:"
+    options:
+      - "A) Underfitting"
+      - "B) Overfitting"
+      - "C) Data drift"
+      - "D) A well-generalised model"
+    answer: 1
+    explanation: "High training accuracy but poor performance on unseen data is the classic signature of overfitting."
+  - id: ctai-005
+    type: single
+    difficulty: medium
+    q: "A model performs poorly on BOTH the training data and new data. This indicates:"
+    options:
+      - "A) Overfitting"
+      - "B) Underfitting"
+      - "C) Data leakage"
+      - "D) Good generalisation"
+    answer: 1
+    explanation: "Poor performance everywhere means the model is too simple to capture the patterns — underfitting."
+  - id: ctai-006
+    type: single
+    difficulty: medium
+    q: "During development, the dataset used to tune hyperparameters and choose between models — kept separate from the final unseen evaluation — is the:"
+    options:
+      - "A) Training dataset"
+      - "B) Validation dataset"
+      - "C) Test dataset"
+      - "D) Production dataset"
+    answer: 1
+    explanation: "The validation set guides model/hyperparameter selection; the test set is reserved for an unbiased final estimate."
+  - id: ctai-007
+    type: single
+    difficulty: medium
+    q: "Including part of the test data during training, so the reported accuracy is over-optimistic, is known as:"
+    options:
+      - "A) Data drift"
+      - "B) Data leakage"
+      - "C) Class imbalance"
+      - "D) Regularisation"
+    answer: 1
+    explanation: "Data leakage occurs when information from the evaluation data influences training, inflating measured performance."
+  - id: ctai-008
+    type: single
+    difficulty: medium
+    q: "A fraud-detection model labels a legitimate transaction as fraudulent. In the confusion matrix this is a:"
+    options:
+      - "A) True positive"
+      - "B) False positive"
+      - "C) False negative"
+      - "D) True negative"
+    answer: 1
+    explanation: "Predicted positive (fraud) but actually negative (legitimate) = false positive."
+  - id: ctai-009
+    type: single
+    difficulty: medium
+    q: "Precision is best described as:"
+    options:
+      - "A) Of all items predicted positive, the proportion that were actually positive"
+      - "B) Of all actually positive items, the proportion correctly found"
+      - "C) The proportion of all predictions that were correct"
+      - "D) The area under the ROC curve"
+    answer: 0
+    explanation: "Precision = TP / (TP + FP): of everything flagged positive, how much was truly positive."
+  - id: ctai-010
+    type: single
+    difficulty: medium
+    q: "Recall (sensitivity) is best described as:"
+    options:
+      - "A) Of all items predicted positive, the proportion actually positive"
+      - "B) Of all actually positive items, the proportion the model correctly identified"
+      - "C) The harmonic mean of precision and recall"
+      - "D) The number of true negatives"
+    answer: 1
+    explanation: "Recall = TP / (TP + FN): of all real positives, how many the model caught."
+  - id: ctai-011
+    type: single
+    difficulty: hard
+    q: "A disease-screening model must avoid missing sick patients (false negatives). Which metric should be optimised?"
+    options:
+      - "A) Precision"
+      - "B) Recall"
+      - "C) Specificity"
+      - "D) Training accuracy"
+    answer: 1
+    explanation: "Minimising false negatives means maximising recall — catching as many true cases as possible."
+  - id: ctai-012
+    type: single
+    difficulty: hard
+    q: "A spam filter must avoid sending legitimate email to the spam folder (false positives). Which metric is most important?"
+    options:
+      - "A) Recall"
+      - "B) Precision"
+      - "C) Training loss"
+      - "D) AUC only"
+    answer: 1
+    explanation: "Minimising false positives means maximising precision — being confident that flagged items really are spam."
+  - id: ctai-013
+    type: single
+    difficulty: medium
+    q: "Accuracy can be a misleading metric when:"
+    options:
+      - "A) The classes are heavily imbalanced (e.g. 99% of cases are negative)"
+      - "B) The dataset is perfectly balanced"
+      - "C) The model is a decision tree"
+      - "D) Precision equals recall"
+    answer: 0
+    explanation: "With heavy imbalance, always predicting the majority class gives high accuracy yet a useless model; precision/recall/F1 are more informative."
+  - id: ctai-014
+    type: single
+    difficulty: medium
+    q: "The F1-score is useful because it:"
+    options:
+      - "A) Ignores false negatives"
+      - "B) Balances precision and recall into a single value (their harmonic mean)"
+      - "C) Always equals accuracy"
+      - "D) Measures training time"
+    answer: 1
+    explanation: "F1 is the harmonic mean of precision and recall — a single figure useful under class imbalance."
+  - id: ctai-015
+    type: single
+    difficulty: medium
+    q: "A vision model classifies a stop sign correctly until a few small stickers cause it to read it as '45 mph'. This vulnerability is exposed by:"
+    options:
+      - "A) Adversarial testing"
+      - "B) A/B testing"
+      - "C) Performance testing"
+      - "D) Smoke testing"
+    answer: 0
+    explanation: "Small crafted perturbations that fool a model are adversarial examples; probing for them is adversarial testing."
+  - id: ctai-016
+    type: single
+    difficulty: medium
+    q: "An attacker injects mislabelled samples into the training data to corrupt the resulting model. This is:"
+    options:
+      - "A) An adversarial example at inference time"
+      - "B) Data poisoning"
+      - "C) Concept drift"
+      - "D) Model inversion"
+    answer: 1
+    explanation: "Corrupting the training data to degrade or bias the model is data poisoning (a training-time attack)."
+  - id: ctai-017
+    type: single
+    difficulty: hard
+    q: "A recruitment model rejects more candidates from one demographic because the historical training data was skewed. The MOST appropriate mitigation is to:"
+    options:
+      - "A) Increase the learning rate"
+      - "B) Use more representative, balanced training data and test for fairness across groups"
+      - "C) Add more layers to the network"
+      - "D) Lower the classification threshold for everyone"
+    answer: 1
+    explanation: "Unwanted bias from skewed data is addressed by representative data and explicit fairness testing across protected groups."
+  - id: ctai-018
+    type: single
+    difficulty: medium
+    q: "A fraud model's accuracy steadily degrades over months as fraud patterns change. This is concept/data drift; the recommended response is to:"
+    options:
+      - "A) Do nothing — models do not need maintenance"
+      - "B) Continuously monitor performance in production and retrain on fresh data"
+      - "C) Delete the production logs"
+      - "D) Enlarge the test set once and stop"
+    answer: 1
+    explanation: "Drift is managed by monitoring live performance and retraining/updating the model on current data."
+  - id: ctai-019
+    type: single
+    difficulty: hard
+    q: "The 'test oracle problem' is especially severe for AI-based systems because:"
+    options:
+      - "A) AI systems are always deterministic"
+      - "B) The correct expected output is often hard to define, and outputs may be probabilistic"
+      - "C) AI systems have no inputs"
+      - "D) Code coverage is impossible"
+    answer: 1
+    explanation: "For many AI outputs there is no simple 'correct answer' to compare against, and behaviour is probabilistic — the oracle problem."
+  - id: ctai-020
+    type: single
+    difficulty: hard
+    q: "When the exact expected output is unknown, you verify that adding irrelevant words to a sentence does not change its sentiment classification. This is:"
+    options:
+      - "A) Metamorphic testing"
+      - "B) Boundary value analysis"
+      - "C) Statement coverage"
+      - "D) Load testing"
+    answer: 0
+    explanation: "Metamorphic testing uses known relations between inputs and outputs (a metamorphic relation) instead of an exact oracle."
+  - id: ctai-021
+    type: single
+    difficulty: medium
+    q: "Running the same prompt through an LLM twice yields different answers. For repeatable test results you should:"
+    options:
+      - "A) Assert exact string equality and accept the flakiness"
+      - "B) Set the sampling temperature to 0 (and/or fix the seed) to reduce randomness"
+      - "C) Increase the temperature"
+      - "D) Disable the test"
+    answer: 1
+    explanation: "Lowering temperature (to 0) and fixing seeds reduces stochasticity, improving reproducibility of LLM tests."
+  - id: ctai-022
+    type: single
+    difficulty: medium
+    q: "Comparing the outputs of a newly trained model against the previous production model on the same inputs is called:"
+    options:
+      - "A) Back-to-back (differential) testing"
+      - "B) Exploratory testing"
+      - "C) Mutation testing"
+      - "D) Beta testing"
+    answer: 0
+    explanation: "Back-to-back testing compares a system against a reference (e.g. the prior model) on identical inputs."
+  - id: ctai-023
+    type: single
+    difficulty: medium
+    q: "Routing a fraction of live users to a new model to compare business outcomes against the current model is:"
+    options:
+      - "A) A/B testing"
+      - "B) Metamorphic testing"
+      - "C) Unit testing"
+      - "D) Data poisoning"
+    answer: 0
+    explanation: "A/B testing compares variants on live traffic to measure real-world impact."
+  - id: ctai-024
+    type: single
+    difficulty: hard
+    q: "A structural coverage measure specific to neural networks is:"
+    options:
+      - "A) Statement coverage"
+      - "B) Neuron coverage (proportion of activated neurons)"
+      - "C) Branch coverage"
+      - "D) MC/DC"
+    answer: 1
+    explanation: "Neuron coverage (and variants) measure how much of a neural network's neurons are activated by the test inputs."
+  - id: ctai-025
+    type: single
+    difficulty: medium
+    q: "Techniques such as SHAP and LIME are used to:"
+    options:
+      - "A) Train models faster"
+      - "B) Provide explanations of why a model made a particular prediction"
+      - "C) Encrypt the model weights"
+      - "D) Generate adversarial examples"
+    answer: 1
+    explanation: "SHAP/LIME support explainability/interpretability by attributing a prediction to input features."
+  - id: ctai-026
+    type: single
+    difficulty: medium
+    q: "For a highly autonomous AI system, a key safety requirement that should be tested is:"
+    options:
+      - "A) That it never logs anything"
+      - "B) That a human can oversee and override its decisions"
+      - "C) That it uses the fastest available GPU"
+      - "D) That it retrains every minute"
+    answer: 1
+    explanation: "Autonomy must be bounded by human oversight/override mechanisms, which should be explicitly tested."
+  - id: ctai-027
+    type: single
+    difficulty: hard
+    q: "A reinforcement-learning agent maximises its score by exploiting a loophole instead of achieving the intended goal. This unintended behaviour is called:"
+    options:
+      - "A) Reward hacking (specification gaming)"
+      - "B) Overfitting"
+      - "C) Data leakage"
+      - "D) Concept drift"
+    answer: 0
+    explanation: "Reward hacking/specification gaming: the agent optimises the literal reward in unintended ways — a safety/side-effect concern."
+  - id: ctai-028
+    type: single
+    difficulty: easy
+    q: "An LLM confidently produces a plausible but factually incorrect citation. This behaviour is known as:"
+    options:
+      - "A) Hallucination"
+      - "B) Overfitting"
+      - "C) A false negative"
+      - "D) Data drift"
+    answer: 0
+    explanation: "Fluent but unfounded/incorrect output from an LLM is a hallucination; mitigations include grounding and factuality evals."
+  - id: ctai-029
+    type: single
+    difficulty: medium
+    q: "Retrieval-Augmented Generation (RAG) primarily reduces hallucination by:"
+    options:
+      - "A) Increasing the temperature"
+      - "B) Grounding the model's answer in retrieved, relevant source documents"
+      - "C) Removing the test dataset"
+      - "D) Fine-tuning on random data"
+    answer: 1
+    explanation: "RAG supplies relevant retrieved context so the model grounds its answer in real sources rather than inventing them."
+  - id: ctai-030
+    type: single
+    difficulty: hard
+    q: "When evaluating a RAG system, an answer that is fluent but not supported by the retrieved context fails on:"
+    options:
+      - "A) Latency"
+      - "B) Faithfulness / groundedness"
+      - "C) Retrieval recall only"
+      - "D) Token cost"
+    answer: 1
+    explanation: "Faithfulness (groundedness) measures whether the generated answer is actually supported by the retrieved context."
+  - id: ctai-031
+    type: single
+    difficulty: hard
+    q: "If a RAG system frequently fails to fetch the document that actually contains the answer, the weak component is measured by:"
+    options:
+      - "A) Retrieval recall"
+      - "B) Generation temperature"
+      - "C) Model parameter count"
+      - "D) Output length"
+    answer: 0
+    explanation: "Retrieval recall captures how often the relevant document(s) are retrieved; low recall starves the generator of the right context."
+  - id: ctai-032
+    type: single
+    difficulty: medium
+    q: "A prompt change fixes one failing example but silently breaks others. The best safeguard is to:"
+    options:
+      - "A) Ship the change without testing"
+      - "B) Maintain a regression evaluation set and re-run it on every prompt change"
+      - "C) Only test the one example that was failing"
+      - "D) Delete the failing example"
+    answer: 1
+    explanation: "Prompt changes are global; a regression eval set catches unintended degradations elsewhere."
+  - id: ctai-033
+    type: single
+    difficulty: hard
+    q: "Using an LLM to grade another model's open-ended answers ('LLM-as-judge') carries the risk of:"
+    options:
+      - "A) Being perfectly objective"
+      - "B) Judge bias and inconsistency, so it should be calibrated against human ratings with a clear rubric"
+      - "C) Eliminating the need for any test data"
+      - "D) Always under-scoring correct answers"
+    answer: 1
+    explanation: "LLM judges can be biased/inconsistent; calibrate against human labels and use an explicit rubric."
+  - id: ctai-034
+    type: single
+    difficulty: medium
+    q: "To evaluate open-ended generated text against a reference when wording varies, a better approach than exact-string match is:"
+    options:
+      - "A) Comparing semantic similarity (e.g. embeddings) or using rubric-based scoring"
+      - "B) Counting characters"
+      - "C) Checking the file timestamp"
+      - "D) Measuring GPU temperature"
+    answer: 0
+    explanation: "Semantic similarity or rubric scoring tolerates valid paraphrases that exact matching would wrongly fail."
+  - id: ctai-035
+    type: single
+    difficulty: medium
+    q: "Crafting prompts that attempt to make an LLM bypass its safety rules and produce harmful content is:"
+    options:
+      - "A) Red-teaming / jailbreak testing"
+      - "B) Load testing"
+      - "C) Unit testing"
+      - "D) A/B testing"
+    answer: 0
+    explanation: "Red-teaming probes safety guardrails by deliberately attempting jailbreaks and harmful-output elicitation."
+  - id: ctai-036
+    type: single
+    difficulty: easy
+    q: "Which is the LEAST relevant concern when assessing the quality of an ML training dataset?"
+    options:
+      - "A) Representativeness and balance across classes"
+      - "B) Label accuracy"
+      - "C) The font used to view the CSV file"
+      - "D) Completeness and absence of duplicates"
+    answer: 2
+    explanation: "Data quality covers representativeness, label accuracy, completeness and duplication — not how the file is rendered."
+  - id: ctai-037
+    type: single
+    difficulty: medium
+    q: "After a model is retrained on new data (but no code changed), you should:"
+    options:
+      - "A) Skip testing because only data changed"
+      - "B) Re-run regression evaluations, since behaviour can change even when code does not"
+      - "C) Delete the previous model immediately"
+      - "D) Reduce the test set size"
+    answer: 1
+    explanation: "For self-/re-learning systems, behaviour can change from data alone, so regression evaluation is needed after retraining."
+  - id: ctai-038
+    type: multi
+    difficulty: medium
+    q: "Which of the following are quality characteristics particularly important for AI-based systems? (Select all that apply.)"
+    options:
+      - "A) Transparency / explainability"
+      - "B) Absence of unwanted bias"
+      - "C) Adaptability / handling drift"
+      - "D) Font size of the documentation"
+    answer: [0, 1, 2]
+    explanation: "AI-specific quality characteristics include transparency/explainability, freedom from unwanted bias, and adaptability/evolution — documentation font is not one."
+  - id: ctai-039
+    type: single
+    difficulty: hard
+    q: "Because an LLM feature is non-deterministic, a sensible acceptance criterion is to:"
+    options:
+      - "A) Require 100% identical output every run"
+      - "B) Define a pass rate / score threshold over a representative evaluation set"
+      - "C) Test it once manually and ship"
+      - "D) Only check that it returns some text"
+    answer: 1
+    explanation: "For probabilistic systems, acceptance is expressed statistically — e.g. a minimum pass rate across an eval set."
+  - id: ctai-040
+    type: single
+    difficulty: medium
+    q: "In production, the most useful signal that an AI model needs attention is:"
+    options:
+      - "A) The number of lines of code"
+      - "B) Monitoring input distribution and output-quality metrics for drift over time"
+      - "C) The colour of the dashboard"
+      - "D) The size of the source repository"
+    answer: 1
+    explanation: "Observability for AI tracks input/output distributions and quality metrics, alerting on drift that warrants retraining."

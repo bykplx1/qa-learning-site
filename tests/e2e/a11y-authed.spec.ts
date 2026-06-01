@@ -91,7 +91,7 @@ test.describe('a11y — authenticated surfaces (WCAG 2.2 AA)', () => {
   });
 
   test('exam runner — mid-exam state passes axe', async ({ page }) => {
-    await page.goto('/exam');
+    await page.goto('/exam/ctfl');
 
     // Wait for the ExamRunner React island to hydrate — start gate appears.
     await expect(page.getByTestId('exam-start-gate')).toBeVisible({ timeout: 15_000 });

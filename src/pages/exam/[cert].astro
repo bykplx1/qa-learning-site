@@ -1,0 +1,96 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ExamRunner from '../../components/exam/ExamRunner';
+import { buildCertExamPool } from '../../lib/exam/pool';
+import { CERTIFICATES, examSlugFor, type CertificateSpec } from '../../lib/exam/certificates';
+
+export const prerender = true;
+
+export const getStaticPaths = (() =>
+  CERTIFICATES.map((cert) => ({
+    params: { cert: cert.id },
+    props: { cert },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  cert: CertificateSpec;
+}
+
+const { cert } = Astro.props as Props;
+const examQuestions = buildCertExamPool(cert.id);
+const examTitle = `${cert.code} — ${cert.name}`;
+const durationMs = cert.durationMinutes * 60 * 1000;
+---
+
+<BaseLayout
+  title={`${cert.code} mock exam — QA Learning`}
+  description={`${cert.questionCount}-question, ${cert.durationMinutes}-minute mock exam for ${cert.fullName}. ${Math.round(cert.passThreshold * 100)}% to pass.`}
+>
+  <div class="exam-page">
+    <header class="exam-page__head">
+      <a href="/exam" class="exam-page__back" data-testid="exam-back">← All certifications</a>
+      <span class="eyebrow">{cert.fullName}</span>
+      <h1>{examTitle}</h1>
+      <p class="lead">
+        {examQuestions.length} questions · {cert.durationMinutes} minutes · {Math.round(cert.passThreshold * 100)}% to pass ·
+        auto-submits when the timer expires. No correctness feedback until you finish.
+      </p>
+    </header>
+
+    {examQuestions.length === 0 ? (
+      <div class="card" style="padding: 28px;">
+        No questions are available for this certification yet.
+      </div>
+    ) : (
+      <ExamRunner
+        client:only="react"
+        questions={examQuestions}
+        examSlug={examSlugFor(cert.id)}
+        durationMs={durationMs}
+        examTitle={examTitle}
+      />
+    )}
+  </div>
+  {/* No site footer on the focused, timed exam surface: the client:only ExamRunner
+      renders empty on SSR, so a footer below it gets pushed down on hydration → CLS. */}
+  <Fragment slot="footer" />
+</BaseLayout>
+
+<style>
+  .exam-page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+  .exam-page__head {
+    margin-bottom: 28px;
+  }
+  .exam-page__back {
+    display: inline-block;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-family: var(--sans);
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+  .exam-page__back:hover {
+    color: var(--accent-strong);
+  }
+  .exam-page__head h1 {
+    font-family: var(--serif);
+    font-size: 44px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 8px 0 12px;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+  .lead {
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 640px;
+  }
+</style>

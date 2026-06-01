@@ -1,0 +1,501 @@
+certificate: ctal-tta
+# Certified Tester Advanced Level — Technical Test Analyst (CTAL-TTA v4.0).
+# Original questions modelled on the public CTAL-TTA syllabus learning
+# objectives (white-box techniques, static/dynamic analysis, quality
+# characteristics, tools). Not reproduced from any copyrighted set.
+questions:
+  - id: tta-001
+    type: single
+    difficulty: medium
+    q: "A function contains 4 decision points (if/while conditions) and no other branching. Its cyclomatic complexity is:"
+    options:
+      - "A) 3"
+      - "B) 4"
+      - "C) 5"
+      - "D) 8"
+    answer: 2
+    explanation: "Cyclomatic complexity = decision points + 1 = 4 + 1 = 5 (for a single connected component)."
+  - id: tta-002
+    type: single
+    difficulty: hard
+    q: "Modified Condition/Decision Coverage (MC/DC) requires that:"
+    options:
+      - "A) Every statement is executed at least once"
+      - "B) Each condition in a decision is shown to independently affect the decision's outcome"
+      - "C) All combinations of conditions are tested"
+      - "D) All paths through the module are executed"
+    answer: 1
+    explanation: "MC/DC demonstrates that each condition independently affects the decision outcome — required by safety standards such as DO-178C."
+  - id: tta-003
+    type: single
+    difficulty: hard
+    q: "Multiple condition coverage for a decision with 3 boolean conditions requires, at most:"
+    options:
+      - "A) 3 test cases"
+      - "B) 6 test cases"
+      - "C) 8 test cases"
+      - "D) 4 test cases"
+    answer: 2
+    explanation: "Multiple condition coverage exercises all combinations of the conditions: 2^3 = 8."
+  - id: tta-004
+    type: single
+    difficulty: hard
+    q: "An 'if' statement has a true-branch body but no else. A single test that makes the condition true achieves:"
+    options:
+      - "A) 100% statement and 100% branch coverage"
+      - "B) 100% statement coverage but not 100% branch coverage"
+      - "C) 100% branch coverage but not 100% statement coverage"
+      - "D) Neither"
+    answer: 1
+    explanation: "The true path runs every statement, but the false outcome of the decision is never taken, so branch (decision) coverage is below 100%."
+  - id: tta-005
+    type: single
+    difficulty: medium
+    q: "To achieve 100% decision (branch) coverage of a decision, you must, at minimum, exercise:"
+    options:
+      - "A) Only the true outcome"
+      - "B) Both the true and the false outcome of the decision"
+      - "C) Every combination of its conditions"
+      - "D) Each statement once"
+    answer: 1
+    explanation: "Decision coverage requires both the true and false outcomes of every decision to be taken."
+  - id: tta-006
+    type: single
+    difficulty: medium
+    q: "The number of linearly independent paths through a module is bounded above by its:"
+    options:
+      - "A) Lines of code"
+      - "B) Cyclomatic complexity"
+      - "C) Number of variables"
+      - "D) Statement coverage percentage"
+    answer: 1
+    explanation: "Cyclomatic complexity gives an upper bound on the basis set of independent paths (basis path testing)."
+  - id: tta-007
+    type: single
+    difficulty: medium
+    q: "Which statement about API testing is correct?"
+    options:
+      - "A) Only valid inputs need to be tested"
+      - "B) Negative tests, error handling and call sequencing matter because APIs are consumed by other software"
+      - "C) APIs do not benefit from automation"
+      - "D) API tests fully replace UI testing"
+    answer: 1
+    explanation: "APIs are integration points for other software; robustness, error handling and call sequences must be tested, typically with automation."
+  - id: tta-008
+    type: single
+    difficulty: medium
+    q: "For higher software integrity (safety) levels, the structural coverage required by standards typically:"
+    options:
+      - "A) Decreases"
+      - "B) Increases (e.g. statement → decision → MC/DC)"
+      - "C) Becomes optional"
+      - "D) Is replaced entirely by exploratory testing"
+    answer: 1
+    explanation: "Higher integrity levels demand stronger structural coverage criteria, up to MC/DC for the most critical software."
+  - id: tta-009
+    type: single
+    difficulty: hard
+    q: "A variable is read (used) on a path before it has ever been assigned a value. This data-flow anomaly is:"
+    options:
+      - "A) Define-define (dd)"
+      - "B) Use before define (an undefined-use anomaly)"
+      - "C) Define without use (dk)"
+      - "D) A normal define-use (du) pair"
+    answer: 1
+    explanation: "Using a variable before any definition is a use-before-define anomaly and a likely defect."
+  - id: tta-010
+    type: single
+    difficulty: hard
+    q: "A variable is assigned a value and then assigned again before the first value is ever used. This anomaly is:"
+    options:
+      - "A) Define-define (the first value is killed before use)"
+      - "B) Use before define"
+      - "C) A normal define-use pair"
+      - "D) A recoverability defect"
+    answer: 0
+    explanation: "Two consecutive definitions with no intervening use is a define-define (dd) anomaly — the first value is wasted."
+  - id: tta-011
+    type: single
+    difficulty: medium
+    q: "A variable is defined but never subsequently used on any path. This is:"
+    options:
+      - "A) A use-before-define anomaly"
+      - "B) A define-without-use anomaly"
+      - "C) Multiple condition coverage"
+      - "D) A memory leak"
+    answer: 1
+    explanation: "A definition that is never read is a define-without-use (dk) anomaly — often dead code or a logic error."
+  - id: tta-012
+    type: single
+    difficulty: medium
+    q: "Control-flow static analysis is particularly good at detecting:"
+    options:
+      - "A) Slow database queries under production load"
+      - "B) Unreachable (dead) code and possible infinite loops"
+      - "C) Memory leaks at runtime"
+      - "D) Usability problems"
+    answer: 1
+    explanation: "Control-flow analysis examines the program's structure to find unreachable code, infinite loops and similar anomalies without executing it."
+  - id: tta-013
+    type: single
+    difficulty: medium
+    q: "Which defect is static analysis LEAST able to find?"
+    options:
+      - "A) Violations of coding standards"
+      - "B) Unreachable code"
+      - "C) Actual response time under production load"
+      - "D) Use of an uninitialised variable"
+    answer: 2
+    explanation: "Real performance under load is a dynamic, runtime property — static analysis cannot measure it."
+  - id: tta-014
+    type: single
+    difficulty: medium
+    q: "A module with very high cyclomatic complexity is a concern mainly because it is:"
+    options:
+      - "A) Always faster at runtime"
+      - "B) Harder to test and maintain and tends to contain more defects"
+      - "C) Guaranteed to be defect-free"
+      - "D) Impossible to measure"
+    answer: 1
+    explanation: "High complexity means more paths to cover and lower maintainability, correlating with higher defect density."
+  - id: tta-015
+    type: single
+    difficulty: medium
+    q: "Steadily increasing memory usage over a long-running test, eventually exhausting resources, indicates a:"
+    options:
+      - "A) Memory leak (best found by dynamic analysis / soak testing)"
+      - "B) Coding-standard violation"
+      - "C) Define-without-use anomaly"
+      - "D) Portability defect"
+    answer: 0
+    explanation: "Unbounded memory growth over time is a memory leak, typically surfaced by dynamic analysis tools and endurance (soak) tests."
+  - id: tta-016
+    type: single
+    difficulty: medium
+    q: "Detecting wild/dangling pointers and invalid memory access while the program runs is the job of:"
+    options:
+      - "A) Static analysis"
+      - "B) Dynamic analysis tools"
+      - "C) A walkthrough"
+      - "D) A keyword-driven framework"
+    answer: 1
+    explanation: "Memory-access errors that appear during execution are caught by dynamic analysis (runtime) tools."
+  - id: tta-017
+    type: single
+    difficulty: easy
+    q: "The key difference between dynamic analysis and static analysis is that dynamic analysis:"
+    options:
+      - "A) Does not require the code to be executed"
+      - "B) Requires the code to be executed"
+      - "C) Cannot find memory issues"
+      - "D) Only reviews documents"
+    answer: 1
+    explanation: "Dynamic analysis observes the system while it runs; static analysis examines artefacts without execution."
+  - id: tta-018
+    type: single
+    difficulty: medium
+    q: "A profiler is used during testing to:"
+    options:
+      - "A) Enforce coding standards"
+      - "B) Identify performance bottlenecks and resource hotspots while the system runs"
+      - "C) Generate test data"
+      - "D) Manage defect reports"
+    answer: 1
+    explanation: "Profiling is dynamic analysis that pinpoints where time and resources are spent, revealing bottlenecks."
+  - id: tta-019
+    type: single
+    difficulty: medium
+    q: "Which set are sub-characteristics of 'performance efficiency' in ISO 25010?"
+    options:
+      - "A) Time behaviour, resource utilisation, capacity"
+      - "B) Maturity, fault tolerance, recoverability"
+      - "C) Confidentiality, integrity, authenticity"
+      - "D) Adaptability, installability, replaceability"
+    answer: 0
+    explanation: "Performance efficiency comprises time behaviour, resource utilisation and capacity."
+  - id: tta-020
+    type: single
+    difficulty: medium
+    q: "Testing a system BEYOND its expected/specified limits to find the point at which it fails is:"
+    options:
+      - "A) Load testing"
+      - "B) Stress testing"
+      - "C) Smoke testing"
+      - "D) Soak testing"
+    answer: 1
+    explanation: "Stress testing pushes past expected limits to find the breaking point and observe failure/recovery behaviour."
+  - id: tta-021
+    type: single
+    difficulty: medium
+    q: "Subjecting a system to a sudden sharp increase in load and then a return to normal is:"
+    options:
+      - "A) Spike testing"
+      - "B) Endurance testing"
+      - "C) Scalability testing"
+      - "D) Volume testing"
+    answer: 0
+    explanation: "Spike testing applies abrupt load surges to see how the system copes and recovers."
+  - id: tta-022
+    type: single
+    difficulty: medium
+    q: "Running a system under significant load for an extended period to expose problems such as memory leaks is:"
+    options:
+      - "A) Spike testing"
+      - "B) Stress testing"
+      - "C) Soak / endurance testing"
+      - "D) Load testing"
+    answer: 2
+    explanation: "Soak/endurance testing sustains load over time, exposing slow resource leaks and degradation."
+  - id: tta-023
+    type: single
+    difficulty: medium
+    q: "Determining whether a system can handle increasing volumes by adding resources is:"
+    options:
+      - "A) Scalability testing"
+      - "B) Recovery testing"
+      - "C) Portability testing"
+      - "D) Confirmation testing"
+    answer: 0
+    explanation: "Scalability testing assesses the system's ability to grow (e.g. with added resources) while meeting requirements."
+  - id: tta-024
+    type: single
+    difficulty: medium
+    q: "Which is a sub-characteristic of 'reliability' in ISO 25010?"
+    options:
+      - "A) Fault tolerance"
+      - "B) Time behaviour"
+      - "C) Interoperability"
+      - "D) Installability"
+    answer: 0
+    explanation: "Reliability comprises maturity, availability, fault tolerance and recoverability."
+  - id: tta-025
+    type: single
+    difficulty: medium
+    q: "A system that keeps operating correctly even when one component fails (e.g. via redundancy) demonstrates:"
+    options:
+      - "A) Recoverability"
+      - "B) Fault tolerance"
+      - "C) Capacity"
+      - "D) Modifiability"
+    answer: 1
+    explanation: "Fault tolerance is the ability to keep functioning despite faults; recoverability is about restoring after a failure."
+  - id: tta-026
+    type: single
+    difficulty: medium
+    q: "After a crash, a system restores its data and resumes service from the last consistent state. This quality is:"
+    options:
+      - "A) Maturity"
+      - "B) Recoverability"
+      - "C) Co-existence"
+      - "D) Analysability"
+    answer: 1
+    explanation: "Recoverability covers re-establishing data and state after an interruption or failure (RTO/RPO are relevant measures)."
+  - id: tta-027
+    type: single
+    difficulty: hard
+    q: "Ensuring a user cannot later deny having performed a transaction (e.g. via signed audit logs) addresses which security sub-characteristic?"
+    options:
+      - "A) Confidentiality"
+      - "B) Non-repudiation"
+      - "C) Availability"
+      - "D) Portability"
+    answer: 1
+    explanation: "Non-repudiation prevents a party from denying actions they took, typically via tamper-evident logging/signatures."
+  - id: tta-028
+    type: single
+    difficulty: medium
+    q: "A test sends ' OR '1'='1 into a login field and gains access. The defect is a failure of:"
+    options:
+      - "A) Input validation (a SQL-injection security vulnerability)"
+      - "B) Recoverability"
+      - "C) Time behaviour"
+      - "D) Co-existence"
+    answer: 0
+    explanation: "Unsanitised input altering the query is SQL injection — a confidentiality/integrity security defect rooted in poor input validation."
+  - id: tta-029
+    type: single
+    difficulty: medium
+    q: "Tightly coupled modules with duplicated logic primarily reduce a system's:"
+    options:
+      - "A) Maintainability"
+      - "B) Confidentiality"
+      - "C) Capacity"
+      - "D) Authenticity"
+    answer: 0
+    explanation: "High coupling and duplication harm analysability and modifiability — i.e. maintainability."
+  - id: tta-030
+    type: single
+    difficulty: medium
+    q: "Adaptability, installability and replaceability are sub-characteristics of:"
+    options:
+      - "A) Portability"
+      - "B) Security"
+      - "C) Reliability"
+      - "D) Performance efficiency"
+    answer: 0
+    explanation: "Portability comprises adaptability, installability and replaceability."
+  - id: tta-031
+    type: single
+    difficulty: medium
+    q: "Verifying that two applications can run in the same environment without adversely affecting each other tests:"
+    options:
+      - "A) Co-existence (compatibility)"
+      - "B) Recoverability"
+      - "C) Maturity"
+      - "D) Capacity"
+    answer: 0
+    explanation: "Co-existence is a sub-characteristic of compatibility — sharing an environment without interference."
+  - id: tta-032
+    type: single
+    difficulty: medium
+    q: "Checking that a mobile app installs and runs correctly across several OS versions and device sizes mainly tests:"
+    options:
+      - "A) Portability / compatibility"
+      - "B) Non-repudiation"
+      - "C) Cyclomatic complexity"
+      - "D) Statement coverage"
+    answer: 0
+    explanation: "Behaviour across platforms/devices falls under portability and compatibility."
+  - id: tta-033
+    type: single
+    difficulty: medium
+    q: "When participating in reviews, the Technical Test Analyst focuses primarily on:"
+    options:
+      - "A) Business acceptance criteria and user wording"
+      - "B) Technical aspects such as code structure, architecture and technical risks, often using checklists"
+      - "C) Marketing copy"
+      - "D) The project budget"
+    answer: 1
+    explanation: "The TTA brings a technical lens to reviews — code, architecture and technical risk — typically guided by checklists."
+  - id: tta-034
+    type: single
+    difficulty: medium
+    q: "Which is a TECHNICAL risk factor that would increase test effort?"
+    options:
+      - "A) Use of a new, unproven technology together with high code complexity"
+      - "B) The size of the marketing team"
+      - "C) The colour scheme of the UI"
+      - "D) The number of stakeholders in a meeting"
+    answer: 0
+    explanation: "New technology and complexity are technical product-risk factors that justify deeper technical testing."
+  - id: tta-035
+    type: single
+    difficulty: easy
+    q: "Static analysis enforcing a rule like 'every switch must have a default case' is checking:"
+    options:
+      - "A) Compliance with coding standards"
+      - "B) Recoverability"
+      - "C) Capacity"
+      - "D) Beta readiness"
+    answer: 0
+    explanation: "Such rules are coding-standard checks, a core use of static analysis tools."
+  - id: tta-036
+    type: single
+    difficulty: medium
+    q: "In keyword-driven testing, the main benefit is that:"
+    options:
+      - "A) Test logic is hard-coded into each script"
+      - "B) Tests are described with keywords/actions separated from scripts and data, so non-programmers can author them and maintenance is easier"
+      - "C) No test data is needed"
+      - "D) It only works for performance testing"
+    answer: 1
+    explanation: "Keyword-driven frameworks abstract actions as keywords, decoupling test design from the underlying scripts for easier authoring/maintenance."
+  - id: tta-037
+    type: single
+    difficulty: medium
+    q: "Data-driven testing runs:"
+    options:
+      - "A) A different script for every input"
+      - "B) The same test script repeatedly using multiple sets of input/expected data from an external source"
+      - "C) Tests without any expected results"
+      - "D) Only manual tests"
+    answer: 1
+    explanation: "Data-driven testing reuses one script across many data rows held externally (e.g. a spreadsheet or table)."
+  - id: tta-038
+    type: single
+    difficulty: easy
+    q: "A weakness of capture/replay automation is that recorded scripts:"
+    options:
+      - "A) Are highly maintainable"
+      - "B) Break easily when the UI or interface changes"
+      - "C) Test internal code paths"
+      - "D) Need no maintenance"
+    answer: 1
+    explanation: "Captured scripts are tightly bound to the recorded interface and are fragile when it changes."
+  - id: tta-039
+    type: single
+    difficulty: hard
+    q: "Deliberately seeding faults into the code to measure how many a test suite detects ('kills') is:"
+    options:
+      - "A) Mutation / fault-seeding testing"
+      - "B) Soak testing"
+      - "C) Recovery testing"
+      - "D) Co-existence testing"
+    answer: 0
+    explanation: "Mutation/fault-seeding evaluates test-suite effectiveness by how many injected faults it detects."
+  - id: tta-040
+    type: single
+    difficulty: medium
+    q: "When testing a component whose lower-level called module is not yet available, the missing module is replaced by a:"
+    options:
+      - "A) Driver"
+      - "B) Stub"
+      - "C) Profiler"
+      - "D) Linter"
+    answer: 1
+    explanation: "A stub stands in for a called (lower-level) component that is not yet available."
+  - id: tta-041
+    type: single
+    difficulty: medium
+    q: "A test harness that calls the component under test in place of a not-yet-available higher-level caller is a:"
+    options:
+      - "A) Stub"
+      - "B) Driver"
+      - "C) Mock server"
+      - "D) Sandbox"
+    answer: 1
+    explanation: "A driver invokes the component under test, substituting for a missing calling (higher-level) component."
+  - id: tta-042
+    type: single
+    difficulty: medium
+    q: "A performance test tool primarily works by:"
+    options:
+      - "A) Reviewing source code for standards compliance"
+      - "B) Generating many virtual users/transactions and measuring response times and resource usage"
+      - "C) Seeding faults into the code"
+      - "D) Detecting dead code"
+    answer: 1
+    explanation: "Performance tools drive concurrent virtual load and capture timing and resource metrics."
+  - id: tta-043
+    type: single
+    difficulty: medium
+    q: "Debugging is best described as:"
+    options:
+      - "A) A testing activity that determines pass/fail"
+      - "B) A development activity to locate and fix the cause of a failure; testers support it with reproducible information"
+      - "C) The same thing as confirmation testing"
+      - "D) A static analysis technique"
+    answer: 1
+    explanation: "Debugging (finding and fixing the defect causing a failure) is a development activity; testing finds the failures and confirms fixes."
+  - id: tta-044
+    type: single
+    difficulty: easy
+    q: "Running an automated build and test suite on every commit provides mainly:"
+    options:
+      - "A) Slower feedback"
+      - "B) Fast feedback so integration defects are caught early"
+      - "C) A replacement for all test levels"
+      - "D) A guarantee of zero defects"
+    answer: 1
+    explanation: "Continuous integration gives rapid feedback, catching integration problems soon after they are introduced."
+  - id: tta-045
+    type: single
+    difficulty: medium
+    q: "When deciding what to automate first, a Technical Test Analyst should prioritise tests that are:"
+    options:
+      - "A) One-off and rarely repeated"
+      - "B) Stable, repetitive, high-value and run frequently (e.g. regression)"
+      - "C) Purely exploratory and unscripted"
+      - "D) Cosmetic and low risk"
+    answer: 1
+    explanation: "Automation pays off for stable, frequently-run, high-value tests; unstable or one-off tests give poor ROI."
