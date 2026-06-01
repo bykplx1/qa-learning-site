@@ -72,7 +72,20 @@ function AuthNavInner() {
     };
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div
+        aria-hidden="true"
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
+          background: 'var(--paper-3)',
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
 
   if (!user) {
     return (
