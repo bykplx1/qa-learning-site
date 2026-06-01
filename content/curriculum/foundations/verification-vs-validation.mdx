@@ -31,19 +31,17 @@ A tester who runs only verification produces green test suites for products user
 ## Diagram
 
 <Diagram caption="The V&V triangle: three questions, three oracles">
+
+```mermaid
+flowchart TD
+    V["Verification\n'Built right?'\nOracle: Spec"]
+    VA["Validation\n'Right product?'\nOracle: User need"]
+    OP["Operational\n'Still right?'\nOracle: Production signal"]
+    V --- VA
+    VA --- OP
+    OP --- V
 ```
-       Verification
-       "Built right?"
-       Oracle: Spec
-           /\
-          /  \
-         /    \
-        /      \
-       /________\
-  Validation    Operational
-  "Right product?"  "Still right?"
-  Oracle: User need  Oracle: Production signal
-```
+
 </Diagram>
 
 ## Worked Example
