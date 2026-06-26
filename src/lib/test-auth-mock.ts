@@ -350,9 +350,6 @@ export function mockLoadProfile(lessonMetaMap?: Map<string, LessonMetaRecord>) {
     submissions: [],
     completedCount: mockStore.lessons.length,
     attemptCount: mockStore.attempts.length,
-    retentionSummary: { retentionPct: null, latestStabilityDays: null, dueCount: 0 },
-    selfExplanationCount: 0,
-    cardsPerSession: null,
     completedSlugs: mockStore.lessons.map((l) => l.lessonSlug),
   };
 }

@@ -50,8 +50,8 @@ test.describe('Feynman explain — submission + rubric reveal', () => {
 
     await signInWithMockedGitHub(page);
 
-    // Navigate to explain page with override (bypass soft-block since user has 0 reviews).
-    await page.goto(`/explain/${TEST_SLUG}?override=1`);
+    // Navigate to the explain page (the editor renders directly).
+    await page.goto(`/explain/${TEST_SLUG}`);
     await page.waitForLoadState('networkidle');
 
     // Rubric must NOT be visible before submission.
@@ -88,49 +88,5 @@ test.describe('Feynman explain — submission + rubric reveal', () => {
 
     // Saved confirmation appears.
     await expect(page.getByTestId('feynman-saved')).toBeVisible({ timeout: 8_000 });
-  });
-});
-
-test.describe('Feynman explain — soft-block', () => {
-  test.skip(
-    process.env.E2E_OAUTH_MOCK !== '1',
-    'requires server started with E2E_OAUTH_MOCK=1 + DATABASE_URL — skipped locally without DB',
-  );
-
-  test('soft-block surfaces for concept with <2 reviews; primary CTA href contains /review?cluster=; override succeeds', async ({
-    page,
-  }) => {
-    await page.addLocatorHandler(page.locator('vite-error-overlay'), async (el) => {
-      await el.locator('button').first().click();
-    });
-
-    await signInWithMockedGitHub(page);
-
-    // Navigate to explain page without override — user has 0 reviews so soft-block shows.
-    await page.goto(`/explain/${TEST_SLUG}`);
-    await page.waitForLoadState('networkidle');
-
-    // Soft-block is visible.
-    const softBlock = page.getByTestId('soft-block');
-    await expect(softBlock).toBeVisible({ timeout: 6_000 });
-
-    // Editor is NOT visible.
-    await expect(page.getByTestId('explain-card')).not.toBeVisible();
-
-    // Primary CTA points to /review?cluster=...
-    const reviewCta = page.getByTestId('soft-block-review-cta');
-    await expect(reviewCta).toBeVisible();
-    const ctaHref = await reviewCta.getAttribute('href');
-    expect(ctaHref).toMatch(/\/review(\?cluster=.*)?/);
-
-    // Override link is present and navigates past the block.
-    const overrideLink = page.getByTestId('soft-block-override');
-    await expect(overrideLink).toBeVisible();
-    await overrideLink.click();
-    await page.waitForLoadState('networkidle');
-
-    // After override, the explain card should be visible (soft-block gone).
-    await expect(page.getByTestId('explain-card')).toBeVisible({ timeout: 6_000 });
-    await expect(page.getByTestId('soft-block')).not.toBeVisible();
   });
 });

@@ -9,6 +9,7 @@ import {
   type ProjectTier,
   type ProjectTrack,
 } from '../../lib/projects/schema';
+import ProjectSubmittedMarkers from '../../components/projects/ProjectSubmittedMarkers';
 
 const allProjects = await getCollection('projects');
 
@@ -107,8 +108,13 @@ const tierProofNote: Record<ProjectTier, string> = {
                 </div>
                 <div class="brief-grid">
                   {list.map((project, i) => (
-                    <a class="brief-card" href={`/projects/${project.data.slug}`}>
-                      <div class="eyebrow">brief · {String(i + 1).padStart(2, '0')}</div>
+                    <a class="brief-card" href={`/projects/${project.data.slug}`} data-project-slug={project.data.slug}>
+                      <div class="brief-card__head">
+                        <div class="eyebrow">brief · {String(i + 1).padStart(2, '0')}</div>
+                        <span class="brief-card__submitted" data-testid="brief-submitted-badge" hidden>
+                          ✓ submitted
+                        </span>
+                      </div>
                       <div class="brief-card__title">{project.data.title}</div>
                       <div class="brief-card__desc">
                         {project.data.acceptanceCriteria.length} acceptance criteria · {TIER_LABELS[tier]}
@@ -131,6 +137,7 @@ const tierProofNote: Record<ProjectTier, string> = {
       );
     })}
   </section>
+  <ProjectSubmittedMarkers client:idle />
 </BaseLayout>
 
 <style>
@@ -156,6 +163,22 @@ const tierProofNote: Record<ProjectTier, string> = {
     transition: border-color 150ms ease, background 150ms ease;
   }
   .brief-card:hover { border-color: var(--ink-3); background: var(--paper-2); }
+  .brief-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .brief-card__submitted {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--pass-strong);
+    border: 1px solid var(--pass);
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
   .brief-card__title {
     font-family: var(--serif);
     font-size: 22px;

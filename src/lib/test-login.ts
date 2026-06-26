@@ -51,7 +51,7 @@ export const personas: Persona[] = [
     name: 'Parker Power',
     email: 'test-power@qa-learning.test',
     image: null,
-    blurb: 'Seeded with quiz attempts, completed lessons, a multi-day streak, a project submission, and review cards. Tests dashboards / profile UX.',
+    blurb: 'Seeded with quiz attempts, completed lessons, a multi-day streak, and a project submission. Tests dashboards / profile UX.',
     populated: true,
   },
 ];
@@ -335,12 +335,4 @@ async function seedProgress(userId: string): Promise<void> {
     reflection: 'Seeded submission for the Parker Power test persona.',
     isPublic: false,
   });
-
-  // Review cards across all topics (non-fatal if content load hiccups).
-  try {
-    const { seedForUser } = await import('./srs/seed');
-    await seedForUser(userId);
-  } catch {
-    /* review-card seeding is best-effort */
-  }
 }

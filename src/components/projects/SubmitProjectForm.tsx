@@ -23,7 +23,9 @@ function SubmitProjectFormInner({ projectSlug, tier, existing, rubric }: Props) 
   const [repoUrl, setRepoUrl] = useState(existing?.repoUrl ?? '');
   const [reflection, setReflection] = useState(existing?.reflection ?? '');
   const [isPublic, setIsPublic] = useState(existing?.isPublic ?? false);
-  const [ciGreen, setCiGreen] = useState(false);
+  // A capstone can only have been submitted with ci_green attested true, so an
+  // existing capstone submission means the box should stay checked after reload.
+  const [ciGreen, setCiGreen] = useState(existing != null && tier === 'capstone');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(existing?.submittedAt ?? null);
@@ -38,20 +40,10 @@ function SubmitProjectFormInner({ projectSlug, tier, existing, rubric }: Props) 
     setRubricScores((prev) => ({ ...prev, [rowId]: bandIndex }));
   }
 
-  function readBelowThresholdOverride(): boolean {
-    if (typeof document === 'undefined') return false;
-    const form = document.querySelector('[data-testid="concept-gate-form"]');
-    const input = (form as HTMLFormElement | null)?.elements?.namedItem(
-      'below_threshold_override',
-    ) as HTMLInputElement | null;
-    return input?.value === '1';
-  }
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus('saving');
     setErrorMsg(null);
-    const belowThreshold = readBelowThresholdOverride();
     try {
       const res = await fetch(`/api/projects/${encodeURIComponent(projectSlug)}/submit`, {
         method: 'POST',
@@ -61,7 +53,6 @@ function SubmitProjectFormInner({ projectSlug, tier, existing, rubric }: Props) 
           reflection: reflection.trim(),
           is_public: isPublic,
           rubric_scores: rubric ? rubricScores : undefined,
-          below_threshold: belowThreshold,
           ci_green: tier === 'capstone' ? ciGreen : undefined,
         }),
       });
@@ -118,11 +109,13 @@ function SubmitProjectFormInner({ projectSlug, tier, existing, rubric }: Props) 
 
         <div>
           <label htmlFor={`reflection-${projectSlug}`} className="label">
-            Reflection
+            Reflection{' '}
+            <span className="label__hint" style={{ color: 'var(--accent)' }}>required</span>
           </label>
           <textarea
             id={`reflection-${projectSlug}`}
             required
+            aria-required="true"
             value={reflection}
             onChange={(e) => setReflection(e.target.value)}
             rows={5}
@@ -130,7 +123,9 @@ function SubmitProjectFormInner({ projectSlug, tier, existing, rubric }: Props) 
             placeholder="What did you build, what was hard, what did you learn?"
             className="textarea"
           />
-          <div className="field-help">{reflection.length} / 4000</div>
+          <div className="field-help">
+            A short reflection is required to submit. {reflection.length} / 4000
+          </div>
         </div>
 
         {rubric && (

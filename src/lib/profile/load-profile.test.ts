@@ -39,9 +39,6 @@ function makeRaw() {
         updatedAt: new Date('2026-05-21T12:00:00Z'),
       },
     ],
-    retentionSummary: { retentionPct: null, latestStabilityDays: null, dueCount: 0 },
-    selfExplanationCount: 0,
-    cardsPerSession: null,
   };
 }
 

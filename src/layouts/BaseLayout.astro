@@ -45,17 +45,13 @@ const isLessons = path.startsWith('/lessons');
 const isProjects = path.startsWith('/projects');
 const isProfile = path.startsWith('/profile');
 
-const isReview = path === '/review' || path === '/review/';
 const isExam = path.startsWith('/exam');
-const isRetention = path === '/me/retention' || path === '/me/retention/';
 
 const navLinks = [
   { href: '/lessons', label: 'Lessons', active: isLessons },
   { href: '/projects', label: 'Build', active: isProjects },
   { href: '/profile', label: 'Profile', active: isProfile },
-  { href: '/review', label: 'Review', active: isReview },
   { href: '/exam', label: 'Mock exam', active: isExam },
-  { href: '/me/retention', label: 'Retention', active: isRetention },
 ];
 ---
 

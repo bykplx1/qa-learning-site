@@ -1,11 +1,8 @@
 ---
-import { like, eq, and, gte, sql } from 'drizzle-orm';
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import FeynmanEditor from '../../components/explain/FeynmanEditor';
 import { getSession } from '../../lib/auth';
-import { db } from '../../db';
-import { reviewCards, reviewLogs } from '../../db/schema';
 import { curriculumTitleBySlug, slugToTitle } from '../../lib/curriculum/title-by-slug';
 
 export const prerender = false;
@@ -19,41 +16,6 @@ const session = await getSession(Astro.request.headers);
 if (!session?.user?.id) {
   return Astro.redirect(`/login?next=${encodeURIComponent(Astro.url.pathname)}`);
 }
-const userId = session.user.id;
-
-// Derive cluster from slug if it contains a path separator, else use the param directly.
-// The slug param here is the `conceptSlug` — typically the topic slug (no cluster prefix).
-// Review cards use sourceRef = "<cluster>/<topicSlug>#<promptId>".
-// We count logs for any card whose sourceRef starts with any cluster prefix for this slug.
-const [reviewCountRows, clusterRows] = await Promise.all([
-  db
-    .select({ count: sql<number>`cast(count(distinct ${reviewLogs.id}) as int)` })
-    .from(reviewLogs)
-    .innerJoin(reviewCards, eq(reviewLogs.cardId, reviewCards.id))
-    .where(
-      and(
-        eq(reviewLogs.userId, userId),
-        like(reviewCards.sourceRef, `%/${slug}#%`),
-        gte(reviewLogs.rating, 1),
-      ),
-    ),
-  // Derive a cluster hint for the CTA: pick the first cluster prefix found on a card for this slug.
-  db
-    .select({ cluster: reviewCards.cluster })
-    .from(reviewCards)
-    .where(and(eq(reviewCards.userId, userId), like(reviewCards.sourceRef, `%/${slug}#%`)))
-    .limit(1),
-]);
-
-const reviewCount = reviewCountRows[0]?.count ?? 0;
-const needsMoreReviews = reviewCount < 2;
-
-// Allow override via query param ?override=1
-const override = Astro.url.searchParams.get('override') === '1';
-const showBlock = needsMoreReviews && !override;
-
-const cluster = clusterRows[0]?.cluster ?? null;
-const reviewHref = cluster ? `/review?cluster=${encodeURIComponent(cluster)}` : '/review';
 
 // Pass as a plain boolean prop — never expose the key itself to the island.
 const showGapPrompt = process.env.FEATURE_AI_GAP_PROMPT === '1';
@@ -66,51 +28,14 @@ const showGapPrompt = process.env.FEATURE_AI_GAP_PROMPT === '1';
       <h1>{topicTitle}</h1>
     </header>
 
-    {showBlock ? (
-      <div class="soft-block" data-testid="soft-block">
-        <div class="soft-block__icon" aria-hidden="true">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-        </div>
-        <h2 class="soft-block__title">Review this topic first</h2>
-        <p class="soft-block__body">
-          You have reviewed this concept <strong>{reviewCount}</strong> time{reviewCount === 1 ? '' : 's'}.
-          We recommend at least 2 reviews before writing a Feynman explanation so the material has had time to consolidate.
-        </p>
-        <div class="soft-block__actions">
-          <a
-            href={reviewHref}
-            class="btn btn--primary"
-            data-testid="soft-block-review-cta"
-          >
-            Review this cluster
-          </a>
-          <a
-            href={`/explain/${encodeURIComponent(slug)}?override=1`}
-            class="btn btn--ghost"
-            data-testid="soft-block-override"
-          >
-            Write anyway
-          </a>
-        </div>
-      </div>
-    ) : (
-      <div class="explain-card card" data-testid="explain-card">
-        {needsMoreReviews && (
-          <div class="explain-notice" role="note">
-            <span class="eyebrow">tip</span>
-            <span> — fewer than 2 reviews on record. The explanation may help, but reviewing after will reinforce it further.</span>
-          </div>
-        )}
-        <FeynmanEditor
-          client:load
-          conceptSlug={slug}
-          wordTarget={150}
-          showGapPrompt={showGapPrompt}
-        />
-      </div>
-    )}
+    <div class="explain-card card" data-testid="explain-card">
+      <FeynmanEditor
+        client:load
+        conceptSlug={slug}
+        wordTarget={150}
+        showGapPrompt={showGapPrompt}
+      />
+    </div>
   </main>
 </BaseLayout>
 

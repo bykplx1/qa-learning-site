@@ -209,55 +209,6 @@ function RecentActivitySection({ items }: { items: ActivityItem[] }) {
   );
 }
 
-// ─── RetentionLeadSection ─────────────────────────────────────────────────────
-
-interface RetentionSummary {
-  retentionPct: number | null;
-  latestStabilityDays: number | null;
-  dueCount: number;
-}
-
-function RetentionLeadSection({ summary }: { summary: RetentionSummary }) {
-  const hasData = summary.retentionPct !== null || summary.latestStabilityDays !== null;
-  return (
-    <section className="retention-lead" aria-labelledby="retention-lead-heading" data-testid="retention-lead-section">
-      <div className="retention-lead__header">
-        <span className="eyebrow" id="retention-lead-heading">retention · the goal</span>
-        <a href="/me/retention" className="retention-lead__link">full dashboard →</a>
-      </div>
-      {hasData ? (
-        <div className="retention-lead__stats">
-          <div className="retention-lead__stat" data-testid="retention-lead-due">
-            <div className="retention-lead__num">{summary.dueCount}</div>
-            <div className="retention-lead__label">cards due now</div>
-          </div>
-          {summary.retentionPct !== null && (
-            <div className="retention-lead__stat" data-testid="retention-lead-pct">
-              <div className="retention-lead__num">
-                {summary.retentionPct}<span className="retention-lead__num-sub">%</span>
-              </div>
-              <div className="retention-lead__label">retention rate</div>
-            </div>
-          )}
-          {summary.latestStabilityDays !== null && (
-            <div className="retention-lead__stat" data-testid="retention-lead-stability">
-              <div className="retention-lead__num">
-                {summary.latestStabilityDays}<span className="retention-lead__num-sub">d</span>
-              </div>
-              <div className="retention-lead__label">mean stability</div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <p className="retention-lead__empty">
-          No spaced-repetition data yet.{' '}
-          <a href="/me/retention" className="retention-lead__link">Start reviewing</a> to see your forgetting curve here.
-        </p>
-      )}
-    </section>
-  );
-}
-
 // ─── ProfileShell ─────────────────────────────────────────────────────────────
 
 type ProfileData = Omit<ProfilePayload, 'recentActivity'> & { recentActivity: ActivityItem[] };
@@ -335,11 +286,6 @@ function ProfileShellInner({ initialUser, initialData }: ProfileShellProps) {
   const heatmapCells = profile?.heatmap.cells ?? [];
   const recentActivity = profile?.recentActivity ?? [];
   const submissionsProp = profile?.submissions ?? [];
-  const retentionSummary: RetentionSummary = profile?.retentionSummary ?? {
-    retentionPct: null,
-    latestStabilityDays: null,
-    dueCount: 0,
-  };
 
   const totalCorrect = quizAccuracy.reduce((s, t) => s + t.correct, 0);
   const totalQ = quizAccuracy.reduce((s, t) => s + t.total, 0);
@@ -359,10 +305,8 @@ function ProfileShellInner({ initialUser, initialData }: ProfileShellProps) {
         </div>
       </section>
 
-      <RetentionLeadSection summary={retentionSummary} />
-
-      <section className="activity-strip" aria-label="Activity — not the goal" data-testid="activity-strip">
-        <span className="eyebrow activity-strip__label">Activity — not the goal</span>
+      <section className="activity-strip" aria-label="Activity" data-testid="activity-strip">
+        <span className="eyebrow activity-strip__label">Activity</span>
         <div className="activity-strip__stats">
           <div className="istat">
             <div className="istat__num">
@@ -496,6 +440,45 @@ interface Submission {
   submittedAt: string;
 }
 
+// Reflections can be up to 4000 chars — collapse long ones so the profile
+// page stays scannable, with a clickable toggle to expand/collapse.
+const REFLECTION_PREVIEW_CHARS = 240;
+
+function ReflectionText({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > REFLECTION_PREVIEW_CHARS;
+  const shown = !isLong || expanded ? text : `${text.slice(0, REFLECTION_PREVIEW_CHARS).trimEnd()}…`;
+
+  return (
+    <div className="mt-2 mb-3">
+      <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55, whiteSpace: 'pre-wrap', margin: 0 }}>
+        {shown}
+      </p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="mt-1"
+          style={{
+            fontSize: 12,
+            fontFamily: 'var(--mono)',
+            color: 'var(--accent)',
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textUnderlineOffset: 2,
+          }}
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function SubmissionsListInline({ submissions: initial }: { submissions: Submission[] }) {
   const [items, setItems] = useState<Submission[]>(initial);
   const [pending, setPending] = useState<string | null>(null);
@@ -550,9 +533,7 @@ function SubmissionsListInline({ submissions: initial }: { submissions: Submissi
               {s.repoUrl}
             </a>
           )}
-          <p className="mt-2 mb-3" style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
-            {s.reflection}
-          </p>
+          <ReflectionText text={s.reflection} />
           <label className="flex items-center gap-2" style={{ fontSize: 12, color: 'var(--ink-2)', cursor: 'pointer' }}>
             <input
               type="checkbox"
