@@ -42,29 +42,12 @@ test.describe('auth provider chooser — #257', () => {
     expect(href).not.toContain('github');
   });
 
-  test('unauthenticated visit to /review redirects to /login with next param', async ({ page }) => {
-    await page.goto('/review', { waitUntil: 'load' });
-    // Server-side redirect: should land on /login?next=%2Freview
-    await expect(page).toHaveURL(/\/login/);
-    const url = new URL(page.url());
-    expect(url.pathname).toBe('/login');
-    expect(url.searchParams.get('next')).toBe('/review');
-  });
-
   test('unauthenticated visit to /explain redirects to /login with next param', async ({ page }) => {
     await page.goto('/explain', { waitUntil: 'load' });
     await expect(page).toHaveURL(/\/login/);
     const url = new URL(page.url());
     expect(url.pathname).toBe('/login');
     expect(url.searchParams.get('next')).toBe('/explain');
-  });
-
-  test('unauthenticated visit to /me/retention redirects to /login with next param', async ({ page }) => {
-    await page.goto('/me/retention', { waitUntil: 'load' });
-    await expect(page).toHaveURL(/\/login/);
-    const url = new URL(page.url());
-    expect(url.pathname).toBe('/login');
-    expect(url.searchParams.get('next')).toBe('/me/retention');
   });
 
   test('/login page renders both provider buttons', async ({ page }) => {

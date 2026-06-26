@@ -3,7 +3,6 @@ import { resolveEndCta } from './end-cta';
 import type { EndCtaInput } from './end-cta';
 
 const base: EndCtaInput = {
-  dueCards: 0,
   reviewCount: 0,
   hasProject: false,
   projectSlug: null,
@@ -13,17 +12,6 @@ const base: EndCtaInput = {
 };
 
 describe('resolveEndCta — pure policy', () => {
-  it('returns review CTA when dueCards >= 1 (signed in)', () => {
-    const { options } = resolveEndCta({ ...base, dueCards: 1 });
-    expect(options[0]?.kind).toBe('review');
-    expect(options[0]?.href).toBe('/review?cluster=foundations');
-  });
-
-  it('omits review CTA when dueCards === 0 (signed in)', () => {
-    const { options } = resolveEndCta({ ...base, dueCards: 0 });
-    expect(options.every((o) => o.kind !== 'review')).toBe(true);
-  });
-
   it('returns explain CTA when reviewCount >= 2 (signed in)', () => {
     const { options } = resolveEndCta({ ...base, reviewCount: 2 });
     expect(options.some((o) => o.kind === 'explain')).toBe(true);
@@ -52,25 +40,14 @@ describe('resolveEndCta — pure policy', () => {
     expect(options.every((o) => o.kind !== 'project')).toBe(true);
   });
 
-  it('priority order: review first, explain second, project last', () => {
+  it('priority order: explain before project', () => {
     const { options } = resolveEndCta({
       ...base,
-      dueCards: 1,
       reviewCount: 3,
       hasProject: true,
       projectSlug: 'flaky-test-hunter',
     });
-    expect(options.length).toBe(3);
-    expect(options[0].kind).toBe('review');
-    expect(options[1].kind).toBe('explain');
-    expect(options[2].kind).toBe('project');
-  });
-
-  it('signed-out: returns generic review CTA (no cluster param)', () => {
-    const { options } = resolveEndCta({ ...base, signedIn: false });
-    const reviewOpt = options.find((o) => o.kind === 'review');
-    expect(reviewOpt).toBeDefined();
-    expect(reviewOpt!.href).toBe('/review');
+    expect(options.map((o) => o.kind)).toEqual(['explain', 'project']);
   });
 
   it('signed-out: never returns explain CTA regardless of reviewCount', () => {
@@ -86,15 +63,5 @@ describe('resolveEndCta — pure policy', () => {
       projectSlug: 'flaky-test-hunter',
     });
     expect(options.some((o) => o.kind === 'project')).toBe(true);
-  });
-
-  it('review CTA href includes correct cluster param', () => {
-    const { options } = resolveEndCta({
-      ...base,
-      dueCards: 1,
-      clusterSlug: 'test-design',
-    });
-    const reviewOpt = options.find((o) => o.kind === 'review');
-    expect(reviewOpt!.href).toBe('/review?cluster=test-design');
   });
 });

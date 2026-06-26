@@ -107,7 +107,6 @@ const prevTopic = currentIndex > 0 ? clusterTopics[currentIndex - 1] : null;
 const nextTopic = currentIndex >= 0 && currentIndex < clusterTopics.length - 1 ? clusterTopics[currentIndex + 1] : null;
 
 const { options: endCtaOptions } = resolveEndCta({
-  dueCards: 0,
   reviewCount: 0,
   hasProject: projectSlugForCluster !== null,
   projectSlug: projectSlugForCluster,
@@ -249,8 +248,8 @@ const { options: endCtaOptions } = resolveEndCta({
     padding: 32px 24px;
   }
   .lesson-main {
-    padding: 44px 56px;
-    max-width: 800px;
+    padding: 44px 48px;
+    max-width: 880px;
     width: 100%;
     margin: 0 auto;
   }

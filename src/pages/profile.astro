@@ -110,59 +110,6 @@ if (session?.user?.id) {
 
   :global(.signed-out) { padding: 64px 0; }
 
-  /* ── Retention lead (issue #386) ── */
-  :global(.retention-lead) {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 20px 24px;
-    margin-bottom: 16px;
-  }
-  :global(.retention-lead__header) {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  :global(.retention-lead__link) {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--ink-3);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  :global(.retention-lead__link:hover) { color: var(--ink); }
-  :global(.retention-lead__stats) {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
-  :global(.retention-lead__stat) { display: flex; flex-direction: column; gap: 4px; }
-  :global(.retention-lead__num) {
-    font-family: var(--serif);
-    font-size: 44px;
-    letter-spacing: -0.03em;
-    color: var(--ink);
-    display: inline-flex;
-    align-items: baseline;
-    line-height: 1;
-  }
-  :global(.retention-lead__num-sub) { color: var(--ink-3); font-size: 24px; margin-left: 2px; }
-  :global(.retention-lead__label) {
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ink-3);
-  }
-  :global(.retention-lead__empty) {
-    font-size: 13px;
-    color: var(--ink-3);
-    font-family: var(--mono);
-    margin: 0;
-  }
-
   /* ── Activity strip (issue #386) ── */
   :global(.activity-strip) {
     background: var(--paper-2);

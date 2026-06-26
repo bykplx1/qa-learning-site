@@ -1,5 +1,4 @@
 import { loadProfileRaw } from '../../db/queries';
-import type { RetentionSummary } from '../../db/queries';
 import type { StreakResult } from '../streak/streak';
 import type { CategoryProgress } from '../progress/progress';
 import type { TopicAccuracy } from '../progress/quiz-accuracy';
@@ -13,8 +12,6 @@ import type { DailyActivityRow } from '../daily-activity/index';
 import { recentActivityOf } from '../activity/activity';
 import { lessonMetaRowsFromMap } from '../curriculum/lesson-meta';
 import type { LessonMetaRecord } from '../curriculum/lesson-meta';
-
-export type { RetentionSummary } from '../../db/queries';
 
 export interface ProfileSubmission {
   projectSlug: string;
@@ -33,12 +30,6 @@ export interface ProfilePayload {
   submissions: ProfileSubmission[];
   completedCount: number;
   attemptCount: number;
-  /** Retention summary for the profile lead block. Always present; fields null when no SRS data. */
-  retentionSummary: RetentionSummary;
-  /** Number of self-explanation submissions (issue #387). */
-  selfExplanationCount: number;
-  /** Mean cards reviewed per active review day (issue #387). Null = no data. */
-  cardsPerSession: number | null;
   /** Slugs of topics the user has marked complete — for client-side markers on /lessons. */
   completedSlugs: string[];
 }
@@ -67,7 +58,7 @@ export async function loadProfile(
   const heatmapYear = today.getUTCFullYear();
 
   // Single round-trip: parallel queries; daily_activity is now derived from sources (#351).
-  const { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows, retentionSummary, selfExplanationCount, cardsPerSession } =
+  const { dailyActivityRows, lessonViewRows, quizAttemptRows, submissionRows } =
     await loadProfileRaw(userId);
 
   // Build slug→title and slug→cluster maps for activity feed from the curriculum meta map.
@@ -131,9 +122,6 @@ export async function loadProfile(
     })),
     completedCount,
     attemptCount,
-    retentionSummary,
-    selfExplanationCount,
-    cardsPerSession,
     completedSlugs,
   };
 }

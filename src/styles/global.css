@@ -758,6 +758,24 @@ a { color: inherit; }
   color: inherit;
   font-size: inherit;
 }
+
+/* Lessons: code blocks, diagrams, and tables were cramped to the 65ch text
+   measure, leaving wide flowcharts and code samples needlessly narrow. Free the
+   media to use the full lesson column while keeping prose text at a readable
+   measure. (Other .prose surfaces — project briefs, explain — keep 65ch.) */
+.lesson-main .prose {
+  max-width: none;
+}
+.lesson-main .prose > :where(p, ul, ol, h1, h2, h3, h4, h5, h6, blockquote, dl, hr) {
+  max-width: 70ch;
+}
+.lesson-main .prose pre,
+.lesson-main .prose table,
+.lesson-main .prose .mermaid-svg,
+.lesson-main .prose .mdx-diagram {
+  max-width: 100%;
+  width: 100%;
+}
 .prose blockquote {
   border-left: 2px solid var(--accent);
   padding: 4px 0 4px 18px;
