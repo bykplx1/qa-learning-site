@@ -80,7 +80,13 @@ for (const theme of ['light', 'dark'] as const) {
     test('lesson', async ({ page }) => {
       await clearQuizState(page);
       await page.goto(LESSON_PATH);
-      await expect(page.locator('#quiz')).toBeVisible();
+      const quiz = page.locator('#quiz');
+      await expect(quiz).toBeVisible();
+      // The quiz is a React island whose question content only paints after
+      // hydration. Waiting on the container alone races that paint, so the
+      // full-page height flaps (~135px) between the pre- and post-hydration
+      // states and trips the strict diff. Wait for the question to render.
+      await expect(quiz.getByText(/Question 1 \/ \d+/)).toBeVisible();
       await settle(page);
       await expect(page).toHaveScreenshot(`lesson-${theme}.png`, { fullPage: true });
     });
