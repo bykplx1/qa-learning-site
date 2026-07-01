@@ -51,7 +51,7 @@ questions:
     q: "A developer writes a passing unit test for a login function. What is the QA mindset response?"
     options:
       - A) Mark the feature done — a passing test proves correctness
-      - B) Ask: what about empty passwords, SQL injection, 429 after brute force, concurrent logins?
+      - "B) Ask: what about empty passwords, SQL injection, 429 after brute force, concurrent logins?"
       - C) Re-run the same test in a different environment
       - D) Convert the unit test into an E2E test
     answer: 1
