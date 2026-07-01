@@ -139,7 +139,7 @@ questions:
     q: "The correct test strategy for a RAG pipeline includes:"
     options:
       - A) End-to-end accuracy only — the user only sees the final answer
-      - B) Per-stage tests: retrieval precision/recall, chunk quality, faithfulness, grounding — plus end-to-end accuracy
+      - "B) Per-stage tests: retrieval precision/recall, chunk quality, faithfulness, grounding — plus end-to-end accuracy"
       - C) Comparing the RAG system to a non-RAG LLM baseline only
       - D) Human evaluation only — automated metrics cannot measure RAG quality
     answer: 1
